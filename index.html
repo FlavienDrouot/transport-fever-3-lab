@@ -15,13 +15,13 @@
   <main>
     <div class="workspace">
     <section id="explorer" class="chart-panel" aria-labelledby="chart-heading">
-      <div class="panel-top"><div><p class="eyebrow">TRANSPORT FEVER 3 · TRAIN BENCHMARKS</p><h2 id="chart-heading">Distance over time</h2></div></div>
+      <div class="panel-top"><div><h2 id="chart-heading">Distance over time</h2></div></div>
 
       <div class="chart-toolbar"><div class="chart-options"><fieldset id="x-scale" class="scale-toggle"><legend class="sr-only">X axis scale</legend><span aria-hidden="true">X axis</span><label><input type="radio" name="x-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="x-scale" value="log"><span>Log</span></label></fieldset><fieldset id="y-scale" class="scale-toggle"><legend class="sr-only">Y axis scale</legend><span aria-hidden="true">Y axis</span><label><input type="radio" name="y-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="y-scale" value="log"><span>Log</span></label></fieldset></div><div class="exports"><button id="csv" type="button">Export CSV ↓</button><button id="svg" type="button">Export SVG ↓</button></div></div>
-      <p id="horizon-summary" class="chart-help"></p>
       <p id="chart-help" class="chart-help">The highest curve shows the leading train.</p>
       <p id="scale-note" class="scale-note" hidden></p><div id="chart" class="chart"></div><p id="empty" hidden>Select at least one train to display the curves.</p>
-      <div class="horizon-control"><label for="route-distance">Route distance</label><input type="range" id="route-distance" min="0.5" max="100" step="0.1" value="20"><output for="route-distance" id="route-distance-value">20.0 km</output></div>
+      <div class="horizon-control"><label for="route-distance">Route distance</label><input type="range" id="route-distance" min="0.5" max="10" step="0.1" value="10"><label class="sr-only" for="distance-input">Route distance in kilometres, including values above the slider limit</label><input type="number" id="distance-input" min="0.5" step="0.1" value="10"><span>km</span></div>
+      <p id="distance-note" class="chart-help"></p>
 
     </section>
     <aside class="catalogue" aria-labelledby="catalogue-heading">

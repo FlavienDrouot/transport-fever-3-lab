@@ -100,7 +100,17 @@ Pour un domaine exceptionnellement petit, le seuil est réduit au dixième de sa
 borne supérieure pour garder une échelle valide. Le changement d’échelle ne change ni le modèle ni les
 valeurs exportées en CSV. Le SVG conserve les échelles choisies et une légende complète.
 L’échantillonnage des courbes tient compte des échelles pour résoudre le démarrage.
-Le curseur « Route distance » couvre 0,5 à 100 km, par pas de 0,1 km (20 km par défaut).
+Le curseur « Route distance » commence à 0,5 km, par pas de 0,1 km (10 km par défaut).
+Sa borne est calculée selon la sélection : 20 % au-delà du dernier croisement des
+chronos, arrondie au multiple de 5 km supérieur, entre 5 et 30 km. Un champ numérique
+permet de saisir une distance supérieure ; le curseur reste à sa borne dans ce cas.
+Avec les quatre trains actuels, le classement se stabilise vers 7,432 km (TGV /
+Twindexx) : la borne proposée vaut 10 km. La recherche des croisements pendant
+l’accélération est numérique (échantillons linéaires/logarithmiques et dichotomie) ;
+les croisements après les plafonds de vitesse sont calculés analytiquement.
+Des trains aux chronos presque identiques justifieraient une recherche analytique
+complète avant de présenter le seuil comme une garantie exacte. Les vitesses
+maximales égales peuvent conserver un écart dû à l’accélération.
 La distance est conservée en changeant de vue ou de sélection. Pour les vues temporelles,
 l’abscisse s’arrête à `max(t_train(distance))` sur les seuls trains sélectionnés ; la vue
 Time / distance s’arrête directement à la distance choisie. Dans Distance / time,
@@ -110,8 +120,7 @@ ne modifie pas l’horizon tant que la sélection ne change pas. Le seul curseur
 Le classement lit les valeurs en fin de domaine : à l’arrivée du dernier train dans
 les vues temporelles, et à la distance choisie dans Time / distance.
 Le SVG contient la distance choisie et la durée calculée ; le CSV couvre le domaine
-entier depuis zéro. Si les usages nécessitent des parcours au-delà de 100 km, étendre
-la plage du curseur après validation de la lisibilité des graphes.
+entier depuis zéro.
 La ligne de Pareto n’est pas implémentée.
 
 Le catalogue fourni contient toujours les quatre trains vérifiés. L’interface est

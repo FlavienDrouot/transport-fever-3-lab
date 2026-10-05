@@ -1,6 +1,6 @@
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
-import {raceHorizon} from './race.js';
+import {raceHorizon, rankingSettlesAt, suggestedDistanceLimit} from './race.js';
 const $ = id => document.getElementById(id);
 const fmt = (n, digits = 1) => n.toLocaleString('en-GB', {minimumFractionDigits: digits, maximumFractionDigits: digits});
 const scaleMode = axis => document.querySelector(`input[name="${axis}-scale"]:checked`).value;
@@ -10,7 +10,13 @@ const views = {
   speed: {title: 'Speed over time', x: 'Time since departure (s)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The plateaus show each train’s top speed.'},
   time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (s)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
 };
-let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 20, horizon = 300;
+const distanceLimits = new Map();
+function selectionLimits(ts) {
+  const key = ts.map(t => t.id).sort().join('|');
+  if (!distanceLimits.has(key)) distanceLimits.set(key, {stable: rankingSettlesAt(ts), limit: suggestedDistanceLimit(ts)});
+  return distanceLimits.get(key);
+}
+let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 10, horizon = 300;
 function active() {return trains.filter(t => selected.has(t.id));}
 function value(t, x) {return view === 'time' ? t.model.timeAt(x) : t.model.stateAt(x)[view === 'speed' ? 'speedKmh' : 'distanceKm'];}
 function visible() {
@@ -53,8 +59,12 @@ function render(width) {
   const ts = active(), spec = views[view];
   const race = raceHorizon(ts, routeDistance);
   horizon = view === 'time' ? routeDistance : Math.max(1, race.seconds);
-  $('route-distance-value').textContent = `${fmt(routeDistance)} km`;
-  $('horizon-summary').textContent = race.lastTrain ? `Time horizon: ${fmt(race.seconds)} s · ${race.lastTrain.name} reaches ${fmt(routeDistance)} km last.` : 'Select trains to calculate the time horizon.';
+  const {limit, stable} = selectionLimits(ts);
+  $('route-distance').max = limit;
+  $('route-distance').value = Math.min(routeDistance, limit);
+  $('distance-input').value = routeDistance;
+  $('route-distance').setAttribute('aria-valuetext', `${fmt(Math.min(routeDistance, limit))} kilometres; use the number field for longer routes`);
+  $('distance-note').textContent = ts.length > 1 ? `Arrival order settles at approximately ${fmt(stable, 2)} km. Slider up to ${limit} km; enter a larger distance in the field.` : `Slider up to ${limit} km; enter a larger distance in the field.`;
   $('chart-heading').textContent = spec.title;
   $('chart-help').textContent = spec.help + (ts.length > 12 ? ' Hover or focus a catalogue row to identify its curve.' : '');
   $('empty').hidden = !!ts.length; $('csv').disabled = $('svg').disabled = !ts.length;
@@ -125,6 +135,11 @@ async function init() {
     render();
   });
   $('route-distance').addEventListener('input', e => {routeDistance = Number(e.target.value); render();});
+  $('distance-input').addEventListener('change', e => {
+    const distance = e.target.valueAsNumber;
+    if (!e.target.checkValidity() || !Number.isFinite(distance)) {e.target.reportValidity(); return;}
+    routeDistance = distance; render();
+  });
   for(const id of ['x-scale','y-scale']) $(id).addEventListener('change',()=>render());
   $('svg').addEventListener('click',()=>{
     const prior=highlighted;highlighted=undefined;render(1400);const svg=$('chart').querySelector('svg').cloneNode(true);highlighted=prior;render();
