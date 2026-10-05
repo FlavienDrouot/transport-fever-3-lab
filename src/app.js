@@ -67,7 +67,8 @@ function sample(t, xScale, yScale) {
 function tickLabel(n) {return fmt(n, n > 0 && n < 1 ? Math.min(4, Math.ceil(-Math.log10(n))) : n % 1 ? 1 : 0);}
 function render(width) {
   const W = typeof width === 'number' ? width : Math.max(320, $('chart').clientWidth || 1000);
-  const H = W < 700 ? 430 : 610, L = 65, R = W < 700 || view === 'distance' ? 18 : 175, T = 45, B = 50;
+  const labelSpace = view === 'distance' ? 120 : 0;
+  const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 175, T = 45 + labelSpace, B = 50;
   const ts = active(), spec = views[view];
   const race = raceHorizon(ts, routeDistance);
   horizon = view === 'time' ? routeDistance : Math.max(1, race.seconds);
@@ -122,11 +123,11 @@ function render(width) {
       .map(t => ({t, x: sx(t.model.timeAt(routeDistance))}))
       .filter(({x}) => Number.isFinite(x)).sort((a,b) => a.x-b.x);
     // Spread neighbouring names; markers keep the exact arrival position.
-    for (let i=0; i<labelled.length; i++) labelled[i].labelX=Math.max(labelled[i].x, i ? labelled[i-1].labelX+16 : L+5);
-    for (let i=labelled.length-1; i>=0; i--) labelled[i].labelX=Math.min(labelled[i].labelX, i===labelled.length-1 ? W-R-5 : labelled[i+1].labelX-16);
+    for (let i=0; i<labelled.length; i++) labelled[i].labelX=Math.max(labelled[i].x, labelled[i].t.name.length*7/Math.sqrt(2)+8, i ? labelled[i-1].labelX+20 : L+5);
+    for (let i=labelled.length-1; i>=0; i--) labelled[i].labelX=Math.min(labelled[i].labelX, i===labelled.length-1 ? W-R-5 : labelled[i+1].labelX-20);
     for (const {t,x,labelX} of labelled) {
       const opacity = !highlighted || highlighted === t.id ? 1 : .25;
-      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${y+14}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${y+18}" transform="rotate(-90 ${labelX} ${y+18})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(t.name)}</text>`;
+      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(45 ${labelX} ${T-16})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(t.name)}</text>`;
     }
   } else if(W>=700) {
     const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
@@ -137,8 +138,8 @@ function render(width) {
   $('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
   const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);
   $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmt(routeDistance)} km`;
-  $('value-heading').textContent='Arrival time (s)'; $('extra-heading').textContent='Speed at arrival (km/h)';
-  $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${fmt(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
+  $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
+  $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
   $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${fmt(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
 }
 function download(content,type,filename) {
@@ -170,8 +171,9 @@ async function init() {
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#758079}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
     const lines=[`Ideal model without resistance · Route distance: ${fmt(routeDistance)} km · Time horizon: ${fmt(raceHorizon(active(), routeDistance).seconds)} s`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
-    lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',640+i*18);text.textContent=line;svg.append(text);});
-    svg.setAttribute('viewBox',`0 0 1400 ${650+lines.length*18}`);
+    const chartHeight=Number(svg.getAttribute('viewBox').split(' ')[3]);
+    lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',chartHeight+30+i*18);text.textContent=line;svg.append(text);});
+    svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);
     download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${scaleMode('x')}-${scaleMode('y')}.svg`);
   });
   $('csv').addEventListener('click',()=>{const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active())for(let i=0;i<=300;i++){const x=i*horizon/300,time=view==='time'?t.model.timeAt(x):x,state=t.model.stateAt(time);rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});

@@ -94,7 +94,7 @@ précède le graphe. La recherche filtre uniquement la liste, sans modifier la s
 « Select results » et « Clear results » agissent sur les résultats filtrés.
 Au lancement et avec « Reset », les quatre premières entrées du JSON sont sélectionnées.
 Toutes les séries sélectionnées sont tracées. Jusqu’à douze séries, leurs noms sont
-placés au franchissement de la cible, verticalement, dans Distance / time ;
+placés dans une zone dédiée au-dessus du tracé, inclinés à 45°, dans Distance / time ;
 les autres vues les placent en fin de courbe. Les repères indiquent les temps
 d’arrivée exacts ; les noms proches sont décalés avec un trait de liaison. Au-delà, le survol/focus d’une ligne du catalogue identifie
 une série et atténue les autres pour limiter la superposition des noms.
@@ -220,5 +220,7 @@ Les autres champs ne sont pas encore présentés dans l’interface ; ils resten
 accessibles dans le fichier de paramètres pour les analyses futures.
 
 Les axes temporels affichent les durées en minutes:secondes (`m:ss`), arrondies
-à la seconde, dans les trois vues et le SVG exporté. Le modèle, le tableau et
-le CSV gardent les temps en secondes.
+à la seconde, dans les trois vues et le SVG exporté. Le tableau Race readout
+affiche également les temps d’arrivée en `m:ss` ; le modèle et le CSV gardent
+les temps en secondes. Le SVG réserve la même zone aux noms et place sa légende
+après la hauteur totale du graphe.
