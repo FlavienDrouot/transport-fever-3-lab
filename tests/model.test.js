@@ -29,14 +29,14 @@ test('La branche traction seule atteint aussi une Vmax basse', () => {
 });
 test('Valeurs de référence indépendantes issues de la conversation', () => {
   const expected = {metroliner: [117.5, 210.7], twindexx: [118.2, 208.2], tgv: [125, 196.9], fuxing: [120.1, 187]};
-  for (const t of data.trains) {
+  for (const t of data.trains.filter(t => expected[t.id])) {
     const m = createModel(t, data.source);
     close(m.timeAt(5), expected[t.id][0], .12);
     close(m.timeAt(10), expected[t.id][1], .12);
   }
 });
 test('Chronos vidéo et comparaison à 5 km', () => {
-  for (const t of data.trains) for (const m of t.measurements) assert.ok(m.videoSeconds > data.source.departureVideoSeconds);
+  for (const t of data.trains) for (const m of t.measurements ?? []) assert.ok(m.videoSeconds > data.source.departureVideoSeconds);
   const tgv = createModel(data.trains.find(t => t.id === 'tgv'), data.source);
   const fuxing = createModel(data.trains.find(t => t.id === 'fuxing'), data.source);
   assert.ok(fuxing.timeAt(5) < tgv.timeAt(5));

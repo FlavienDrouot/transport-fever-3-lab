@@ -1,19 +1,1193 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "title": "Branche · Analyser Transport Fever 3",
     "date": "2026-10-05",
-    "inspirationVideo": {"title": "I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?", "url": "https://www.youtube.com/watch?v=KgUHw9Ya60M", "author": "Flowengineer", "authorUrl": "https://www.youtube.com/@Flowengineer"},
-    "method": "Parameters checked against game screenshots and timestamps from the table provided in the conversation. Images and the full conversation are not redistributed.",
+    "inspirationVideo": {
+      "title": "I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?",
+      "url": "https://www.youtube.com/watch?v=KgUHw9Ya60M",
+      "author": "Flowengineer",
+      "authorUrl": "https://www.youtube.com/@Flowengineer"
+    },
+    "method": "Physical parameters and all visible card values transcribed from 16 game screenshots supplied by Flavien on 2026-10-05. Economic difficulty is normal, as stated by Flavien. Original capture filenames identify the evidence; images are not redistributed. Video timings retained for the original four trains only.",
     "departureVideoSeconds": 32,
     "horsepowerWatts": 735.5,
     "kgfNewtons": 9.80665,
-    "limitations": "Rounded manual measurements; marker positions are uncertain. The 15 km point is approximate. An ideal model on level track without resistance, braking or stops; it does not establish the game’s actual physics."
+    "limitations": "Rounded manual measurements; marker positions are uncertain. The 15 km point is approximate. An ideal model on level track without resistance, braking or stops; it does not establish the game’s actual physics.",
+    "catalogueCoverage": "All 16 distinct names visible across the three supplied catalogue-list captures have corresponding vehicle cards. Completeness outside these captures, active filters, game version and mods are unverified.",
+    "economicDifficulty": "normal",
+    "economicDifficultyScaling": "Other difficulties change costs by multiplication or division according to Flavien; coefficients are not yet verified.",
+    "catalogueListCaptures": [
+      "codex-clipboard-428556f2-0343-415d-b979-a5f2474bdf9a.png",
+      "codex-clipboard-377712b6-6637-4b62-9938-b431aaf5ad83.png",
+      "codex-clipboard-dfa00543-64f5-46e1-bbc9-58294eb2ec4c.png"
+    ]
   },
   "trains": [
-    {"id":"metroliner","name":"Metroliner","year":1969,"massTonnes":150,"tractionKgf":36710,"powerCh":4351,"maxSpeedKmh":193,"color":"#9b4d18","dash":"","measurements":[{"distanceKm":5,"videoSeconds":150},{"distanceKm":10,"videoSeconds":240}]},
-    {"id":"twindexx","name":"RABe 502 Twindexx","year":2014,"massTonnes":226,"tractionKgf":32767,"powerCh":6798,"maxSpeedKmh":200,"color":"#137968","dash":"9 4","measurements":[{"distanceKm":5,"videoSeconds":148},{"distanceKm":10,"videoSeconds":236}]},
-    {"id":"tgv","name":"TGV Duplex","year":1995,"massTonnes":420,"tractionKgf":71380,"powerCh":8770,"maxSpeedKmh":300,"color":"#3e5fc4","dash":"3 3","measurements":[{"distanceKm":5,"videoSeconds":158},{"distanceKm":10,"videoSeconds":229}]},
-    {"id":"fuxing","name":"Fuxing Hao","year":2016,"massTonnes":544,"tractionKgf":65262,"powerCh":14140,"maxSpeedKmh":350,"color":"#9b407e","dash":"12 4 3 4","measurements":[{"distanceKm":5,"videoSeconds":150},{"distanceKm":10,"videoSeconds":215},{"distanceKm":15,"videoSeconds":279,"approximate":true}]}
+    {
+      "id": "metroliner",
+      "name": "Metroliner",
+      "year": 1969,
+      "massTonnes": 150,
+      "tractionKgf": 36710,
+      "powerCh": 4351,
+      "maxSpeedKmh": 193,
+      "color": "#9b4d18",
+      "dash": "",
+      "measurements": [
+        {
+          "distanceKm": 5,
+          "videoSeconds": 150
+        },
+        {
+          "distanceKm": 10,
+          "videoSeconds": 240
+        }
+      ],
+      "lengthMetres": 52,
+      "passengerCapacity": 38,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 14129136,
+        "annualMaintenance": 2354856
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-48561656-0fb2-4f62-94ce-61c0a9bc2f20.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Metroliner",
+          "year": "1969",
+          "purchasePrice": "$14 129 136",
+          "maintenance": "$2 354 856/an",
+          "cargo": "Passagers",
+          "capacity": "38",
+          "propulsion": "Électrique",
+          "maxSpeed": "193 km/h",
+          "mass": "150 t",
+          "length": "52 m",
+          "tractiveEffort": "36 710 kgf",
+          "power": "4 351 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "1.5x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 1.5,
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant"
+    },
+    {
+      "id": "twindexx",
+      "name": "RABe 502 Twindexx",
+      "year": 2014,
+      "massTonnes": 226,
+      "tractionKgf": 32767,
+      "powerCh": 6798,
+      "maxSpeedKmh": 200,
+      "color": "#137968",
+      "dash": "9 4",
+      "measurements": [
+        {
+          "distanceKm": 5,
+          "videoSeconds": 148
+        },
+        {
+          "distanceKm": 10,
+          "videoSeconds": 236
+        }
+      ],
+      "lengthMetres": 100,
+      "passengerCapacity": 110,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 25023684,
+        "annualMaintenance": 4170614
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-73021b41-b57a-459e-8db6-70d2a4d4164c.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "RABe 502 Twindexx",
+          "year": "2014",
+          "purchasePrice": "$25 023 684",
+          "maintenance": "$4 170 614/an",
+          "cargo": "Passagers",
+          "capacity": "110",
+          "propulsion": "Électrique",
+          "maxSpeed": "200 km/h",
+          "mass": "226 t",
+          "length": "100 m",
+          "tractiveEffort": "32 767 kgf",
+          "power": "6 798 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "3.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Très bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 3.0,
+      "noise": "Très bon",
+      "pollution": "Bon",
+      "comfort": "Insuffisant"
+    },
+    {
+      "id": "tgv",
+      "name": "TGV Duplex",
+      "year": 1995,
+      "massTonnes": 420,
+      "tractionKgf": 71380,
+      "powerCh": 8770,
+      "maxSpeedKmh": 300,
+      "color": "#3e5fc4",
+      "dash": "3 3",
+      "measurements": [
+        {
+          "distanceKm": 5,
+          "videoSeconds": 158
+        },
+        {
+          "distanceKm": 10,
+          "videoSeconds": 229
+        }
+      ],
+      "lengthMetres": 200,
+      "passengerCapacity": 275,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 45179532,
+        "annualMaintenance": 7529922
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-67b69ed2-4eb4-489e-9b3f-35f06731ce8b.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "TGV Duplex",
+          "year": "1995",
+          "purchasePrice": "$45 179 532",
+          "maintenance": "$7 529 922/an",
+          "cargo": "Passagers",
+          "capacity": "275",
+          "propulsion": "Électrique",
+          "maxSpeed": "300 km/h",
+          "mass": "420 t",
+          "length": "200 m",
+          "tractiveEffort": "71 380 kgf",
+          "power": "8 770 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "3.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Très insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Médiocre",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 3.0,
+      "noise": "Très insuffisant",
+      "pollution": "Très bon",
+      "comfort": "Médiocre"
+    },
+    {
+      "id": "fuxing",
+      "name": "Fuxing Hao",
+      "year": 2016,
+      "massTonnes": 544,
+      "tractionKgf": 65262,
+      "powerCh": 14140,
+      "maxSpeedKmh": 350,
+      "color": "#9b407e",
+      "dash": "12 4 3 4",
+      "measurements": [
+        {
+          "distanceKm": 5,
+          "videoSeconds": 150
+        },
+        {
+          "distanceKm": 10,
+          "videoSeconds": 215
+        },
+        {
+          "distanceKm": 15,
+          "videoSeconds": 279,
+          "approximate": true
+        }
+      ],
+      "lengthMetres": 210,
+      "passengerCapacity": 144,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 47604768,
+        "annualMaintenance": 7934128
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-0029c66e-ccfd-4032-9708-2361d4bb724b.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Fuxing Hao",
+          "year": "2016",
+          "purchasePrice": "$47 604 768",
+          "maintenance": "$7 934 128/an",
+          "cargo": "Passagers",
+          "capacity": "144",
+          "propulsion": "Électrique",
+          "maxSpeed": "350 km/h",
+          "mass": "544 t",
+          "length": "210 m",
+          "tractiveEffort": "65 262 kgf",
+          "power": "14 140 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "3.5x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 3.5,
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant"
+    },
+    {
+      "id": "draisine",
+      "name": "Draisine",
+      "year": 1860,
+      "massTonnes": 1.0,
+      "tractionKgf": 102,
+      "powerCh": 1.4,
+      "maxSpeedKmh": 40,
+      "color": "#986020",
+      "dash": "",
+      "lengthMetres": 3.8,
+      "passengerCapacity": 3,
+      "propulsion": "horse",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 53598,
+        "annualMaintenance": 8933
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-a59b5b8c-caa7-4cc8-bb6f-e6f5da0ebbde.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Draisine",
+          "year": "1860",
+          "purchasePrice": "$53 598",
+          "maintenance": "$8 933/an",
+          "cargo": "Passagers",
+          "capacity": "3",
+          "propulsion": "Cheval",
+          "maxSpeed": "40 km/h",
+          "mass": "1,0 t",
+          "length": "3,8 m",
+          "tractiveEffort": "102 kgf",
+          "power": "1,4 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "2.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Très bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 2.0,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant"
+    },
+    {
+      "id": "acf-m300",
+      "name": "ACF M-300",
+      "year": 1924,
+      "massTonnes": 25,
+      "tractionKgf": 3059,
+      "powerCh": 272,
+      "maxSpeedKmh": 100,
+      "color": "#267a9c",
+      "dash": "",
+      "lengthMetres": 18,
+      "passengerCapacity": 20,
+      "propulsion": "diesel",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1582128,
+        "annualMaintenance": 263688
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-73d4c114-56b8-4706-bf70-2dbad06d7515.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "ACF M-300",
+          "year": "1924",
+          "purchasePrice": "$1 582 128",
+          "maintenance": "$263 688/an",
+          "cargo": "Passagers",
+          "capacity": "20",
+          "propulsion": "Diesel",
+          "maxSpeed": "100 km/h",
+          "mass": "25 t",
+          "length": "18 m",
+          "tractiveEffort": "3 059 kgf",
+          "power": "272 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "2.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 2.0,
+      "noise": "Bon",
+      "pollution": "Bon",
+      "comfort": "Très insuffisant"
+    },
+    {
+      "id": "roter-pfeil",
+      "name": "CLe 2/4 Roter Pfeil",
+      "year": 1935,
+      "massTonnes": 33,
+      "tractionKgf": 4589,
+      "powerCh": 428,
+      "maxSpeedKmh": 125,
+      "color": "#ac4059",
+      "dash": "",
+      "lengthMetres": 22,
+      "passengerCapacity": 20,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 4264800,
+        "annualMaintenance": 355400
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-696aab0f-a3c7-454c-aec0-b49ddba92c88.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "CLe 2/4 Roter Pfeil",
+          "year": "1935",
+          "purchasePrice": "$4 264 800",
+          "maintenance": "$355 400/an",
+          "cargo": "Passagers",
+          "capacity": "20",
+          "propulsion": "Électrique",
+          "maxSpeed": "125 km/h",
+          "mass": "33 t",
+          "length": "22 m",
+          "tractiveEffort": "4 589 kgf",
+          "power": "428 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "5.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Médiocre",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très bon",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 5.0,
+      "noise": "Médiocre",
+      "pollution": "Bon",
+      "comfort": "Très bon"
+    },
+    {
+      "id": "uerdingen",
+      "name": "Autorail Uerdingen",
+      "year": 1950,
+      "massTonnes": 13,
+      "tractionKgf": 1530,
+      "powerCh": 131,
+      "maxSpeedKmh": 90,
+      "color": "#6a7843",
+      "dash": "",
+      "lengthMetres": 14,
+      "passengerCapacity": 15,
+      "propulsion": "diesel",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 923676,
+        "annualMaintenance": 153946
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-ccbd2484-ff6f-4002-b8eb-ffbdbaeec29f.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Autorail Uerdingen",
+          "year": "1950",
+          "purchasePrice": "$923 676",
+          "maintenance": "$153 946/an",
+          "cargo": "Passagers",
+          "capacity": "15",
+          "propulsion": "Diesel",
+          "maxSpeed": "90 km/h",
+          "mass": "13 t",
+          "length": "14 m",
+          "tractiveEffort": "1 530 kgf",
+          "power": "131 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "2.5x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Très bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 2.5,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant"
+    },
+    {
+      "id": "tee-vt115",
+      "name": "TEE VT 11.5",
+      "year": 1957,
+      "massTonnes": 209,
+      "tractionKgf": 16315,
+      "powerCh": 2203,
+      "maxSpeedKmh": 160,
+      "color": "#965cc5",
+      "dash": "",
+      "lengthMetres": 131,
+      "passengerCapacity": 142,
+      "propulsion": "diesel",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 13392702,
+        "annualMaintenance": 2232117
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-96a8bf45-0529-4ef6-8290-ef2529842bd1.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "TEE VT 11.5",
+          "year": "1957",
+          "purchasePrice": "$13 392 702",
+          "maintenance": "$2 232 117/an",
+          "cargo": "Passagers",
+          "capacity": "142",
+          "propulsion": "Diesel",
+          "maxSpeed": "160 km/h",
+          "mass": "209 t",
+          "length": "131 m",
+          "tractiveEffort": "16 315 kgf",
+          "power": "2 203 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "6.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très bon",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 6.0,
+      "noise": "Insuffisant",
+      "pollution": "Bon",
+      "comfort": "Très bon"
+    },
+    {
+      "id": "shinkansen-0",
+      "name": "Shinkansen série 0",
+      "year": 1964,
+      "massTonnes": 440,
+      "tractionKgf": 65262,
+      "powerCh": 8049,
+      "maxSpeedKmh": 220,
+      "color": "#687b9a",
+      "dash": "",
+      "lengthMetres": 203,
+      "passengerCapacity": 160,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 31671072,
+        "annualMaintenance": 5278512
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-63d54f52-708b-4719-bbc5-b2adf98e434b.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Shinkansen série 0",
+          "year": "1964",
+          "purchasePrice": "$31 671 072",
+          "maintenance": "$5 278 512/an",
+          "cargo": "Passagers",
+          "capacity": "160",
+          "propulsion": "Électrique",
+          "maxSpeed": "220 km/h",
+          "mass": "440 t",
+          "length": "203 m",
+          "tractiveEffort": "65 262 kgf",
+          "power": "8 049 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "2.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Médiocre",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 2.0,
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre"
+    },
+    {
+      "id": "intercity-125",
+      "name": "Inter-City 125",
+      "year": 1975,
+      "massTonnes": 428,
+      "tractionKgf": 16315,
+      "powerCh": 4563,
+      "maxSpeedKmh": 200,
+      "color": "#b66e13",
+      "dash": "",
+      "lengthMetres": 219,
+      "passengerCapacity": 120,
+      "propulsion": "diesel",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 19530336,
+        "annualMaintenance": 3255056
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-f49af3b7-52bd-4354-895d-47fc2f1df92c.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Inter-City 125",
+          "year": "1975",
+          "purchasePrice": "$19 530 336",
+          "maintenance": "$3 255 056/an",
+          "cargo": "Passagers",
+          "capacity": "120",
+          "propulsion": "Diesel",
+          "maxSpeed": "200 km/h",
+          "mass": "428 t",
+          "length": "219 m",
+          "tractiveEffort": "16 315 kgf",
+          "power": "4 563 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "3.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Très insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Insuffisant",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Médiocre",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 3.0,
+      "noise": "Très insuffisant",
+      "pollution": "Insuffisant",
+      "comfort": "Médiocre"
+    },
+    {
+      "id": "etr-450",
+      "name": "Italian Class ETR 450",
+      "year": 1985,
+      "massTonnes": 480,
+      "tractionKgf": 16953,
+      "powerCh": 5948,
+      "maxSpeedKmh": 250,
+      "color": "#427ca0",
+      "dash": "",
+      "lengthMetres": 285,
+      "passengerCapacity": 154,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 26162706,
+        "annualMaintenance": 4360451
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-d09f5324-428a-40d4-8772-9b42b341dad6.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Italian Class ETR 450",
+          "year": "1985",
+          "purchasePrice": "$26 162 706",
+          "maintenance": "$4 360 451/an",
+          "cargo": "Passagers",
+          "capacity": "154",
+          "propulsion": "Électrique",
+          "maxSpeed": "250 km/h",
+          "mass": "480 t",
+          "length": "285 m",
+          "tractiveEffort": "16 953 kgf",
+          "power": "5 948 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "4.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Bon",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 4.0,
+      "noise": "Insuffisant",
+      "pollution": "Très bon",
+      "comfort": "Bon"
+    },
+    {
+      "id": "re450",
+      "name": "Swiss Re 450 DPZ",
+      "year": 1990,
+      "massTonnes": 225,
+      "tractionKgf": 28552,
+      "powerCh": 4079,
+      "maxSpeedKmh": 130,
+      "color": "#7b6793",
+      "dash": "",
+      "lengthMetres": 101,
+      "passengerCapacity": 99,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 16634436,
+        "annualMaintenance": 2772406
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-01f5bcc9-2d21-4e30-83f1-0c1ea8437e2f.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Swiss Re 450 DPZ",
+          "year": "1990",
+          "purchasePrice": "$16 634 436",
+          "maintenance": "$2 772 406/an",
+          "cargo": "Passagers",
+          "capacity": "99",
+          "propulsion": "Électrique",
+          "maxSpeed": "130 km/h",
+          "mass": "225 t",
+          "length": "101 m",
+          "tractiveEffort": "28 552 kgf",
+          "power": "4 079 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "3.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 3.0,
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant"
+    },
+    {
+      "id": "ice-1",
+      "name": "ICE 1",
+      "year": 1991,
+      "massTonnes": 623,
+      "tractionKgf": 40789,
+      "powerCh": 13025,
+      "maxSpeedKmh": 280,
+      "color": "#555eaa",
+      "dash": "",
+      "lengthMetres": 282,
+      "passengerCapacity": 170,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 46149732,
+        "annualMaintenance": 7691622
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-d4895a52-9785-48f0-9d03-125f69ebf842.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "ICE 1",
+          "year": "1991",
+          "purchasePrice": "$46 149 732",
+          "maintenance": "$7 691 622/an",
+          "cargo": "Passagers",
+          "capacity": "170",
+          "propulsion": "Électrique",
+          "maxSpeed": "280 km/h",
+          "mass": "623 t",
+          "length": "282 m",
+          "tractiveEffort": "40 789 kgf",
+          "power": "13 025 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "4.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Médiocre",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 4.0,
+      "noise": "Insuffisant",
+      "pollution": "Bon",
+      "comfort": "Médiocre"
+    },
+    {
+      "id": "talent-1",
+      "name": "Talbot Talent 1",
+      "year": 1996,
+      "massTonnes": 72,
+      "tractionKgf": 17335,
+      "powerCh": 857,
+      "maxSpeedKmh": 140,
+      "color": "#ad5650",
+      "dash": "",
+      "lengthMetres": 48,
+      "passengerCapacity": 40,
+      "propulsion": "diesel",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 4337856,
+        "annualMaintenance": 722976
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-8df1ecb3-33b4-4dfe-8e0e-8168b9c7dd6d.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "Talbot Talent 1",
+          "year": "1996",
+          "purchasePrice": "$4 337 856",
+          "maintenance": "$722 976/an",
+          "cargo": "Passagers",
+          "capacity": "40",
+          "propulsion": "Diesel",
+          "maxSpeed": "140 km/h",
+          "mass": "72 t",
+          "length": "48 m",
+          "tractiveEffort": "17 335 kgf",
+          "power": "857 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "4.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Très insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Insuffisant",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 4.0,
+      "noise": "Très insuffisant",
+      "pollution": "Insuffisant",
+      "comfort": "Insuffisant"
+    },
+    {
+      "id": "lastochka",
+      "name": "ES1 Lastochka",
+      "year": 2013,
+      "massTonnes": 265,
+      "tractionKgf": 33651,
+      "powerCh": 3467,
+      "maxSpeedKmh": 160,
+      "color": "#2d8076",
+      "dash": "",
+      "lengthMetres": 126,
+      "passengerCapacity": 115,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 15669510,
+        "annualMaintenance": 2611585
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-0e9640cd-7383-44f8-a0e1-5752beb4ff8f.png",
+        "date": "2026-10-05",
+        "language": "fr",
+        "raw": {
+          "name": "ES1 Lastochka",
+          "year": "2013",
+          "purchasePrice": "$15 669 510",
+          "maintenance": "$2 611 585/an",
+          "cargo": "Passagers",
+          "capacity": "115",
+          "propulsion": "Électrique",
+          "maxSpeed": "160 km/h",
+          "mass": "265 t",
+          "length": "126 m",
+          "tractiveEffort": "33 651 kgf",
+          "power": "3 467 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Descriptions, tooltips, version, mods and availability end dates are not visible in these cropped captures. Qualitative values and multipliers are retained without inferring numerical scores.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "2.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Bon",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Très insuffisant",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 2.0,
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant"
+    }
   ]
 }

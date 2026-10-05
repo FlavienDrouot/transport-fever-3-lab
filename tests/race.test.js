@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createModel} from '../src/model.js';
 import {raceHorizon} from '../src/race.js';
 const data = JSON.parse(await readFile(new URL('../data/trains.json', import.meta.url)));
-const trains = data.trains.map(t => ({...t, model: createModel(t, data.source)}));
+const trains = data.trains.filter(t => ['metroliner', 'twindexx', 'tgv', 'fuxing'].includes(t.id)).map(t => ({...t, model: createModel(t, data.source)}));
 test('Time horizon ends exactly when the last selected train reaches the chosen distance', () => {
  for (const distance of [.5, 5, 20, 100]) {
   const {seconds, lastTrain} = raceHorizon(trains, distance);

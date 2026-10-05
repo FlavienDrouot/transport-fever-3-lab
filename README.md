@@ -13,7 +13,8 @@ Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 ## Explorer
 
 - Distance en fonction du temps, vitesse en fonction du temps, temps en fonction de la distance.
-- Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
+- 16 véhicules activables issus des fiches fournies, dont la Draisine ; Metroliner,
+  RABe 502 Twindexx, TGV Duplex et Fuxing Hao sélectionnés par défaut.
 - Catalogue compact défilant avec recherche par nom/année, tri et sélection des résultats.
 - Distance de parcours réglable par curseur ; horizon temporel calculé d’après le dernier train sélectionné.
 - Classement théorique par temps d’arrivée à la distance choisie ; identification des courbes au survol ou au focus clavier.
@@ -104,8 +105,10 @@ Le curseur « Route distance » commence à 0,5 km, par pas de 0,1 km (10 km par
 Sa borne est calculée selon la sélection : 20 % au-delà du dernier croisement des
 chronos, arrondie au multiple de 5 km supérieur, entre 5 et 30 km. Un champ numérique
 permet de saisir une distance supérieure ; le curseur reste à sa borne dans ce cas.
-Avec les quatre trains actuels, le classement se stabilise vers 7,432 km (TGV /
-Twindexx) : la borne proposée vaut 10 km. La recherche des croisements pendant
+Avec les quatre trains sélectionnés par défaut, le classement se stabilise vers 7,432 km (TGV /
+Twindexx) : la borne proposée vaut 10 km. Avec les 16 véhicules sélectionnés,
+le dernier croisement est estimé à 100,979 km ; le curseur reste donc plafonné
+à 30 km, et le champ numérique permet d’explorer cette distance. La recherche des croisements pendant
 l’accélération est numérique (échantillons linéaires/logarithmiques et dichotomie) ;
 les croisements après les plafonds de vitesse sont calculés analytiquement.
 Des trains aux chronos presque identiques justifieraient une recherche analytique
@@ -124,7 +127,7 @@ Le SVG contient la distance choisie et la durée calculée ; le CSV couvre le do
 entier depuis zéro.
 La ligne de Pareto n’est pas implémentée.
 
-Le catalogue fourni contient toujours les quatre trains vérifiés. L’interface est
+Le catalogue fourni contient 16 fiches transcrites depuis les captures du jeu. L’interface est
 validée avec une fixture de 80 trains sans publier de faux paramètres. La liste n’est
 pas virtualisée ; envisager cette optimisation seulement si un catalogue réel beaucoup
 plus grand présente des lenteurs mesurées.
@@ -189,3 +192,20 @@ doivent distinguer calculs, observations et incertitudes.
 
 Code sous [licence MIT](LICENSE). Les noms du jeu et des trains restent ceux de leurs
 ayants droit respectifs.
+
+## Données du catalogue
+
+`data/trains.json` conserve les 16 fiches fournies le 5 octobre 2026 : paramètres
+physiques, longueur, capacité, motorisation, prix et maintenance annuelle en
+difficulté normale. Chaque entrée contient les valeurs brutes françaises et le
+nom du fichier de capture source. Les captures ne sont pas redistribuées.
+Les libellés des quatre indicateurs ont été confirmés par Flavien : vitesse de
+chargement/déchargement (multiplicateur), bruit, pollution et confort. Leurs valeurs
+brutes et icônes sont conservées ; les trois appréciations restent en français
+dans les données source. Aucun score
+numérique n’est déduit des barres qualitatives. Les coefficients économiques
+des autres difficultés ne sont pas connus. Les trois captures de liste ont été rapprochées des fiches : les 16 noms distincts
+visibles ont tous une fiche, sans doublon. Cela ne prouve pas l’exhaustivité hors
+des captures ni la version du jeu, les mods ou les filtres actifs.
+Les autres champs ne sont pas encore présentés dans l’interface ; ils restent
+accessibles dans le fichier de paramètres pour les analyses futures.
