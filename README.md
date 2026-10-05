@@ -16,7 +16,7 @@ Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 - Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
 - Curseur avec classement théorique et plusieurs horizons.
 - Table des transitions ; exports CSV et SVG des courbes théoriques.
-- Interface française responsive, contrôles clavier et valeurs accessibles en tableau.
+- Interface en anglais responsive, contrôles clavier et valeurs accessibles en tableau.
 
 ## Développer
 
@@ -81,7 +81,9 @@ La sélection est locale à la page ; aucune collecte, connexion ou persistance 
 Depuis un départ arrêté, sur voie plane : `F(v) = min(Fmax, P/v)`, puis plafond `Vmax`.
 Au départ, l’effort maximal évite la division par zéro. L’intégration des phases est
 analytique ; l’inverse distance → temps l’est également. Conversions retenues :
-1 kgf = 9,80665 N ; 1 ch = 735,5 W. Temps en secondes réelles depuis le départ.
+1 kgf = 9,80665 N ; 1 ch = 735,5 W. La puissance est affichée en PS (chevaux métriques)
+sur le site anglais, sans conversion vers les horsepower impériaux. Temps en secondes
+réelles depuis le départ.
 
 Les paramètres ont été vérifiés sur les captures fournies. Les mesures sont conservées
 dans le JSON comme provenance de la validation initiale ; elles ne sont plus affichées

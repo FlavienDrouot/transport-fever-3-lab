@@ -1,10 +1,10 @@
 import {createModel} from './model.js';
 const $ = id => document.getElementById(id);
-const fmt = (n, digits = 1) => n.toLocaleString('fr-FR', {minimumFractionDigits: digits, maximumFractionDigits: digits});
+const fmt = (n, digits = 1) => n.toLocaleString('en-GB', {minimumFractionDigits: digits, maximumFractionDigits: digits});
 const views = {
-  distance: {title: 'Distance en fonction du temps', x: 'Temps depuis le départ (s)', y: 'Distance parcourue (km)', unit: 's', help: 'La courbe la plus haute correspond au train en tête.'},
-  speed: {title: 'Vitesse en fonction du temps', x: 'Temps depuis le départ (s)', y: 'Vitesse (km/h)', unit: 's', help: 'Les plateaux correspondent aux vitesses maximales.'},
-  time: {title: 'Temps en fonction de la distance', x: 'Distance parcourue (km)', y: 'Temps depuis le départ (s)', unit: 'km', help: 'La courbe la plus basse correspond au train qui atteint la distance en premier.'}
+  distance: {title: 'Distance over time', x: 'Time since departure (s)', y: 'Distance travelled (km)', unit: 's', help: 'The highest curve shows the leading train.'},
+  speed: {title: 'Speed over time', x: 'Time since departure (s)', y: 'Speed (km/h)', unit: 's', help: 'The plateaus show each train’s top speed.'},
+  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (s)', unit: 'km', help: 'The lowest curve shows the train that reaches the distance first.'}
 };
 let dataset, trains, selected, view = 'distance', horizon = 300, cursor = 120;
 const H = 420, L = 70, R = 25, T = 48, B = 55;
@@ -30,7 +30,7 @@ function render(width) {
   const ymax = tick * 5;
   const sx = x => L + x / horizon * (W - L - R);
   const sy = y => H - B - y / ymax * (H - T - B);
-  let content = `<title>${spec.title}</title><desc>Courbes théoriques des trains sélectionnés. Une table fournit les valeurs à la position du curseur ; les exports CSV permettent une lecture complète.</desc><rect width="${W}" height="${H}" fill="white"/><text x="${L}" y="22">${spec.y}</text>`;
+  let content = `<title>${spec.title}</title><desc>Theoretical curves for the selected trains. The table shows values at the slider position; CSV exports provide the complete data.</desc><rect width="${W}" height="${H}" fill="white"/><text x="${L}" y="22">${spec.y}</text>`;
   for (let i = 0; i <= 5; i++) {
     const y = ymax * i / 5, x = horizon * i / 5;
     content += `<line x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}" stroke="#e5ebe2"/><text x="${L - 12}" y="${sy(y) + 4}" text-anchor="end">${fmt(y, y < 1 && y > 0 ? 2 : 0)}</text><text x="${sx(x)}" y="${H - B + 23}" text-anchor="middle">${fmt(x, 0)}</text>`;
@@ -38,15 +38,15 @@ function render(width) {
   content += `<text x="${(W + L - R) / 2}" y="${H - 6}" text-anchor="middle">${spec.x}</text>`;
   for (const t of ts) {
     const d = points(t).map(([x, y], i) => `${i ? 'L' : 'M'}${sx(x).toFixed(2)},${sy(y).toFixed(2)}`).join(' ');
-    content += `<path d="${d}" fill="none" stroke="${t.color}" stroke-width="3" stroke-dasharray="${t.dash}"><title>${t.name} — modèle</title></path>`;
+    content += `<path d="${d}" fill="none" stroke="${t.color}" stroke-width="3" stroke-dasharray="${t.dash}"><title>${t.name} — model</title></path>`;
   }
   content += `<line x1="${sx(cursor)}" x2="${sx(cursor)}" y1="${T}" y2="${H - B}" stroke="#253b36" stroke-dasharray="4 5"/>`;
   for (const t of ts) content += `<circle cx="${sx(cursor)}" cy="${sy(value(t, cursor))}" r="4" fill="${t.color}"/>`;
   $('chart').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}">${content}</svg>`;
   const ranking = ts.map(t => ({t, y: value(t, cursor)})).sort((a, b) => view === 'time' ? a.y - b.y : b.y - a.y);
-  $('ranking-caption').textContent = `Classement théorique à ${fmt(cursor, view === 'time' ? 1 : 0)} ${spec.unit}${cursor === 0 ? ' · tous ex æquo' : ''}`;
+  $('ranking-caption').textContent = `Theoretical ranking at ${fmt(cursor, view === 'time' ? 1 : 0)} ${spec.unit}${cursor === 0 ? ' · all tied' : ''}`;
   $('value-heading').textContent = spec.y;
-  $('extra-heading').textContent = view === 'speed' ? 'Distance (km)' : 'Vitesse (km/h)';
+  $('extra-heading').textContent = view === 'speed' ? 'Distance (km)' : 'Speed (km/h)';
   $('ranking').innerHTML = ranking.map(({t, y}, i) => {
     const state = t.model.stateAt(view === 'time' ? y : cursor);
     return `<tr><td>${cursor === 0 ? '—' : i + 1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${t.name}</td><td>${fmt(y, view === 'distance' ? 2 : 1)}</td><td>${fmt(view === 'speed' ? state.distanceKm : state.speedKmh, view === 'speed' ? 2 : 1)}</td></tr>`;
@@ -57,15 +57,15 @@ function download(content, type, filename) {
   const url = URL.createObjectURL(new Blob([content], {type}));
   const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  $('status').textContent = `Export préparé : ${filename}`;
+  $('status').textContent = `Export ready: ${filename}`;
 }
 async function init() {
   const response = await fetch(new URL('../data/trains.json', import.meta.url));
-  if (!response.ok) throw new Error('Données indisponibles');
+  if (!response.ok) throw new Error('Data unavailable');
   dataset = await response.json();
   trains = dataset.trains.map(t => ({...t, model: createModel(t, dataset.source)}));
   selected = new Set(trains.map(t => t.id));
-  $('trains').innerHTML = trains.map(t => `<label class="train-card" style="--train-color:${t.color}"><div class="train-title"><span>${t.name}</span><input type="checkbox" value="${t.id}" checked aria-label="Comparer ${t.name}"></div><div class="year">${t.year}</div><div class="train-speed">${t.maxSpeedKmh} <small>km/h</small></div><div class="train-spec"><span>${t.massTonnes} t</span><span>${fmt(t.powerCh, 0)} ch</span><span>${fmt(t.tractionKgf, 0)} kgf</span></div></label>`).join('');
+  $('trains').innerHTML = trains.map(t => `<label class="train-card" style="--train-color:${t.color}"><div class="train-title"><span>${t.name}</span><input type="checkbox" value="${t.id}" checked aria-label="Compare ${t.name}"></div><div class="year">${t.year}</div><div class="train-speed">${t.maxSpeedKmh} <small>km/h</small></div><div class="train-spec"><span>${t.massTonnes} t</span><span title="Metric horsepower">${fmt(t.powerCh, 0)} PS</span><span>${fmt(t.tractionKgf, 0)} kgf</span></div></label>`).join('');
   $('trains').addEventListener('change', e => {if (e.target.checked) selected.add(e.target.value); else selected.delete(e.target.value); render();});
   document.querySelector('.views').addEventListener('change', e => {
     const previous = view; view = e.target.value;
@@ -86,7 +86,7 @@ async function init() {
     style.textContent = 'text{font-family:system-ui,sans-serif;font-size:12px;fill:#63726a}'; svg.prepend(style);
     const legend = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     legend.setAttribute('x', L); legend.setAttribute('y', H + 22);
-    legend.textContent = active().map(t => t.name).join(' · ') + ' | Modèle idéal sans résistance';
+    legend.textContent = active().map(t => t.name).join(' · ') + ' | Ideal model without resistance';
     svg.append(legend); svg.setAttribute('viewBox', `0 0 ${W} ${H + 42}`);
     download(new XMLSerializer().serializeToString(svg), 'image/svg+xml', `tf3-${view}.svg`);
   });
@@ -104,4 +104,4 @@ async function init() {
   window.addEventListener('resize', () => render());
   render();
 }
-init().catch(error => {$('status').textContent = 'Impossible de charger le laboratoire. Servez le site avec un serveur HTTP puis réessayez.'; console.error(error);});
+init().catch(error => {$('status').textContent = 'Unable to load the lab. Serve the site over HTTP and try again.'; console.error(error);});

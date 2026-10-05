@@ -4,11 +4,11 @@
     "title": "Branche · Analyser Transport Fever 3",
     "date": "2026-10-05",
     "inspirationVideo": {"title": "I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?", "url": "https://www.youtube.com/watch?v=KgUHw9Ya60M", "author": "Flowengineer", "authorUrl": "https://www.youtube.com/@Flowengineer"},
-    "method": "Paramètres vérifiés sur les captures du jeu et timestamps du tableau fourni dans la conversation. Les images et la conversation complète ne sont pas redistribuées.",
+    "method": "Parameters checked against game screenshots and timestamps from the table provided in the conversation. Images and the full conversation are not redistributed.",
     "departureVideoSeconds": 32,
     "horsepowerWatts": 735.5,
     "kgfNewtons": 9.80665,
-    "limitations": "Mesures manuelles arrondies ; position des marqueurs incertaine. Le point à 15 km est approximatif. Modèle idéal sur voie plane sans résistance, freinage ni arrêts ; il ne démontre pas le moteur physique réel du jeu."
+    "limitations": "Rounded manual measurements; marker positions are uncertain. The 15 km point is approximate. An ideal model on level track without resistance, braking or stops; it does not establish the game’s actual physics."
   },
   "trains": [
     {"id":"metroliner","name":"Metroliner","year":1969,"massTonnes":150,"tractionKgf":36710,"powerCh":4351,"maxSpeedKmh":193,"color":"#9b4d18","dash":"","measurements":[{"distanceKm":5,"videoSeconds":150},{"distanceKm":10,"videoSeconds":240}]},

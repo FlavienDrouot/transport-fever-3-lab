@@ -4,7 +4,7 @@ export function createModel(train, units) {
   const f = train.tractionKgf * units.kgfNewtons;
   const p = train.powerCh * units.horsepowerWatts;
   const vmax = train.maxSpeedKmh / 3.6;
-  if (![m, f, p, vmax].every(n => Number.isFinite(n) && n > 0)) throw new RangeError('Paramètres physiques invalides');
+  if (![m, f, p, vmax].every(n => Number.isFinite(n) && n > 0)) throw new RangeError('Invalid physical parameters');
   const a = f / m;
   const q = p / m;
   const v1 = Math.min(p / f, vmax);
@@ -13,7 +13,7 @@ export function createModel(train, units) {
   const t2 = t1 + (vmax ** 2 - v1 ** 2) / (2 * q);
   const x2 = x1 + (vmax ** 3 - v1 ** 3) / (3 * q);
   function valid(n) {
-    if (!Number.isFinite(n) || n < 0) throw new RangeError('Temps ou distance invalide');
+    if (!Number.isFinite(n) || n < 0) throw new RangeError('Invalid time or distance');
   }
   function stateAt(t) {
     valid(t);
