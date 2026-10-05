@@ -1,14 +1,15 @@
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
+import {raceHorizon} from './race.js';
 const $ = id => document.getElementById(id);
 const fmt = (n, digits = 1) => n.toLocaleString('en-GB', {minimumFractionDigits: digits, maximumFractionDigits: digits});
 const escape = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const views = {
-  distance: {title: 'Distance over time', x: 'Time since departure (s)', y: 'Distance travelled (km)', unit: 's', xFloor: 1, yFloor: .001, yUnit: 'km', help: 'The highest curve shows the leading train.'},
-  speed: {title: 'Speed over time', x: 'Time since departure (s)', y: 'Speed (km/h)', unit: 's', xFloor: 1, yFloor: 1, yUnit: 'km/h', help: 'The plateaus show each train’s top speed.'},
-  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (s)', unit: 'km', xFloor: .01, yFloor: 1, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
+  distance: {title: 'Distance over time', x: 'Time since departure (s)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading train.'},
+  speed: {title: 'Speed over time', x: 'Time since departure (s)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The plateaus show each train’s top speed.'},
+  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (s)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
 };
-let dataset, trains, selected, defaults, highlighted, view = 'distance', horizon = 300, cursor = 120;
+let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 20, horizon = 300, cursor = 120;
 function active() {return trains.filter(t => selected.has(t.id));}
 function value(t, x) {return view === 'time' ? t.model.timeAt(x) : t.model.stateAt(x)[view === 'speed' ? 'speedKmh' : 'distanceKm'];}
 function visible() {
@@ -49,23 +50,27 @@ function render(width) {
   const W = typeof width === 'number' ? width : Math.max(320, $('chart').clientWidth || 1000);
   const H = W < 700 ? 430 : 610, L = 65, R = W < 700 ? 18 : 175, T = 45, B = 50;
   const ts = active(), spec = views[view];
+  const race = raceHorizon(ts, routeDistance);
+  horizon = view === 'time' ? routeDistance : Math.max(1, race.seconds);
+  $('route-distance-value').textContent = `${fmt(routeDistance)} km`;
+  $('horizon-summary').textContent = race.lastTrain ? `Time horizon: ${fmt(race.seconds)} s · ${race.lastTrain.name} reaches ${fmt(routeDistance)} km last.` : 'Select trains to calculate the time horizon.';
   $('chart-heading').textContent = spec.title;
   $('chart-help').textContent = spec.help + (ts.length > 12 ? ' Hover or focus a catalogue row to identify its curve.' : '');
   $('cursor').max = horizon;
-  $('cursor').step = view === 'time' ? .1 : 1;
+  $('cursor').step = 'any';
   cursor = Math.min(cursor, horizon); $('cursor').value = cursor;
-  $('cursor-value').textContent = `${fmt(cursor, view === 'time' ? 1 : 0)} ${spec.unit}`;
+  $('cursor-value').textContent = `${fmt(cursor)} ${spec.unit}`;
   $('empty').hidden = !!ts.length; $('csv').disabled = $('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
   const ymax = Math.ceil(max / 5 / step) * step * 5;
-  const xScale = createScale($('x-scale').value, horizon, spec.xFloor);
-  const yScale = createScale($('y-scale').value, ymax, spec.yFloor);
+  const xScale = createScale($('x-scale').value, horizon, Math.min(spec.xFloor, horizon / 10));
+  const yScale = createScale($('y-scale').value, ymax, Math.min(spec.yFloor, ymax / 10));
   const notes = [];
-  if (xScale.mode === 'log') notes.push(`X starts at ${spec.xFloor} ${spec.unit}`);
-  if (yScale.mode === 'log') notes.push(`Y starts at ${spec.yFloor} ${spec.yUnit}`);
+  if (xScale.mode === 'log') notes.push(`X starts at ${tickLabel(xScale.min)} ${spec.unit}`);
+  if (yScale.mode === 'log') notes.push(`Y starts at ${tickLabel(yScale.min)} ${spec.yUnit}`);
   $('scale-note').hidden = !notes.length;
-  $('scale-note').textContent = `Logarithmic axes show positive values only. ${notes.join('; ')}. Zero remains available in the readout and CSV.`;
+  $('scale-note').textContent = `Small values are cropped on logarithmic axes. ${notes.join('; ')}. The readout and CSV retain the full values.`;
   const sx = x => L + xScale.position(x) * (W-L-R);
   const sy = y => H-B-yScale.position(y) * (H-T-B);
   let content = `<title>${spec.title}</title><desc>Theoretical curves. X axis: ${xScale.mode}; Y axis: ${yScale.mode}. Log domains: X starts at ${xScale.min} ${spec.unit}; Y starts at ${yScale.min} ${spec.yUnit}. Use the race readout for exact values, including zero.</desc><rect width="${W}" height="${H}" fill="white"/><defs><clipPath id="plot-clip"><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/></clipPath></defs><text x="${L}" y="20">${spec.y}${yScale.mode==='log' ? ' · log scale' : ''}</text>`;
@@ -83,6 +88,10 @@ function render(width) {
     content+=`<text x="${pos}" y="${H-B+23}" text-anchor="middle">${tickLabel(x)}</text>`;
   }
   content+=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#ccd4cc"/><text x="${(W+L-R)/2}" y="${H-6}" text-anchor="middle">${spec.x}${xScale.mode==='log' ? ' · log scale' : ''}</text>`;
+  if (view === 'distance' && Number.isFinite(sy(routeDistance))) {
+    const y = sy(routeDistance);
+    content += `<line class="distance-target" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${L+8}" y="${y-7}" style="fill:#8a5f2b">${fmt(routeDistance)} km target</text>`;
+  }
   for(const t of ts) {
     const d=sample(t,xScale,yScale).map(([x,y],i)=>`${i?'L':'M'}${sx(x).toFixed(2)},${sy(y).toFixed(2)}`).join(' ');
     const emphasis = !highlighted || highlighted === t.id;
@@ -100,7 +109,7 @@ function render(width) {
   }
   $('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
   const ranking=ts.map(t=>({t,y:value(t,cursor)})).sort((a,b)=>view==='time'?a.y-b.y:b.y-a.y);
-  $('ranking-caption').textContent=`Theoretical ranking at ${fmt(cursor,view==='time'?1:0)} ${spec.unit}${cursor===0?' · all tied':''}`;
+  $('ranking-caption').textContent=`Theoretical ranking at ${fmt(cursor)} ${spec.unit}${cursor===0?' · all tied':''}`;
   $('value-heading').textContent=spec.y; $('extra-heading').textContent=view==='speed'?'Distance (km)':'Speed (km/h)';
   $('ranking').innerHTML=ranking.map(({t,y},i)=>{const state=t.model.stateAt(view==='time'?y:cursor);return `<tr><td>${cursor===0?'—':i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${fmt(y,view==='distance'?2:1)}</td><td>${fmt(view==='speed'?state.distanceKm:state.speedKmh,view==='speed'?2:1)}</td></tr>`;}).join('');
   $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${fmt(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
@@ -118,15 +127,19 @@ async function init() {
   for(const id of ['train-search','train-sort']) $(id).addEventListener(id==='train-search'?'input':'change',()=>{highlighted=undefined;renderCatalogue();render();});
   for(const [id,select] of [['select-visible',true],['clear-visible',false]]) $(id).addEventListener('click',()=>{for(const t of visible())if(select)selected.add(t.id);else selected.delete(t.id);highlighted=undefined;renderCatalogue();render();});
   $('reset').addEventListener('click',()=>{selected=new Set(defaults);$('train-search').value='';highlighted=undefined;renderCatalogue();render();});
-  document.querySelector('.views').addEventListener('change',e=>{const previous=view;view=e.target.value;if((previous==='time')!==(view==='time')){horizon=view==='time'?20:300;cursor=view==='time'?5:120;$('horizon').innerHTML=(view==='time'?[10,20,40]:[180,300,600]).map(n=>`<option value="${n}" ${n===horizon?'selected':''}>${n} ${views[view].unit}</option>`).join('');}render();});
-  $('horizon').addEventListener('change',e=>{horizon=Number(e.target.value);render();});
+  document.querySelector('.views').addEventListener('change', e => {
+    const previous = view; view = e.target.value;
+    if ((previous === 'time') !== (view === 'time')) cursor = view === 'time' ? Math.min(5, routeDistance) : 120;
+    render();
+  });
+  $('route-distance').addEventListener('input', e => {routeDistance = Number(e.target.value); render();});
   for(const id of ['x-scale','y-scale']) $(id).addEventListener('change',()=>render());
   $('cursor').addEventListener('input',e=>{cursor=Number(e.target.value);render();});
   $('svg').addEventListener('click',()=>{
     const prior=highlighted;highlighted=undefined;render(1400);const svg=$('chart').querySelector('svg').cloneNode(true);highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#758079}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
-    const lines=['Ideal model without resistance',...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
+    const lines=[`Ideal model without resistance · Route distance: ${fmt(routeDistance)} km · Time horizon: ${fmt(raceHorizon(active(), routeDistance).seconds)} s`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',640+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${650+lines.length*18}`);
     download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${$('x-scale').value}-${$('y-scale').value}.svg`);

@@ -17,7 +17,9 @@
     <section id="explorer" class="chart-panel" aria-labelledby="chart-heading">
       <div class="panel-top"><div><p class="eyebrow">TRANSPORT FEVER 3 · TRAIN BENCHMARKS</p><h2 id="chart-heading">Distance over time</h2></div><div class="exports"><button id="csv" type="button">Export CSV ↓</button><button id="svg" type="button">Export SVG ↓</button></div></div>
 
-      <div class="chart-options"><label>X axis <select id="x-scale"><option value="linear">Linear</option><option value="log">Log</option></select></label><label>Y axis <select id="y-scale"><option value="linear">Linear</option><option value="log">Log</option></select></label><label id="horizon-label">Horizon <select id="horizon"><option value="180">180 s</option><option value="300" selected>300 s</option><option value="600">600 s</option></select></label></div>
+      <div class="chart-options"><label>X axis <select id="x-scale"><option value="linear">Linear</option><option value="log">Log</option></select></label><label>Y axis <select id="y-scale"><option value="linear">Linear</option><option value="log">Log</option></select></label></div>
+      <div class="horizon-control"><label for="route-distance">Route distance</label><input type="range" id="route-distance" min="0.5" max="100" step="0.1" value="20"><output for="route-distance" id="route-distance-value">20.0 km</output></div>
+      <p id="horizon-summary" class="chart-help"></p>
       <p id="chart-help" class="chart-help">The highest curve shows the leading train.</p>
       <p id="scale-note" class="scale-note" hidden></p><div id="chart" class="chart"></div><p id="empty" hidden>Select at least one train to display the curves.</p>
       <div class="cursor-control"><label for="cursor" id="cursor-label">Read the race at</label><input type="range" id="cursor" min="0" max="300" step="1" value="120"><output for="cursor" id="cursor-value">120 s</output></div>

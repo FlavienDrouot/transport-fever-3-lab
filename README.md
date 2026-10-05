@@ -15,7 +15,8 @@ Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 - Distance en fonction du temps, vitesse en fonction du temps, temps en fonction de la distance.
 - Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
 - Catalogue compact défilant avec recherche par nom/année, tri et sélection des résultats.
-- Curseur avec classement théorique et plusieurs horizons ; identification des courbes au survol ou au focus clavier.
+- Distance de parcours réglable par curseur ; horizon temporel calculé d’après le dernier train sélectionné.
+- Curseur de lecture avec classement théorique ; identification des courbes au survol ou au focus clavier.
 - Échelles linéaires ou logarithmiques indépendantes pour chaque axe.
 - Table des transitions ; exports CSV et SVG des courbes théoriques.
 - Interface en anglais responsive, contrôles clavier et valeurs accessibles en tableau.
@@ -70,6 +71,7 @@ du terminal. Le tunnel SSH décrit plus haut reste une alternative avec `npm run
 - `data/trains.json` : paramètres en unités du jeu, timestamps bruts, provenance et limites.
 - `src/model.js` : modèle analytique pur, unités SI internes.
 - `src/scales.js` : transformations linéaires/logarithmiques et graduations.
+- `src/race.js` : horizon temporel commun calculé depuis la distance du parcours.
 - `src/app.js` : interactions et tracé SVG, sans CDN ni bibliothèque externe.
 - `tests/` : références numériques, transitions, inversion distance/temps et plafond.
 - `scripts/build.mjs` : copie des seuls fichiers du site dans `dist/`.
@@ -92,10 +94,23 @@ une série et atténue les autres pour limiter la superposition des noms.
 
 Le mode Log utilise un logarithme en base 10, avec graduations en unités physiques.
 Zéro n’a pas de position logarithmique : il reste dans le classement et dans le CSV.
-Les limites positives sont affichées : X à 1 s ou 0,01 km selon la vue ; Y à
-0,001 km, 1 km/h ou 1 s. Le changement d’échelle ne change ni le modèle ni les
+Les petites valeurs sont coupées : X à 10 s ou 0,1 km selon la vue ; Y à
+0,1 km, 10 km/h ou 10 s. Les seuils effectivement utilisés sont affichés.
+Pour un domaine exceptionnellement petit, le seuil est réduit au dixième de sa
+borne supérieure pour garder une échelle valide. Le changement d’échelle ne change ni le modèle ni les
 valeurs exportées en CSV. Le SVG conserve les échelles choisies et une légende complète.
 L’échantillonnage des courbes tient compte des échelles pour résoudre le démarrage.
+Le curseur « Route distance » couvre 0,5 à 100 km, par pas de 0,1 km (20 km par défaut).
+La distance est conservée en changeant de vue ou de sélection. Pour les vues temporelles,
+l’abscisse s’arrête à `max(t_train(distance))` sur les seuls trains sélectionnés ; la vue
+Time / distance s’arrête directement à la distance choisie. Dans Distance / time,
+une ligne indique la distance cible. Les trains rapides continuent naturellement leur
+course jusqu’à l’arrivée du dernier ; ils ne sont pas figés à la cible. La recherche
+ne modifie pas l’horizon tant que la sélection ne change pas. Le curseur « Read the race
+at » sert séparément à lire les valeurs et se recale si le domaine diminue.
+Le SVG contient la distance choisie et la durée calculée ; le CSV couvre le domaine
+entier depuis zéro. Si les usages nécessitent des parcours au-delà de 100 km, étendre
+la plage du curseur après validation de la lisibilité des graphes.
 La ligne de Pareto n’est pas implémentée.
 
 Le catalogue fourni contient toujours les quatre trains vérifiés. L’interface est
