@@ -14,6 +14,7 @@
   <header class="app-header"><a class="brand" href="./">TF3 <strong>LAB</strong></a>      <fieldset class="views"><legend class="sr-only">Chart view</legend><label><input type="radio" name="view" value="distance" checked><span>Distance / time</span></label><label><input type="radio" name="view" value="speed"><span>Speed / time</span></label><label><input type="radio" name="view" value="time"><span>Time / distance</span></label></fieldset><a class="github-star" href="https://github.com/FlavienDrouot/transport-fever-3-lab" aria-label="Open the GitHub repository to give it a star"><span class="star" aria-hidden="true">★</span><strong>GitHub</strong><span>Star ↗</span></a></header>
   <main>
     <div class="workspace">
+    <div class="main-column">
     <section id="explorer" class="chart-panel" aria-labelledby="chart-heading">
       <div class="panel-top"><div><h2 id="chart-heading">Distance over time</h2></div></div>
 
@@ -24,6 +25,13 @@
       <p id="distance-note" class="chart-help"></p>
 
     </section>
+
+    <section class="results panel"><h2>Race readout</h2>      <div class="table-scroll"><table><caption id="ranking-caption">Theoretical arrival ranking at 10.0 km</caption><thead><tr><th scope="col">Rank</th><th scope="col">Train</th><th scope="col" id="value-heading">Arrival time (s)</th><th scope="col" id="extra-heading">Speed at arrival (km/h)</th></tr></thead><tbody id="ranking"></tbody></table></div></section>
+    <section class="details-grid"><article><p class="eyebrow">THE MODEL</p><h2>Three phases, one simple hypothesis.</h2><p>Maximum tractive effort at the start, then maximum power, followed by a steady top speed.</p><p class="formula">F(v) = min(F<sub>max</sub>, P / v)</p><p>Starting from rest on level track, with no resistance, braking or stops. A hypothesis to compare with observations, rather than a confirmed description of the game’s physics.</p></article><article><p class="eyebrow">THE INSPIRATION</p><h2>From a video race to a theoretical model.</h2><p>This site was inspired by the video <a href="https://www.youtube.com/watch?v=KgUHw9Ya60M" lang="en">I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?</a>, by <a href="https://www.youtube.com/@Flowengineer">Flowengineer</a>. Timings recorded from this video helped compare the theoretical model with how the trains behave in the game.</p><p>Mass, tractive effort, power and top speed are used to calculate the curves and explore the race.</p><a href="./data/trains.json">View model parameters ↗</a></article></section>
+    <details class="panel transitions"><summary>View model transitions</summary><div class="table-scroll"><table><caption>Ideal model transitions</caption><thead><tr><th>Train</th><th>Traction phase ends (s)</th><th>Top speed reached (s)</th><th>Top speed reached (km)</th></tr></thead><tbody id="transitions"></tbody></table></div></details>
+    <p id="status" role="status"></p>
+    <noscript>Enable JavaScript to explore the charts. Model parameters remain available in the data file.</noscript>
+    </div>
     <aside class="catalogue" aria-labelledby="catalogue-heading">
       <div class="catalogue-heading"><h2 id="catalogue-heading">Trains <span id="train-count"></span></h2><button id="reset" type="button" title="Reset selection to the first four trains">Reset</button></div>
       <label class="search-label" for="train-search">Find trains</label><input id="train-search" type="search" placeholder="Search name or year" autocomplete="off">
@@ -33,11 +41,6 @@
       <p class="catalogue-note">Select trains to compare. Hover or focus a row to highlight its curve.</p>
     </aside>
     </div>
-    <section class="results panel"><h2>Race readout</h2>      <div class="table-scroll"><table><caption id="ranking-caption">Theoretical arrival ranking at 10.0 km</caption><thead><tr><th scope="col">Rank</th><th scope="col">Train</th><th scope="col" id="value-heading">Arrival time (s)</th><th scope="col" id="extra-heading">Speed at arrival (km/h)</th></tr></thead><tbody id="ranking"></tbody></table></div></section>
-    <section class="details-grid"><article><p class="eyebrow">THE MODEL</p><h2>Three phases, one simple hypothesis.</h2><p>Maximum tractive effort at the start, then maximum power, followed by a steady top speed.</p><p class="formula">F(v) = min(F<sub>max</sub>, P / v)</p><p>Starting from rest on level track, with no resistance, braking or stops. A hypothesis to compare with observations, rather than a confirmed description of the game’s physics.</p></article><article><p class="eyebrow">THE INSPIRATION</p><h2>From a video race to a theoretical model.</h2><p>This site was inspired by the video <a href="https://www.youtube.com/watch?v=KgUHw9Ya60M" lang="en">I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?</a>, by <a href="https://www.youtube.com/@Flowengineer">Flowengineer</a>. Timings recorded from this video helped compare the theoretical model with how the trains behave in the game.</p><p>Mass, tractive effort, power and top speed are used to calculate the curves and explore the race.</p><a href="./data/trains.json">View model parameters ↗</a></article></section>
-    <details class="panel transitions"><summary>View model transitions</summary><div class="table-scroll"><table><caption>Ideal model transitions</caption><thead><tr><th>Train</th><th>Traction phase ends (s)</th><th>Top speed reached (s)</th><th>Top speed reached (km)</th></tr></thead><tbody id="transitions"></tbody></table></div></details>
-    <p id="status" role="status"></p>
-    <noscript>Enable JavaScript to explore the charts. Model parameters remain available in the data file.</noscript>
   </main>
   <footer><span>TF3 Lab · An independent community project, unaffiliated with the game’s publisher.</span><a href="https://github.com/FlavienDrouot/transport-fever-3-lab/blob/main/LICENSE">MIT-licensed code ↗</a></footer>
 </body>

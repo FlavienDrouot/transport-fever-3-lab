@@ -85,7 +85,11 @@ La sélection est locale à la page ; aucune collecte, connexion ou persistance 
 ## Catalogue et échelles
 
 L’interface reprend la structure de la capture Slopalytics fournie : navigation des
-vues en haut, graphe central et catalogue à droite. Sur mobile, le catalogue compact
+vues en haut, graphe central et catalogue à droite. Sur ordinateur, le catalogue
+reste sous l’en-tête fixe et occupe la hauteur restante du viewport ; sa liste
+défile indépendamment. Graphe, classement et explications partagent la colonne
+principale : la hauteur du catalogue ne crée pas d’espace vide sous le curseur.
+Sur mobile, le catalogue compact
 précède le graphe. La recherche filtre uniquement la liste, sans modifier la sélection ;
 « Select results » et « Clear results » agissent sur les résultats filtrés.
 Au lancement et avec « Reset », les quatre premières entrées du JSON sont sélectionnées.
