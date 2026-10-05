@@ -16,8 +16,8 @@ Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 - Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
 - Catalogue compact défilant avec recherche par nom/année, tri et sélection des résultats.
 - Distance de parcours réglable par curseur ; horizon temporel calculé d’après le dernier train sélectionné.
-- Curseur de lecture avec classement théorique ; identification des courbes au survol ou au focus clavier.
-- Échelles linéaires ou logarithmiques indépendantes pour chaque axe.
+- Classement théorique à la fin du parcours ; identification des courbes au survol ou au focus clavier.
+- Toggles linéaire/logarithmique indépendants pour chaque axe, sur la même ligne que les exports (repli sur petit écran).
 - Table des transitions ; exports CSV et SVG des courbes théoriques.
 - Interface en anglais responsive, contrôles clavier et valeurs accessibles en tableau.
 
@@ -106,8 +106,9 @@ l’abscisse s’arrête à `max(t_train(distance))` sur les seuls trains sélec
 Time / distance s’arrête directement à la distance choisie. Dans Distance / time,
 une ligne indique la distance cible. Les trains rapides continuent naturellement leur
 course jusqu’à l’arrivée du dernier ; ils ne sont pas figés à la cible. La recherche
-ne modifie pas l’horizon tant que la sélection ne change pas. Le curseur « Read the race
-at » sert séparément à lire les valeurs et se recale si le domaine diminue.
+ne modifie pas l’horizon tant que la sélection ne change pas. Le seul curseur, placé sous le graphe, règle la distance du parcours.
+Le classement lit les valeurs en fin de domaine : à l’arrivée du dernier train dans
+les vues temporelles, et à la distance choisie dans Time / distance.
 Le SVG contient la distance choisie et la durée calculée ; le CSV couvre le domaine
 entier depuis zéro. Si les usages nécessitent des parcours au-delà de 100 km, étendre
 la plage du curseur après validation de la lisibilité des graphes.

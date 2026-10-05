@@ -3,13 +3,14 @@ import {createScale} from './scales.js';
 import {raceHorizon} from './race.js';
 const $ = id => document.getElementById(id);
 const fmt = (n, digits = 1) => n.toLocaleString('en-GB', {minimumFractionDigits: digits, maximumFractionDigits: digits});
+const scaleMode = axis => document.querySelector(`input[name="${axis}-scale"]:checked`).value;
 const escape = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const views = {
   distance: {title: 'Distance over time', x: 'Time since departure (s)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading train.'},
   speed: {title: 'Speed over time', x: 'Time since departure (s)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The plateaus show each train’s top speed.'},
   time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (s)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
 };
-let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 20, horizon = 300, cursor = 120;
+let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 20, horizon = 300;
 function active() {return trains.filter(t => selected.has(t.id));}
 function value(t, x) {return view === 'time' ? t.model.timeAt(x) : t.model.stateAt(x)[view === 'speed' ? 'speedKmh' : 'distanceKm'];}
 function visible() {
@@ -56,16 +57,12 @@ function render(width) {
   $('horizon-summary').textContent = race.lastTrain ? `Time horizon: ${fmt(race.seconds)} s · ${race.lastTrain.name} reaches ${fmt(routeDistance)} km last.` : 'Select trains to calculate the time horizon.';
   $('chart-heading').textContent = spec.title;
   $('chart-help').textContent = spec.help + (ts.length > 12 ? ' Hover or focus a catalogue row to identify its curve.' : '');
-  $('cursor').max = horizon;
-  $('cursor').step = 'any';
-  cursor = Math.min(cursor, horizon); $('cursor').value = cursor;
-  $('cursor-value').textContent = `${fmt(cursor)} ${spec.unit}`;
   $('empty').hidden = !!ts.length; $('csv').disabled = $('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
   const ymax = Math.ceil(max / 5 / step) * step * 5;
-  const xScale = createScale($('x-scale').value, horizon, Math.min(spec.xFloor, horizon / 10));
-  const yScale = createScale($('y-scale').value, ymax, Math.min(spec.yFloor, ymax / 10));
+  const xScale = createScale(scaleMode('x'), horizon, Math.min(spec.xFloor, horizon / 10));
+  const yScale = createScale(scaleMode('y'), ymax, Math.min(spec.yFloor, ymax / 10));
   const notes = [];
   if (xScale.mode === 'log') notes.push(`X starts at ${tickLabel(xScale.min)} ${spec.unit}`);
   if (yScale.mode === 'log') notes.push(`Y starts at ${tickLabel(yScale.min)} ${spec.yUnit}`);
@@ -97,10 +94,6 @@ function render(width) {
     const emphasis = !highlighted || highlighted === t.id;
     content+=`<path data-train="${escape(t.id)}" clip-path="url(#plot-clip)" d="${d}" fill="none" stroke="${t.color}" stroke-width="${highlighted===t.id?3:2}" opacity="${emphasis?1:.16}" stroke-dasharray="${t.dash}"><title>${escape(t.name)} — model</title></path>`;
   }
-  if(Number.isFinite(sx(cursor))) {
-    content+=`<line x1="${sx(cursor)}" x2="${sx(cursor)}" y1="${T}" y2="${H-B}" stroke="#8d978e" stroke-dasharray="4 5"/>`;
-    for(const t of ts) if(Number.isFinite(sy(value(t,cursor)))) content+=`<circle cx="${sx(cursor)}" cy="${sy(value(t,cursor))}" r="3" fill="${t.color}"/>`;
-  }
   if(W>=700) {
     const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>({t,y:sy(value(t,horizon))})).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
@@ -108,10 +101,10 @@ function render(width) {
     for(const {t,y,labelY} of labelled) content+=`<line x1="${W-R}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(t.name)}</text>`;
   }
   $('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
-  const ranking=ts.map(t=>({t,y:value(t,cursor)})).sort((a,b)=>view==='time'?a.y-b.y:b.y-a.y);
-  $('ranking-caption').textContent=`Theoretical ranking at ${fmt(cursor)} ${spec.unit}${cursor===0?' · all tied':''}`;
+  const ranking=ts.map(t=>({t,y:value(t,horizon)})).sort((a,b)=>view==='time'?a.y-b.y:b.y-a.y);
+  $('ranking-caption').textContent=`Theoretical ranking at the route horizon · ${fmt(horizon)} ${spec.unit}`;
   $('value-heading').textContent=spec.y; $('extra-heading').textContent=view==='speed'?'Distance (km)':'Speed (km/h)';
-  $('ranking').innerHTML=ranking.map(({t,y},i)=>{const state=t.model.stateAt(view==='time'?y:cursor);return `<tr><td>${cursor===0?'—':i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${fmt(y,view==='distance'?2:1)}</td><td>${fmt(view==='speed'?state.distanceKm:state.speedKmh,view==='speed'?2:1)}</td></tr>`;}).join('');
+  $('ranking').innerHTML=ranking.map(({t,y},i)=>{const state=t.model.stateAt(view==='time'?y:horizon);return `<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${fmt(y,view==='distance'?2:1)}</td><td>${fmt(view==='speed'?state.distanceKm:state.speedKmh,view==='speed'?2:1)}</td></tr>`;}).join('');
   $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${fmt(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
 }
 function download(content,type,filename) {
@@ -128,13 +121,11 @@ async function init() {
   for(const [id,select] of [['select-visible',true],['clear-visible',false]]) $(id).addEventListener('click',()=>{for(const t of visible())if(select)selected.add(t.id);else selected.delete(t.id);highlighted=undefined;renderCatalogue();render();});
   $('reset').addEventListener('click',()=>{selected=new Set(defaults);$('train-search').value='';highlighted=undefined;renderCatalogue();render();});
   document.querySelector('.views').addEventListener('change', e => {
-    const previous = view; view = e.target.value;
-    if ((previous === 'time') !== (view === 'time')) cursor = view === 'time' ? Math.min(5, routeDistance) : 120;
+    view = e.target.value;
     render();
   });
   $('route-distance').addEventListener('input', e => {routeDistance = Number(e.target.value); render();});
   for(const id of ['x-scale','y-scale']) $(id).addEventListener('change',()=>render());
-  $('cursor').addEventListener('input',e=>{cursor=Number(e.target.value);render();});
   $('svg').addEventListener('click',()=>{
     const prior=highlighted;highlighted=undefined;render(1400);const svg=$('chart').querySelector('svg').cloneNode(true);highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#758079}.end-label{font-weight:600}';svg.prepend(style);
@@ -142,7 +133,7 @@ async function init() {
     const lines=[`Ideal model without resistance · Route distance: ${fmt(routeDistance)} km · Time horizon: ${fmt(raceHorizon(active(), routeDistance).seconds)} s`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',640+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${650+lines.length*18}`);
-    download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${$('x-scale').value}-${$('y-scale').value}.svg`);
+    download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${scaleMode('x')}-${scaleMode('y')}.svg`);
   });
   $('csv').addEventListener('click',()=>{const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active())for(let i=0;i<=300;i++){const x=i*horizon/300,time=view==='time'?t.model.timeAt(x):x,state=t.model.stateAt(time);rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
   window.addEventListener('resize',()=>render());render();
