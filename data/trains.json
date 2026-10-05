@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "title": "Branche · Analyser Transport Fever 3",
+    "date": "2026-10-05",
+    "method": "Paramètres vérifiés sur les captures du jeu et timestamps du tableau fourni dans la conversation. Les images et la conversation complète ne sont pas redistribuées.",
+    "departureVideoSeconds": 32,
+    "horsepowerWatts": 735.5,
+    "kgfNewtons": 9.80665,
+    "limitations": "Mesures manuelles arrondies ; position des marqueurs incertaine. Le point à 15 km est approximatif. Modèle idéal sur voie plane sans résistance, freinage ni arrêts ; il ne démontre pas le moteur physique réel du jeu."
+  },
+  "trains": [
+    {"id":"metroliner","name":"Metroliner","year":1969,"massTonnes":150,"tractionKgf":36710,"powerCh":4351,"maxSpeedKmh":193,"color":"#9b4d18","dash":"","measurements":[{"distanceKm":5,"videoSeconds":150},{"distanceKm":10,"videoSeconds":240}]},
+    {"id":"twindexx","name":"RABe 502 Twindexx","year":2014,"massTonnes":226,"tractionKgf":32767,"powerCh":6798,"maxSpeedKmh":200,"color":"#137968","dash":"9 4","measurements":[{"distanceKm":5,"videoSeconds":148},{"distanceKm":10,"videoSeconds":236}]},
+    {"id":"tgv","name":"TGV Duplex","year":1995,"massTonnes":420,"tractionKgf":71380,"powerCh":8770,"maxSpeedKmh":300,"color":"#3e5fc4","dash":"3 3","measurements":[{"distanceKm":5,"videoSeconds":158},{"distanceKm":10,"videoSeconds":229}]},
+    {"id":"fuxing","name":"Fuxing Hao","year":2016,"massTonnes":544,"tractionKgf":65262,"powerCh":14140,"maxSpeedKmh":350,"color":"#9b407e","dash":"12 4 3 4","measurements":[{"distanceKm":5,"videoSeconds":150},{"distanceKm":10,"videoSeconds":215},{"distanceKm":15,"videoSeconds":279,"approximate":true}]}
+  ]
+}
