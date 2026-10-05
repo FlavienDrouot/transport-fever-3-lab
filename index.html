@@ -10,16 +10,25 @@
   <script type="module" src="./src/app.js"></script>
 </head>
 <body>
-  <a class="skip" href="#explorer">Skip to charts</a>
-  <header class="app-header"><a class="brand" href="./">TF3 <strong>LAB</strong></a>      <fieldset class="views"><legend class="sr-only">Chart view</legend><label><input type="radio" name="view" value="distance" checked><span>Distance / time</span></label><label><input type="radio" name="view" value="speed"><span>Speed / time</span></label><label><input type="radio" name="view" value="time"><span>Time / distance</span></label></fieldset><a class="github-star" href="https://github.com/FlavienDrouot/transport-fever-3-lab" aria-label="Open the GitHub repository to give it a star"><span class="star" aria-hidden="true">★</span><strong>GitHub</strong><span>Star ↗</span></a></header>
+  <a class="skip" href="#speed-explorer">Skip to charts</a>
+  <header class="app-header"><button id="picker-toggle" class="picker-toggle" type="button" aria-haspopup="dialog" aria-controls="train-drawer" aria-expanded="false"><span aria-hidden="true">☰</span> Trains</button><a class="brand" href="./">TF3 <strong>LAB</strong></a>      <nav class="views section-nav" aria-label="Sections"><a href="#model">Model &amp; inspiration</a><a href="#speed-explorer">Speed / time</a><a href="#explorer">Distance &amp; time</a><a href="#crossover-curves">Crossovers</a><a href="#support">Support &amp; contribute</a></nav><a class="github-star" href="https://github.com/FlavienDrouot/transport-fever-3-lab" aria-label="Open the GitHub repository to give it a star"><span class="star" aria-hidden="true">★</span><strong>GitHub</strong><span>Star ↗</span></a></header>
   <main>
     <div class="workspace">
     <div class="main-column">
-    <section id="explorer" class="chart-panel" aria-labelledby="chart-heading">
-      <div class="panel-top"><div><h2 id="chart-heading">Distance over time</h2></div></div>
+    <section id="model" class="details-grid" aria-label="Model and inspiration"><article><p class="eyebrow">THE MODEL</p><h2>Three phases, one simple hypothesis.</h2><p>Maximum tractive effort at the start, then maximum power, followed by a steady top speed.</p><p class="formula">F(v) = min(F<sub>max</sub>, P / v)</p><p>Starting from rest on level track, with no resistance, braking or stops. A hypothesis to compare with observations, rather than a confirmed description of the game’s physics.</p></article><article><p class="eyebrow">THE INSPIRATION</p><h2>From a video race to a theoretical model.</h2><p>This site was inspired by the video <a href="https://www.youtube.com/watch?v=KgUHw9Ya60M" lang="en">I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?</a>, by <a href="https://www.youtube.com/@Flowengineer">Flowengineer</a>. Timings recorded from this video helped compare the theoretical model with how the trains behave in the game.</p><p>Mass, tractive effort, power and top speed are used to calculate the curves and explore the race.</p><a href="./data/trains.json">View model parameters ↗</a></article></section>
+    <section id="speed-explorer" class="chart-panel" aria-labelledby="speed-chart-heading">
+      <div class="panel-top"><h2 id="speed-chart-heading">Speed over time</h2><p id="speed-chart-help" class="chart-help">The curves show how each train accelerates to its top speed.</p></div>
 
-      <div class="chart-toolbar"><div class="chart-options"><fieldset id="x-scale" class="scale-toggle"><legend class="sr-only">X axis scale</legend><span aria-hidden="true">X axis</span><label><input type="radio" name="x-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="x-scale" value="log"><span>Log</span></label></fieldset><fieldset id="y-scale" class="scale-toggle"><legend class="sr-only">Y axis scale</legend><span aria-hidden="true">Y axis</span><label><input type="radio" name="y-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="y-scale" value="log"><span>Log</span></label></fieldset></div><div class="exports"><button id="csv" type="button">Export CSV ↓</button><button id="svg" type="button">Export SVG ↓</button></div></div>
-      <p id="chart-help" class="chart-help">The highest curve shows the leading train.</p>
+
+      <div class="chart-toolbar"><div class="chart-options"><fieldset id="speed-x-scale" class="scale-toggle"><legend id="speed-x-scale-legend" class="sr-only">Time scale</legend><span id="speed-x-scale-label" aria-hidden="true">Time</span><label><input type="radio" name="speed-x-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="speed-x-scale" value="log"><span>Log</span></label></fieldset><fieldset id="speed-y-scale" class="scale-toggle"><legend id="speed-y-scale-legend" class="sr-only">Speed scale</legend><span id="speed-y-scale-label" aria-hidden="true">Speed</span><label><input type="radio" name="speed-y-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="speed-y-scale" value="log"><span>Log</span></label></fieldset></div><div class="exports"><button id="speed-csv" type="button">Export CSV ↓</button><button id="speed-svg" type="button">Export SVG ↓</button></div></div>
+      <p id="speed-scale-note" class="scale-note" hidden></p><div id="speed-chart" class="chart"></div><p id="speed-empty" hidden>Select at least one train to display the curves.</p>
+    </section>
+
+    <section id="explorer" class="chart-panel" aria-labelledby="chart-heading">
+      <div class="panel-top"><h2 id="chart-heading">Distance over time</h2><p id="chart-help" class="chart-help">The highest curve shows the leading train.</p></div>
+
+
+      <div class="chart-toolbar"><fieldset id="race-orientation" class="scale-toggle"><legend class="sr-only">Distance and time chart orientation</legend><label><input type="radio" name="race-orientation" value="distance" checked><span>Distance over time</span></label><label><input type="radio" name="race-orientation" value="time"><span>Time over distance</span></label></fieldset><div class="chart-options"><fieldset id="x-scale" class="scale-toggle"><legend id="x-scale-legend" class="sr-only">Time scale</legend><span id="x-scale-label" aria-hidden="true">Time</span><label><input type="radio" name="x-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="x-scale" value="log"><span>Log</span></label></fieldset><fieldset id="y-scale" class="scale-toggle"><legend id="y-scale-legend" class="sr-only">Distance scale</legend><span id="y-scale-label" aria-hidden="true">Distance</span><label><input type="radio" name="y-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="y-scale" value="log"><span>Log</span></label></fieldset></div><div class="exports"><button id="csv" type="button">Export CSV ↓</button><button id="svg" type="button">Export SVG ↓</button></div></div>
       <p id="scale-note" class="scale-note" hidden></p><div id="chart" class="chart"></div><p id="empty" hidden>Select at least one train to display the curves.</p>
       <div class="horizon-control"><label for="route-distance">Route distance</label><input type="range" id="route-distance" min="0.5" max="10" step="0.1" value="10"><label class="sr-only" for="distance-input">Route distance in kilometres, including values above the slider limit</label><input type="number" id="distance-input" min="0.5" step="0.1" value="10"><span>km</span></div>
       <p id="distance-note" class="chart-help"></p>
@@ -27,23 +36,44 @@
     </section>
 
     <section class="results panel"><h2>Race readout</h2>      <div class="table-scroll"><table><caption id="ranking-caption">Theoretical arrival ranking at 10.0 km</caption><thead><tr><th scope="col">Rank</th><th scope="col">Train</th><th scope="col" id="value-heading">Arrival time (m:ss)</th><th scope="col" id="extra-heading">Speed at arrival (km/h)</th></tr></thead><tbody id="ranking"></tbody></table></div></section>
-    <section class="details-grid"><article><p class="eyebrow">THE MODEL</p><h2>Three phases, one simple hypothesis.</h2><p>Maximum tractive effort at the start, then maximum power, followed by a steady top speed.</p><p class="formula">F(v) = min(F<sub>max</sub>, P / v)</p><p>Starting from rest on level track, with no resistance, braking or stops. A hypothesis to compare with observations, rather than a confirmed description of the game’s physics.</p></article><article><p class="eyebrow">THE INSPIRATION</p><h2>From a video race to a theoretical model.</h2><p>This site was inspired by the video <a href="https://www.youtube.com/watch?v=KgUHw9Ya60M" lang="en">I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?</a>, by <a href="https://www.youtube.com/@Flowengineer">Flowengineer</a>. Timings recorded from this video helped compare the theoretical model with how the trains behave in the game.</p><p>Mass, tractive effort, power and top speed are used to calculate the curves and explore the race.</p><a href="./data/trains.json">View model parameters ↗</a></article></section>
+
     <details class="panel transitions"><summary>View model transitions</summary><div class="table-scroll"><table><caption>Ideal model transitions</caption><thead><tr><th>Train</th><th>Traction phase ends (s)</th><th>Top speed reached (s)</th><th>Top speed reached (km)</th></tr></thead><tbody id="transitions"></tbody></table></div></details>
+
+    <section id="crossover-curves" class="chart-panel" aria-labelledby="crossover-curves-heading">
+      <div class="panel-top"><h2 id="crossover-curves-heading">Arrival curves around crossovers</h2><p id="crossover-curves-help" class="chart-help">The highest curve leads the race.</p></div>
+      <div class="chart-toolbar"><fieldset id="crossover-orientation" class="scale-toggle"><legend class="sr-only">Crossover chart orientation</legend><label><input type="radio" name="crossover-orientation" value="distance" checked><span>Distance over time</span></label><label><input type="radio" name="crossover-orientation" value="time"><span>Time over distance</span></label></fieldset><label class="leader-emphasis"><input id="emphasize-leaders" type="checkbox" checked> Highlight leaders</label><fieldset id="focus-distance" class="scale-toggle"><legend class="sr-only">Crossover distance scale</legend><span aria-hidden="true">Distance</span><label><input type="radio" name="focus-distance" value="focus" checked><span>Phase focus</span></label><label><input type="radio" name="focus-distance" value="linear"><span>Linear</span></label></fieldset><fieldset id="focus-time" class="scale-toggle"><legend class="sr-only">Crossover time scale</legend><span aria-hidden="true">Time</span><label><input type="radio" name="focus-time" value="focus" checked><span>Phase focus</span></label><label><input type="radio" name="focus-time" value="linear"><span>Linear</span></label></fieldset></div>
+      <p class="chart-help">Phase focus expands the leadership phases and gives the final phase only 30% of the space of an earlier phase. Both axes stay continuous, with real distances and times at the ticks; their scale changes at the crossover boundaries. Curves are clipped to the displayed window. The window ends shortly after the last leader change; crossings between slower trains do not extend it.</p>
+      <p id="crossover-axis-note" class="scale-note">Orange grid lines and double marks on the axes show where the scale changes. Phase focus can introduce bends where a curve crosses these boundaries. These bends come from the axes, not train acceleration. Choose Linear on both axes to remove these scale effects.</p>
+      <div id="crossover-curves-chart" class="chart"></div><p id="crossover-curves-empty" hidden>Select at least one train to display arrival curves.</p>
+
+    </section>
+
+    <section id="crossovers" class="chart-panel" aria-labelledby="crossover-heading">
+      <div class="panel-top"><h2 id="crossover-heading">Rank crossovers</h2><p class="chart-help">First place at the top. Every train’s rank changes are shown.</p></div>
+      <div class="chart-toolbar"><fieldset id="rank-distance-scale" class="scale-toggle"><legend class="sr-only">Rank chart distance scale</legend><span aria-hidden="true">Distance</span><label><input type="radio" name="rank-distance-scale" value="linear"><span>Linear</span></label><label><input type="radio" name="rank-distance-scale" value="crossovers" checked><span>All crossovers</span></label></fieldset></div>
+      <p id="rank-scale-note" class="chart-help"></p>
+      <div id="crossover-chart" class="chart"></div>
+      <p id="crossover-empty" hidden>Select at least one train to explore leader crossovers.</p>
+      <div class="table-scroll"><table><caption>Leadership phases and crossovers · theoretical model</caption><thead><tr><th scope="col">Distance range (km)</th><th scope="col">Leading train</th><th scope="col">Arrival time at range start (m:ss)</th></tr></thead><tbody id="crossover-readout"></tbody></table></div>
+    </section>
+
+
     <p id="status" role="status"></p>
-  <footer><span>TF3 Lab · An independent community project, unaffiliated with the game’s publisher.</span><a href="https://github.com/FlavienDrouot/transport-fever-3-lab/blob/main/LICENSE">MIT-licensed code ↗</a></footer>
+  <footer id="support" class="community-footer"><div><h2>Support &amp; contribute</h2><p>Find this explorer useful? <a href="https://github.com/FlavienDrouot/transport-fever-3-lab">Give it a star on GitHub ★</a>.</p><p>Have a feature idea or spotted a bug? <a href="https://github.com/FlavienDrouot/transport-fever-3-lab/issues/new">Open an issue</a>. Want to help build it? <a href="https://github.com/FlavienDrouot/transport-fever-3-lab/compare">Open a pull request</a>.</p><p>For any other message, <a href="mailto:flavien.drouot@gmail.com">email Flavien</a>.</p></div><div class="footer-credits"><span>TF3 Lab · An independent community project, unaffiliated with the game’s publisher.</span><a href="https://github.com/FlavienDrouot/transport-fever-3-lab/blob/main/LICENSE">MIT-licensed code ↗</a></div></footer>
     <noscript>Enable JavaScript to explore the charts. Model parameters remain available in the data file.</noscript>
     </div>
-    <aside class="catalogue" aria-labelledby="catalogue-heading">
-      <div class="catalogue-heading"><h2 id="catalogue-heading">Trains <span id="train-count"></span></h2><button id="reset" type="button" title="Reset selection to the first four trains">Reset</button></div>
+    <aside id="catalogue" class="catalogue" aria-labelledby="catalogue-heading">
+      <div class="catalogue-heading"><h2 id="catalogue-heading">Trains <span id="train-count"></span></h2><div class="catalogue-heading-actions"><button id="reset" type="button" title="Reset selection to the first four trains">Reset</button><button id="picker-close" class="picker-close" type="button" aria-label="Close train picker">×</button></div></div>
       <label class="search-label" for="train-search">Find trains</label><input id="train-search" type="search" placeholder="Search name or year" autocomplete="off">
       <div class="year-filter"><label for="catalogue-year">Game year <output id="catalogue-year-value" for="catalogue-year">2020</output></label><input type="range" id="catalogue-year" min="1900" max="2020" step="1" value="2020"></div>
-      <div class="catalogue-tools"><label for="train-sort">Sort</label><select id="train-sort"><option value="name">Name</option><option value="speed">Top speed</option><option value="year">Year</option></select></div>
+      <div class="catalogue-tools"><label for="train-sort">Sort</label><select id="train-sort"><option value="name">Name</option><option value="speed">Top speed</option><option value="year" selected>Year</option></select></div>
       <p id="selection-count" role="status"></p><div class="selection-actions"><button id="select-visible" type="button">Select results</button><button id="clear-visible" type="button">Clear results</button></div>
       <div id="trains" class="train-list"></div><p id="no-results" hidden>No trains match the year and search filters.</p>
       <p class="catalogue-note">Select trains to compare. Hover or focus a row to highlight its curve.</p>
-    </aside>
+    </aside><span id="catalogue-anchor" hidden></span>
     </div>
   </main>
 
+  <dialog id="train-drawer" aria-labelledby="catalogue-heading"></dialog>
 </body>
 </html>

@@ -13,7 +13,14 @@ export function raceHorizon(trains, distanceKm) {
 export function rankingSettlesAt(trains) {
   let last = 0;
   for (let i = 0; i < trains.length; i++) for (let j = i + 1; j < trains.length; j++) {
-    const a = trains[i], b = trains[j];
+    last = Math.max(last, ...pairCrossings(trains[i], trains[j]));
+  }
+  return last;
+}
+
+/** Positive crossings between two arrival-time curves, including the steady-speed tail. */
+export function pairCrossings(a, b) {
+  const crossings = [];
     const end = Math.max(a.model.speedCapKm, b.model.speedCapKm);
     const difference = x => a.model.timeAt(x) - b.model.timeAt(x);
     // Mix linear and logarithmic samples to resolve both early and late crossings.
@@ -31,17 +38,16 @@ export function rankingSettlesAt(trains) {
           const mid = (low + high) / 2;
           if (difference(mid) * prior > 0) low = mid; else high = mid;
         }
-        last = Math.max(last, (low + high) / 2);
+        crossings.push((low + high) / 2);
       }
-      previous = x; prior = current;
+      if (current !== 0) {previous = x; prior = current;}
     }
     const slope = 3600 / a.maxSpeedKmh - 3600 / b.maxSpeedKmh;
     if (slope !== 0) {
       const crossing = end - difference(end) / slope;
-      if (crossing >= end) last = Math.max(last, crossing);
+      if (crossing >= end) crossings.push(crossing);
     }
-  }
-  return last;
+  return crossings;
 }
 
 export function suggestedDistanceLimit(trains) {
