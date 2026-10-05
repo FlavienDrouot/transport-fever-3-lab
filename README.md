@@ -16,7 +16,7 @@ Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 - Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
 - Catalogue compact défilant avec recherche par nom/année, tri et sélection des résultats.
 - Distance de parcours réglable par curseur ; horizon temporel calculé d’après le dernier train sélectionné.
-- Classement théorique à la fin du parcours ; identification des courbes au survol ou au focus clavier.
+- Classement théorique par temps d’arrivée à la distance choisie ; identification des courbes au survol ou au focus clavier.
 - Toggles linéaire/logarithmique indépendants pour chaque axe, sur la même ligne que les exports (repli sur petit écran).
 - Table des transitions ; exports CSV et SVG des courbes théoriques.
 - Interface en anglais responsive, contrôles clavier et valeurs accessibles en tableau.
@@ -93,7 +93,7 @@ placés en fin de courbe ; au-delà, le survol/focus d’une ligne du catalogue 
 une série et atténue les autres pour limiter la superposition des noms.
 
 Le mode Log utilise un logarithme en base 10, avec graduations en unités physiques.
-Zéro n’a pas de position logarithmique : il reste dans le classement et dans le CSV.
+Zéro n’a pas de position logarithmique : il reste dans le CSV.
 Les petites valeurs sont coupées : X à 10 s ou 0,1 km selon la vue ; Y à
 0,1 km, 10 km/h ou 10 s. Les seuils effectivement utilisés sont affichés.
 Pour un domaine exceptionnellement petit, le seuil est réduit au dixième de sa
@@ -117,8 +117,9 @@ Time / distance s’arrête directement à la distance choisie. Dans Distance / 
 une ligne indique la distance cible. Les trains rapides continuent naturellement leur
 course jusqu’à l’arrivée du dernier ; ils ne sont pas figés à la cible. La recherche
 ne modifie pas l’horizon tant que la sélection ne change pas. Le seul curseur, placé sous le graphe, règle la distance du parcours.
-Le classement lit les valeurs en fin de domaine : à l’arrivée du dernier train dans
-les vues temporelles, et à la distance choisie dans Time / distance.
+Le tableau classe toujours les trains par temps d’arrivée à la distance choisie,
+indépendamment de la vue du graphe. Il indique le temps et la vitesse de chaque
+train lorsqu’il atteint cette distance.
 Le SVG contient la distance choisie et la durée calculée ; le CSV couvre le domaine
 entier depuis zéro.
 La ligne de Pareto n’est pas implémentée.

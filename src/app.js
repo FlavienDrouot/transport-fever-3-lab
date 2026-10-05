@@ -111,10 +111,10 @@ function render(width) {
     for(const {t,y,labelY} of labelled) content+=`<line x1="${W-R}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(t.name)}</text>`;
   }
   $('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
-  const ranking=ts.map(t=>({t,y:value(t,horizon)})).sort((a,b)=>view==='time'?a.y-b.y:b.y-a.y);
-  $('ranking-caption').textContent=`Theoretical ranking at the route horizon · ${fmt(horizon)} ${spec.unit}`;
-  $('value-heading').textContent=spec.y; $('extra-heading').textContent=view==='speed'?'Distance (km)':'Speed (km/h)';
-  $('ranking').innerHTML=ranking.map(({t,y},i)=>{const state=t.model.stateAt(view==='time'?y:horizon);return `<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${fmt(y,view==='distance'?2:1)}</td><td>${fmt(view==='speed'?state.distanceKm:state.speedKmh,view==='speed'?2:1)}</td></tr>`;}).join('');
+  const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);
+  $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmt(routeDistance)} km`;
+  $('value-heading').textContent='Arrival time (s)'; $('extra-heading').textContent='Speed at arrival (km/h)';
+  $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${fmt(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
   $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${fmt(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
 }
 function download(content,type,filename) {
