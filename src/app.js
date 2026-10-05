@@ -17,18 +17,24 @@ function selectionLimits(ts) {
   if (!distanceLimits.has(key)) distanceLimits.set(key, {stable: rankingSettlesAt(ts), limit: suggestedDistanceLimit(ts)});
   return distanceLimits.get(key);
 }
-let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 10, horizon = 300;
-function active() {return trains.filter(t => selected.has(t.id));}
+let dataset, trains, selected, defaults, highlighted, view = 'distance', routeDistance = 10, horizon = 300, catalogueYear = 2020;
+function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear);}
+function arrivalName(t) {return `${t.name} · ${formatTime(t.model.timeAt(routeDistance))}`;}
+function renderSelectionCount() {
+  const shown = active().length, hidden = selected.size-shown;
+  $('selection-count').textContent = `${shown} selected${hidden ? ` · ${hidden} hidden by year` : ''} · ${visible().length} of ${trains.length} shown`;
+}
 function value(t, x) {return view === 'time' ? t.model.timeAt(x) : t.model.stateAt(x)[view === 'speed' ? 'speedKmh' : 'distanceKm'];}
 function visible() {
   const query = $('train-search').value.trim().toLowerCase();
   const sort = $('train-sort').value;
-  return trains.filter(t => `${t.name} ${t.year}`.toLowerCase().includes(query)).sort((a,b) => sort === 'speed' ? b.maxSpeedKmh - a.maxSpeedKmh : sort === 'year' ? b.year - a.year : a.name.localeCompare(b.name));
+  return trains.filter(t => t.year <= catalogueYear && `${t.name} ${t.year}`.toLowerCase().includes(query)).sort((a,b) => sort === 'speed' ? b.maxSpeedKmh - a.maxSpeedKmh : sort === 'year' ? b.year - a.year : a.name.localeCompare(b.name));
 }
 function renderCatalogue() {
   const results = visible();
   $('train-count').textContent = trains.length;
-  $('selection-count').textContent = `${selected.size} selected · ${results.length} of ${trains.length} shown`;
+  renderSelectionCount();
+  $('catalogue-year-value').textContent = catalogueYear;
   $('no-results').hidden = !!results.length;
   $('select-visible').disabled = $('clear-visible').disabled = !results.length;
   $('trains').innerHTML = results.map(t => `<label class="train-row" data-train="${escape(t.id)}" style="--train-color:${t.color}"><input type="checkbox" value="${escape(t.id)}" ${selected.has(t.id) ? 'checked' : ''} aria-label="Compare ${escape(t.name)}"><span class="train-info"><span class="train-name">${escape(t.name)}</span><span class="train-spec">${t.year} · ${t.maxSpeedKmh} km/h</span><span class="train-power">${t.massTonnes} t · <span title="Metric horsepower">${fmt(t.powerCh, 0)} PS</span> · ${fmt(t.tractionKgf, 0)} kgf</span></span></label>`).join('');
@@ -67,9 +73,9 @@ function sample(t, xScale, yScale) {
 function tickLabel(n) {return fmt(n, n > 0 && n < 1 ? Math.min(4, Math.ceil(-Math.log10(n))) : n % 1 ? 1 : 0);}
 function render(width) {
   const W = typeof width === 'number' ? width : Math.max(320, $('chart').clientWidth || 1000);
-  const labelSpace = view === 'distance' ? 120 : 0;
-  const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 175, T = 45 + labelSpace, B = 50;
   const ts = active(), spec = views[view];
+  const labelSpace = view === 'distance' ? Math.max(120, Math.ceil(Math.max(0,...ts.map(t=>arrivalName(t).length))*7/Math.sqrt(2))+24) : 0;
+  const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 220, T = 45 + labelSpace, B = 50;
   const race = raceHorizon(ts, routeDistance);
   horizon = view === 'time' ? routeDistance : Math.max(1, race.seconds);
   const {limit, stable} = selectionLimits(ts);
@@ -123,17 +129,17 @@ function render(width) {
       .map(t => ({t, x: sx(t.model.timeAt(routeDistance))}))
       .filter(({x}) => Number.isFinite(x)).sort((a,b) => a.x-b.x);
     // Spread neighbouring names; markers keep the exact arrival position.
-    for (let i=0; i<labelled.length; i++) labelled[i].labelX=Math.max(labelled[i].x, labelled[i].t.name.length*7/Math.sqrt(2)+8, i ? labelled[i-1].labelX+20 : L+5);
+    for (let i=0; i<labelled.length; i++) labelled[i].labelX=Math.max(labelled[i].x, arrivalName(labelled[i].t).length*7/Math.sqrt(2)+8, i ? labelled[i-1].labelX+20 : L+5);
     for (let i=labelled.length-1; i>=0; i--) labelled[i].labelX=Math.min(labelled[i].labelX, i===labelled.length-1 ? W-R-5 : labelled[i+1].labelX-20);
     for (const {t,x,labelX} of labelled) {
       const opacity = !highlighted || highlighted === t.id ? 1 : .25;
-      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(45 ${labelX} ${T-16})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(t.name)}</text>`;
+      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(45 ${labelX} ${T-16})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t))}</text>`;
     }
   } else if(W>=700) {
     const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);
-    for(const {t,x,y,labelY} of labelled) content+=`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(t.name)}</text>`;
+    for(const {t,x,y,labelY} of labelled) content+=`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t))}</text>`;
   }
   $('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
   const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);
@@ -148,13 +154,14 @@ function download(content,type,filename) {
 async function init() {
   const response=await fetch(new URL('../data/trains.json',import.meta.url));if(!response.ok)throw new Error('Data unavailable');dataset=await response.json();
   trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=trains.slice(0,4).map(t=>t.id);selected=new Set(defaults);renderCatalogue();
-  $('trains').addEventListener('change',e=>{if(e.target.checked)selected.add(e.target.value);else selected.delete(e.target.value);$('selection-count').textContent=`${selected.size} selected · ${visible().length} of ${trains.length} shown`;render();});
+  $('trains').addEventListener('change',e=>{if(e.target.checked)selected.add(e.target.value);else selected.delete(e.target.value);renderSelectionCount();render();});
   const highlight = event => {const row=event.target.closest('[data-train]');const id=row?.dataset.train;if(highlighted!==id){highlighted=id;render();}};
   $('trains').addEventListener('pointerover',highlight);$('trains').addEventListener('focusin',highlight);
   $('trains').addEventListener('pointerleave',()=>{highlighted=undefined;render();});$('trains').addEventListener('focusout',e=>{if(!$('trains').contains(e.relatedTarget)){highlighted=undefined;render();}});
+  $('catalogue-year').addEventListener('input', e=>{catalogueYear=Number(e.target.value);highlighted=undefined;renderCatalogue();render();});
   for(const id of ['train-search','train-sort']) $(id).addEventListener(id==='train-search'?'input':'change',()=>{highlighted=undefined;renderCatalogue();render();});
   for(const [id,select] of [['select-visible',true],['clear-visible',false]]) $(id).addEventListener('click',()=>{for(const t of visible())if(select)selected.add(t.id);else selected.delete(t.id);highlighted=undefined;renderCatalogue();render();});
-  $('reset').addEventListener('click',()=>{selected=new Set(defaults);$('train-search').value='';highlighted=undefined;renderCatalogue();render();});
+  $('reset').addEventListener('click',()=>{selected=new Set(defaults);$('train-search').value='';catalogueYear=2020;$('catalogue-year').value=catalogueYear;highlighted=undefined;renderCatalogue();render();});
   document.querySelector('.views').addEventListener('change', e => {
     view = e.target.value;
     render();

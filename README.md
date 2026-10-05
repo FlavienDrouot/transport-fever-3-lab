@@ -224,3 +224,16 @@ Les axes temporels affichent les durées en minutes:secondes (`m:ss`), arrondies
 affiche également les temps d’arrivée en `m:ss` ; le modèle et le CSV gardent
 les temps en secondes. Le SVG réserve la même zone aux noms et place sa légende
 après la hauteur totale du graphe.
+
+Le filtre « Game year » couvre 1900–2020, par année (2020 par défaut). Il
+retient les véhicules dont l’année d’introduction est inférieure ou égale au
+curseur, y compris la Draisine de 1860. Il filtre à la fois la liste, les courbes,
+le classement, les transitions et les exports ; la recherche ne filtre que la
+liste. Les trains sélectionnés mais masqués par l’année restent mémorisés ; le
+compteur l’indique et ils réapparaissent en remontant l’année. Aucune sélection
+n’est ajoutée automatiquement : « Select results » permet de choisir les trains
+d’une époque. Reset restaure 2020, la recherche vide et les quatre trains
+d’origine. Les dates de retrait étant inconnues, ce filtre décrit l’introduction,
+pas une garantie de disponibilité à l’achat dans le jeu.
+Les noms des courbes indiquent aussi le temps d’arrivée à la cible en m:ss. La
+zone supérieure et la légende SVG s’adaptent à la longueur de ces annotations.

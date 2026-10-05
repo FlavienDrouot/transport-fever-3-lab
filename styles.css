@@ -17,3 +17,5 @@
 }
 
 .main-column footer{margin:0}
+
+.year-filter{margin-top:14px;font-size:11px}.year-filter label{display:flex;justify-content:space-between;gap:10px;color:var(--muted)}.year-filter output{font-variant-numeric:tabular-nums;font-weight:600;color:#27332e}.year-filter input{width:100%;margin:8px 0 0;accent-color:var(--green)}

@@ -36,9 +36,10 @@
     <aside class="catalogue" aria-labelledby="catalogue-heading">
       <div class="catalogue-heading"><h2 id="catalogue-heading">Trains <span id="train-count"></span></h2><button id="reset" type="button" title="Reset selection to the first four trains">Reset</button></div>
       <label class="search-label" for="train-search">Find trains</label><input id="train-search" type="search" placeholder="Search name or year" autocomplete="off">
+      <div class="year-filter"><label for="catalogue-year">Game year <output id="catalogue-year-value" for="catalogue-year">2020</output></label><input type="range" id="catalogue-year" min="1900" max="2020" step="1" value="2020"></div>
       <div class="catalogue-tools"><label for="train-sort">Sort</label><select id="train-sort"><option value="name">Name</option><option value="speed">Top speed</option><option value="year">Year</option></select></div>
       <p id="selection-count" role="status"></p><div class="selection-actions"><button id="select-visible" type="button">Select results</button><button id="clear-visible" type="button">Clear results</button></div>
-      <div id="trains" class="train-list"></div><p id="no-results" hidden>No trains match your search.</p>
+      <div id="trains" class="train-list"></div><p id="no-results" hidden>No trains match the year and search filters.</p>
       <p class="catalogue-note">Select trains to compare. Hover or focus a row to highlight its curve.</p>
     </aside>
     </div>
