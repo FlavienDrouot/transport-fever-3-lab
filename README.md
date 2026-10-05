@@ -3,16 +3,19 @@
 Un laboratoire open source pour comparer les trains de **Transport Fever 3**.
 
 **[Ouvrir le site](https://flaviendrouot.github.io/transport-fever-3-lab/)**
-Cette preuve de concept reprend les paramètres et les mesures de la conversation
-« Branche · Analyser Transport Fever 3 » du 5 octobre 2026 et recalcule les courbes.
+Ce site s’inspire de la vidéo de **[Flowengineer](https://www.youtube.com/@Flowengineer)**,
+**[I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?](https://www.youtube.com/watch?v=KgUHw9Ya60M)**.
+Les chronos de cette vidéo ont servi à la validation initiale du modèle, avec les
+paramètres relevés sur les captures du jeu et discutés le 5 octobre 2026.
+Les graphes et exports présentent maintenant uniquement les courbes théoriques.
 Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 
 ## Explorer
 
 - Distance en fonction du temps, vitesse en fonction du temps, temps en fonction de la distance.
 - Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
-- Curseur avec classement théorique, plusieurs horizons, observations vidéo superposées.
-- Tables des transitions et des écarts mesuré − modèle ; export CSV et SVG.
+- Curseur avec classement théorique et plusieurs horizons.
+- Table des transitions ; exports CSV et SVG des courbes théoriques.
 - Interface française responsive, contrôles clavier et valeurs accessibles en tableau.
 
 ## Développer
@@ -67,7 +70,7 @@ du terminal. Le tunnel SSH décrit plus haut reste une alternative avec `npm run
 - `src/app.js` : interactions et tracé SVG, sans CDN ni bibliothèque externe.
 - `tests/` : références numériques, transitions, inversion distance/temps et plafond.
 - `scripts/build.mjs` : copie des seuls fichiers du site dans `dist/`.
-- `.github/workflows/ci.yml` : tests et préparation du site, sans déploiement.
+- `.github/workflows/ci.yml` : tests, préparation du site et publication sur GitHub Pages.
 
 Pour ajouter un train, compléter le JSON avec un identifiant unique, les paramètres,
 une couleur et un motif de trait distinct. Les valeurs physiques doivent être positives.
@@ -80,7 +83,9 @@ Au départ, l’effort maximal évite la division par zéro. L’intégration de
 analytique ; l’inverse distance → temps l’est également. Conversions retenues :
 1 kgf = 9,80665 N ; 1 ch = 735,5 W. Temps en secondes réelles depuis le départ.
 
-Les paramètres ont été vérifiés sur les captures fournies. Les mesures utilisent
+Les paramètres ont été vérifiés sur les captures fournies. Les mesures sont conservées
+dans le JSON comme provenance de la validation initiale ; elles ne sont plus affichées
+dans les graphes, les tableaux ou les exports du site. Les mesures utilisent
 les timestamps vidéo moins 32 secondes. Le point Fuxing à environ 15 km / 247 s
 reste approximatif ; ni précision des marqueurs ni vitesse vidéo ne sont certifiées.
 Les images du jeu et le texte complet de la conversation ne sont pas redistribués.
