@@ -14,7 +14,9 @@ Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
 
 - Distance en fonction du temps, vitesse en fonction du temps, temps en fonction de la distance.
 - Quatre trains activables : Metroliner, RABe 502 Twindexx, TGV Duplex, Fuxing Hao.
-- Curseur avec classement théorique et plusieurs horizons.
+- Catalogue compact défilant avec recherche par nom/année, tri et sélection des résultats.
+- Curseur avec classement théorique et plusieurs horizons ; identification des courbes au survol ou au focus clavier.
+- Échelles linéaires ou logarithmiques indépendantes pour chaque axe.
 - Table des transitions ; exports CSV et SVG des courbes théoriques.
 - Interface en anglais responsive, contrôles clavier et valeurs accessibles en tableau.
 
@@ -67,6 +69,7 @@ du terminal. Le tunnel SSH décrit plus haut reste une alternative avec `npm run
 
 - `data/trains.json` : paramètres en unités du jeu, timestamps bruts, provenance et limites.
 - `src/model.js` : modèle analytique pur, unités SI internes.
+- `src/scales.js` : transformations linéaires/logarithmiques et graduations.
 - `src/app.js` : interactions et tracé SVG, sans CDN ni bibliothèque externe.
 - `tests/` : références numériques, transitions, inversion distance/temps et plafond.
 - `scripts/build.mjs` : copie des seuls fichiers du site dans `dist/`.
@@ -75,6 +78,30 @@ du terminal. Le tunnel SSH décrit plus haut reste une alternative avec `npm run
 Pour ajouter un train, compléter le JSON avec un identifiant unique, les paramètres,
 une couleur et un motif de trait distinct. Les valeurs physiques doivent être positives.
 La sélection est locale à la page ; aucune collecte, connexion ou persistance utilisateur.
+
+## Catalogue et échelles
+
+L’interface reprend la structure de la capture Slopalytics fournie : navigation des
+vues en haut, graphe central et catalogue à droite. Sur mobile, le catalogue compact
+précède le graphe. La recherche filtre uniquement la liste, sans modifier la sélection ;
+« Select results » et « Clear results » agissent sur les résultats filtrés.
+Au lancement et avec « Reset », les quatre premières entrées du JSON sont sélectionnées.
+Toutes les séries sélectionnées sont tracées. Jusqu’à douze séries, leurs noms sont
+placés en fin de courbe ; au-delà, le survol/focus d’une ligne du catalogue identifie
+une série et atténue les autres pour limiter la superposition des noms.
+
+Le mode Log utilise un logarithme en base 10, avec graduations en unités physiques.
+Zéro n’a pas de position logarithmique : il reste dans le classement et dans le CSV.
+Les limites positives sont affichées : X à 1 s ou 0,01 km selon la vue ; Y à
+0,001 km, 1 km/h ou 1 s. Le changement d’échelle ne change ni le modèle ni les
+valeurs exportées en CSV. Le SVG conserve les échelles choisies et une légende complète.
+L’échantillonnage des courbes tient compte des échelles pour résoudre le démarrage.
+La ligne de Pareto n’est pas implémentée.
+
+Le catalogue fourni contient toujours les quatre trains vérifiés. L’interface est
+validée avec une fixture de 80 trains sans publier de faux paramètres. La liste n’est
+pas virtualisée ; envisager cette optimisation seulement si un catalogue réel beaucoup
+plus grand présente des lenteurs mesurées.
 
 ## Hypothèse physique et données
 

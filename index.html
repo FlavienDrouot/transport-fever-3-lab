@@ -4,26 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#137968">
-  <meta name="description" content="Compare speed, distance and time curves for four trains in Transport Fever 3. A theoretical model of traction, power and top speed.">
+  <meta name="description" content="Explore and compare train speed, distance and time curves in Transport Fever 3. A theoretical model of traction, power and top speed.">
   <title>TF3 Lab — The train race</title>
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./src/app.js"></script>
 </head>
 <body>
   <a class="skip" href="#explorer">Skip to charts</a>
-  <header><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">↗</span> TF3 <strong>LAB</strong></a><span class="tag">PROOF OF CONCEPT · 0.1</span><a class="github-star" href="https://github.com/FlavienDrouot/transport-fever-3-lab" aria-label="Open the GitHub repository to give it a star"><span class="star" aria-hidden="true">★</span><strong>GitHub</strong><span>Star ↗</span></a></header>
+  <header class="app-header"><a class="brand" href="./">TF3 <strong>LAB</strong></a>      <fieldset class="views"><legend class="sr-only">Chart view</legend><label><input type="radio" name="view" value="distance" checked><span>Distance / time</span></label><label><input type="radio" name="view" value="speed"><span>Speed / time</span></label><label><input type="radio" name="view" value="time"><span>Time / distance</span></label></fieldset><a class="github-star" href="https://github.com/FlavienDrouot/transport-fever-3-lab" aria-label="Open the GitHub repository to give it a star"><span class="star" aria-hidden="true">★</span><strong>GitHub</strong><span>Star ↗</span></a></header>
   <main>
-    <section class="intro"><p class="eyebrow">TRANSPORT FEVER 3 / RAILWAY LAB</p><h1>Four trains.<br>A different way to see the race.</h1><p class="lead">From the first metre to top speed, explore how traction, power and mass shape the race.</p><div class="intro-note"><span class="dot"></span> Calculated curves · Theoretical model · Open data</div></section>
-    <section aria-label="Choose trains"><div class="section-label"><h2>The contenders</h2><span>Select trains to compare</span></div><div id="trains" class="train-grid"></div></section>
-    <section id="explorer" class="panel" aria-labelledby="chart-heading">
-      <div class="panel-top"><div><p class="eyebrow">EXPLORE THE RACE</p><h2 id="chart-heading">Distance over time</h2></div><div class="exports"><button id="csv" type="button">Export CSV ↓</button><button id="svg" type="button">Export SVG ↓</button></div></div>
-      <fieldset class="views"><legend class="sr-only">Chart view</legend><label><input type="radio" name="view" value="distance" checked><span>Distance / time</span></label><label><input type="radio" name="view" value="speed"><span>Speed / time</span></label><label><input type="radio" name="view" value="time"><span>Time / distance</span></label></fieldset>
-      <div class="chart-options"><label id="horizon-label">Horizon <select id="horizon"><option value="180">180 s</option><option value="300" selected>300 s</option><option value="600">600 s</option></select></label></div>
+    <div class="workspace">
+    <section id="explorer" class="chart-panel" aria-labelledby="chart-heading">
+      <div class="panel-top"><div><p class="eyebrow">TRANSPORT FEVER 3 · TRAIN BENCHMARKS</p><h2 id="chart-heading">Distance over time</h2></div><div class="exports"><button id="csv" type="button">Export CSV ↓</button><button id="svg" type="button">Export SVG ↓</button></div></div>
+
+      <div class="chart-options"><label>X axis <select id="x-scale"><option value="linear">Linear</option><option value="log">Log</option></select></label><label>Y axis <select id="y-scale"><option value="linear">Linear</option><option value="log">Log</option></select></label><label id="horizon-label">Horizon <select id="horizon"><option value="180">180 s</option><option value="300" selected>300 s</option><option value="600">600 s</option></select></label></div>
       <p id="chart-help" class="chart-help">The highest curve shows the leading train.</p>
-      <div id="chart" class="chart"></div><p id="empty" hidden>Select at least one train to display the curves.</p>
+      <p id="scale-note" class="scale-note" hidden></p><div id="chart" class="chart"></div><p id="empty" hidden>Select at least one train to display the curves.</p>
       <div class="cursor-control"><label for="cursor" id="cursor-label">Read the race at</label><input type="range" id="cursor" min="0" max="300" step="1" value="120"><output for="cursor" id="cursor-value">120 s</output></div>
-      <div class="table-scroll"><table><caption id="ranking-caption">Theoretical ranking at 120 s</caption><thead><tr><th scope="col">Rank</th><th scope="col">Train</th><th scope="col" id="value-heading">Distance (km)</th><th scope="col" id="extra-heading">Speed (km/h)</th></tr></thead><tbody id="ranking"></tbody></table></div>
+
     </section>
+    <aside class="catalogue" aria-labelledby="catalogue-heading">
+      <div class="catalogue-heading"><h2 id="catalogue-heading">Trains <span id="train-count"></span></h2><button id="reset" type="button" title="Reset selection to the first four trains">Reset</button></div>
+      <label class="search-label" for="train-search">Find trains</label><input id="train-search" type="search" placeholder="Search name or year" autocomplete="off">
+      <div class="catalogue-tools"><label for="train-sort">Sort</label><select id="train-sort"><option value="name">Name</option><option value="speed">Top speed</option><option value="year">Year</option></select></div>
+      <p id="selection-count" role="status"></p><div class="selection-actions"><button id="select-visible" type="button">Select results</button><button id="clear-visible" type="button">Clear results</button></div>
+      <div id="trains" class="train-list"></div><p id="no-results" hidden>No trains match your search.</p>
+      <p class="catalogue-note">Select trains to compare. Hover or focus a row to highlight its curve.</p>
+    </aside>
+    </div>
+    <section class="results panel"><h2>Race readout</h2>      <div class="table-scroll"><table><caption id="ranking-caption">Theoretical ranking at 120 s</caption><thead><tr><th scope="col">Rank</th><th scope="col">Train</th><th scope="col" id="value-heading">Distance (km)</th><th scope="col" id="extra-heading">Speed (km/h)</th></tr></thead><tbody id="ranking"></tbody></table></div></section>
     <section class="details-grid"><article><p class="eyebrow">THE MODEL</p><h2>Three phases, one simple hypothesis.</h2><p>Maximum tractive effort at the start, then maximum power, followed by a steady top speed.</p><p class="formula">F(v) = min(F<sub>max</sub>, P / v)</p><p>Starting from rest on level track, with no resistance, braking or stops. A hypothesis to compare with observations, rather than a confirmed description of the game’s physics.</p></article><article><p class="eyebrow">THE INSPIRATION</p><h2>From a video race to a theoretical model.</h2><p>This site was inspired by the video <a href="https://www.youtube.com/watch?v=KgUHw9Ya60M" lang="en">I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?</a>, by <a href="https://www.youtube.com/@Flowengineer">Flowengineer</a>. Timings recorded from this video helped compare the theoretical model with how the trains behave in the game.</p><p>Mass, tractive effort, power and top speed are used to calculate the curves and explore the race.</p><a href="./data/trains.json">View model parameters ↗</a></article></section>
     <details class="panel transitions"><summary>View model transitions</summary><div class="table-scroll"><table><caption>Ideal model transitions</caption><thead><tr><th>Train</th><th>Traction phase ends (s)</th><th>Top speed reached (s)</th><th>Top speed reached (km)</th></tr></thead><tbody id="transitions"></tbody></table></div></details>
     <p id="status" role="status"></p>
