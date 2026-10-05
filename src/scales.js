@@ -8,7 +8,7 @@ export function createScale(mode, max, floor = 1) {
   const invert = fraction => mode === 'log' ? 10 ** (low + fraction * span) : fraction * max;
   const ticks = [];
   if (mode === 'linear') {
-    for (let i = 0; i <= 5; i++) ticks.push(max * i / 5);
+    for (let i = 0; i <= 5; i++) ticks.push(i === 5 ? max : max * i / 5);
   } else {
     for (let exponent = Math.floor(Math.log10(min)); exponent <= Math.ceil(Math.log10(max)); exponent++) {
       for (const multiple of [1, 2, 5]) {

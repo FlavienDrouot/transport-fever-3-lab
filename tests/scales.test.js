@@ -16,3 +16,11 @@ test('Sub-unit log domains and ticks preserve physical units',()=>{
 test('Invalid domains fail rather than produce misleading coordinates',()=>{
  for(const args of [['log',300,0],['log',300,300],['linear',0],['linear',NaN],['unknown',10]])assert.throws(()=>createScale(...args),RangeError);
 });
+
+test('Linear ceiling ticks stay in the domain despite decimal rounding', () => {
+ for (const max of [.55, 18.7, 100 * 1.1]) {
+  const scale = createScale('linear', max);
+  assert.equal(scale.ticks.at(-1), max);
+  for (const tick of scale.ticks) assert.ok(Number.isFinite(scale.position(tick)));
+ }
+});

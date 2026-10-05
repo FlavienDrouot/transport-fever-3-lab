@@ -43,12 +43,23 @@ function sample(t, xScale, yScale) {
     }
     start = high;
   }
-  const xs = new Set([start, horizon]);
+  // Stop precisely at the displayed ceiling instead of flattening the curve there.
+  let end = horizon;
+  if (value(t, end) > yScale.max) {
+    let low = 0, high = end;
+    for (let i = 0; i < 50; i++) {
+      const mid = (low + high) / 2;
+      if (value(t, mid) < yScale.max) low = mid; else high = mid;
+    }
+    end = low;
+  }
+  if (start > end) return [];
+  const xs = new Set([start, end]);
   for (let i = 0; i <= 400; i++) {
     const x = xScale.mode === 'log' ? xScale.invert(i / 400) : i * horizon / 400;
-    if (x >= start && x <= horizon) xs.add(x);
+    if (x >= start && x <= end) xs.add(x);
     // Extra samples resolve the first seconds on a logarithmic vertical axis.
-    if (yScale.mode === 'log' && start > 0) xs.add(start * (horizon / start) ** (i / 400));
+    if (yScale.mode === 'log' && start > 0) xs.add(start * (end / start) ** (i / 400));
   }
   return [...xs].sort((a,b) => a-b).map(x => [x,value(t,x)]).filter(([x,y]) => Number.isFinite(xScale.position(x)) && Number.isFinite(yScale.position(y)));
 }
@@ -70,7 +81,7 @@ function render(width) {
   $('empty').hidden = !!ts.length; $('csv').disabled = $('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
-  const ymax = Math.ceil(max / 5 / step) * step * 5;
+  const ymax = view === 'distance' ? routeDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
   const xScale = createScale(scaleMode('x'), horizon, Math.min(spec.xFloor, horizon / 10));
   const yScale = createScale(scaleMode('y'), ymax, Math.min(spec.yFloor, ymax / 10));
   const notes = [];
@@ -105,10 +116,10 @@ function render(width) {
     content+=`<path data-train="${escape(t.id)}" clip-path="url(#plot-clip)" d="${d}" fill="none" stroke="${t.color}" stroke-width="${highlighted===t.id?3:2}" opacity="${emphasis?1:.16}" stroke-dasharray="${t.dash}"><title>${escape(t.name)} — model</title></path>`;
   }
   if(W>=700) {
-    const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>({t,y:sy(value(t,horizon))})).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
+    const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);
-    for(const {t,y,labelY} of labelled) content+=`<line x1="${W-R}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(t.name)}</text>`;
+    for(const {t,x,y,labelY} of labelled) content+=`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(t.name)}</text>`;
   }
   $('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
   const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);

@@ -87,7 +87,7 @@ La sélection est locale à la page ; aucune collecte, connexion ou persistance 
 L’interface reprend la structure de la capture Slopalytics fournie : navigation des
 vues en haut, graphe central et catalogue à droite. Sur ordinateur, le catalogue
 reste sous l’en-tête fixe et occupe la hauteur restante du viewport ; sa liste
-défile indépendamment. Graphe, classement et explications partagent la colonne
+défile indépendamment. Graphe, classement, explications et footer partagent la colonne
 principale : la hauteur du catalogue ne crée pas d’espace vide sous le curseur.
 Sur mobile, le catalogue compact
 précède le graphe. La recherche filtre uniquement la liste, sans modifier la sélection ;
@@ -121,8 +121,11 @@ maximales égales peuvent conserver un écart dû à l’accélération.
 La distance est conservée en changeant de vue ou de sélection. Pour les vues temporelles,
 l’abscisse s’arrête à `max(t_train(distance))` sur les seuls trains sélectionnés ; la vue
 Time / distance s’arrête directement à la distance choisie. Dans Distance / time,
-une ligne indique la distance cible. Les trains rapides continuent naturellement leur
-course jusqu’à l’arrivée du dernier ; ils ne sont pas figés à la cible. La recherche
+une ligne indique la distance cible. L’axe vertical est plafonné à 110 % de cette
+distance, même si les trains rapides iraient beaucoup plus loin à l’arrivée du
+dernier. Les courbes se terminent précisément à cette borne, sans plateau
+artificiel. Les calculs, le classement d’arrivée et le CSV complet restent inchangés ;
+le SVG exporté utilise la même fenêtre que le graphe. La recherche
 ne modifie pas l’horizon tant que la sélection ne change pas. Le seul curseur, placé sous le graphe, règle la distance du parcours.
 Le tableau classe toujours les trains par temps d’arrivée à la distance choisie,
 indépendamment de la vue du graphe. Il indique le temps et la vitesse de chaque
