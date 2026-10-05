@@ -47,3 +47,8 @@ export function rankingSettlesAt(trains) {
 export function suggestedDistanceLimit(trains) {
   return Math.min(30, Math.max(5, Math.ceil(rankingSettlesAt(trains) * 1.2 / 5) * 5));
 }
+
+/** End the acceleration view shortly after every selected train reaches its speed cap. */
+export function speedHorizon(trains) {
+  return Math.max(1, ...trains.map(t => t.model.speedCapSeconds * 1.05));
+}

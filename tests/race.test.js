@@ -46,3 +46,15 @@ test('Late steady-speed crossings are included and the slider is capped at 30 km
  assert.equal(suggestedDistanceLimit(late),30);
  assert.equal(rankingSettlesAt([fake('one',100,0),fake('two',100,5)]),0);
 });
+
+test('Speed view covers every acceleration with only a 5% margin and responds to selection', async () => {
+ const {speedHorizon} = await import('../src/race.js');
+ const all = data.trains.map(t=>({...t,model:createModel(t,data.source)}));
+ const horizon = speedHorizon(all);
+ const latest = all.reduce((a,b)=>a.model.speedCapSeconds>b.model.speedCapSeconds?a:b);
+ assert.equal(horizon, latest.model.speedCapSeconds*1.05);
+ for (const t of all) assert.ok(Math.abs(t.model.stateAt(horizon).speedKmh-t.maxSpeedKmh)<1e-8);
+ assert.ok(speedHorizon(all.filter(t=>t.id!==latest.id))<horizon);
+ assert.equal(speedHorizon([latest]),horizon);
+ assert.equal(speedHorizon([]),1);
+});

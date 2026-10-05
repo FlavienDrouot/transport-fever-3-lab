@@ -1,7 +1,7 @@
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
 import {formatTime} from './format.js';
-import {raceHorizon, rankingSettlesAt, suggestedDistanceLimit} from './race.js';
+import {raceHorizon, rankingSettlesAt, suggestedDistanceLimit, speedHorizon} from './race.js';
 const $ = id => document.getElementById(id);
 const fmt = (n, digits = 1) => n.toLocaleString('en-GB', {minimumFractionDigits: digits, maximumFractionDigits: digits});
 const scaleMode = axis => document.querySelector(`input[name="${axis}-scale"]:checked`).value;
@@ -77,7 +77,7 @@ function render(width) {
   const labelSpace = view === 'distance' ? Math.max(120, Math.ceil(Math.max(0,...ts.map(t=>arrivalName(t).length))*7/Math.sqrt(2))+24) : 0;
   const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 220, T = 45 + labelSpace, B = 50;
   const race = raceHorizon(ts, routeDistance);
-  horizon = view === 'time' ? routeDistance : Math.max(1, race.seconds);
+  horizon = view === 'time' ? routeDistance : view === 'speed' ? speedHorizon(ts) : Math.max(1, race.seconds);
   const {limit, stable} = selectionLimits(ts);
   $('route-distance').max = limit;
   $('route-distance').value = Math.min(routeDistance, limit);
@@ -177,7 +177,7 @@ async function init() {
     const prior=highlighted;highlighted=undefined;render(1400);const svg=$('chart').querySelector('svg').cloneNode(true);highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#758079}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
-    const lines=[`Ideal model without resistance · Route distance: ${fmt(routeDistance)} km · Time horizon: ${fmt(raceHorizon(active(), routeDistance).seconds)} s`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
+    const lines=[`Ideal model without resistance · Route distance: ${fmt(routeDistance)} km · Time horizon: ${fmt(view === 'speed' ? horizon : raceHorizon(active(), routeDistance).seconds)} s`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     const chartHeight=Number(svg.getAttribute('viewBox').split(' ')[3]);
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',chartHeight+30+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);

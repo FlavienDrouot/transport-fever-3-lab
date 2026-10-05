@@ -120,8 +120,12 @@ les croisements après les plafonds de vitesse sont calculés analytiquement.
 Des trains aux chronos presque identiques justifieraient une recherche analytique
 complète avant de présenter le seuil comme une garantie exacte. Les vitesses
 maximales égales peuvent conserver un écart dû à l’accélération.
-La distance est conservée en changeant de vue ou de sélection. Pour les vues temporelles,
-l’abscisse s’arrête à `max(t_train(distance))` sur les seuls trains sélectionnés ; la vue
+La distance est conservée en changeant de vue ou de sélection. Dans Distance / time,
+l’abscisse s’arrête à `max(t_train(distance))` sur les seuls trains sélectionnés.
+Dans Speed / time, elle s’arrête à 105 % du dernier instant d’atteinte de la vitesse
+maximale, indépendamment de la distance du parcours. Le filtre d’année et la
+sélection recalculent cet horizon ; une sélection vide garde un domaine valide de 1 s.
+Le CSV de cette vue couvre cet horizon d’accélération et le SVG indique cette durée. La vue
 Time / distance s’arrête directement à la distance choisie. Dans Distance / time,
 une ligne indique la distance cible. L’axe vertical est plafonné à 110 % de cette
 distance, même si les trains rapides iraient beaucoup plus loin à l’arrivée du
