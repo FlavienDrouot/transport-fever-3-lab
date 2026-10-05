@@ -1,14 +1,15 @@
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
+import {formatTime} from './format.js';
 import {raceHorizon, rankingSettlesAt, suggestedDistanceLimit} from './race.js';
 const $ = id => document.getElementById(id);
 const fmt = (n, digits = 1) => n.toLocaleString('en-GB', {minimumFractionDigits: digits, maximumFractionDigits: digits});
 const scaleMode = axis => document.querySelector(`input[name="${axis}-scale"]:checked`).value;
 const escape = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const views = {
-  distance: {title: 'Distance over time', x: 'Time since departure (s)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading train.'},
-  speed: {title: 'Speed over time', x: 'Time since departure (s)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The plateaus show each train’s top speed.'},
-  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (s)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
+  distance: {title: 'Distance over time', x: 'Time since departure (m:ss)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading train.'},
+  speed: {title: 'Speed over time', x: 'Time since departure (m:ss)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The plateaus show each train’s top speed.'},
+  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (m:ss)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
 };
 const distanceLimits = new Map();
 function selectionLimits(ts) {
@@ -66,7 +67,7 @@ function sample(t, xScale, yScale) {
 function tickLabel(n) {return fmt(n, n > 0 && n < 1 ? Math.min(4, Math.ceil(-Math.log10(n))) : n % 1 ? 1 : 0);}
 function render(width) {
   const W = typeof width === 'number' ? width : Math.max(320, $('chart').clientWidth || 1000);
-  const H = W < 700 ? 430 : 610, L = 65, R = W < 700 ? 18 : 175, T = 45, B = 50;
+  const H = W < 700 ? 430 : 610, L = 65, R = W < 700 || view === 'distance' ? 18 : 175, T = 45, B = 50;
   const ts = active(), spec = views[view];
   const race = raceHorizon(ts, routeDistance);
   horizon = view === 'time' ? routeDistance : Math.max(1, race.seconds);
@@ -97,13 +98,13 @@ function render(width) {
   for(const y of [...yScale.ticks].reverse()) {
     const pos = sy(y);
     if(pos-lastY < 23) continue; lastY=pos;
-    content+=`<line x1="${L}" x2="${W-R}" y1="${pos}" y2="${pos}" stroke="#e5e9e4" stroke-dasharray="2 5"/><text x="${L-12}" y="${pos+4}" text-anchor="end">${tickLabel(y)}</text>`;
+    content+=`<line x1="${L}" x2="${W-R}" y1="${pos}" y2="${pos}" stroke="#e5e9e4" stroke-dasharray="2 5"/><text x="${L-12}" y="${pos+4}" text-anchor="end">${view === 'time' ? formatTime(y) : tickLabel(y)}</text>`;
   }
   let lastX=-Infinity;
   for(const x of xScale.ticks) {
     const pos=sx(x);
     if(pos-lastX < 42) continue; lastX=pos;
-    content+=`<text x="${pos}" y="${H-B+23}" text-anchor="middle">${tickLabel(x)}</text>`;
+    content+=`<text x="${pos}" y="${H-B+23}" text-anchor="middle">${view !== 'time' ? formatTime(x) : tickLabel(x)}</text>`;
   }
   content+=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#ccd4cc"/><text x="${(W+L-R)/2}" y="${H-6}" text-anchor="middle">${spec.x}${xScale.mode==='log' ? ' · log scale' : ''}</text>`;
   if (view === 'distance' && Number.isFinite(sy(routeDistance))) {
@@ -115,7 +116,19 @@ function render(width) {
     const emphasis = !highlighted || highlighted === t.id;
     content+=`<path data-train="${escape(t.id)}" clip-path="url(#plot-clip)" d="${d}" fill="none" stroke="${t.color}" stroke-width="${highlighted===t.id?3:2}" opacity="${emphasis?1:.16}" stroke-dasharray="${t.dash}"><title>${escape(t.name)} — model</title></path>`;
   }
-  if(W>=700) {
+  if (view === 'distance') {
+    const y = sy(routeDistance);
+    const labelled = (ts.length <= 12 ? ts : ts.filter(t => t.id === highlighted))
+      .map(t => ({t, x: sx(t.model.timeAt(routeDistance))}))
+      .filter(({x}) => Number.isFinite(x)).sort((a,b) => a.x-b.x);
+    // Spread neighbouring names; markers keep the exact arrival position.
+    for (let i=0; i<labelled.length; i++) labelled[i].labelX=Math.max(labelled[i].x, i ? labelled[i-1].labelX+16 : L+5);
+    for (let i=labelled.length-1; i>=0; i--) labelled[i].labelX=Math.min(labelled[i].labelX, i===labelled.length-1 ? W-R-5 : labelled[i+1].labelX-16);
+    for (const {t,x,labelX} of labelled) {
+      const opacity = !highlighted || highlighted === t.id ? 1 : .25;
+      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${y+14}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${y+18}" transform="rotate(-90 ${labelX} ${y+18})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(t.name)}</text>`;
+    }
+  } else if(W>=700) {
     const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);

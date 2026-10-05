@@ -94,7 +94,9 @@ précède le graphe. La recherche filtre uniquement la liste, sans modifier la s
 « Select results » et « Clear results » agissent sur les résultats filtrés.
 Au lancement et avec « Reset », les quatre premières entrées du JSON sont sélectionnées.
 Toutes les séries sélectionnées sont tracées. Jusqu’à douze séries, leurs noms sont
-placés en fin de courbe ; au-delà, le survol/focus d’une ligne du catalogue identifie
+placés au franchissement de la cible, verticalement, dans Distance / time ;
+les autres vues les placent en fin de courbe. Les repères indiquent les temps
+d’arrivée exacts ; les noms proches sont décalés avec un trait de liaison. Au-delà, le survol/focus d’une ligne du catalogue identifie
 une série et atténue les autres pour limiter la superposition des noms.
 
 Le mode Log utilise un logarithme en base 10, avec graduations en unités physiques.
@@ -216,3 +218,7 @@ visibles ont tous une fiche, sans doublon. Cela ne prouve pas l’exhaustivité 
 des captures ni la version du jeu, les mods ou les filtres actifs.
 Les autres champs ne sont pas encore présentés dans l’interface ; ils restent
 accessibles dans le fichier de paramètres pour les analyses futures.
+
+Les axes temporels affichent les durées en minutes:secondes (`m:ss`), arrondies
+à la seconde, dans les trois vues et le SVG exporté. Le modèle, le tableau et
+le CSV gardent les temps en secondes.
