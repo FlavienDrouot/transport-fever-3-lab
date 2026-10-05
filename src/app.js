@@ -7,11 +7,12 @@ const views = {
   time: {title: 'Temps en fonction de la distance', x: 'Distance parcourue (km)', y: 'Temps depuis le départ (s)', unit: 'km', help: 'La courbe la plus basse correspond au train qui atteint la distance en premier.'}
 };
 let dataset, trains, selected, view = 'distance', horizon = 300, cursor = 120;
-const W = 1000, H = 420, L = 70, R = 25, T = 48, B = 55;
+const H = 420, L = 70, R = 25, T = 48, B = 55;
 function active() {return trains.filter(t => selected.has(t.id));}
 function value(t, x) {return view === 'time' ? t.model.timeAt(x) : t.model.stateAt(x)[view === 'speed' ? 'speedKmh' : 'distanceKm'];}
 function points(t) {return Array.from({length: 301}, (_, i) => {const x = i * horizon / 300; return [x, value(t, x)];});}
-function render() {
+function render(width) {
+  const W = typeof width === 'number' ? width : Math.max(320, Math.min(1000, $('chart').clientWidth || 1000));
   const ts = active();
   const spec = views[view];
   $('chart-heading').textContent = spec.title;
@@ -93,7 +94,10 @@ async function init() {
   $('measurements').addEventListener('change', render);
   $('cursor').addEventListener('input', e => {cursor = Number(e.target.value); render();});
   $('svg').addEventListener('click', () => {
+    render(1000);
+    const W = 1000;
     const svg = $('chart').querySelector('svg').cloneNode(true);
+    render();
     const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
     style.textContent = 'text{font-family:system-ui,sans-serif;font-size:12px;fill:#63726a}'; svg.prepend(style);
     const legend = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -117,6 +121,7 @@ async function init() {
     }
     download(rows.map(row => row.join(',')).join('\n'), 'text/csv;charset=utf-8', `tf3-${view}.csv`);
   });
+  window.addEventListener('resize', () => render());
   render();
 }
 init().catch(error => {$('status').textContent = 'Impossible de charger le laboratoire. Servez le site avec un serveur HTTP puis réessayez.'; console.error(error);});
