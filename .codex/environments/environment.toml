@@ -1,0 +1,10 @@
+version = 1
+name = "TF3 Lab"
+
+[setup]
+script = ""
+
+[[actions]]
+name = "Aperçu"
+icon = "run"
+command = "npm run dev:remote"

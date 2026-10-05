@@ -1,6 +1,8 @@
 # TF3 Lab
 
 Un laboratoire open source pour comparer les trains de **Transport Fever 3**.
+
+**[Ouvrir le site](https://flaviendrouot.github.io/transport-fever-3-lab/)**
 Cette preuve de concept reprend les paramètres et les mesures de la conversation
 « Branche · Analyser Transport Fever 3 » du 5 octobre 2026 et recalcule les courbes.
 Projet communautaire indépendant, sans affiliation avec l’éditeur du jeu.
@@ -33,6 +35,30 @@ ssh -N -L 4173:127.0.0.1:4173 flavien@flavien-g5-5590.tailbc92c5.ts.net
 Puis ouvrir <http://127.0.0.1:4173> sur Windows. Arrêter le serveur et le tunnel
 avec Ctrl+C. Le site nécessite HTTP pour charger les modules et le JSON ; ouvrir
 `index.html` directement en `file://` ne suffit pas.
+
+## Aperçu privé depuis un autre poste
+
+Dans Codex, lancer l’action **Aperçu** définie dans
+[`.codex/environments/environment.toml`](.codex/environments/environment.toml),
+ou exécuter `npm run dev:remote` depuis le checkout.
+Le terminal affiche une URL HTTPS Tailscale avec le port sélectionné.
+Ouvrir ce lien dans le navigateur du poste Windows connecté au même réseau Tailscale.
+Aucun tunnel SSH supplémentaire n’est nécessaire pour cette action.
+
+Le serveur reste sur `127.0.0.1` sur le Dell ; Tailscale Serve relaie uniquement
+les fichiers publics du site. Le port est choisi à partir de 8443 selon les disponibilités,
+pour permettre plusieurs aperçus sans modifier les routes existantes. Les modifications
+non commitées du checkout apparaissent après rafraîchissement du navigateur ;
+il n’y a pas de rechargement automatique.
+
+Garder le terminal ouvert. Ctrl+C ou une terminaison normale arrête le serveur et
+sa session Serve. Une interruption forcée peut laisser le processus enfant actif :
+arrêter uniquement le `tailscale serve` de cet aperçu, sans `tailscale serve reset`.
+Prérequis : Node.js, Tailscale CLI connecté, MagicDNS/certificats HTTPS actifs,
+droits Serve sur le Dell et accès au port dans les règles du réseau Tailscale.
+Le lanceur ne modifie ni ces droits, ni le pare-feu, et n’utilise pas Funnel.
+En cas d’échec, consulter `tailscale status`, `tailscale serve status` et le message
+du terminal. Le tunnel SSH décrit plus haut reste une alternative avec `npm run dev`.
 
 ## Organisation
 
@@ -69,13 +95,21 @@ contradictoires : les calculs et les mesures sont prioritaires sur ces commentai
 
 Le résultat `dist/` est un site statique autonome à chemins relatifs : il peut être
 servi à la racine ou dans un sous-répertoire, sans réécriture d’URL ni secret.
-L’hébergement n’est pas encore activé. La discussion et les preuves de livraison
+GitHub Pages est configuré avec GitHub Actions. La discussion et les preuves de livraison
 se trouvent dans les [Issues](https://github.com/FlavienDrouot/transport-fever-3-lab/issues).
 
-Pour GitHub Pages, après choix de cette option : préparer un workflow Actions
-qui teste, génère `dist/`, téléverse un artefact Pages et le déploie avec les permissions
-`pages: write` et `id-token: write` ; configurer Pages sur GitHub Actions.
-Ne pas servir tout le dépôt comme artefact.
+Le workflow `.github/workflows/ci.yml` exécute les tests et le build sur les PR.
+Chaque push sur `main` publie `dist/` après réussite des tests ; le déclenchement
+manuel `workflow_dispatch` sur `main` permet de republier. Les PR ne déploient pas.
+La source Pages du dépôt est **GitHub Actions** ; le job de publication utilise
+l’environnement `github-pages` et les permissions `pages: write` / `id-token: write`.
+Seuls les fichiers du site sont téléversés. Les URL utilisent le sous-répertoire
+`/transport-fever-3-lab/` grâce aux chemins relatifs.
+
+En cas d’échec, consulter le run Actions : vérifier d’abord tests/build, puis
+les réglages Pages et l’environnement `github-pages`. Pour revenir à une version
+antérieure, rétablir le commit voulu sur `main` avec un revert revu et pousser.
+Ne pas relancer une ancienne exécution concurrente pour contourner l’historique.
 
 Pour OpenAI Sites, après choix de cette option : importer cette source via la compétence
 Sites, enregistrer le Site, configurer son répertoire statique `dist` et publier une version.

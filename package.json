@@ -5,6 +5,13 @@
   "type": "module",
   "description": "Comparateur de trains et laboratoire de visualisation Transport Fever 3",
   "license": "MIT",
-  "engines": { "node": ">=22" },
-  "scripts": { "test": "node --test", "build": "node scripts/build.mjs", "dev": "python3 -m http.server 4173 --bind 127.0.0.1" }
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "dev": "python3 -m http.server 4173 --bind 127.0.0.1",
+    "dev:remote": "node scripts/dev-tailnet.mjs"
+  }
 }
