@@ -67,3 +67,23 @@ test('Invalid service parameters fail; zero fixed delay is allowed', () => {
   assert.throws(()=>analyseLine({...train,carCount:1.5},{distanceKm:1}),RangeError);
   assert.equal(analyseLine(train,{distanceKm:1,stationDelaySeconds:0}).stationSeconds,15);
 });
+test('Absolute maintenance-per-throughput is reciprocal and uses hourly throughput', () => {
+  const result=analyseLine(train,{distanceKm:1});
+  close(result.maintenancePerThroughput,1200/result.journeysPerHour);
+  close(result.transportPerMaintenance,1/result.maintenancePerThroughput);
+  close(result.transportPerMaintenance,result.efficiency*3600);
+  const zero=analyseLine(train,{distanceKm:1,fillRatio:0});
+  assert.equal(zero.maintenancePerThroughput,null);
+  assert.equal(zero.transportPerMaintenance,0);
+});
+
+// Independent accounting: complete cycles carry 2N passenger journeys each.
+test('Maintenance per passenger journey uses a 1,460-second game year', () => {
+  const result=analyseLine(train,{distanceKm:1});
+  const journeysInYear=1460/result.roundTripSeconds * 2 * result.passengers;
+  close(result.maintenancePerJourney,train.economy.annualMaintenance/journeysInYear);
+  close(result.maintenancePerJourney,result.maintenancePerThroughput*3600/1460);
+  const expensive=analyseLine({...train,economy:{annualMaintenance:2400}},{distanceKm:1});
+  close(expensive.maintenancePerJourney,result.maintenancePerJourney*2);
+  assert.equal(analyseLine(train,{distanceKm:1,fillRatio:0}).maintenancePerJourney,null);
+});

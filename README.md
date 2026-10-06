@@ -14,7 +14,13 @@ Switch between **Race** for travel-time comparisons and **Economics** for A–B�
 2. **Speed over time** shows acceleration and top speed.
 3. **Distance & time** compares progress or arrival time. Set a route distance and read the arrival ranking in **Race readout**.
 4. **Crossovers** reveals where the best choice changes. The arrival curves emphasize winning segments; the rank chart also shows overtakes among the other trains.
-5. In **Economics**, **Line capacity** explores A–B–A passenger throughput per maintenance cost, with distance and occupancy sliders. The efficiency index compares throughput per maintenance cost; provisional assumptions are shown beside the controls. **Efficiency over distance** shows relative competitiveness. **Efficiency curves around crossovers** emphasizes winning segments with phase focus, while **Economic rank crossovers** shows every train’s ranking changes.
+5. In **Economics**, **Line capacity** explores A–B–A passenger throughput per maintenance cost, with distance and occupancy sliders. The method explains maintenance cost per completed passenger journey, using four simulation seconds per day and 365 days per game year. Lower values indicate less maintenance for the same throughput. Provisional assumptions are shown beside the controls. **Maintenance cost over distance** shows this ratio across distances. **Maintenance cost around crossovers** emphasizes winning segments with phase focus, while **Economic rank crossovers** shows every train’s ranking changes.
+
+**Explore Train History** selects the complete catalogue and sets the year to 1900. Move the year slider or use the − / + buttons to advance one year at a time; newly introduced trains automatically enter the graphs.
+
+Use the **moon / sun** navigation button to change the theme; your browser remembers the choice.
+
+Methods, assumptions, chart reading guides and supplementary tables are folded by default in both views. Open their labelled sections for the full explanation or exact results.
 
 Hover a curve or focus a train in the picker to identify it across the page. Try linear and logarithmic axes, or **Phase focus** to give crossover intervals more room. The rank chart's **All crossovers** mode spaces each ranking change equally, ignoring crossings before 100 m. Non-uniform axes show real values at their ticks, but their visual spacing is deliberately stretched.
 
@@ -28,7 +34,7 @@ The model uses each train's mass, tractive effort, power and maximum speed. It a
 F(v) = min(Fmax, P / v)
 ```
 
-It does not include braking, stops, slopes or resistance. “Best” in the race charts means **fastest for the distance**. The experimental **Line capacity** section instead compares passenger throughput per maintenance cost, including braking, sequential unloading and loading, and fixed delays at both terminals. It excludes ticket revenue and purchase cost, and assumes sufficient demand regardless of travel time. This can favor the low-maintenance Handcar, even when long journeys would make its assumed occupancy unrealistic. Purchase and maintenance values in the source dataset were recorded on normal difficulty. The year filter uses introduction dates; retirement dates are not known.
+It does not include braking, stops, slopes or resistance. “Best” in the race charts means **fastest for the distance**. The experimental **Line capacity** section instead compares passenger throughput per maintenance cost, including braking, sequential unloading and loading, and fixed delays at both terminals. Ticket revenue is excluded because the comparison equalizes passenger throughput on the same route: assuming the same fare per passenger, revenue is then identical. This assumption is supported by measurements on one route, not a complete game pricing formula. Purchase cost and whole-train fleet rounding are excluded, and sufficient demand is assumed regardless of travel time. This can favor the low-maintenance Handcar, even when long journeys would make its assumed occupancy unrealistic. Purchase and maintenance values in the source dataset were recorded on normal difficulty. The year filter uses introduction dates; retirement dates are not known.
 
 This is a proof of concept, not a complete simulation of the game. [Model and data notes](docs/model.md) explain assumptions, provenance and the experimental scales.
 
