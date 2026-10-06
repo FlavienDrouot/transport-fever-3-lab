@@ -67,7 +67,7 @@
       <p class="chart-help">One train, equal occupancy in both directions, unlimited demand. At each terminal, all passengers leave before the next group boards. Each leg starts from rest; constant braking is included. Platform penalties, traffic and variable waits for late passengers are excluded.</p>
       <div class="line-controls">
         <div class="line-distance-control"><label for="line-distance">One-way distance</label><div class="line-distance-entry"><label class="sr-only" for="line-distance-input">One-way distance in kilometres</label><input id="line-distance-input" type="number" min="0.5" step="0.1" value="10"><span>km</span></div><input id="line-distance" type="range" min="0.5" max="30" step="0.1" value="10"></div>
-        <label for="line-fill">Occupancy <output id="line-fill-value" for="line-fill">100%</output><input id="line-fill" type="range" min="0" max="100" step="1" value="100"></label>
+        <label for="line-fill">Occupancy <output id="line-fill-value" for="line-fill">100%</output><input id="line-fill" type="range" min="1" max="100" step="1" value="100"></label>
       </div>
       <p class="chart-help">Distance is shared with the race chart. An hour means 3,600 simulation seconds.</p>
       <p class="scale-note">Experimental calibration: 1 passenger/s per multiplier unit, in both directions. Total rate = base rate × multiplier per car × number of cars. Braking defaults to 2.5 m/s²; fixed delays to 6 seconds per terminal (2 before unloading, 2 before loading, 2 before departure). All cars are assumed to contribute equally. Empty mass is used; passenger load showed no visible acceleration effect.</p>
@@ -83,7 +83,7 @@
     <section id="economic-efficiency" class="chart-panel" aria-labelledby="economic-efficiency-heading">
       <div class="panel-top"><h2 id="economic-efficiency-heading">Efficiency over distance</h2><p class="chart-help">Passenger throughput per maintenance cost. At each distance, the best selected train scores 100.</p></div>
       <div class="chart-toolbar"><fieldset class="scale-toggle" id="economic-efficiency-scale"><legend class="sr-only">Efficiency over distance vertical scale</legend><span aria-hidden="true">Efficiency</span><label><input type="radio" name="economic-efficiency-scale" value="linear" checked><span>Linear</span></label><label><input type="radio" name="economic-efficiency-scale" value="log"><span>Log</span></label></fieldset></div>
-      <p class="chart-help">The distance axis ends at your selected route distance, shown by the vertical marker. Hover a curve to identify its train. Log scale crops values below the displayed minimum; zero occupancy gives zero throughput.</p>
+      <p class="chart-help">The distance axis ends at your selected route distance, shown by the vertical marker. Hover a curve to identify its train. Log scale crops values below the displayed minimum.</p>
       <div id="economic-efficiency-chart" class="chart"></div>
     </section>
     <section id="economic-crossover-curves" class="chart-panel" aria-labelledby="economic-crossover-curves-heading">

@@ -65,7 +65,7 @@ efficiency = journeysPerSecond / annualMaintenance
 
 Both directions count as journeys, not unique passengers. An hour is 3,600 simulation seconds. Efficiency ranks `journeysPerSecond / annualMaintenance`, normalized to 100 for the best active train. No annual transport totals or per-journey cost are calculated: a common conversion to an economic year would only multiply the unnormalized efficiency and cannot change the ranking. Zero occupancy gives no best choice. Costs use normal difficulty and one continuously operated train.
 
-A visual drag race between identical trains carrying 60 and two passengers showed no observable acceleration difference; passenger mass is omitted. Reproducible timing differences would justify revisiting this choice. Distance and occupancy controls are local to the page; distance uses a slider from 0.5 to 30 km, extending to accommodate longer distances entered in its adjacent number field or in the race section. Calibration parameters are fixed model defaults, not editable page controls.
+A visual drag race between identical trains carrying 60 and two passengers showed no observable acceleration difference; passenger mass is omitted. Reproducible timing differences would justify revisiting this choice. The occupancy slider ranges from 1% to 100%, keeping all economic views visible when reducing occupancy. Distance and occupancy controls are local to the page; distance uses a slider from 0.5 to 30 km, extending to accommodate longer distances entered in its adjacent number field or in the race section. Calibration parameters are fixed model defaults, not editable page controls.
 
 ## Economic curves
 
