@@ -8,10 +8,13 @@ An open-source, independent community project. Choose trains, adjust the route d
 
 ## Start exploring
 
+Switch between **Race** for travel-time comparisons and **Economics** for A–B–A service efficiency. Each view has its own section links; the train selection is shared.
+
 1. Choose trains in the right-hand picker, or open **Trains** on mobile. The list is sorted by introduction year, newest first. Search by name and use the year slider to explore vehicles introduced by that date.
 2. **Speed over time** shows acceleration and top speed.
 3. **Distance & time** compares progress or arrival time. Set a route distance and read the arrival ranking in **Race readout**.
 4. **Crossovers** reveals where the best choice changes. The arrival curves emphasize winning segments; the rank chart also shows overtakes among the other trains.
+5. In **Economics**, **Line capacity** explores A–B–A passenger throughput per maintenance cost, with distance and occupancy sliders. The efficiency index compares throughput per maintenance cost; provisional assumptions are shown beside the controls. **Efficiency over distance** shows relative competitiveness. **Efficiency curves around crossovers** emphasizes winning segments with phase focus, while **Economic rank crossovers** shows every train’s ranking changes.
 
 Hover a curve or focus a train in the picker to identify it across the page. Try linear and logarithmic axes, or **Phase focus** to give crossover intervals more room. The rank chart's **All crossovers** mode spaces each ranking change equally, ignoring crossings before 100 m. Non-uniform axes show real values at their ticks, but their visual spacing is deliberately stretched.
 
@@ -25,7 +28,7 @@ The model uses each train's mass, tractive effort, power and maximum speed. It a
 F(v) = min(Fmax, P / v)
 ```
 
-It does not include braking, stops, slopes or resistance. “Best” currently means **fastest for the distance**, rather than lowest cost or best overall service. Purchase and maintenance values in the source dataset were recorded on normal difficulty. The year filter uses introduction dates; retirement dates are not known.
+It does not include braking, stops, slopes or resistance. “Best” in the race charts means **fastest for the distance**. The experimental **Line capacity** section instead compares passenger throughput per maintenance cost, including braking, sequential unloading and loading, and fixed delays at both terminals. It excludes ticket revenue and purchase cost, and assumes sufficient demand regardless of travel time. This can favor the low-maintenance Handcar, even when long journeys would make its assumed occupancy unrealistic. Purchase and maintenance values in the source dataset were recorded on normal difficulty. The year filter uses introduction dates; retirement dates are not known.
 
 This is a proof of concept, not a complete simulation of the game. [Model and data notes](docs/model.md) explain assumptions, provenance and the experimental scales.
 
