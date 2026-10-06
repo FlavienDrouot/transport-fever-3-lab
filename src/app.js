@@ -355,7 +355,7 @@ function initTheme() {
   const apply=theme=>{
     document.documentElement.dataset.theme=theme;
     const dark=theme==='dark';
-    $('theme-toggle').textContent=dark?'Light':'Dark';
+    $('theme-toggle').title=dark?'Switch to light mode':'Switch to dark mode';
     $('theme-toggle').setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
     $('theme-toggle').setAttribute('aria-pressed',String(dark));
   };

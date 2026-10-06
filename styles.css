@@ -134,3 +134,5 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 [data-theme=dark] .chart [fill="white"]{fill:var(--surface)}
 [data-theme=dark] .chart line[stroke="#e4e8e4"],[data-theme=dark] .chart line[stroke="#e5e9e4"]{stroke:var(--line)}
 [data-theme=dark] .chart path[data-train],[data-theme=dark] .chart text[data-train],[data-theme=dark] .chart circle[data-train],[data-theme=dark] .phase-leaders span,[data-theme=dark] .train-legend span,[data-theme=dark] .train-key{filter:brightness(1.7)}
+
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:6px}.theme-toggle svg{width:20px;height:20px}.theme-sun{display:none}[data-theme=dark] .theme-sun{display:block}[data-theme=dark] .theme-moon{display:none}@media(max-width:700px){.theme-toggle{width:44px;height:44px}}

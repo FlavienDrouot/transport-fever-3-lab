@@ -18,7 +18,7 @@ Switch between **Race** for travel-time comparisons and **Economics** for A–B�
 
 **Explore Train History** selects the complete catalogue and sets the year to 1900. Move the year slider or use the − / + buttons to advance one year at a time; newly introduced trains automatically enter the graphs.
 
-Use the **Dark / Light** navigation button to change the theme; your browser remembers the choice.
+Use the **moon / sun** navigation button to change the theme; your browser remembers the choice.
 
 Methods, assumptions, chart reading guides and supplementary tables are folded by default in both views. Open their labelled sections for the full explanation or exact results.
 
