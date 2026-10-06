@@ -1,3 +1,4 @@
+import {curveLabels, trainLegend} from './chart-labels.js';
 import {economicStory} from './economic-crossovers.js';
 import {renderEconomicCrossovers} from './economic-crossover-chart.js';
 import {renderEconomicChart} from './economic-chart.js';
@@ -42,6 +43,9 @@ function renderCatalogue() {
   $('train-count').textContent = trains.length;
   renderSelectionCount();
   $('catalogue-year-value').textContent = catalogueYear;
+  $('catalogue-year').value = catalogueYear;
+  $('year-previous').disabled = catalogueYear <= 1900;
+  $('year-next').disabled = catalogueYear >= 2020;
   $('no-results').hidden = !!results.length;
   $('select-visible').disabled = $('clear-visible').disabled = !results.length;
   $('trains').innerHTML = results.map(t => `<label class="train-row" data-train="${escape(t.id)}" style="--train-color:${t.color}"><input type="checkbox" value="${escape(t.id)}" ${selected.has(t.id) ? 'checked' : ''} aria-label="Compare ${escape(t.name)}"><span class="train-info"><span class="train-name">${escape(t.name)}</span><span class="train-spec">${t.year} · ${t.maxSpeedKmh} km/h</span><span class="train-power">${t.massTonnes} t · ${fmt(t.powerCh * dataset.source.horsepowerWatts / 1000)} kW · ${fmt(t.tractionKgf, 0)} kgf</span></span></label>`).join('');
@@ -87,13 +91,13 @@ function renderChart(kind, width) {
   const clipId = `${kind}-plot-clip`;
   const W = typeof width === 'number' ? width : Math.max(320, el('chart').clientWidth || 1000);
   const ts = active(), spec = views[view];
-  const labelSpace = view === 'distance' ? Math.max(120, Math.ceil(Math.max(0,...ts.map(t=>arrivalName(t, view).length))*7/Math.sqrt(2))+24) : 0;
+  const labelSpace = view === 'distance' ? Math.max(120, Math.ceil(Math.max(0,...trains.map(t=>arrivalName(t, view).length))*7/Math.sqrt(2))+24) : 0;
   const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 220, T = 45 + labelSpace, B = 50;
   const horizon = chartHorizon(view, ts);
   el('chart-heading').textContent = spec.title;
   const xName = view === 'time' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view === 'speed' ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
-  el('chart-help').textContent = spec.help + (ts.length > 12 ? ' Hover or focus a catalogue row to identify its curve.' : '');
+  el('chart-help').textContent = spec.help;
   el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
@@ -133,7 +137,7 @@ function renderChart(kind, width) {
   }
   if (view === 'distance') {
     const y = sy(routeDistance);
-    const labelled = (ts.length <= 12 ? ts : ts.filter(t => t.id === highlighted))
+    const labelled = ts
       .map(t => ({t, x: sx(t.model.timeAt(routeDistance))}))
       .filter(({x}) => Number.isFinite(x)).sort((a,b) => a.x-b.x);
     // Spread neighbouring names; markers keep the exact arrival position.
@@ -144,12 +148,12 @@ function renderChart(kind, width) {
       content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(45 ${labelX} ${T-16})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t, view))}</text>`;
     }
   } else if(W>=700) {
-    const labelled = (ts.length<=12 ? ts : ts.filter(t=>t.id===highlighted)).map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
+    const labelled = ts.map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);
     for(const {t,x,y,labelY} of labelled) content+=`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" data-train="${escape(t.id)}" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t, view))}</text>`;
   }
-  el('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>`;
+  el('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>${trainLegend(ts,W,highlighted)}`;
 }
 const crossoverCache = new Map();
 function renderCrossovers() {
@@ -159,7 +163,7 @@ function renderCrossovers() {
   $('crossover-empty').hidden = !!ts.length;
   $('crossover-readout').innerHTML = phases.map(p=>`<tr><td>${fmt(p.start,2)} – ${p.unbounded ? '∞' : fmt(p.end,2)}</td><td>${p.leaders.map(id=>escape(ts.find(t=>t.id===id).name)).join(' / ')}</td><td>${formatTime(Math.min(...ts.map(t=>t.model.timeAt(p.start))))}</td></tr>`).join('');
   if (!ts.length) {$('crossover-chart').innerHTML='';return;}
-  const W=Math.max(320,$('crossover-chart').clientWidth), L=65, R=18, T=55, B=60;
+  const W=Math.max(320,$('crossover-chart').clientWidth), L=65, R=W>=700?220:18, T=55, B=60;
   const H=Math.max(300, Math.min(650, ts.length*35+T+B));
   const mode=document.querySelector('input[name="rank-distance-scale"]:checked').value;
   const minimum=.1, knots=[minimum,...intervals.map(p=>p.end)];
@@ -188,7 +192,8 @@ function renderCrossovers() {
     const opacity=!highlighted||highlighted===t.id?1:.16;
     content+=`<path class="train-curve" data-train="${escape(t.id)}" d="${d}" fill="none" stroke="${t.color}" stroke-width="${highlighted===t.id?3:2}" stroke-dasharray="${t.dash}" opacity="${opacity}"><title>${escape(t.name)}</title></path><path class="curve-hit" data-train="${escape(t.id)}" d="${d}" fill="none" stroke="transparent" stroke-width="12" pointer-events="stroke"/>`;
   }
-  $('crossover-chart').innerHTML=`<div class="phase-leaders">${phases.map(p=>`<div style="flex:${phaseAxis.position(p.end)-phaseAxis.position(p.start)}">${p.leaders.map(id=>{const t=ts.find(t=>t.id===id);return `<span data-train="${escape(id)}" style="color:${t.color}">${escape(t.name)}</span>`;}).join(' / ')}</div>`).join('')}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Arrival ranking by distance; ${mode==='linear'?'linear scale':'all crossovers equally spaced'}">${content}</svg>`;
+  content+=curveLabels(ts.map(t=>({t,y:sy(intervals.at(-1).ranks[t.id])})),{width:W,right:R,top:T,bottom:H-B,highlighted});
+  $('crossover-chart').innerHTML=`<div class="phase-leaders">${phases.map(p=>`<div style="flex:${phaseAxis.position(p.end)-phaseAxis.position(p.start)}">${p.leaders.map(id=>{const t=ts.find(t=>t.id===id);return `<span data-train="${escape(id)}" style="color:${t.color}">${escape(t.name)}</span>`;}).join(' / ')}</div>`).join('')}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Arrival ranking by distance; ${mode==='linear'?'linear scale':'all crossovers equally spaced'}">${content}</svg>${trainLegend(ts,W,highlighted)}`;
 }
 function renderCrossoverCurves() {
   const ts=active(), key=ts.map(t=>t.id).sort().join('|');
@@ -201,7 +206,8 @@ function renderCrossoverCurves() {
   const inverted=document.querySelector('input[name="crossover-orientation"]:checked').value==='distance';
   const emphasize=$('emphasize-leaders').checked;
   $('crossover-curves-help').textContent=inverted?'The highest curve leads the race.':'The lowest curve arrives first.';
-  $('crossover-axis-note').hidden=phases.length<2 || (timeMode!=='focus' && distanceMode!=='focus');
+  // Keep the explanation in the flow while the year changes.
+  $('crossover-axis-note').hidden=false;
   const distanceAxis=createPhaseScale(distanceMode==='focus'?distances:[0,end],distanceMode==='focus'?leadershipWeights(phases.length):[1]);
   const timeAxis=createPhaseScale(timeMode==='focus'?times:[0,times.at(-1)],timeMode==='focus'?leadershipWeights(phases.length):[1]);
   const xAxis=inverted?timeAxis:distanceAxis, yAxis=inverted?distanceAxis:timeAxis;
@@ -209,7 +215,7 @@ function renderCrossoverCurves() {
   const xMode=inverted?timeMode:distanceMode,yMode=inverted?distanceMode:timeMode;
   const xLabel=inverted?'Time (m:ss)':'Distance (km)',yLabel=inverted?'Distance (km)':'Arrival time (m:ss)';
   const xFormat=inverted?formatTime:d=>fmt(d,2),yFormat=inverted?d=>fmt(d,2):formatTime;
-  const W=Math.max(320,$('crossover-curves-chart').clientWidth),H=W<700?620:820,L=65,R=18,T=45,B=65;
+  const W=Math.max(320,$('crossover-curves-chart').clientWidth),H=W<700?620:820,L=65,R=W>=700?220:18,T=45,B=65;
   const sx=x=>L+xAxis.position(x)*(W-L-R),sy=y=>H-B-yAxis.position(y)/1.12*(H-T-B);
   const value=(t,x)=>inverted?t.model.stateAt(x).distanceKm:t.model.timeAt(x);
   const bounds=p=>inverted?[times[phases.indexOf(p)],times[phases.indexOf(p)+1]]:[p.start,p.end];
@@ -254,7 +260,8 @@ function renderCrossoverCurves() {
   }
   phases.slice(1).forEach((p,i)=>{const x=inverted?times[i+1]:p.start,y=inverted?p.start:times[i+1];content+=`<circle cx="${sx(x)}" cy="${sy(y)}" r="4" fill="white" stroke="#27332e"><title>Leader changes at ${fmt(p.start,2)} km · ${formatTime(times[i+1])}</title></circle>`;});
   content+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">${xLabel} · ${xMode==='focus'?'phase focus':'linear'}</text>`;
-  $('crossover-curves-chart').innerHTML=`<div class="phase-leaders">${phases.map(p=>{const [start,stop]=bounds(p);return `<div style="flex:${xAxis.position(stop)-xAxis.position(start)}">${p.leaders.map(id=>{const t=ts.find(t=>t.id===id);return `<span data-train="${escape(id)}" style="color:${t.color}">${escape(t.name)}</span>`;}).join(' / ')}</div>`;}).join('')}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${inverted?'Distance over time':'Time over distance'} around crossovers; distance ${distanceMode}, time ${timeMode}">${content}</svg>`;
+  content+=curveLabels(ts.map(t=>({t,y:sy(value(t,xKnots.at(-1)))})),{width:W,right:R,top:T,bottom:H-B,highlighted});
+  $('crossover-curves-chart').innerHTML=`<div class="phase-leaders">${phases.map(p=>{const [start,stop]=bounds(p);return `<div style="flex:${xAxis.position(stop)-xAxis.position(start)}">${p.leaders.map(id=>{const t=ts.find(t=>t.id===id);return `<span data-train="${escape(id)}" style="color:${t.color}">${escape(t.name)}</span>`;}).join(' / ')}</div>`;}).join('')}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${inverted?'Distance over time':'Time over distance'} around crossovers; distance ${distanceMode}, time ${timeMode}">${content}</svg>${trainLegend(ts,W,highlighted)}`;
 }
 function renderLineAnalysis() {
   $('line-distance').max = Math.max(30, Math.ceil(routeDistance));
@@ -265,14 +272,14 @@ function renderLineAnalysis() {
   const rows = active().map(t => ({t, result: analyseLine(t, {distanceKm: routeDistance, fillRatio: lineFill})})).sort((a,b) => b.result.efficiency - a.result.efficiency);
   const best = rows[0]?.result.efficiency || 0;
   const winners = rows.filter(({result}) => best > 0 && Math.abs(result.efficiency / best - 1) < 1e-9);
-  $('line-summary').textContent = !rows.length ? 'Select at least one train to compare line capacity.' : !best ? 'Occupancy is zero: no passenger journeys and no best service choice.' : `Best capacity per maintenance cost: ${winners.map(({t}) => t.name).join(' / ')} at ${fmt(routeDistance)} km and ${Math.round(lineFill * 100)}% occupancy.`;
+  $('line-summary').textContent = !rows.length ? 'Select at least one train to compare line capacity.' : !best ? 'Occupancy is zero: no passenger journeys and no best service choice.' : `Lowest maintenance cost per passenger journey: ${winners.map(({t}) => t.name).join(' / ')} at ${fmt(routeDistance)} km and ${Math.round(lineFill * 100)}% occupancy.`;
   $('line-caption').textContent = `A–B–A at ${fmt(routeDistance)} km per leg · normal-difficulty maintenance`;
   let rank = 0, prior;
   $('line-readout').innerHTML = rows.map(({t,result:r},i) => {
-    const score = best ? 100 * r.efficiency / best : 0;
-    if (prior === undefined || Math.abs(score - prior) > 1e-7) rank = i + 1;
+    const score = r.maintenancePerJourney;
+    if (prior === undefined || Math.abs(score - prior) > Math.max(1e-7, Math.abs(score || 0)*1e-9)) rank = i + 1;
     prior = score;
-    return `<tr class="${t.id===highlighted?'is-highlighted':''}"><td>${best ? rank : '—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td><meter min="0" max="100" value="${score}" aria-label="Relative efficiency of ${escape(t.name)}">${fmt(score)}</meter> ${fmt(score)}</td><td>${fmt(r.journeysPerHour,0)}</td><td>${fmt(t.economy.annualMaintenance,0)}</td><td>${fmt(r.passengers)}</td><td>${t.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)} → ${fmt(r.rate,2)}</td><td>${formatTime(r.travelSeconds)}</td><td>${formatTime(r.stationSeconds)}</td><td>${formatTime(r.roundTripSeconds)}</td></tr>`;
+    return `<tr class="${t.id===highlighted?'is-highlighted':''}"><td>${best ? rank : '—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${score === null ? '—' : fmt(score,0)}</td><td>${fmt(r.journeysPerHour,0)}</td><td>${fmt(t.economy.annualMaintenance,0)}</td><td>${fmt(r.passengers)}</td><td>${t.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)} → ${fmt(r.rate,2)}</td><td>${formatTime(r.travelSeconds)}</td><td>${formatTime(r.stationSeconds)}</td><td>${formatTime(r.roundTripSeconds)}</td></tr>`;
   }).join('');
 }
 function updateStickyOffsets() {
@@ -283,6 +290,9 @@ function updateStickyOffsets() {
 }
 function syncAnalysisView() {
   const target = document.getElementById(location.hash.slice(1));
+  // Following a link to an explanation reveals it; normal chart visits stay compact.
+  for (let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details')) disclosure.open=true;
+  if (target && ['model','economic-method'].includes(target.id)) target.querySelector('details').open=true;
   const view = target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
   for (const name of ['race', 'economics']) {
     $(name).hidden = name !== view;
@@ -306,7 +316,7 @@ function render() {
   for (const row of $('trains').querySelectorAll('[data-train]')) row.classList.toggle('is-highlighted',row.dataset.train===highlighted);
   renderLineAnalysis();
   if (!$('economics').hidden) {
-    renderEconomicChart($('economic-efficiency-chart'), {trains:ts,distance:routeDistance,fill:lineFill,metric:'efficiency',highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
+    renderEconomicChart($('economic-efficiency-chart'), {trains:ts,distance:routeDistance,fill:lineFill,highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
     const key=JSON.stringify([ts.map(t=>t.id),routeDistance,lineFill]);
     if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(ts,routeDistance,lineFill);}
     renderEconomicCrossovers($('economic-crossover-curves-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,kind:'curves',highlighted,distanceMode:document.querySelector('input[name="economic-focus-scale"]:checked').value,verticalMode:document.querySelector('input[name="economic-focus-y"]:checked').value});
@@ -321,7 +331,7 @@ function render() {
   $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmt(routeDistance)} km`;
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
-  $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${fmt(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
+  $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${formatTime(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.stateAt(t.model.tractionEndSeconds).distanceKm*1000,0)}</td><td>${formatTime(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
 }
 function download(content,type,filename) {
   const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('status').textContent=`Export ready: ${filename}`;
@@ -340,7 +350,7 @@ function initPickerDrawer() {
 }
 async function init() {
   const response=await fetch(new URL('../data/trains.json',import.meta.url));if(!response.ok)throw new Error('Data unavailable');dataset=await response.json();
-  trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=trains.slice(0,4).map(t=>t.id);selected=new Set(defaults);renderCatalogue();initPickerDrawer();
+  trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=['metroliner','twindexx','tgv','fuxing','ice-1','etr-450'];selected=new Set(defaults);renderCatalogue();initPickerDrawer();
   $('trains').addEventListener('change',e=>{if(e.target.checked)selected.add(e.target.value);else selected.delete(e.target.value);renderSelectionCount();render();});
   const highlight = event => {const row=event.target.closest('[data-train]');const id=row?.dataset.train;if(highlighted!==id){highlighted=id;render();}};
   for (const chart of [$('chart'), $('speed-chart'), $('crossover-chart'), $('crossover-curves-chart'), $('economic-efficiency-chart'), $('economic-crossover-curves-chart'), $('economic-crossovers-chart')]) {
@@ -358,7 +368,11 @@ async function init() {
   }
   $('trains').addEventListener('pointerover',highlight);$('trains').addEventListener('focusin',highlight);
   $('trains').addEventListener('pointerleave',()=>{highlighted=undefined;render();});$('trains').addEventListener('focusout',e=>{if(!$('trains').contains(e.relatedTarget)){highlighted=undefined;render();}});
-  $('catalogue-year').addEventListener('input', e=>{catalogueYear=Number(e.target.value);highlighted=undefined;renderCatalogue();render();});
+  const setCatalogueYear = year => {catalogueYear=Math.max(1900,Math.min(2020,year));highlighted=undefined;renderCatalogue();render();};
+  $('catalogue-year').addEventListener('input', e=>setCatalogueYear(Number(e.target.value)));
+  $('year-previous').addEventListener('click',()=>setCatalogueYear(catalogueYear-1));
+  $('year-next').addEventListener('click',()=>setCatalogueYear(catalogueYear+1));
+  $('explore-history').addEventListener('click',()=>{selected=new Set(trains.map(t=>t.id));$('train-search').value='';setCatalogueYear(1900);});
   for(const id of ['train-search','train-sort']) $(id).addEventListener(id==='train-search'?'input':'change',()=>{highlighted=undefined;renderCatalogue();render();});
   for(const [id,select] of [['select-visible',true],['clear-visible',false]]) $(id).addEventListener('click',()=>{for(const t of visible())if(select)selected.add(t.id);else selected.delete(t.id);highlighted=undefined;renderCatalogue();render();});
   $('reset').addEventListener('click',()=>{selected=new Set(defaults);$('train-search').value='';catalogueYear=2020;$('catalogue-year').value=catalogueYear;highlighted=undefined;renderCatalogue();render();});

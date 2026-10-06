@@ -76,3 +76,44 @@ body.picker-open{overflow:hidden}
 :root{--app-header-offset:60px;--economic-controls-height:0px}.economic-controls{position:sticky;top:var(--app-header-offset);z-index:8;background:white;border-bottom:1px solid var(--line);box-shadow:0 5px 12px #00000008;max-height:50dvh;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable}.analysis-view>.economic-controls{padding-top:12px;padding-bottom:8px;margin-bottom:12px}.economic-controls .line-controls{margin:12px 0}.economic-controls .scale-note{margin:5px 0}.economic-controls .chart-help{margin:5px 0}#line-capacity{scroll-margin-top:calc(var(--app-header-offset) + 12px)}#economic-efficiency,#economic-crossover-curves,#economic-crossovers,#line-results{scroll-margin-top:calc(var(--app-header-offset) + var(--economic-controls-height) + 16px)}@media(min-width:701px){.catalogue{top:var(--app-header-offset);height:calc(100dvh - var(--app-header-offset))}}@media(max-width:700px){:root{--app-header-offset:0px}.economic-controls{max-height:42dvh}.economic-controls .line-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 
 .economic-controls{overflow-x:hidden}.economic-controls .line-controls input[type=range]{display:block;min-width:0;max-width:100%;margin:0}.line-distance-control{display:flex;flex-direction:column;gap:6px;min-width:0}.line-distance-entry{display:flex;align-items:center;gap:6px;font-size:12px}.line-distance-entry input{width:90px;min-width:0;padding:3px 6px;border:1px solid var(--line);border-radius:5px;font-variant-numeric:tabular-nums}
+
+#economic-method{scroll-margin-top:calc(var(--app-header-offset) + 12px)}.economic-method-details{font-size:12px;color:var(--muted);margin:14px 0}.economic-method-details summary{cursor:pointer;color:var(--green);font-weight:600}.economic-method-details p{max-width:100ch}
+
+/* Distance ranges are not rank numbers: reserve a readable column. */
+.economic-phases-table{table-layout:fixed}.economic-phases-table th:first-child,.economic-phases-table td:first-child{width:35%;white-space:nowrap}.economic-phases-table td:last-child{overflow-wrap:anywhere}
+
+/* Two compact lines retain the name, introduction, speed and physical specs. */
+.train-row{padding:5px 4px;gap:7px;align-items:center}
+.train-row input{margin:0;flex-shrink:0}
+.train-info{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 5px;align-items:baseline;line-height:1.2}
+.train-name{font-size:11px;overflow-wrap:normal}
+.train-spec{font-size:9px;margin:0;white-space:nowrap}
+.train-power{grid-column:1/-1;font-size:10px;line-height:1.2}
+.catalogue .search-label{margin-top:10px}
+.catalogue .year-filter,.catalogue .catalogue-tools{margin-top:10px}
+.catalogue .selection-actions{margin-bottom:6px}
+.catalogue .catalogue-note{margin-top:8px;padding-top:8px}
+@media(max-width:700px){.train-row{min-height:44px}}
+
+.year-stepper{display:flex;align-items:center;gap:7px;margin-top:6px}.year-stepper button{padding:2px 8px;font-size:15px;min-width:28px}.year-stepper input[type=range]{flex:1;min-width:0;margin:0}
+.selection-actions{flex-wrap:wrap}.selection-actions #explore-history{flex-basis:100%;color:#3655a3;background:#edf1fc;border-color:#cbd5f0}.selection-actions #explore-history:hover{background:#dde6fa}
+@media(max-width:700px){.year-stepper button{min-width:44px;min-height:44px}}
+
+/* Keep history exploration from moving charts when readout rows appear. */
+.line-table{height:min(400px,45dvh);max-height:min(400px,45dvh);overflow:auto;scrollbar-gutter:stable}
+.line-summary{min-height:66px}
+@media(min-width:701px){.workspace{grid-template-columns:minmax(0,1fr) 320px}}
+.selection-actions{flex-wrap:nowrap;gap:5px}.selection-actions button{padding:6px 7px;white-space:nowrap}.selection-actions #explore-history{flex-basis:auto}
+/* Legends and phase names also reserve room for future introductions. */
+.economic-legend{min-height:64px;align-content:flex-start}
+.phase-leaders{min-height:56px}
+@media(min-width:701px) and (max-width:1100px){.economic-legend{min-height:112px}}
+@media(max-width:700px){.economic-legend{min-height:240px}}
+
+.info-disclosure{margin:12px 0;color:var(--muted);font-size:12px}.info-disclosure>summary{color:var(--green);font-size:12px;font-weight:550;cursor:pointer;width:fit-content}.info-disclosure[open]>summary{margin-bottom:10px}.info-disclosure .details-grid{padding:16px 0;margin:0}.info-disclosure.chart-notes{margin:10px 0}.info-disclosure.assumptions{padding:8px 0;border-bottom:1px solid var(--line)}.info-disclosure.results{margin-top:16px;padding:14px 0}.economic-controls .line-controls{margin:10px 0}.economic-controls .panel-top .chart-help{font-size:11px}
+
+.train-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;line-height:1.4;margin:10px 0;min-height:240px;align-content:flex-start}.train-legend span{cursor:pointer}
+.info-disclosure h3{font-size:12px;color:#27332e;font-weight:600;margin:16px 0 6px}
+
+/* Optional tables grow with their contents; retain horizontal scrolling on phones. */
+details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}

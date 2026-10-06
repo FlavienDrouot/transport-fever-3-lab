@@ -1,3 +1,6 @@
+// Default calendar: four simulation seconds per day, 365 days per year.
+export const GAME_YEAR_SECONDS = 4 * 365;
+
 // Passenger journeys count both directions; motion always uses the vehicle's empty mass.
 export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6}) {
   for (const [name, value] of Object.entries({distanceKm, baseRate, brakingDeceleration, capacity: train.passengerCapacity, multiplier: train.loadingUnloadingSpeedMultiplier, maintenance: train.economy.annualMaintenance})) {
@@ -26,7 +29,11 @@ export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, bra
   const stationSeconds = 2 * loadingSeconds + stationDelaySeconds; // Sequential unloading, then loading at each terminal.
   const roundTripSeconds = 2 * travelSeconds + 2 * stationSeconds;
   const journeysPerSecond = 2 * passengers / roundTripSeconds;
+  const journeysPerHour = journeysPerSecond * 3600;
+  const transportPerMaintenance = journeysPerHour / train.economy.annualMaintenance;
   return {passengers, rate, travelSeconds, brakingSeconds, peakSpeedKmh, loadingSeconds, stationSeconds, roundTripSeconds,
-    journeysPerHour: journeysPerSecond * 3600,
+    journeysPerHour, transportPerMaintenance,
+    maintenancePerJourney: journeysPerSecond > 0 ? train.economy.annualMaintenance / (journeysPerSecond * GAME_YEAR_SECONDS) : null,
+    maintenancePerThroughput: journeysPerHour > 0 ? train.economy.annualMaintenance / journeysPerHour : null,
     efficiency: journeysPerSecond / train.economy.annualMaintenance};
 }
