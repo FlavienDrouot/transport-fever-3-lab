@@ -1,8 +1,9 @@
+import {renderDataView} from './data-view.js';
 import {curveLabels, trainLegend} from './chart-labels.js';
 import {economicStory} from './economic-crossovers.js';
 import {renderEconomicCrossovers} from './economic-crossover-chart.js';
 import {renderEconomicChart} from './economic-chart.js';
-import {analyseLine} from './line.js';
+import {analyseService as analyseLine} from './line.js';
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
@@ -25,7 +26,8 @@ function selectionLimits(ts) {
   return distanceLimits.get(key);
 }
 let economicStoryKey, currentEconomicStory;
-let dataset, trains, selected, defaults, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2020, lineFill = 1;
+let dataset, experiments, trains, selected, defaults, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2020, lineFill = 1, desiredFlow = null, maxHeadwaySeconds = null, frequencyMode = 'maximum';
+function serviceTargets(){return {demandPerDirection:desiredFlow,maxHeadwaySeconds,frequencyMode};}
 function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear);}
 function arrivalName(t, view) {return view === 'speed' ? t.name : `${t.name} · ${formatTime(t.model.timeAt(routeDistance))}`;}
 function renderSelectionCount() {
@@ -268,18 +270,19 @@ function renderLineAnalysis() {
   $('line-distance').value = routeDistance;
   $('line-distance-input').value = routeDistance;
   $('line-distance').setAttribute('aria-valuetext', `${fmt(routeDistance)} kilometres`);
+  $('occupancy-label').textContent=desiredFlow===null?'Utilization':'Utilization limit';
   $('line-fill-value').textContent = `${Math.round(lineFill * 100)}%`;
-  const rows = active().map(t => ({t, result: analyseLine(t, {distanceKm: routeDistance, fillRatio: lineFill})})).sort((a,b) => b.result.efficiency - a.result.efficiency);
+  const rows = active().map(t => ({t, result: analyseLine(t, {distanceKm: routeDistance, fillRatio: lineFill,...serviceTargets()})})).sort((a,b) => b.result.efficiency - a.result.efficiency);
   const best = rows[0]?.result.efficiency || 0;
   const winners = rows.filter(({result}) => best > 0 && Math.abs(result.efficiency / best - 1) < 1e-9);
-  $('line-summary').textContent = !rows.length ? 'Select at least one train to compare line capacity.' : !best ? 'Occupancy is zero: no passenger journeys and no best service choice.' : `Lowest maintenance cost per passenger journey: ${winners.map(({t}) => t.name).join(' / ')} at ${fmt(routeDistance)} km and ${Math.round(lineFill * 100)}% occupancy.`;
-  $('line-caption').textContent = `A–B–A at ${fmt(routeDistance)} km per leg · normal-difficulty maintenance`;
+  $('line-summary').textContent = !rows.length ? 'Select at least one train to compare line capacity.' : !best ? 'Utilization is zero: no passenger journeys and no best service choice.' : `Lowest running cost per passenger journey: ${winners.map(({t}) => t.name).join(' / ')} at ${fmt(routeDistance)} km and ${desiredFlow===null?'':'up to '}${Math.round(lineFill * 100)}% utilization.`;
+  $('line-caption').textContent = `A–B–A at ${fmt(routeDistance)} km per leg · normal-difficulty running costs`;
   let rank = 0, prior;
   $('line-readout').innerHTML = rows.map(({t,result:r},i) => {
     const score = r.maintenancePerJourney;
     if (prior === undefined || Math.abs(score - prior) > Math.max(1e-7, Math.abs(score || 0)*1e-9)) rank = i + 1;
     prior = score;
-    return `<tr class="${t.id===highlighted?'is-highlighted':''}"><td>${best ? rank : '—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${score === null ? '—' : fmt(score,0)}</td><td>${fmt(r.journeysPerHour,0)}</td><td>${fmt(t.economy.annualMaintenance,0)}</td><td>${fmt(r.passengers)}</td><td>${t.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)} → ${fmt(r.rate,2)}</td><td>${formatTime(r.travelSeconds)}</td><td>${formatTime(r.stationSeconds)}</td><td>${formatTime(r.roundTripSeconds)}</td></tr>`;
+    return `<tr class="${t.id===highlighted?'is-highlighted':''}"><td>${best ? rank : '—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${score === null ? '—' : fmt(score,0)}</td><td>${r.trainCount}</td><td>${formatTime(r.headwaySeconds)}</td><td>${fmt(r.actualOccupancyRatio*100,1)}%</td><td>${fmt(r.perDirectionJourneysPerYear,0)}</td><td>${fmt(r.fleetMaintenance,0)}</td><td>${fmt(r.passengers)}</td><td>${t.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)} → ${fmt(r.rate,2)}</td><td>${formatTime(r.travelSeconds)}</td><td>${formatTime(r.stationSeconds)}</td><td>${formatTime(r.roundTripSeconds)}</td></tr>`;
   }).join('');
 }
 function updateStickyOffsets() {
@@ -293,14 +296,14 @@ function syncAnalysisView() {
   // Following a link to an explanation reveals it; normal chart visits stay compact.
   for (let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details')) disclosure.open=true;
   if (target && ['model','economic-method'].includes(target.id)) target.querySelector('details').open=true;
-  const view = target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
-  for (const name of ['race', 'economics']) {
+  const view = target?.closest('#data') ? 'data' : target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
+  for (const name of ['race', 'economics', 'data']) {
     $(name).hidden = name !== view;
-    $(name === 'race' ? 'race-links' : 'economic-links').hidden = name !== view;
+    $(name === 'economics' ? 'economic-links' : `${name}-links`).hidden = name !== view;
     const link = document.querySelector(`[data-analysis="${name}"]`);
     if (name === view) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
   }
-  document.querySelector('.skip').href = view === 'race' ? '#speed-explorer' : '#line-capacity';
+  document.querySelector('.skip').href = view === 'race' ? '#speed-explorer' : view === 'data' ? '#raw-data' : '#line-capacity';
   render();
   updateStickyOffsets();
   target?.scrollIntoView();
@@ -314,13 +317,14 @@ function render() {
   $('route-distance').setAttribute('aria-valuetext', `${fmt(Math.min(routeDistance, limit))} kilometres; use the number field for longer routes`);
   $('distance-note').textContent = ts.length > 1 ? `Arrival order settles at approximately ${fmt(stable, 2)} km. Slider up to ${limit} km; enter a larger distance in the field.` : `Slider up to ${limit} km; enter a larger distance in the field.`;
   for (const row of $('trains').querySelectorAll('[data-train]')) row.classList.toggle('is-highlighted',row.dataset.train===highlighted);
+  if (!$('data').hidden) renderDataView(dataset,visible(),experiments);
   renderLineAnalysis();
   if (!$('economics').hidden) {
-    renderEconomicChart($('economic-efficiency-chart'), {trains:ts,distance:routeDistance,fill:lineFill,highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
-    const key=JSON.stringify([ts.map(t=>t.id),routeDistance,lineFill]);
-    if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(ts,routeDistance,lineFill);}
-    renderEconomicCrossovers($('economic-crossover-curves-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,kind:'curves',highlighted,distanceMode:document.querySelector('input[name="economic-focus-scale"]:checked').value,verticalMode:document.querySelector('input[name="economic-focus-y"]:checked').value});
-    renderEconomicCrossovers($('economic-crossovers-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,kind:'rank',highlighted,distanceMode:document.querySelector('input[name="economic-rank-scale"]:checked').value});
+    renderEconomicChart($('economic-efficiency-chart'), {trains:ts,distance:routeDistance,fill:lineFill,targets:serviceTargets(),highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
+    const key=JSON.stringify([ts.map(t=>t.id),routeDistance,lineFill,desiredFlow,maxHeadwaySeconds,frequencyMode]);
+    if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(ts,routeDistance,lineFill,serviceTargets());}
+    renderEconomicCrossovers($('economic-crossover-curves-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,targets:serviceTargets(),kind:'curves',highlighted,distanceMode:document.querySelector('input[name="economic-focus-scale"]:checked').value,verticalMode:document.querySelector('input[name="economic-focus-y"]:checked').value});
+    renderEconomicCrossovers($('economic-crossovers-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,targets:serviceTargets(),kind:'rank',highlighted,distanceMode:document.querySelector('input[name="economic-rank-scale"]:checked').value});
     $('economic-phases').innerHTML=currentEconomicStory.phases.map(p=>`<tr><td>${fmt(p.start,2)} – ${fmt(p.end,2)}</td><td>${p.leaders.map(id=>escape(ts.find(t=>t.id===id).name)).join(' / ')}</td></tr>`).join('');
   }
   renderChart('speed');
@@ -371,7 +375,9 @@ initTheme();
 
 async function init() {
   const response=await fetch(new URL('../data/trains.json',import.meta.url));if(!response.ok)throw new Error('Data unavailable');dataset=await response.json();
+  const observations=await fetch(new URL('../data/experiments.json',import.meta.url));if(!observations.ok)throw new Error('Experimental data unavailable');experiments=await observations.json();
   trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=['metroliner','twindexx','tgv','fuxing','ice-1','etr-450'];selected=new Set(defaults);renderCatalogue();initPickerDrawer();
+  $('raw-data-csv').addEventListener('click',()=>{const table=$('raw-data-body').closest('table');const csv=[...table.rows].map(row=>[...row.cells].map(cell=>'"'+cell.textContent.replaceAll('"','""')+'"').join(',')).join('\n');download(csv,'text/csv;charset=utf-8','tf3-catalogue.csv');});
   $('trains').addEventListener('change',e=>{if(e.target.checked)selected.add(e.target.value);else selected.delete(e.target.value);renderSelectionCount();render();});
   const highlight = event => {const row=event.target.closest('[data-train]');const id=row?.dataset.train;if(highlighted!==id){highlighted=id;render();}};
   for (const chart of [$('chart'), $('speed-chart'), $('crossover-chart'), $('crossover-curves-chart'), $('economic-efficiency-chart'), $('economic-crossover-curves-chart'), $('economic-crossovers-chart')]) {
@@ -402,6 +408,23 @@ async function init() {
     if(previous!==raceView){const x=scaleMode('x'),y=scaleMode('y');document.querySelector(`input[name="x-scale"][value="${y}"]`).checked=true;document.querySelector(`input[name="y-scale"][value="${x}"]`).checked=true;}
     render();
   });
+  const updateTargets=()=>{
+    const flow=Number($('desired-flow').value), interval=Number($('desired-headway').value);
+    const flowEnabled=$('enable-flow').checked, frequencyEnabled=$('enable-frequency').checked;
+    $('desired-flow').disabled=!flowEnabled;
+    $('desired-headway').disabled=!frequencyEnabled;
+    $('frequency-mode').disabled=!frequencyEnabled;
+    if((flowEnabled&&(!Number.isFinite(flow)||flow<=0))||(frequencyEnabled&&(!Number.isFinite(interval)||interval<=0)))return;
+    desiredFlow=$('enable-flow').checked?flow:null;
+    maxHeadwaySeconds=$('enable-frequency').checked?interval*60:null;
+    frequencyMode=$('frequency-mode').value;
+    $('frequency-mode').disabled=maxHeadwaySeconds===null;
+    $('desired-flow').disabled=desiredFlow===null;
+    $('desired-headway').disabled=maxHeadwaySeconds===null;
+    render();
+  };
+  for(const id of ['enable-flow','enable-frequency','frequency-mode'])$(id).addEventListener('change',updateTargets);
+  for(const id of ['desired-flow','desired-headway'])$(id).addEventListener('input',updateTargets);
   $('line-fill').addEventListener('input', e => {lineFill = Number(e.target.value) / 100; render();});
   $('line-distance').addEventListener('input', e => {routeDistance = Number(e.target.value); render();});
   $('line-distance-input').addEventListener('change', e => {
