@@ -348,6 +348,27 @@ function initPickerDrawer() {
   drawer.addEventListener('close',()=>{toggle.setAttribute('aria-expanded','false');document.body.classList.remove('picker-open');if(mobile.matches)toggle.focus();});
   mobile.addEventListener('change',sync);sync();
 }
+function initTheme() {
+  const system=matchMedia('(prefers-color-scheme: dark)');
+  let chosen;
+  try {chosen=localStorage.getItem('tf3-theme');} catch {}
+  const apply=theme=>{
+    document.documentElement.dataset.theme=theme;
+    const dark=theme==='dark';
+    $('theme-toggle').textContent=dark?'Light':'Dark';
+    $('theme-toggle').setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
+    $('theme-toggle').setAttribute('aria-pressed',String(dark));
+  };
+  apply(chosen || (system.matches?'dark':'light'));
+  $('theme-toggle').addEventListener('click',()=>{
+    chosen=document.documentElement.dataset.theme==='dark'?'light':'dark';
+    try {localStorage.setItem('tf3-theme',chosen);} catch {}
+    apply(chosen);
+  });
+  system.addEventListener('change',event=>{if(!chosen)apply(event.matches?'dark':'light');});
+}
+initTheme();
+
 async function init() {
   const response=await fetch(new URL('../data/trains.json',import.meta.url));if(!response.ok)throw new Error('Data unavailable');dataset=await response.json();
   trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=['metroliner','twindexx','tgv','fuxing','ice-1','etr-450'];selected=new Set(defaults);renderCatalogue();initPickerDrawer();

@@ -117,3 +117,20 @@ body.picker-open{overflow:hidden}
 
 /* Optional tables grow with their contents; retain horizontal scrolling on phones. */
 details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
+
+.theme-toggle{margin-left:auto;white-space:nowrap}.theme-toggle+.github-star{margin-left:0}
+:root[data-theme=dark]{color-scheme:dark;color:#dde8e1;background:#17201c;--green:#70d9bf;--muted:#a4b5aa;--line:#37483e;--surface:#17201c;--tint:#24352b}
+[data-theme=dark] .app-header,[data-theme=dark] .economic-controls,[data-theme=dark] #train-drawer,[data-theme=dark] input[type=search],[data-theme=dark] button,[data-theme=dark] select{background:var(--surface);color:#dde8e1}
+[data-theme=dark] .brand,[data-theme=dark] .formula,[data-theme=dark] .info-disclosure h3,[data-theme=dark] .year-filter output,[data-theme=dark] .analysis-nav a[aria-current=page],[data-theme=dark] .footer-credits,[data-theme=dark] .community-footer h2{color:#dde8e1}
+[data-theme=dark] th,[data-theme=dark] .formula,[data-theme=dark] button:hover,[data-theme=dark] .train-row:hover,[data-theme=dark] .train-row:focus-within{background:var(--tint)}
+[data-theme=dark] td,[data-theme=dark] .train-row{border-bottom-color:var(--line)}
+[data-theme=dark] .scale-toggle label span{background:var(--surface);border-color:var(--line)}
+[data-theme=dark] .scale-toggle input:checked+span,[data-theme=dark] .train-row.is-highlighted,[data-theme=dark] .line-table .is-highlighted,[data-theme=dark] .line-summary{background:#203d30;color:var(--green)}
+[data-theme=dark] .scale-note{background:#342d1d;color:#e3c48e}
+[data-theme=dark] .selection-actions #explore-history{background:#243552;color:#b7cbff;border-color:#435b88}
+[data-theme=dark] .selection-actions #explore-history:hover{background:#304665}
+[data-theme=dark] .line-distance-entry input{background:var(--surface);color:#dde8e1}
+[data-theme=dark] .chart text{fill:var(--muted)}
+[data-theme=dark] .chart [fill="white"]{fill:var(--surface)}
+[data-theme=dark] .chart line[stroke="#e4e8e4"],[data-theme=dark] .chart line[stroke="#e5e9e4"]{stroke:var(--line)}
+[data-theme=dark] .chart path[data-train],[data-theme=dark] .chart text[data-train],[data-theme=dark] .chart circle[data-train],[data-theme=dark] .phase-leaders span,[data-theme=dark] .train-legend span,[data-theme=dark] .train-key{filter:brightness(1.7)}
