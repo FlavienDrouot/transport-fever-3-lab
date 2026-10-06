@@ -1,8 +1,8 @@
-import {analyseLine} from './line.js';
+import {analyseService as analyseLine} from './line.js';
 
 /** Bounded ranking story: crossings before 100 m and beyond the selected route are omitted. */
-export function economicStory(trains, distance, fill) {
-  return rankingStory(trains.map(t=>t.id), (id,x)=>analyseLine(trains.find(t=>t.id===id), {distanceKm:x,fillRatio:fill}).efficiency, .1, distance, fill>0);
+export function economicStory(trains, distance, fill, targets = {}) {
+  return rankingStory(trains.map(t=>t.id), (id,x)=>analyseLine(trains.find(t=>t.id===id), {distanceKm:x,fillRatio:fill,...targets}).efficiency, .1, distance, fill>0);
 }
 
 export function rankingStory(ids, score, start, end, enabled = true) {

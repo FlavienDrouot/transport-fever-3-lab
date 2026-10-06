@@ -8,13 +8,15 @@ An open-source, independent community project. Choose trains, adjust the route d
 
 ## Start exploring
 
-Switch between **Race** for travel-time comparisons and **Economics** for A–B–A service efficiency. Each view has its own section links; the train selection is shared.
+Switch between **Race** for travel-time comparisons and **Economics** for A–B–A service efficiency. **Data & models** presents raw catalogue values and experimental evidence. Each view has its own section links; the train selection is shared.
 
 1. Choose trains in the right-hand picker, or open **Trains** on mobile. The list is sorted by introduction year, newest first. Search by name and use the year slider to explore vehicles introduced by that date.
 2. **Speed over time** shows acceleration and top speed.
 3. **Distance & time** compares progress or arrival time. Set a route distance and read the arrival ranking in **Race readout**.
 4. **Crossovers** reveals where the best choice changes. The arrival curves emphasize winning segments; the rank chart also shows overtakes among the other trains.
-5. In **Economics**, **Line capacity** explores A–B–A passenger throughput per maintenance cost, with distance and occupancy sliders. The method explains maintenance cost per completed passenger journey, using four simulation seconds per day and 365 days per game year. Lower values indicate less maintenance for the same throughput. Provisional assumptions are shown beside the controls. **Maintenance cost over distance** shows this ratio across distances. **Maintenance cost around crossovers** emphasizes winning segments with phase focus, while **Economic rank crossovers** shows every train’s ranking changes.
+5. In **Economics**, **Line capacity** explores A–B–A passenger throughput per maintenance cost, with distance and utilization sliders. Optional target rate (per game year per direction) and frequency targets choose a whole fleet and report its actual utilization and frequency. Choose a maximum interval or the achievable interval closest to your target. The method explains maintenance cost per completed passenger journey, using four simulation seconds per day and 365 days per game year. Lower values indicate less maintenance for the same throughput. Provisional assumptions are shown beside the controls. **Running cost over distance** shows this ratio across distances. **Running cost around crossovers** emphasizes winning segments with phase focus, while **Economic rank crossovers** shows every train’s ranking changes.
+
+6. **Data & models** provides downloadable catalogue data, measured/calibrated model assumptions and model-versus-video arrival checks. Evidence limitations are kept alongside the observations.
 
 **Explore Train History** selects the complete catalogue and sets the year to 1900. Move the year slider or use the − / + buttons to advance one year at a time; newly introduced trains automatically enter the graphs.
 
@@ -34,7 +36,7 @@ The model uses each train's mass, tractive effort, power and maximum speed. It a
 F(v) = min(Fmax, P / v)
 ```
 
-It does not include braking, stops, slopes or resistance. “Best” in the race charts means **fastest for the distance**. The experimental **Line capacity** section instead compares passenger throughput per maintenance cost, including braking, sequential unloading and loading, and fixed delays at both terminals. Ticket revenue is excluded because the comparison equalizes passenger throughput on the same route: assuming the same fare per passenger, revenue is then identical. This assumption is supported by measurements on one route, not a complete game pricing formula. Purchase cost and whole-train fleet rounding are excluded, and sufficient demand is assumed regardless of travel time. This can favor the low-maintenance Handcar, even when long journeys would make its assumed occupancy unrealistic. Purchase and maintenance values in the source dataset were recorded on normal difficulty. The year filter uses introduction dates; retirement dates are not known.
+It does not include braking, stops, slopes or resistance. “Best” in the race charts means **fastest for the distance**. The experimental **Line capacity** section instead compares passenger throughput per maintenance cost, including braking, sequential unloading and loading, and fixed delays at both terminals. Ticket revenue is excluded because the comparison equalizes passenger throughput on the same route: assuming the same fare per passenger, revenue is then identical. This assumption is supported by measurements on one route, not a complete game pricing formula. Purchase cost is excluded; optional service targets account for whole-train fleet rounding, and sufficient demand is assumed regardless of travel time. This can favor the low-maintenance Handcar, even when long journeys would make its assumed occupancy unrealistic. Purchase and maintenance values in the source dataset were recorded on normal difficulty. The year filter uses introduction dates; retirement dates are not known.
 
 This is a proof of concept, not a complete simulation of the game. [Model and data notes](docs/model.md) explain assumptions, provenance and the experimental scales.
 

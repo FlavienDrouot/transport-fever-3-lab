@@ -37,3 +37,46 @@ export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, bra
     maintenancePerThroughput: journeysPerHour > 0 ? train.economy.annualMaintenance / journeysPerHour : null,
     efficiency: journeysPerSecond / train.economy.annualMaintenance};
 }
+
+/** Whole identical trains, evenly spaced, on an A–B–A line. Demand is passenger journeys per game year per direction. */
+export function analyseService(train, options) {
+  const {demandPerDirection = null, maxHeadwaySeconds = null, frequencyMode = 'maximum'} = options;
+  for(const [name,value] of Object.entries({demandPerDirection,maxHeadwaySeconds}))
+    if(value!==null && (!Number.isFinite(value)||value<=0))throw new RangeError(`${name} must be positive or null`);
+  if(!['maximum','closest'].includes(frequencyMode))throw new RangeError('Invalid frequency mode');
+  const baseline=analyseLine(train,options);
+  const roundUp=value=>Math.max(1,Math.ceil(value-1e-10));
+  let trainCount=1, line=baseline;
+  if(demandPerDirection!==null){
+    if(!baseline.passengers)throw new RangeError('A positive occupancy limit is required for passenger demand');
+    const flow=demandPerDirection/GAME_YEAR_SECONDS;
+    const fixedCycle=2*baseline.travelSeconds+2*(options.stationDelaySeconds??6);
+    const transferFactor=4*flow/baseline.rate;
+    const capacityCount=flow*baseline.roundTripSeconds/baseline.passengers;
+    const frequencyCount=maxHeadwaySeconds===null?1:transferFactor+fixedCycle/maxHeadwaySeconds;
+    const minimum=roundUp(capacityCount);
+    trainCount=roundUp(Math.max(capacityCount,frequencyCount));
+    if(maxHeadwaySeconds!==null && frequencyMode==='closest'){
+      const candidates=[Math.max(minimum,Math.floor(frequencyCount)),Math.max(minimum,Math.ceil(frequencyCount))];
+      trainCount=candidates.sort((a,b)=>Math.abs(fixedCycle/(a-transferFactor)-maxHeadwaySeconds)-Math.abs(fixedCycle/(b-transferFactor)-maxHeadwaySeconds)||a-b)[0];
+    }
+    const passengers=flow*fixedCycle/(trainCount-transferFactor);
+    line=analyseLine(train,{...options,fillRatio:Math.min(options.fillRatio??1,passengers/train.passengerCapacity)});
+  }else if(maxHeadwaySeconds!==null){
+    const count=baseline.roundTripSeconds/maxHeadwaySeconds;
+    trainCount=roundUp(count);
+    if(frequencyMode==='closest')trainCount=[Math.max(1,Math.floor(count)),Math.max(1,Math.ceil(count))].sort((a,b)=>Math.abs(baseline.roundTripSeconds/a-maxHeadwaySeconds)-Math.abs(baseline.roundTripSeconds/b-maxHeadwaySeconds)||a-b)[0];
+  }
+  const journeysPerHour=line.journeysPerHour*trainCount;
+  const fleetMaintenance=train.economy.annualMaintenance*trainCount;
+  const journeysPerSecond=journeysPerHour/3600;
+  return {...line,trainCount,fleetMaintenance,journeysPerHour,
+    perDirectionJourneysPerHour:journeysPerHour/2,
+    perDirectionJourneysPerYear:journeysPerSecond*GAME_YEAR_SECONDS/2,
+    actualOccupancyRatio:line.passengers/train.passengerCapacity,
+    headwaySeconds:line.roundTripSeconds/trainCount,
+    maintenancePerJourney:journeysPerSecond>0?fleetMaintenance/(journeysPerSecond*GAME_YEAR_SECONDS):null,
+    maintenancePerThroughput:journeysPerHour>0?fleetMaintenance/journeysPerHour:null,
+    transportPerMaintenance:journeysPerHour/fleetMaintenance,
+    efficiency:journeysPerSecond/fleetMaintenance};
+}
