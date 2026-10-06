@@ -1,3 +1,7 @@
+import {economicStory} from './economic-crossovers.js';
+import {renderEconomicCrossovers} from './economic-crossover-chart.js';
+import {renderEconomicChart} from './economic-chart.js';
+import {analyseLine} from './line.js';
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
@@ -19,7 +23,8 @@ function selectionLimits(ts) {
   if (!distanceLimits.has(key)) distanceLimits.set(key, {stable: rankingSettlesAt(ts), limit: suggestedDistanceLimit(ts)});
   return distanceLimits.get(key);
 }
-let dataset, trains, selected, defaults, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2020;
+let economicStoryKey, currentEconomicStory;
+let dataset, trains, selected, defaults, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2020, lineFill = 1;
 function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear);}
 function arrivalName(t, view) {return view === 'speed' ? t.name : `${t.name} · ${formatTime(t.model.timeAt(routeDistance))}`;}
 function renderSelectionCount() {
@@ -251,6 +256,45 @@ function renderCrossoverCurves() {
   content+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">${xLabel} · ${xMode==='focus'?'phase focus':'linear'}</text>`;
   $('crossover-curves-chart').innerHTML=`<div class="phase-leaders">${phases.map(p=>{const [start,stop]=bounds(p);return `<div style="flex:${xAxis.position(stop)-xAxis.position(start)}">${p.leaders.map(id=>{const t=ts.find(t=>t.id===id);return `<span data-train="${escape(id)}" style="color:${t.color}">${escape(t.name)}</span>`;}).join(' / ')}</div>`;}).join('')}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${inverted?'Distance over time':'Time over distance'} around crossovers; distance ${distanceMode}, time ${timeMode}">${content}</svg>`;
 }
+function renderLineAnalysis() {
+  $('line-distance').max = Math.max(30, Math.ceil(routeDistance));
+  $('line-distance').value = routeDistance;
+  $('line-distance-input').value = routeDistance;
+  $('line-distance').setAttribute('aria-valuetext', `${fmt(routeDistance)} kilometres`);
+  $('line-fill-value').textContent = `${Math.round(lineFill * 100)}%`;
+  const rows = active().map(t => ({t, result: analyseLine(t, {distanceKm: routeDistance, fillRatio: lineFill})})).sort((a,b) => b.result.efficiency - a.result.efficiency);
+  const best = rows[0]?.result.efficiency || 0;
+  const winners = rows.filter(({result}) => best > 0 && Math.abs(result.efficiency / best - 1) < 1e-9);
+  $('line-summary').textContent = !rows.length ? 'Select at least one train to compare line capacity.' : !best ? 'Occupancy is zero: no passenger journeys and no best service choice.' : `Best capacity per maintenance cost: ${winners.map(({t}) => t.name).join(' / ')} at ${fmt(routeDistance)} km and ${Math.round(lineFill * 100)}% occupancy.`;
+  $('line-caption').textContent = `A–B–A at ${fmt(routeDistance)} km per leg · normal-difficulty maintenance`;
+  let rank = 0, prior;
+  $('line-readout').innerHTML = rows.map(({t,result:r},i) => {
+    const score = best ? 100 * r.efficiency / best : 0;
+    if (prior === undefined || Math.abs(score - prior) > 1e-7) rank = i + 1;
+    prior = score;
+    return `<tr class="${t.id===highlighted?'is-highlighted':''}"><td>${best ? rank : '—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td><meter min="0" max="100" value="${score}" aria-label="Relative efficiency of ${escape(t.name)}">${fmt(score)}</meter> ${fmt(score)}</td><td>${fmt(r.journeysPerHour,0)}</td><td>${fmt(t.economy.annualMaintenance,0)}</td><td>${fmt(r.passengers)}</td><td>${t.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)} → ${fmt(r.rate,2)}</td><td>${formatTime(r.travelSeconds)}</td><td>${formatTime(r.stationSeconds)}</td><td>${formatTime(r.roundTripSeconds)}</td></tr>`;
+  }).join('');
+}
+function updateStickyOffsets() {
+    const header = document.querySelector('.app-header');
+    const headerHeight = getComputedStyle(header).position === 'sticky' ? header.getBoundingClientRect().height : 0;
+    document.documentElement.style.setProperty('--app-header-offset', `${headerHeight}px`);
+    document.documentElement.style.setProperty('--economic-controls-height', `${$('line-capacity').getBoundingClientRect().height}px`);
+}
+function syncAnalysisView() {
+  const target = document.getElementById(location.hash.slice(1));
+  const view = target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
+  for (const name of ['race', 'economics']) {
+    $(name).hidden = name !== view;
+    $(name === 'race' ? 'race-links' : 'economic-links').hidden = name !== view;
+    const link = document.querySelector(`[data-analysis="${name}"]`);
+    if (name === view) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
+  }
+  document.querySelector('.skip').href = view === 'race' ? '#speed-explorer' : '#line-capacity';
+  render();
+  updateStickyOffsets();
+  target?.scrollIntoView();
+}
 function render() {
   const ts = active();
   const {limit, stable} = selectionLimits(ts);
@@ -260,6 +304,15 @@ function render() {
   $('route-distance').setAttribute('aria-valuetext', `${fmt(Math.min(routeDistance, limit))} kilometres; use the number field for longer routes`);
   $('distance-note').textContent = ts.length > 1 ? `Arrival order settles at approximately ${fmt(stable, 2)} km. Slider up to ${limit} km; enter a larger distance in the field.` : `Slider up to ${limit} km; enter a larger distance in the field.`;
   for (const row of $('trains').querySelectorAll('[data-train]')) row.classList.toggle('is-highlighted',row.dataset.train===highlighted);
+  renderLineAnalysis();
+  if (!$('economics').hidden) {
+    renderEconomicChart($('economic-efficiency-chart'), {trains:ts,distance:routeDistance,fill:lineFill,metric:'efficiency',highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
+    const key=JSON.stringify([ts.map(t=>t.id),routeDistance,lineFill]);
+    if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(ts,routeDistance,lineFill);}
+    renderEconomicCrossovers($('economic-crossover-curves-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,kind:'curves',highlighted,distanceMode:document.querySelector('input[name="economic-focus-scale"]:checked').value,verticalMode:document.querySelector('input[name="economic-focus-y"]:checked').value});
+    renderEconomicCrossovers($('economic-crossovers-chart'),{trains:ts,story:currentEconomicStory,fill:lineFill,kind:'rank',highlighted,distanceMode:document.querySelector('input[name="economic-rank-scale"]:checked').value});
+    $('economic-phases').innerHTML=currentEconomicStory.phases.map(p=>`<tr><td>${fmt(p.start,2)} – ${fmt(p.end,2)}</td><td>${p.leaders.map(id=>escape(ts.find(t=>t.id===id).name)).join(' / ')}</td></tr>`).join('');
+  }
   renderChart('speed');
   renderChart('race');
   renderCrossovers();
@@ -290,7 +343,7 @@ async function init() {
   trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=trains.slice(0,4).map(t=>t.id);selected=new Set(defaults);renderCatalogue();initPickerDrawer();
   $('trains').addEventListener('change',e=>{if(e.target.checked)selected.add(e.target.value);else selected.delete(e.target.value);renderSelectionCount();render();});
   const highlight = event => {const row=event.target.closest('[data-train]');const id=row?.dataset.train;if(highlighted!==id){highlighted=id;render();}};
-  for (const chart of [$('chart'), $('speed-chart'), $('crossover-chart'), $('crossover-curves-chart')]) {
+  for (const chart of [$('chart'), $('speed-chart'), $('crossover-chart'), $('crossover-curves-chart'), $('economic-efficiency-chart'), $('economic-crossover-curves-chart'), $('economic-crossovers-chart')]) {
   chart.addEventListener('pointermove',event=>{
     const previous=highlighted;highlight(event);
     if (highlighted && highlighted!==previous) {
@@ -314,13 +367,20 @@ async function init() {
     if(previous!==raceView){const x=scaleMode('x'),y=scaleMode('y');document.querySelector(`input[name="x-scale"][value="${y}"]`).checked=true;document.querySelector(`input[name="y-scale"][value="${x}"]`).checked=true;}
     render();
   });
+  $('line-fill').addEventListener('input', e => {lineFill = Number(e.target.value) / 100; render();});
+  $('line-distance').addEventListener('input', e => {routeDistance = Number(e.target.value); render();});
+  $('line-distance-input').addEventListener('change', e => {
+    const distance = e.target.valueAsNumber;
+    if (!e.target.checkValidity() || !Number.isFinite(distance)) {e.target.reportValidity(); return;}
+    routeDistance = distance; render();
+  });
   $('route-distance').addEventListener('input', e => {routeDistance = Number(e.target.value); render();});
   $('distance-input').addEventListener('change', e => {
     const distance = e.target.valueAsNumber;
     if (!e.target.checkValidity() || !Number.isFinite(distance)) {e.target.reportValidity(); return;}
     routeDistance = distance; render();
   });
-  for(const id of ['x-scale','y-scale','speed-x-scale','speed-y-scale','focus-distance','focus-time','crossover-orientation','emphasize-leaders','rank-distance-scale']) $(id).addEventListener('change',()=>render());
+  for(const id of ['x-scale','y-scale','speed-x-scale','speed-y-scale','focus-distance','focus-time','crossover-orientation','emphasize-leaders','rank-distance-scale','economic-efficiency-scale','economic-focus-scale','economic-focus-y','economic-rank-scale']) $(id).addEventListener('change',()=>render());
   for (const kind of ['speed','race']) {
   const el = id => $(kind === 'speed' ? `speed-${id}` : id);
   el('svg').addEventListener('click',()=>{
@@ -336,6 +396,11 @@ async function init() {
   });
   el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? 'speed' : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active())for(let i=0;i<=300;i++){const x=i*horizon/300,time=view==='time'?t.model.timeAt(x):x,state=t.model.stateAt(time);rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
   }
-  window.addEventListener('resize',()=>render());render();
+  const stickyObserver = new ResizeObserver(updateStickyOffsets);
+  stickyObserver.observe(document.querySelector('.app-header'));
+  stickyObserver.observe($('line-capacity'));
+  updateStickyOffsets();
+  window.addEventListener('resize',()=>render());
+  window.addEventListener('hashchange',syncAnalysisView);syncAnalysisView();
 }
 init().catch(error=>{$('status').textContent='Unable to load the lab. Serve the site over HTTP and try again.';console.error(error);});

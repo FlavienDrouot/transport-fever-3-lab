@@ -30,13 +30,18 @@ Prerequisites: connected Tailscale CLI, MagicDNS/HTTPS certificates, Serve permi
 - `src/model.js`: analytical motion model in SI units.
 - `src/scales.js`, `src/phase-scale.js`: linear, logarithmic and phase axes.
 - `src/race.js`, `src/crossovers.js`: horizons, crossings and ranking intervals.
-- `src/app.js`: controls and SVG charts.
+- `src/line.js`: experimental A–B–A capacity and maintenance calculations.
+- `src/economic-chart.js`: cached service samples and standard efficiency curves.
+- `src/economic-crossovers.js`, `src/economic-crossover-chart.js`: bounded economic ranking changes, phase curves and rank charts.
+- `src/app.js`: analysis views, controls, service readout and race SVG charts.
 - `tests/`: model, data, scale, crossing and preview-server checks.
 - `scripts/build.mjs`: copies public site files into ignored `dist/`.
 
 Use the existing vanilla JavaScript patterns. Keep the physical model independent of rendering. Add a train with a unique ID, positive physical parameters, an introduction year, a distinguishable colour/dash and documented provenance. Do not publish game screenshots without permission. The catalogue is not virtualized; revisit that choice only if a substantially larger real catalogue shows measurable slowdowns.
 
 ## GitHub Pages
+
+Iterate in the private local preview first. Publish changes through a branch and pull request; do not push changes directly to `main`. Merging the reviewed pull request triggers publication.
 
 `.github/workflows/ci.yml` tests and builds pull requests. Pushes to `main`, or a manual workflow run on `main`, publish `dist/` after checks pass. Pull requests do not deploy. Pages uses the GitHub Actions source and the `github-pages` environment, with `pages: write` and `id-token: write` permissions limited to deployment.
 
