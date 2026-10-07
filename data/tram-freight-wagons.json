@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "date": "2026-10-07",
+    "method": "Values transcribed from fifteen freight tram wagon cards supplied by Flavien for later consist modelling. Original French names, cargo group labels and screenshot filenames are retained; generic names are translated for the English catalogue. Images are not redistributed.",
+    "limitations": "Stored components only, excluded from current standalone vehicle comparisons. Economic difficulty, retirement dates, coupling compatibility and combined handling rules are unverified. Propulsion, power and traction values are not shown and are omitted. Additional numbers on capacity badges are retained without interpreting them as vehicle or compartment counts."
+  },
+  "wagons": [
+    {
+      "id": "general-1895",
+      "name": "Freight wagon 1895",
+      "sourceName": "Wagon de marchandises 1895",
+      "year": 1895,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 97986,
+        "annualMaintenance": 16331
+      },
+      "massTonnes": 3,
+      "lengthMetres": 4.8,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCargoLabel": "Tout fret",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-139b8a8d-51fe-4cb6-84b9-dd53feb6f39e.png"
+    },
+    {
+      "id": "box-1896",
+      "name": "Box wagon 1896",
+      "sourceName": "Wagon couvert 1896",
+      "year": 1896,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 146979,
+        "annualMaintenance": 20414
+      },
+      "massTonnes": 3,
+      "lengthMetres": 4.8,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCargoLabel": "Marchandises",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-e2e5584e-4b2d-4a44-8a05-2d7fb89cf879.png"
+    },
+    {
+      "id": "flatbed-1897",
+      "name": "Stake wagon 1897",
+      "sourceName": "Wagon à ranchers 1897",
+      "year": 1897,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 146979,
+        "annualMaintenance": 20414
+      },
+      "massTonnes": 3,
+      "lengthMetres": 4.8,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCargoLabel": "Plateau",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-925ffbcb-e5e8-4f5e-a03b-7b9f0cf20a43.png"
+    },
+    {
+      "id": "gondola-1898",
+      "name": "Gondola wagon 1898",
+      "sourceName": "Wagon tombereau 1898",
+      "year": 1898,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 146979,
+        "annualMaintenance": 20414
+      },
+      "massTonnes": 3,
+      "lengthMetres": 5.3,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCargoLabel": "Vrac",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-1e31926d-1f65-4831-80cd-ab853c84f3c8.png",
+      "sourceAdditionalCapacityBadge": 2
+    },
+    {
+      "id": "tank-1899",
+      "name": "Tank wagon 1899",
+      "sourceName": "Wagon-citerne 1899",
+      "year": 1899,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 146979,
+        "annualMaintenance": 20414
+      },
+      "massTonnes": 3,
+      "lengthMetres": 6.7,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCargoLabel": "Liquide",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-b4ae6307-15e2-48c9-b58e-ef555d000618.png"
+    },
+    {
+      "id": "general-1950",
+      "name": "Freight wagon 1950",
+      "sourceName": "Wagon de marchandises 1950",
+      "year": 1950,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 60,
+      "economy": {
+        "purchasePrice": 223542,
+        "annualMaintenance": 37257
+      },
+      "massTonnes": 7,
+      "lengthMetres": 9.6,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCargoLabel": "Tout fret",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-03732ff9-a443-42f3-ac56-14f9f9aa8e6b.png"
+    },
+    {
+      "id": "tank-1950",
+      "name": "Tank wagon 1950",
+      "sourceName": "Wagon-citerne 1950",
+      "year": 1950,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 60,
+      "economy": {
+        "purchasePrice": 335313,
+        "annualMaintenance": 46571
+      },
+      "massTonnes": 7,
+      "lengthMetres": 9.6,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCargoLabel": "Liquide",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-4647357b-f34d-4cac-a92c-cf3b28c71574.png"
+    },
+    {
+      "id": "gondola-1950",
+      "name": "Gondola wagon 1950",
+      "sourceName": "Wagon tombereau 1950",
+      "year": 1950,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 60,
+      "economy": {
+        "purchasePrice": 335313,
+        "annualMaintenance": 46571
+      },
+      "massTonnes": 7,
+      "lengthMetres": 8.2,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCargoLabel": "Vrac",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-2164e05a-8d0e-4099-89f2-9457e8e8ae37.png"
+    },
+    {
+      "id": "flatbed-1950",
+      "name": "Stake wagon 1950",
+      "sourceName": "Wagon à ranchers 1950",
+      "year": 1950,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 60,
+      "economy": {
+        "purchasePrice": 335313,
+        "annualMaintenance": 46571
+      },
+      "massTonnes": 7,
+      "lengthMetres": 9.6,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCargoLabel": "Plateau",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-e7d6ac6f-cbd6-44cf-8a11-3bb4db057246.png"
+    },
+    {
+      "id": "box-1950",
+      "name": "Box wagon 1950",
+      "sourceName": "Wagon couvert 1950",
+      "year": 1950,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 60,
+      "economy": {
+        "purchasePrice": 335313,
+        "annualMaintenance": 46571
+      },
+      "massTonnes": 7,
+      "lengthMetres": 9.6,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCargoLabel": "Marchandises",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-980f883f-c750-4d8e-9fa4-673a1e1932cb.png"
+    },
+    {
+      "id": "general-2005",
+      "name": "Freight wagon 2005",
+      "sourceName": "Wagon de marchandises 2005",
+      "year": 2005,
+      "cargoCapacity": 21,
+      "maxSpeedKmh": 80,
+      "economy": {
+        "purchasePrice": 407772,
+        "annualMaintenance": 67962
+      },
+      "massTonnes": 12,
+      "lengthMetres": 15,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCargoLabel": "Tout fret",
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-34fe04c8-17bd-4575-abac-4cb636ab5431.png"
+    },
+    {
+      "id": "tank-2005",
+      "name": "Tank wagon 2005",
+      "sourceName": "Wagon-citerne 2005",
+      "year": 2005,
+      "cargoCapacity": 22,
+      "maxSpeedKmh": 80,
+      "economy": {
+        "purchasePrice": 640782,
+        "annualMaintenance": 88998
+      },
+      "massTonnes": 12,
+      "lengthMetres": 15,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCargoLabel": "Liquide",
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-080f3937-31a5-407f-b510-f2d119ec0e2b.png",
+      "sourceAdditionalCapacityBadge": 2
+    },
+    {
+      "id": "gondola-2005",
+      "name": "Gondola wagon 2005",
+      "sourceName": "Wagon tombereau 2005",
+      "year": 2005,
+      "cargoCapacity": 21,
+      "maxSpeedKmh": 80,
+      "economy": {
+        "purchasePrice": 611658,
+        "annualMaintenance": 84953
+      },
+      "massTonnes": 12,
+      "lengthMetres": 15,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCargoLabel": "Vrac",
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-e5833a7d-f4dd-4b84-ada1-46a65ebf6424.png"
+    },
+    {
+      "id": "flatbed-2005",
+      "name": "Stake wagon 2005",
+      "sourceName": "Wagon à ranchers 2005",
+      "year": 2005,
+      "cargoCapacity": 21,
+      "maxSpeedKmh": 80,
+      "economy": {
+        "purchasePrice": 611658,
+        "annualMaintenance": 84953
+      },
+      "massTonnes": 12,
+      "lengthMetres": 15,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCargoLabel": "Plateau",
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-de66a907-061d-4acd-b278-f518ae0a96a6.png"
+    },
+    {
+      "id": "box-2005",
+      "name": "Box wagon 2005",
+      "sourceName": "Wagon couvert 2005",
+      "year": 2005,
+      "cargoCapacity": 21,
+      "maxSpeedKmh": 80,
+      "economy": {
+        "purchasePrice": 611658,
+        "annualMaintenance": 84953
+      },
+      "massTonnes": 12,
+      "lengthMetres": 15,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCargoLabel": "Marchandises",
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-fbd57f44-21b4-4aab-9dcc-102fb50ee6e2.png"
+    }
+  ]
+}

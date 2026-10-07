@@ -18,6 +18,8 @@ Switch between **Race** for travel-time comparisons and **Economics** for A–B�
 
 6. **Data & models** provides downloadable catalogue data, measured/calibrated model assumptions and model-versus-video arrival checks. Evidence limitations are kept alongside the observations.
 
+7. **Road** compares vehicles by **Freight / Passengers**. Freight compares compatible trucks (50 captured variants); Passengers compares buses (23). Enable **Include trams** to add compatible freight trams (8 variants) or passenger trams (19) to the same cost ranking, chart and detailed table. Choose freight specialization and introduction year; retirement dates are unknown. Set distance (slider: 0.1–5 km; longer values can be entered), utilization and an optional infrastructure speed cap. Freight supports loaded or empty returns and specialized terminal/warehouse handling bonuses (×2 each, ×4 together). Passenger service uses equal utilization in both directions and ignores freight bonuses. Costs are per delivered cargo unit or passenger journey on A–B–A. Handling factors are fixed at 0.0625 for freight and 1 for passengers, with 6 seconds of pauses per terminal when both unloading and loading occur, or 4 seconds for a single transfer operation; approximate MAN measurements support the freight factor, while bus/tram terminal timing needs independent validation; city routes with frequent stops, traffic and tight turns are not accurately modelled. At long distances the ranking approaches maintenance / (capacity × effective speed). Source JSON downloads are available under the method disclosure.
+
 **Explore Train History** selects the complete catalogue and sets the year to 1900. Move the year slider or use the − / + buttons to advance one year at a time; newly introduced trains automatically enter the graphs.
 
 Use the **moon / sun** navigation button to change the theme; your browser remembers the choice.
@@ -68,3 +70,5 @@ Open http://127.0.0.1:4173. `npm run build` creates a static site in `dist/`. Se
 - For other messages, [email Flavien](mailto:flavien.drouot@gmail.com).
 
 Code is released under the [MIT licence](LICENSE).
+
+Tram locomotive source cards are stored separately in [`data/tram-locomotives.json`](data/tram-locomotives.json) for a future consist calculator. The five records retain their captured costs and mechanical properties. Six passenger tram wagons are stored in [`data/tram-passenger-wagons.json`](data/tram-passenger-wagons.json), with capacity, handling and source values. Fifteen freight tram wagons are stored in [`data/tram-freight-wagons.json`](data/tram-freight-wagons.json), grouped by freight specialization. These component catalogues are reserved for a future consist calculator and are not included in current rankings.

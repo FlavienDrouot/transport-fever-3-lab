@@ -1,3 +1,4 @@
+import {renderTruckService, selectRoadVehicles} from './trucks.js';
 import {renderDataView} from './data-view.js';
 import {curveLabels, trainLegend} from './chart-labels.js';
 import {economicStory} from './economic-crossovers.js';
@@ -26,6 +27,9 @@ function selectionLimits(ts) {
   return distanceLimits.get(key);
 }
 let economicStoryKey, currentEconomicStory;
+let busDataset, tramDataset, roadCategory = 'freight', includeTrams = false;
+let truckDataset, truckRoadSpeedLimit = null, truckYear = 2020, truckCargo = 'all';
+let truckService = {distanceKm:1,fillRatio:1,loadedReturn:false,specializedTerminal:false,specializedWarehouse:false};
 let dataset, experiments, trains, selected, defaults, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2020, lineFill = 1, desiredFlow = null, maxHeadwaySeconds = null, frequencyMode = 'maximum';
 function serviceTargets(){return {demandPerDirection:desiredFlow,maxHeadwaySeconds,frequencyMode};}
 function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear);}
@@ -296,19 +300,29 @@ function syncAnalysisView() {
   // Following a link to an explanation reveals it; normal chart visits stay compact.
   for (let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details')) disclosure.open=true;
   if (target && ['model','economic-method'].includes(target.id)) target.querySelector('details').open=true;
-  const view = target?.closest('#data') ? 'data' : target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
-  for (const name of ['race', 'economics', 'data']) {
+  const view = target?.closest('#trucks') ? 'trucks' : target?.closest('#data') ? 'data' : target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
+  for (const name of ['race', 'economics', 'data', 'trucks']) {
     $(name).hidden = name !== view;
     $(name === 'economics' ? 'economic-links' : `${name}-links`).hidden = name !== view;
     const link = document.querySelector(`[data-analysis="${name}"]`);
     if (name === view) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
   }
-  document.querySelector('.skip').href = view === 'race' ? '#speed-explorer' : view === 'data' ? '#raw-data' : '#line-capacity';
+  document.querySelector('.workspace').classList.toggle('truck-view',view==='trucks');
+  $('catalogue').hidden=view==='trucks';
+  $('picker-toggle').hidden=view==='trucks';
+  if(view==='trucks'&&$('train-drawer').open)$('train-drawer').close();
+  document.querySelector('.skip').textContent=view==='trucks'?'Skip to truck ranking':'Skip to charts';
+  document.querySelector('.skip').href = view === 'race' ? '#speed-explorer' : view === 'data' ? '#raw-data' : view === 'trucks' ? '#truck-service' : '#line-capacity';
   render();
   updateStickyOffsets();
   target?.scrollIntoView();
 }
 function render() {
+  if (!$('trucks').hidden) {
+    const passenger=roadCategory==='passengers';
+    const vehicles=selectRoadVehicles({trucks:truckDataset.trucks,buses:busDataset.buses,trams:tramDataset.trams,freightTrams:tramDataset.freightTrams},{category:roadCategory,includeTrams,cargo:truckCargo,year:truckYear});
+    renderTruckService(document,vehicles,{...truckService,roadSpeedLimit:truckRoadSpeedLimit,passenger});return;
+  }
   const ts = active();
   const {limit, stable} = selectionLimits(ts);
   $('route-distance').max = limit;
@@ -376,6 +390,61 @@ initTheme();
 async function init() {
   const response=await fetch(new URL('../data/trains.json',import.meta.url));if(!response.ok)throw new Error('Data unavailable');dataset=await response.json();
   const observations=await fetch(new URL('../data/experiments.json',import.meta.url));if(!observations.ok)throw new Error('Experimental data unavailable');experiments=await observations.json();
+  const truckResponse=await fetch(new URL('../data/trucks.json',import.meta.url));if(!truckResponse.ok)throw new Error('Truck data unavailable');truckDataset=await truckResponse.json();
+  const busResponse=await fetch(new URL('../data/buses.json',import.meta.url));if(!busResponse.ok)throw new Error('Bus data unavailable');busDataset=await busResponse.json();
+  const tramResponse=await fetch(new URL('../data/trams.json',import.meta.url));if(!tramResponse.ok)throw new Error('Tram data unavailable');tramDataset=await tramResponse.json();
+  const updateRoadCategory=()=>{
+    const passenger=roadCategory==='passengers';
+    $('truck-service-heading').textContent=`${passenger?'Passengers':'Freight'} · route calculator`;
+    $('road-metric-help').textContent=`Running cost per ${passenger?'passenger journey':'delivered cargo unit'}. Lower is better.`;
+    $('road-intro').textContent=passenger?`Compare buses${includeTrams?' and passenger trams':''} on A–B–A, with equal utilization in both directions. Fixed passenger handling factor: 1.`:`Compare trucks${includeTrams?' and freight trams':''} on A–B–A. Fixed freight handling factor: 0.0625 (1/16).`;
+    for(const id of ['road-freight-filter','road-return-control','road-freight-facilities'])$(id).hidden=passenger;
+    $('road-passenger-warning').hidden=!passenger;
+    $('road-handling-calibration').textContent=passenger?'Passenger handling: 1 passenger/s per vehicle multiplier. Fixed pauses: 2 s before alighting, 2 s before boarding and 2 s before departure (6 s per terminal). Bus and tram timings have not been independently measured.':'Freight handling: 0.0625 cargo units/s per vehicle multiplier (1/16 of the passenger factor), consistent with approximate MAN 19.304 timings. Fixed pauses: 2 s before each active transfer operation and departure. Loading plus unloading: 6 s per terminal; one operation only: 4 s.';
+    $('road-chart-help').textContent=`Shorter bars are better · $ / ${passenger?'passenger journey':'cargo unit'} · starts at zero`;
+    $('truck-chart-heading').textContent=`Running cost per ${passenger?'passenger journey':'delivered cargo unit'}`;
+    $('road-cost-column').innerHTML=`Cost / ${passenger?'passenger journey':'cargo unit'}<br>($) ↓`;
+    $('road-source-download').href=passenger?'./data/buses.json':'./data/trucks.json';
+    $('road-source-download').textContent=`Download ${passenger?'bus':'truck'} source data JSON ↓`;
+    $('road-tram-source-download').hidden=!includeTrams;
+    $('road-speed-label').textContent=includeTrams?'Limit infrastructure speed':'Limit road speed';
+    $('truck-speed-limit').setAttribute('aria-label',includeTrams?'Infrastructure speed limit in kilometres per hour':'Road speed limit in kilometres per hour');
+  };
+  $('road-category').addEventListener('change',()=>{roadCategory=document.querySelector('input[name="road-category"]:checked').value;updateRoadCategory();render();});
+  $('road-include-trams').addEventListener('change',()=>{includeTrams=$('road-include-trams').checked;updateRoadCategory();render();});
+  updateRoadCategory();
+  const updateTruckSpeed=()=>{
+    const enabled=$('enable-truck-speed-limit').checked, speed=$('truck-speed-limit').valueAsNumber;
+    $('truck-speed-limit').disabled=!enabled;
+    if(enabled&&(!Number.isFinite(speed)||speed<=0))return;
+    truckRoadSpeedLimit=enabled?speed:null;render();
+  };
+  $('enable-truck-speed-limit').addEventListener('change',updateTruckSpeed);
+  $('truck-speed-limit').addEventListener('input',updateTruckSpeed);
+  $('truck-cargo-specialization').addEventListener('change',()=>{
+    truckCargo=document.querySelector('input[name="truck-cargo"]:checked').value;render();
+  });
+  const updateTruckYear=()=>{
+    truckYear=$('truck-year').valueAsNumber;
+    $('truck-year-value').textContent=truckYear;
+    $('truck-year-previous').disabled=truckYear<=Number($('truck-year').min);
+    $('truck-year-next').disabled=truckYear>=Number($('truck-year').max);
+    render();
+  };
+  $('truck-year-next').disabled=true;
+  $('truck-year').addEventListener('input',updateTruckYear);
+  for(const [id,step] of [['truck-year-previous',-1],['truck-year-next',1]])$(id).addEventListener('click',()=>{
+    $('truck-year').value=Math.min(Number($('truck-year').max),Math.max(Number($('truck-year').min),truckYear+step));updateTruckYear();
+  });
+  const updateTruckService=event=>{
+    if(event.target.id==='truck-distance-slider')$('truck-distance').value=$('truck-distance-slider').value;
+    const distanceKm=$('truck-distance').valueAsNumber,fillRatio=$('truck-utilization').valueAsNumber/100;
+    if(!Number.isFinite(distanceKm)||distanceKm<=0)return;
+    $('truck-distance-slider').value=Math.min(5,distanceKm);
+    $('truck-utilization-value').textContent=`${Math.round(fillRatio*100)}%`;
+    truckService={distanceKm,fillRatio,loadedReturn:$('truck-loaded-return').checked,specializedTerminal:$('truck-specialized-terminal').checked,specializedWarehouse:$('truck-specialized-warehouse').checked};render();
+  };
+  for(const id of ['truck-distance','truck-distance-slider','truck-utilization','truck-loaded-return','truck-specialized-terminal','truck-specialized-warehouse'])$(id).addEventListener('input',updateTruckService);
   trains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));defaults=['metroliner','twindexx','tgv','fuxing','ice-1','etr-450'];selected=new Set(defaults);renderCatalogue();initPickerDrawer();
   $('raw-data-csv').addEventListener('click',()=>{const table=$('raw-data-body').closest('table');const csv=[...table.rows].map(row=>[...row.cells].map(cell=>'"'+cell.textContent.replaceAll('"','""')+'"').join(',')).join('\n');download(csv,'text/csv;charset=utf-8','tf3-catalogue.csv');});
   $('trains').addEventListener('change',e=>{if(e.target.checked)selected.add(e.target.value);else selected.delete(e.target.value);renderSelectionCount();render();});

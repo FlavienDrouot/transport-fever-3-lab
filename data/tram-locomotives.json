@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "date": "2026-10-07",
+    "method": "Values transcribed from five tram locomotive cards supplied by Flavien for storage and later reuse. Original French names and screenshot filenames are retained; the generic steam tram name is translated for the English catalogue. Images are not redistributed.",
+    "limitations": "Stored source data only, not included in the current road calculators. Economic difficulty, retirement dates, coupling compatibility and future consist performance are not separately verified. Capacity and handling values are not supplied by these locomotive cards and are omitted."
+  },
+  "locomotives": [
+    {
+      "id": "steam-tram-locomotive",
+      "name": "Steam tram locomotive",
+      "sourceName": "Tramway à vapeur",
+      "year": 1900,
+      "maxSpeedKmh": 30,
+      "economy": {
+        "purchasePrice": 127986,
+        "annualMaintenance": 21331
+      },
+      "massTonnes": 10,
+      "lengthMetres": 4.9,
+      "tractionKgf": 1530,
+      "powerCh": 41,
+      "propulsion": "steam",
+      "noise": "Très bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-43b9110c-4c0f-436a-b2f5-6977aceb1a27.png"
+    },
+    {
+      "id": "swiss-ge22",
+      "name": "Swiss Ge 2/2",
+      "sourceName": "Swiss Ge 2/2",
+      "year": 1920,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 267930,
+        "annualMaintenance": 44655
+      },
+      "massTonnes": 18,
+      "lengthMetres": 6.7,
+      "tractionKgf": 2549,
+      "powerCh": 95,
+      "propulsion": "electric",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-32f2fa30-71ec-4e2e-a892-7794ee0c37c1.png"
+    },
+    {
+      "id": "ge-25ton-switcher",
+      "name": "GE 25-ton Switcher",
+      "sourceName": "GE 25-ton Switcher",
+      "year": 1945,
+      "maxSpeedKmh": 45,
+      "economy": {
+        "purchasePrice": 403650,
+        "annualMaintenance": 67275
+      },
+      "massTonnes": 23,
+      "lengthMetres": 4.9,
+      "tractionKgf": 6832,
+      "powerCh": 150,
+      "propulsion": "diesel",
+      "noise": "Très bon",
+      "pollution": "Médiocre",
+      "sourceCapture": "codex-clipboard-f7b881f0-0086-4f9f-8d2a-5fbeb93db42d.png"
+    },
+    {
+      "id": "schoma-tm22",
+      "name": "Schöma Tm 2/2",
+      "sourceName": "Schöma Tm 2/2",
+      "year": 1970,
+      "maxSpeedKmh": 70,
+      "economy": {
+        "purchasePrice": 556908,
+        "annualMaintenance": 92818
+      },
+      "massTonnes": 10,
+      "lengthMetres": 6.4,
+      "tractionKgf": 5099,
+      "powerCh": 239,
+      "propulsion": "diesel",
+      "noise": "Très bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-64c16b87-8f30-40e1-b0f6-eaeb8944d5fc.png"
+    },
+    {
+      "id": "vienna-lh",
+      "name": "Vienna Type LH",
+      "sourceName": "Vienna Type LH",
+      "year": 1990,
+      "maxSpeedKmh": 70,
+      "economy": {
+        "purchasePrice": 379710,
+        "annualMaintenance": 63285
+      },
+      "massTonnes": 22,
+      "lengthMetres": 7.3,
+      "tractionKgf": 4079,
+      "powerCh": 163,
+      "propulsion": "electric",
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-85c2dd0f-cfba-455e-ab82-433b658a8b14.png"
+    }
+  ]
+}

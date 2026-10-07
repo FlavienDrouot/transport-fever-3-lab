@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "date": "2026-10-07",
+    "method": "Values transcribed from six passenger tram wagon cards supplied by Flavien for later consist modelling. Generic names are translated for the English catalogue; original French names and screenshot filenames are retained. Images are not redistributed.",
+    "limitations": "Stored source data only; wagons are not included as standalone vehicles in the current calculators. Economic difficulty, retirement dates, coupling compatibility and combined handling rules are not independently verified. These cards show no propulsion, power or traction values; these fields are omitted."
+  },
+  "wagons": [
+    {
+      "id": "open-wagon",
+      "name": "Open passenger wagon",
+      "sourceName": "Wagon ouvert",
+      "year": 1892,
+      "passengerCapacity": 6,
+      "maxSpeedKmh": 25,
+      "economy": {
+        "purchasePrice": 55080,
+        "annualMaintenance": 9180
+      },
+      "massTonnes": 2,
+      "lengthMetres": 7.3,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "codex-clipboard-4068e042-4355-4474-a36f-49caae4e1b6f.png"
+    },
+    {
+      "id": "closed-wagon",
+      "name": "Closed passenger wagon",
+      "sourceName": "Wagon fermé",
+      "year": 1896,
+      "passengerCapacity": 8,
+      "maxSpeedKmh": 30,
+      "economy": {
+        "purchasePrice": 81906,
+        "annualMaintenance": 13651
+      },
+      "massTonnes": 10,
+      "lengthMetres": 6.9,
+      "loadingUnloadingSpeedMultiplier": 3.5,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant",
+      "sourceCapture": "codex-clipboard-00875298-3926-46b3-a364-dfa15ed90383.png"
+    },
+    {
+      "id": "double-deck-wagon",
+      "name": "Double-deck passenger wagon",
+      "sourceName": "Wagon à deux niveaux",
+      "year": 1905,
+      "passengerCapacity": 12,
+      "maxSpeedKmh": 30,
+      "economy": {
+        "purchasePrice": 122862,
+        "annualMaintenance": 20477
+      },
+      "massTonnes": 10,
+      "lengthMetres": 8.6,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-94e9d9c2-1b4d-44f5-9d4b-b2fa64ea60d3.png"
+    },
+    {
+      "id": "nuremberg-f-wagon",
+      "name": "Nuremberg Type F passenger wagon",
+      "sourceName": "Tramway F de Nuremberg",
+      "year": 1920,
+      "passengerCapacity": 12,
+      "maxSpeedKmh": 40,
+      "economy": {
+        "purchasePrice": 146976,
+        "annualMaintenance": 24496
+      },
+      "massTonnes": 5,
+      "lengthMetres": 9.8,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant",
+      "sourceCapture": "codex-clipboard-f2ed4763-a764-4f9f-9cb0-b1df60cf0012.png"
+    },
+    {
+      "id": "gotha-t1-wagon",
+      "name": "Gotha T1 passenger wagon",
+      "sourceName": "Wagon Gotha T1",
+      "year": 1928,
+      "passengerCapacity": 14,
+      "maxSpeedKmh": 60,
+      "economy": {
+        "purchasePrice": 223542,
+        "annualMaintenance": 37257
+      },
+      "massTonnes": 6,
+      "lengthMetres": 10,
+      "loadingUnloadingSpeedMultiplier": 5,
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Bon",
+      "sourceCapture": "codex-clipboard-925e9fd8-c2a5-4e08-acdd-f94f0bb97d2b.png"
+    },
+    {
+      "id": "duewag-wagon",
+      "name": "DUEWAG passenger wagon",
+      "sourceName": "Wagon DUEWAG",
+      "year": 1955,
+      "passengerCapacity": 16,
+      "maxSpeedKmh": 50,
+      "economy": {
+        "purchasePrice": 226386,
+        "annualMaintenance": 37731
+      },
+      "massTonnes": 10,
+      "lengthMetres": 15,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Très bon",
+      "sourceCapture": "codex-clipboard-4a0a0c85-b96e-4c3b-ae9b-651a6f439062.png"
+    }
+  ]
+}
