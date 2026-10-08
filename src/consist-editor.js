@@ -99,6 +99,14 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
     $('configuration-cargo-group').hidden=context.category!=='freight';$('configuration-year').value=context.year;$('configuration-year-value').textContent=context.year;
     drawCatalogue();
   }
+  function openComposition(id,duplicate=false){
+    const original=saved.get(id);if(!original)return false;
+    const item=duplicate?duplicateDefinition(original):original;context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,item.year)};
+    for(const key of ['carrier','category','cargo'])radio(`configuration-${key}`,context[key]);
+    $('configuration-search').value='';radio('configuration-role','all');syncFilters();
+    draftContext={...context};editing=duplicate?null:item.id;$('composition-name').value=item.name;entries=item.components.map(c=>({...c}));drawComposition();$('composition-name').focus();
+    return true;
+  }
   for(const id of ['configuration-carrier','configuration-category','configuration-cargo','configuration-year'])$(id).addEventListener('input',()=>{
     const next={carrier:readRadio('configuration-carrier'),category:readRadio('configuration-category'),cargo:readRadio('configuration-cargo'),year:$('configuration-year').valueAsNumber};
     context=next;syncFilters();
@@ -131,15 +139,9 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
   $('composition-saved').addEventListener('click',event=>{
     const remove=event.target.closest('[data-delete]'),edit=event.target.closest('[data-edit]'),duplicate=event.target.closest('[data-duplicate]');
     if(remove){saved.delete(remove.dataset.delete);if(editing===remove.dataset.delete)newDraft();publish({removed:remove.dataset.delete});}
-    if(edit||duplicate){
-      const original=saved.get(edit?.dataset.edit??duplicate.dataset.duplicate);
-      const item=duplicate?duplicateDefinition(original):original;context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,item.year)};
-      for(const key of ['carrier','category','cargo'])radio(`configuration-${key}`,context[key]);
-      $('configuration-search').value='';radio('configuration-role','all');syncFilters();
-      draftContext={...context};editing=duplicate?null:item.id;$('composition-name').value=item.name;entries=item.components.map(c=>({...c}));drawComposition();$('composition-name').focus();
-    }
+    if(edit||duplicate)openComposition(edit?.dataset.edit??duplicate.dataset.duplicate,!!duplicate);
   });
   syncFilters();drawSaved();newDraft();
   if(restored.skipped)$('composition-message').textContent='Some saved compositions could not be restored with the current catalogue.';
-  return {getCompositions(){return [...saved.values()];}};
+  return {getCompositions(){return [...saved.values()];},edit:openComposition};
 }

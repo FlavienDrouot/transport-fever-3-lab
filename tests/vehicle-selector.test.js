@@ -54,3 +54,14 @@ for(const family of ['train','road'])test(`${family}: focus and pointer highligh
   input.checked=false;list.handlers.change({target:input});assert.equal(selected.has('fast'),false);assert.equal(writes,1);assert.equal(document.activeElement,input);
   list.handlers.focusout({relatedTarget:null});assert.equal(row.classList.highlighted,false);assert.equal(writes,1);
 });
+test('Editing a custom choice does not toggle selection and places its button outside the checkbox label',()=>{
+  const custom={...items[2],id:'custom:rail:test',components:[]},selected=new Set([custom.id,'old']);
+  const html=vehicleRows([items[0],custom],selected,()=>'',true);
+  assert.equal((html.match(/data-edit-composition=/g)||[]).length,1);
+  assert.match(html,/<\/label><button class="train-edit"/);assert.match(html,/aria-label="Edit Custom"/);assert.match(html,/title="Edit Custom"/);
+  const {root,get}=fixture(),ids=Object.fromEntries(['search','sort','count','select','clear','list','empty'].map(key=>[key,key]));
+  let edited,changed=0;
+  const picker=mountVehicleSelector(root,{ids,getItems:()=>[items[0],custom],getSelected:()=>selected,describe:()=>'',onChange:()=>changed++,onEdit:id=>edited=id});
+  picker.render();get('list').handlers.click({target:{closest:()=>({dataset:{editComposition:custom.id}})}});
+  assert.equal(edited,custom.id);assert.equal(changed,0);assert.deepEqual([...selected],[custom.id,'old']);
+});
