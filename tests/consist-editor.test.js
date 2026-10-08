@@ -63,3 +63,41 @@ test('Catalogue filters can browse other types while incompatible additions are 
   assert.equal(canAddComponent(engine,draft),true);assert.equal(canAddComponent(bulk,draft),true);
   for(const item of [liquid,tram,passenger])assert.equal(canAddComponent(item,draft),false);
 });
+
+test('Duplicating a saved train uses its derived introduction year and leaves filters and saved copies valid',async()=>{
+  const {mountConsistEditor}=await import('../src/consist-editor.js');
+  const {buildConsist,railComponents}=await import('../src/consists.js');
+  const [html,units,locomotives,passenger]=await Promise.all([
+    readFile(new URL('../index.html',import.meta.url),'utf8'),
+    ...['trains','rail-locomotives','rail-passenger-wagons'].map(async file=>JSON.parse(await readFile(new URL(`../data/${file}.json`,import.meta.url))))
+  ]);
+  const catalogue=railComponents({locomotives:locomotives.locomotives,passengerWagons:passenger.wagons,freightWagons:[]});
+  const original=buildConsist({schemaVersion:1,id:'custom:rail:original',name:'Original',carrier:'rail',category:'passengers',components:[{componentId:catalogue[0].id,quantity:1},{componentId:catalogue.find(c=>c.passengerCapacity&&c.year>=2000).id,quantity:2}]},catalogue,units.source);
+  const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],{
+    value:'',innerHTML:'',handlers:{},focus(){},get valueAsNumber(){return Number(this.value);},
+    addEventListener(type,fn){this.handlers[type]=fn;},querySelector(){return null;}
+  }]));
+  for(const [id,values] of Object.entries({'configuration-carrier':['rail','tram'],'configuration-category':['passengers','freight'],'configuration-cargo':['all','bulk','goods','flatbed','liquid'],'configuration-role':['all','locomotive','wagon','powered-carriage']})){
+    const radios=values.map(value=>({value}));let chosen=values[0];
+    for(const radio of radios)Object.defineProperty(radio,'checked',{get:()=>chosen===radio.value,set:on=>{if(on)chosen=radio.value;}});
+    nodes.get(id).querySelector=selector=>selector==='input:checked'?radios.find(r=>r.checked):radios.find(r=>selector.includes(`"${r.value}"`));
+  }
+  const document={getElementById(id){assert.ok(nodes.has(id),`Unknown document ID: ${id}`);return nodes.get(id);}};
+  const saved=JSON.stringify({schemaVersion:1,compositions:[compositionDefinition(original)]});
+  const editor=mountConsistEditor(document,{catalogue,units:units.source,storage:{getItem:()=>saved,setItem(){}},onChange(){}});
+  const year=nodes.get('configuration-year'),output=nodes.get('configuration-year-value');
+  const action=type=>nodes.get('composition-saved').handlers.click({target:{closest:selector=>selector===`[data-${type}]`?{dataset:{[type]:original.id}}:null}});
+  // A copy intentionally stores only a recipe, with no derived year. Its source
+  // still supplies that year when the editor switches catalogue context.
+  editor.openContext({carrier:'rail',category:'passengers',cargo:'all',year:1900});
+  action('duplicate');
+  assert.equal(year.value,original.year);assert.equal(output.textContent,original.year);
+  assert.match(nodes.get('component-catalogue-body').innerHTML,/\+ Add/);
+  assert.equal(nodes.get('composition-name').value,'Original · copy');
+  nodes.get('composition-form').handlers.submit({preventDefault(){}});
+  const items=editor.getCompositions();
+  assert.equal(items.length,2);assert.equal(items[1].year,original.year);assert.notEqual(items[1].id,original.id);
+  assert.deepEqual(items[1].components,original.components);
+  editor.openContext({carrier:'rail',category:'passengers',cargo:'all',year:1900});action('edit');
+  assert.equal(year.value,original.year);assert.equal(output.textContent,original.year);
+});

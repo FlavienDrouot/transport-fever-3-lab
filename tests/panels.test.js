@@ -31,6 +31,7 @@ test('Mobile drawers move the same controls and preserve state across viewport c
   node('road-sidebar').value='preserved state';mountPanelDrawers(document,mobile);
   assert.equal(node('road-sidebar').parent,node('road-drawer'));assert.equal(node('catalogue').parent,node('train-drawer'));
   node('road-picker-toggle').handlers.click();assert.equal(node('road-drawer').open,true);assert.equal(node('road-picker-toggle').attrs['aria-expanded'],'true');
+  assert.equal(node('road-vehicle-search').focused,true);
   node('road-picker-close').handlers.click();assert.equal(node('road-drawer').open,false);assert.equal(node('road-picker-toggle').attrs['aria-expanded'],'false');
   mobile.matches=false;for(const handler of mobile.handlers)handler();
   assert.equal(node('road-sidebar').parent,node('road-sidebar-anchor'));assert.equal(node('road-sidebar').value,'preserved state');
@@ -39,9 +40,13 @@ test('Data is the last tab; route controls have one owner and labelled drawer',a
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
   assert.deepEqual([...html.matchAll(/data-analysis="([^"]+)"/g)].map(m=>m[1]),['race','economics','trucks','configurator','data']);
   const sidebar=html.match(/<aside id="road-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(sidebar);
-  for(const id of ['road-category','truck-distance','truck-utilization','truck-year','truck-specialized-terminal','road-selector']){
+  for(const id of ['truck-distance','truck-utilization','truck-year','truck-specialized-terminal','road-selector']){
     assert.ok(sidebar.includes(`id="${id}"`));assert.equal([...html.matchAll(new RegExp(`id="${id}"`,'g'))].length,1);
   }
+  assert.ok(!sidebar.includes('id="road-category"'));
+  const headers=[...html.matchAll(/<header class="analysis-overview">([\s\S]*?)<\/header>/g)].map(m=>m[1]);
+  assert.equal(headers.length,2);
+  for(const id of ['economic-category','road-category'])assert.equal(headers.filter(header=>header.includes(`id="${id}"`)).length,1);
   const trains=html.match(/<aside id="catalogue"[\s\S]*?<\/aside>/)?.[0];assert.ok(trains.includes('id="line-capacity"'));assert.ok(trains.includes('id="route-distance"'));
   assert.match(html,/<dialog id="road-drawer" aria-labelledby="road-sidebar-heading">/);
 });

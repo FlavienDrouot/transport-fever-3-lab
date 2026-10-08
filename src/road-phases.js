@@ -4,9 +4,9 @@ import {createPhaseScale,leadershipWeights} from './phase-scale.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {fixedRateFleetCount} from './service-fleet.js';
+import {styleVehicleCatalogues} from './vehicle-styles.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>n.toLocaleString('en-GB',{maximumFractionDigits:2});
-const palette=['#147d64','#527ac1','#ad5a28','#9270b9','#bf5074','#798329','#3897a7','#bf8437'];
 
 export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5}={}){
   if(!['distance','year','utilization'].includes(axis))throw new RangeError('Unsupported road phase axis');
@@ -111,7 +111,7 @@ function phaseChart(container,vehicles,story,{axis,label,current,mode,rank,stepp
 let cacheKey,cached;
 export function renderRoadPhases(document,datasets,selection,options){
   const node=id=>document.getElementById(id),axis=node('road-phase-axis').querySelector('input:checked').value;
-  const vehicles=selectRoadVehicles(datasets,{...selection,year:axis==='year'?2035:selection.year}).map((v,i)=>({...v,color:palette[i%palette.length],dash:i>=palette.length?`${2+Math.floor(i/palette.length)*2} 3`:''}));
+  const vehicles=selectRoadVehicles(styleVehicleCatalogues(datasets),{...selection,year:axis==='year'?2035:selection.year});
   const domain=axis==='year'?{start:1900,end:2035}:axis==='utilization'?{start:1,end:100}:{start:.01,end:Math.max(5,options.distanceKm)};
   const current=axis==='year'?selection.year:axis==='utilization'?options.fillRatio*100:options.distanceKm;
   const label=axis==='year'?'Game year':axis==='utilization'?'Utilization (%)':'One-way distance (km)';

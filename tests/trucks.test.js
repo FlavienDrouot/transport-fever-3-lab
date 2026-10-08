@@ -45,9 +45,9 @@ test('Freight handling changes short-route rankings and tends to the long-haul p
 test('Freight calculator rejects invalid assumptions and renders all vehicles with finite costs',()=>{
   for(const invalid of [{distanceKm:0},{distanceKm:NaN},{fillRatio:0},{fillRatio:1.1},{loadedReturn:'yes'}])assert.throws(()=>analyseTruckService(data.trucks,{distanceKm:10,...invalid}));
   assert.throws(()=>analyseTruckService([{...data.trucks[0],loadingUnloadingSpeedMultiplier:0}],{distanceKm:10}));
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   renderTruckService({getElementById:id=>nodes[id]},data.trucks,{distanceKm:10,loadedReturn:false,roadSpeedLimit:80});
-  assert.match(nodes['truck-service-summary'].textContent,/empty return/);assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,11);assert.doesNotMatch(nodes['truck-service-readout'].innerHTML,/NaN|Infinity/);
+  assert.match(nodes['road-service-caption'].textContent,/empty return/);assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,11);assert.doesNotMatch(nodes['truck-service-readout'].innerHTML,/NaN|Infinity/);
 });
 
 test('Truck year filtering includes introduction boundaries and preserves older vehicles',()=>{
@@ -59,7 +59,7 @@ test('Truck year filtering includes introduction boundaries and preserves older 
   assert.throws(()=>trucksByYear(data.trucks,NaN),RangeError);
 });
 test('Bars and table use the same filtered cost ranking and proportional zero-based widths',()=>{
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   const options={distanceKm:1,roadSpeedLimit:80};
   const filtered=trucksByYear(data.trucks,1942), rows=analyseTruckService(filtered,options);
   renderTruckService({getElementById:id=>nodes[id]},filtered,options);

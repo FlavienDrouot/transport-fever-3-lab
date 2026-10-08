@@ -2,6 +2,7 @@ import {sizeFleet} from './service-fleet.js';
 import {updateTablePreview} from './table-preview.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {formatTime} from './format.js';
+import {renderServiceSummary} from './service-summary.js';
 
 export const FREIGHT_LOAD_SPEED_FACTOR = 0.0625;
 export const PASSENGER_LOAD_SPEED_FACTOR = 1;
@@ -120,9 +121,10 @@ export function analyseRoadFleet(vehicles, options) {
 export function renderTruckService(document,trucks,options) {
   const passenger=options.passenger===true;
   const rows=analyseRoadFleet(trucks,options);
-  const unit=passenger?'passenger journey':'cargo unit';
+  const unit=passenger?'passenger journey':'delivered cargo unit';
   document.getElementById('truck-service-readout').closest('table').classList.toggle('has-targets',options.demandPerYear!=null||options.maxHeadwaySeconds!=null);
-  document.getElementById('truck-service-summary').textContent=rows.length?`Lowest running cost / ${unit}: ${rows.filter(row=>row.rank===1).map(row=>row.truck.name).join(' / ')} · $${fmt(rows[0].costPerCargo,2)}. A–B–A · ${fmt(options.distanceKm,1)} km per leg · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'} · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}.`:'No vehicles introduced by this year in the captured catalogue.';
+  renderServiceSummary(document.getElementById('truck-service-summary'),{names:rows.filter(row=>row.rank===1).map(row=>row.truck.name),cost:rows[0]?.costPerCargo,unit,emptyMessage:'No vehicles introduced by this year in the captured catalogue.'});
+  document.getElementById('road-service-caption').textContent=`A–B–A · ${fmt(options.distanceKm,1)} km per leg · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'}${!passenger&&rows.length?` · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}`:''}. Travel and handling times in m:ss; handling totals cover the entire round trip.`;
   renderTruckBars(document.getElementById('truck-bars'),rows);
   document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td><td class="road-fleet-column">${row.vehicleCount}</td><td class="road-fleet-column">${fmt(row.actualFillRatio*100,1)}%</td><td class="road-fleet-column">${formatTime(row.headwaySeconds)}</td><td class="road-fleet-column">${fmt(row.deliveredPerYear,0)}</td><td class="road-fleet-column">$${fmt(row.fleetMaintenance,0)}</td></tr>`).join('');
   updateTablePreview(document,'truck-service-readout');
