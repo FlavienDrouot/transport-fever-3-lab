@@ -82,6 +82,9 @@ function syncCustomCompositions(change={}){
   if(change.item?.carrier==='rail')catalogueYear=Math.max(catalogueYear,change.item.year);
   renderCatalogue();render();
 }
+function editComposition(id){
+  location.hash='#composition-builder';syncAnalysisView();consistEditor.edit(id);
+}
 function sample(t, xScale, yScale, view, horizon) {
   // Find where the curve enters the positive log domain, rather than inventing zero.
   let start = xScale.min;
@@ -527,14 +530,14 @@ async function init() {
     getItems:trainCandidates,getSelected:()=>selected,
     describe:t=>`${t.massTonnes} t · ${fmt(t.powerCh * dataset.source.horsepowerWatts / 1000)} kW · ${fmt(t.tractionKgf,0)} kgf`,
     onHighlight:id=>setChartHighlight(document,'rail',id),
-    onChange:()=>{highlighted=undefined;render();}
+    onChange:()=>{highlighted=undefined;render();},onEdit:editComposition
   });
   roadSelector=mountVehicleSelector($('road-selector'),{
     ids:{search:'road-vehicle-search',sort:'road-sort',count:'road-selection-count',select:'road-select-visible',clear:'road-clear-visible',list:'road-vehicles',empty:'road-no-results'},
     getItems:roadCandidates,getSelected:()=>selectedRoad,
     describe:t=>`${t.vehicleType} · ${t.passengerCapacity??t.cargoCapacity} ${roadCategory==='passengers'?'passengers':'cargo units'} · $${fmt(t.economy.annualMaintenance,0)}/year`,
     onHighlight:id=>setChartHighlight(document,'road',id),
-    onChange:render
+    onChange:render,onEdit:editComposition
   });
   updateRoadCategory=()=>{
     const passenger=roadCategory==='passengers';

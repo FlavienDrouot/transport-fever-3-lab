@@ -307,3 +307,8 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
   .raw-data-table .compact-rows>tr:nth-child(n+11){display:none}
   .scale-toggle label span{min-height:36px}.road-sidebar .road-family-toggle label span{padding:6px}
 }
+/* Compact edit action for saved custom compositions. */
+.vehicle-selector .train-row-main{display:flex;align-items:center;gap:7px;flex:1;min-width:0;cursor:pointer}
+.vehicle-selector .train-edit{flex:none;width:26px;height:26px;padding:0;border:1px solid transparent;background:transparent;color:var(--muted);font-size:19px}
+.vehicle-selector .train-edit:hover,.vehicle-selector .train-edit:focus-visible{color:var(--green);border-color:var(--line);background:var(--tint,#f3f6f3)}
+@media(pointer:coarse){.vehicle-selector .train-edit{width:40px;height:40px}}
