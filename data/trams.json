@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
   "source": {
-    "date": "2026-10-07",
-    "method": "Values transcribed from nineteen passenger and eight freight tram cards supplied by Flavien. Generic French names are translated; manufacturer and model names are retained. Original names and capture filenames identify the source. Images are not redistributed.",
-    "limitations": "Captured tram subset (1890–2018), not a complete catalogue. Difficulty and retirement dates are not separately confirmed. Handling rates and terminal delays have not been measured for these trams."
+    "date": "2026-10-08",
+    "method": "Nineteen passenger and eight freight detailed cards, supplemented by a condensed in-game capture of two newer passenger trams and one freight tram, matched to extracted model metadata. Observed and source-backed fields are recorded separately. Images are not redistributed.",
+    "limitations": "Covers all installed non-campaign powered trams (1890–2030); separate datasets supply tram locomotives and wagons. Values combine in-game captures, matched source metadata and the verified maintenance formula. Handling rates, terminal delays and coupling compatibility remain unmeasured for the recent additions."
   },
   "trams": [
     {
@@ -64,7 +64,7 @@
       "massTonnes": 18,
       "lengthMetres": 9.8,
       "tractionKgf": 2039,
-      "powerCh": 86,
+      "powerCh": 68,
       "loadingUnloadingSpeedMultiplier": 2.5,
       "propulsion": "electric",
       "noise": "Très bon",
@@ -423,6 +423,106 @@
       "pollution": "Bon",
       "comfort": "Médiocre",
       "sourceCapture": "codex-clipboard-4fe29e34-82a8-4b8f-868e-ff4bf83034a5.png"
+    },
+    {
+      "id": "stadler-citylink",
+      "name": "Stadler Citylink",
+      "sourceName": "Stadler Citylink",
+      "year": 2022,
+      "passengerCapacity": 50,
+      "maxSpeedKmh": 90,
+      "economy": {
+        "purchasePrice": 2106966,
+        "annualMaintenance": 351161,
+        "status": "source-formula-purchase-confirmed",
+        "purchasePriceStatus": "observed",
+        "annualMaintenanceStatus": "source_formula_not_individually_observed"
+      },
+      "massTonnes": 68.0,
+      "lengthMetres": 37.025,
+      "tractionKgf": 8157.7297038234265,
+      "powerCh": 789,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "propulsion": "electric",
+      "noise": "Bon",
+      "pollution": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-b4901820-139a-49d7-9903-0fd129b4e4dd.png",
+      "dataProvenance": {
+        "method": "condensed_capture_plus_source_metadata",
+        "resourceId": "base::/vehicle/tram/stadler_citylink/stadler_citylink.mdl",
+        "sha256": "747be5b46c95ac4493ff05bfb27e75e1e64e17a6d04fb1326e2f84c621b73c4c",
+        "observedFields": [
+          "sourceName",
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice",
+          "comfort"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "economy.annualMaintenance"
+        ],
+        "limitations": "Length is the source bounding-box extent, not a detailed-card observation. Annual maintenance is computed by the extracted normal-scale rule; purchase price agrees exactly with this capture. Section count and actual coupling compatibility are not observed."
+      },
+      "comfort": "Très bon"
+    },
+    {
+      "id": "stadler-tina",
+      "name": "Stadler TINA",
+      "sourceName": "Stadler TINA",
+      "year": 2024,
+      "passengerCapacity": 60,
+      "maxSpeedKmh": 80,
+      "economy": {
+        "purchasePrice": 2330118,
+        "annualMaintenance": 388353,
+        "status": "source-formula-purchase-confirmed",
+        "purchasePriceStatus": "observed",
+        "annualMaintenanceStatus": "source_formula_not_individually_observed"
+      },
+      "massTonnes": 62.0,
+      "lengthMetres": 45.4581,
+      "tractionKgf": 8157.7297038234265,
+      "powerCh": 816,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "propulsion": "electric",
+      "noise": "Très insuffisant",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-b4901820-139a-49d7-9903-0fd129b4e4dd.png",
+      "dataProvenance": {
+        "method": "condensed_capture_plus_source_metadata",
+        "resourceId": "base::/vehicle/tram/stadler_tina/stadler_tina.mdl",
+        "sha256": "0fbf9dc13a8ddb7e14feb17e5b48b12576cfcb38112f201235e4b634a2966d56",
+        "observedFields": [
+          "sourceName",
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice",
+          "comfort"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "economy.annualMaintenance"
+        ],
+        "limitations": "Length is the source bounding-box extent, not a detailed-card observation. Annual maintenance is computed by the extracted normal-scale rule; purchase price agrees exactly with this capture. Section count and actual coupling compatibility are not observed."
+      },
+      "comfort": "Médiocre"
     }
   ],
   "freightTrams": [
@@ -608,16 +708,66 @@
       "massTonnes": 90,
       "lengthMetres": 64,
       "tractionKgf": 8158,
-      "powerCh": 1088,
+      "powerCh": 1224,
       "loadingUnloadingSpeedMultiplier": 16,
       "propulsion": "electric",
       "noise": "Médiocre",
-      "pollution": "Bon",
+      "pollution": "Médiocre",
       "cargoTypes": "all freight",
       "freightSpecialization": "general",
       "sourceCargoLabel": "Tout fret",
       "sourceCapture": "codex-clipboard-8fc1750f-991b-43b5-95e4-9609ee48dc48.png",
       "carCount": 5
+    },
+    {
+      "id": "articulated-freight-tram",
+      "name": "Articulated freight tram",
+      "sourceName": "Tramway de fret articulé",
+      "year": 2030,
+      "cargoCapacity": 80,
+      "maxSpeedKmh": 100,
+      "economy": {
+        "purchasePrice": 3629064,
+        "annualMaintenance": 604844,
+        "status": "source-formula-purchase-confirmed",
+        "purchasePriceStatus": "observed",
+        "annualMaintenanceStatus": "source_formula_not_individually_observed"
+      },
+      "massTonnes": 45.0,
+      "lengthMetres": 35.7344,
+      "tractionKgf": 8157.7297038234265,
+      "powerCh": 1224,
+      "loadingUnloadingSpeedMultiplier": 12,
+      "propulsion": "electric",
+      "noise": "Insuffisant",
+      "pollution": "Médiocre",
+      "sourceCapture": "codex-clipboard-b4901820-139a-49d7-9903-0fd129b4e4dd.png",
+      "dataProvenance": {
+        "method": "condensed_capture_plus_source_metadata",
+        "resourceId": "base::/vehicle/tram/f_tram_univ/f_tram_univ.mdl",
+        "sha256": "a390d7cc4bd9dd2ccfad6e7ba1429a5178d4da5bf12171a425abab2e0325a783",
+        "observedFields": [
+          "sourceName",
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "economy.annualMaintenance"
+        ],
+        "limitations": "Length is the source bounding-box extent, not a detailed-card observation. Annual maintenance is computed by the extracted normal-scale rule; purchase price agrees exactly with this capture. Section count and actual coupling compatibility are not observed."
+      },
+      "cargoTypes": "all freight",
+      "freightSpecialization": "general"
     }
   ]
 }

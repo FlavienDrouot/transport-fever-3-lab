@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
   "source": {
-    "date": "2026-10-07",
-    "method": "Values transcribed from 11 general-purpose, 10 unique bulk tipper and 10 goods box-truck, 8 flatbed and 11 liquid vehicle cards supplied by Flavien on 2026-10-07. Two FAW tipper captures show the same model and are retained as provenance for one entry. French generic names and category labels are translated; manufacturer model names are retained. Images are not redistributed.",
-    "limitations": "Captured subset, not a complete truck catalogue. Values and economy settings are used as captured; difficulty was not separately confirmed. Retirement dates and cargo-specific capacity differences are not known."
+    "date": "2026-10-08",
+    "method": "Values transcribed from 11 general-purpose, 10 unique bulk tipper and 10 goods box-truck, 8 flatbed and 11 liquid vehicle cards supplied by Flavien on 2026-10-07. Two FAW tipper captures show the same model and are retained as provenance for one entry. French generic names and category labels are translated; manufacturer model names are retained. Images are not redistributed. Rivian EDV and Tesla Semi combine a condensed capture with extracted physical metadata and the verified maintenance formula.",
+    "limitations": "Covers all installed non-campaign trucks (1885–2030). Values combine in-game captures and matched source metadata. Retirement dates and cargo-specific capacity differences are not known."
   },
   "trucks": [
     {
@@ -506,7 +506,7 @@
       "massTonnes": 1.5,
       "lengthMetres": 6.8,
       "tractionKgf": 510,
-      "powerCh": 46,
+      "powerCh": 48,
       "loadingUnloadingSpeedMultiplier": 6,
       "propulsion": "diesel",
       "noise": "Très bon",
@@ -1187,6 +1187,100 @@
       "freightSpecialization": "liquid",
       "sourceCargoLabel": "Liquide",
       "sourceCapture": "codex-clipboard-ecc3cea9-3f22-4a29-a8df-57728468255c.png"
+    },
+    {
+      "id": "rivian-edv",
+      "name": "Rivian EDV Van",
+      "sourceName": "Fourgon Rivian EDV",
+      "year": 2024,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 70,
+      "economy": {
+        "purchasePrice": 1594764,
+        "annualMaintenance": 55374
+      },
+      "massTonnes": 5.0,
+      "lengthMetres": 7.065709999999999,
+      "tractionKgf": 4078.8648519117132,
+      "powerCh": 136,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "propulsion": "electric",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "inline condensed road catalogue capture supplied by Flavien on 2026-10-08",
+      "dataProvenance": {
+        "method": "condensed_capture_plus_source_metadata",
+        "resourceId": "base::/vehicle/truck/rivian_edv/rivian_edv.mdl",
+        "sha256": "f9dd6b01d1c829682080ec42d0b3da04955f8c5073413897e79afd58762b558c",
+        "observedFields": [
+          "sourceName",
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "economy.annualMaintenance"
+        ],
+        "limitations": "Length uses model extents. Maintenance uses the extracted formula; purchase price agrees exactly with the in-game capture."
+      },
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight"
+    },
+    {
+      "id": "tesla-semi",
+      "name": "Tesla Semi",
+      "sourceName": "Tesla Semi",
+      "year": 2030,
+      "cargoCapacity": 40,
+      "maxSpeedKmh": 120,
+      "economy": {
+        "purchasePrice": 8257152,
+        "annualMaintenance": 344048
+      },
+      "massTonnes": 15.0,
+      "lengthMetres": 17.357590000000002,
+      "tractionKgf": 4078.8648519117132,
+      "powerCh": 340,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "propulsion": "electric",
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "sourceCapture": "inline condensed road catalogue capture supplied by Flavien on 2026-10-08",
+      "dataProvenance": {
+        "method": "condensed_capture_plus_source_metadata",
+        "resourceId": "base::/vehicle/truck/tesla_semi/tesla_semi.mdl",
+        "sha256": "c3d6ccae518ff4d4389daf676bd2181e12f106b188937ecda7ffe289de408dc4",
+        "observedFields": [
+          "sourceName",
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "economy.annualMaintenance"
+        ],
+        "limitations": "Length uses model extents. Maintenance uses the extracted formula; purchase price agrees exactly with the in-game capture."
+      },
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight"
     }
   ]
 }

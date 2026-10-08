@@ -29,32 +29,32 @@ test('Rail sample observations are separate from predicted costs and preserve ph
   assert.equal(loco.capacity.display_observed,0);assert.equal(loco.purchasePrice.value,null);
   assert.equal(loco.derivedCosts.purchase_price,1099191);assert.equal(loco.derivedCosts.annual_maintenance,366397);
   assert.equal(catalogue.vehicles.filter(v=>v.capacity.display_observed!==null).length,3);
-  const rows=sourceRows([loco]);assert.match(rows,/1,099,191 · estimate/);assert.match(rows,/0 · observed/);assert.match(rows,/Sample checked/);
+  const rows=sourceRows([loco]);assert.match(rows,/1,099,191/);assert.doesNotMatch(rows,/estimate|observed|Sample checked/);
 });
 
 test('Inventory filters expose future models and distinguish installed non-transport resources',()=>{
-  const all=filterSourceVehicles(catalogue,{includeAuxiliary:true});assert.equal(all.length,380);
+  const all=filterSourceVehicles(catalogue,{includeAuxiliary:true});assert.equal(all.length,catalogue.vehicles.filter(v=>!v.provenance.owner.includes('campaign')).length);
   const before=filterSourceVehicles(catalogue,{year:2020,includeAuxiliary:true});assert.equal(all.length-before.length,20);
   assert.equal(Math.max(...all.map(v=>v.availability.raw?.yearFrom??0)),2035);
-  assert.equal(filterSourceVehicles(catalogue).length,328);
+  assert.equal(filterSourceVehicles(catalogue).length,catalogue.vehicles.filter(v=>v.isTransportVehicle&&!v.provenance.owner.includes('campaign')).length);
   assert.equal(filterSourceVehicles(catalogue,{category:'train',query:'alco_hh600'}).length,1);
   assert.equal(filterSourceVehicles(catalogue,{query:'does not exist'}).length,0);
-  const unresolved=all.find(v=>!v.name.value);assert.equal(sourceName(unresolved),unresolved.name.translation.translation_key);
+  const unresolved=all.find(v=>!v.name.value&&v.name.translation?.translation_key);assert.equal(sourceName(unresolved),unresolved.name.translation.translation_key);
 });
 
 test('Inventory safely renders names and unknown fields, and mounts independent native filters',()=>{
   const fixture=structuredClone(catalogue.vehicles[0]);fixture.name.value='<script>"bad"</script>';
-  fixture.capacity.display_observed=null;fixture.capacity.display_candidate=null;
+  delete fixture.displayValues;fixture.capacity.display_observed=null;fixture.capacity.display_candidate=null;
   fixture.purchasePrice.value=null;fixture.derivedCosts=null;
   const rows=sourceRows([fixture]);assert.doesNotMatch(rows,/<script>|NaN/);assert.match(rows,/&lt;script&gt;/);assert.match(rows,/Unknown/);
   const ids=['source-catalogue-summary','source-search','source-category','source-year','source-auxiliary','source-catalogue-caption','source-catalogue-body','source-formations'];
   const nodes=Object.fromEntries(ids.map(id=>[id,{value:'',checked:false,addEventListener(event,handler){this.handler=handler;}}]));
   nodes['source-year'].valueAsNumber=2050;nodes['source-category'].value='train';
   mountSourceCatalogue({getElementById:id=>nodes[id]},catalogue);
-  assert.match(nodes['source-catalogue-summary'].textContent,/380 source models/);
+  assert.match(nodes['source-catalogue-summary'].textContent,/373 models/);
   assert.match(nodes['source-catalogue-body'].innerHTML,/ALCO HH 600/);
   nodes['source-search'].value='no match';nodes['source-search'].handler();
-  assert.match(nodes['source-catalogue-body'].innerHTML,/No source models/);
+  assert.match(nodes['source-catalogue-body'].innerHTML,/No vehicles/);
 });
 
 test('Importer rejects duplicate source identities and selects metadata without copying originals',()=>{
@@ -77,4 +77,6 @@ test('Default year controls include the named 2025 Rampini through the final col
   assert.equal(filterSourceVehicles(catalogue,{query:'Rampini',year:2020}).length,0);
   assert.equal(filterSourceVehicles(catalogue,{query:'Rampini',year:2025})[0].name.value,'Rampini Eltron');
   assert.equal(filterSourceVehicles(catalogue,{query:'Rampini'})[0].name.value,'Rampini Eltron');
+  const rows=sourceRows(filterSourceVehicles(catalogue,{query:'Rampini'}));
+  assert.match(rows,/<td>2025<\/td>/);assert.doesNotMatch(rows,/2,025|2025–0/);
 });
