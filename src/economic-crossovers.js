@@ -1,4 +1,4 @@
-import {analyseService as analyseLine} from './line.js';
+import {analyseEconomicService as analyseLine} from './rail-freight.js';
 
 const axisDefinitions = {
   distance: {label:'One-way distance (km)', start:.1},
@@ -12,8 +12,10 @@ const axisDefinitions = {
 export function economicStory(trains, distance, fill, targets = {}, {axis='distance',year=2035} = {}) {
   if(axis==='utilisation')axis='utilization';
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
-  const {start,label}=axisDefinitions[axis];
-  const current={distance,year,utilization:fill*100,demand:targets.demandPerDirection??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
+  const {start}=axisDefinitions[axis];
+  const label=axis==='demand'&&targets.freight?'Cargo units / year delivered':axisDefinitions[axis].label;
+  const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
+  const current={distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
   const end={distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
   const byId=new Map(trains.map(train=>[train.id,train]));
   const values=new Map();
@@ -25,16 +27,16 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
     const options={distanceKm:distance,fillRatio:fill,...targets};
     if(axis==='distance')options.distanceKm=x;
     if(axis==='utilization')options.fillRatio=x/100;
-    if(axis==='demand')options.demandPerDirection=x;
+    if(axis==='demand')options[rateKey]=x;
     if(axis==='headway')options.maxHeadwaySeconds=x*60;
-    const value=analyseLine(train,options).maintenancePerJourney;values.set(cacheKey,value);return value;
+    const value=analyseLine(train,options).maintenancePerUnit;values.set(cacheKey,value);return value;
   };
   const enabled=fill>0 || axis==='utilization';
   const story=axis==='year'?yearRankingStory(trains,valueAt,start,end,enabled):rankingStory(trains.map(t=>t.id),(id,x)=>{
     const cost=valueAt(id,x);return cost===null?null:1/cost;
   },start,end,enabled);
-  return {...story,axis,label,current,year,valueAt,discontinuous:axis==='year'||axis==='demand'||axis==='headway'||targets.demandPerDirection!=null||targets.maxHeadwaySeconds!=null,
-    sampled:axis!=='year'&&(targets.demandPerDirection!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
+  return {...story,axis,label,current,year,valueAt,discontinuous:axis==='year'||axis==='demand'||axis==='headway'||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null,
+    sampled:axis!=='year'&&(targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
 }
 
 function ranksFor(ids,score,x) {

@@ -86,12 +86,14 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
     if(focusIndex!=null)$('composition-components').querySelector(`[data-row="${focusIndex}"] input`)?.focus();
   }
   function drawSaved(){
-    $('composition-saved').innerHTML=saved.size?`<ul class="consist-saved">${[...saved.values()].map(item=>`<li><span><strong>${escape(item.name)}</strong><small>${item.carrier==='rail'?'Rail':'Tram'} · ${item.category==='passengers'?'Passengers':escape(item.freightSpecialization)} · ${item.year}</small></span><button type="button" data-edit="${escape(item.id)}" aria-label="Edit ${escape(item.name)}">Edit</button><button type="button" data-duplicate="${escape(item.id)}" aria-label="Duplicate ${escape(item.name)}">Duplicate</button><button type="button" data-delete="${escape(item.id)}" aria-label="Delete ${escape(item.name)}">×</button></li>`).join('')}</ul>`:'<p class="chart-help">No saved compositions yet.</p>';
+    const editIcon='<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m10 2 4 4M3 9l8-8 4 4-8 8-5 1z"/></svg>';
+    const duplicateIcon='<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="6" y="6" width="8" height="8" rx="1"/><path d="M10 4V2H2v8h2"/></svg>';
+    $('composition-saved').innerHTML=saved.size?`<ul class="consist-saved">${[...saved.values()].map(item=>`<li><span><strong>${escape(item.name)}</strong><small>${item.carrier==='rail'?'Rail':'Tram'} · ${item.category==='passengers'?'Passengers':escape(item.freightSpecialization)} · ${item.year}</small></span><div class="saved-actions"><button class="saved-action" type="button" data-edit="${escape(item.id)}" title="Edit" aria-label="Edit ${escape(item.name)}">${editIcon}</button><button class="saved-action" type="button" data-duplicate="${escape(item.id)}" title="Duplicate" aria-label="Duplicate ${escape(item.name)}">${duplicateIcon}</button><button class="saved-action" type="button" data-delete="${escape(item.id)}" title="Delete" aria-label="Delete ${escape(item.name)}">×</button></div></li>`).join('')}</ul>`:'<p class="chart-help">No saved compositions yet.</p>';
   }
   function publish(change){
     let persisted=false;
     try {if(storage){storage.setItem(COMPOSITION_STORAGE_KEY,JSON.stringify({schemaVersion:1,compositions:[...saved.values()].map(compositionDefinition)}));persisted=true;}}catch{}
-    $('composition-message').textContent=change.removed?'Composition removed.':`Saved${persisted?' in this browser':''}. Available in ${change.item.carrier==='tram'?'Road (Include trams)':change.item.category==='passengers'?'Race and Economics':'Race'}.${persisted?'':' Browser storage is unavailable; keep this page open.'}`;
+    $('composition-message').textContent=change.removed?'Composition removed.':`Saved${persisted?' in this browser':''}. Available in ${change.item.carrier==='tram'?'Road (Include trams)':'Race and Economics'}.${persisted?'':' Browser storage is unavailable; keep this page open.'}`;
     drawSaved();onChange(change);
   }
   function newDraft(){draftContext={...context};editing=null;entries=[];$('composition-name').value=context.carrier==='rail'?'Custom train':'Custom tram';$('composition-message').textContent='';$('composition-save').textContent='Save composition';drawComposition();}
@@ -101,7 +103,7 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
   }
   function openComposition(id,duplicate=false){
     const original=saved.get(id);if(!original)return false;
-    const item=duplicate?duplicateDefinition(original):original;context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,item.year)};
+    const item=duplicate?duplicateDefinition(original):original;context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,original.year)};
     for(const key of ['carrier','category','cargo'])radio(`configuration-${key}`,context[key]);
     $('configuration-search').value='';radio('configuration-role','all');syncFilters();
     draftContext={...context};editing=duplicate?null:item.id;$('composition-name').value=item.name;entries=item.components.map(c=>({...c}));drawComposition();$('composition-name').focus();
@@ -143,5 +145,18 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
   });
   syncFilters();drawSaved();newDraft();
   if(restored.skipped)$('composition-message').textContent='Some saved compositions could not be restored with the current catalogue.';
-  return {getCompositions(){return [...saved.values()];},edit:openComposition};
+  return {
+    edit:openComposition,
+    getCompositions(){return [...saved.values()];},
+    openContext(next){
+      context={...next};
+      radio('configuration-carrier',context.carrier);radio('configuration-category',context.category);radio('configuration-cargo',context.cargo);radio('configuration-role','all');
+      $('configuration-year').value=context.year;$('configuration-year-value').textContent=context.year;
+      $('configuration-search').value='';
+      if(!entries.length)newDraft();
+      else $('composition-message').textContent='Your current draft has been kept. Choose New composition to start a different train.';
+      syncFilters();
+    }
+  };
+
 }

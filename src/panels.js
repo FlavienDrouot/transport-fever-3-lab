@@ -22,7 +22,7 @@ export function mountPanelDrawers(document,mobile) {
   const $=id=>document.getElementById(id);
   for(const ids of [
     {drawer:'train-drawer',panel:'catalogue',toggle:'picker-toggle',close:'picker-close',anchor:'catalogue-anchor',focus:'train-search'},
-    {drawer:'road-drawer',panel:'road-sidebar',toggle:'road-picker-toggle',close:'road-picker-close',anchor:'road-sidebar-anchor',focus:'road-category'},
+    {drawer:'road-drawer',panel:'road-sidebar',toggle:'road-picker-toggle',close:'road-picker-close',anchor:'road-sidebar-anchor',focus:'road-vehicle-search'},
     {drawer:'configuration-drawer',panel:'configuration-sidebar',toggle:'configuration-picker-toggle',close:'configuration-picker-close',anchor:'configuration-sidebar-anchor',focus:'configuration-search'},
   ]){
     const drawer=$(ids.drawer),panel=$(ids.panel),toggle=$(ids.toggle);

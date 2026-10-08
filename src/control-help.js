@@ -1,14 +1,17 @@
 /** Visible help works by click, touch and keyboard, alongside existing descriptions. */
-export function mountControlHelp(document) {
-  let index=0;
-  for (const button of document.querySelectorAll('.control-info')) {
+let index=0;
+const mounted=new WeakSet();
+export function mountControlHelp(document,root=document) {
+  for (const button of root.querySelectorAll('.control-info')) {
+    if(mounted.has(button))continue;
     let description = document.getElementById(button.getAttribute('aria-describedby'));
     if(!description&&button.title){
       description=document.createElement('span');description.id=`control-help-${++index}`;description.textContent=button.title;
-      const host=button.closest('.target-control,.infrastructure-control,.service-option-group,.panel-group-body,p')??button.parentElement;
+      const host=button.closest('.service-winner,.target-control,.infrastructure-control,.service-option-group,.panel-group-body,p')??button.parentElement;
       host.append(description);button.setAttribute('aria-describedby',description.id);
     }
     if (!description) continue;
+    mounted.add(button);
     button.setAttribute('aria-controls', description.id);
     button.setAttribute('aria-expanded', 'false');
     description.classList.remove('sr-only');

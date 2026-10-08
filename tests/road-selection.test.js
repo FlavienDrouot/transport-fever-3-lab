@@ -32,7 +32,7 @@ test('Combined comparisons retain absolute individual costs and distinguish vehi
     const combined=analyse(vehicles,options);
     for(const row of combined){const [single]=analyse([row.truck],options);assert.equal(row.costPerCargo,single.costPerCargo);assert.equal(row.handlingMultiplier,category==='passengers'?1:4);}
     assert.ok(combined.every((row,i)=>i===0||combined[i-1].costPerCargo<=row.costPerCargo));
-    const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));renderTruckService({getElementById:id=>nodes[id]},vehicles,{...options,passenger:category==='passengers'});
+    const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));renderTruckService({getElementById:id=>nodes[id]},vehicles,{...options,passenger:category==='passengers'});
     assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,vehicles.length);assert.match(nodes['truck-bars'].innerHTML,/road-vehicle-kind">Tram/);assert.match(nodes['truck-bars'].innerHTML,category==='passengers'?/road-vehicle-kind">Bus/:/road-vehicle-kind">Truck/);
   }
 });

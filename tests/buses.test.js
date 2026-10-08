@@ -25,9 +25,9 @@ test('Bus cycle counts passenger journeys in both directions and ignores freight
   assert.throws(()=>analyseBusService([{...bus,passengerCapacity:0}],options),RangeError);
 });
 test('Passenger rendering uses passenger vocabulary and filters chart and table consistently',()=>{
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   renderTruckService({getElementById:id=>nodes[id]},trucksByYear(data.buses,1913),{distanceKm:1,passenger:true});
-  assert.match(nodes['truck-service-summary'].textContent,/passenger journey/);assert.match(nodes['truck-service-summary'].textContent,/equal utilization/);assert.doesNotMatch(nodes['truck-service-summary'].textContent,/cargo unit|empty return/);
+  assert.match(nodes['truck-service-summary'].innerHTML,/passenger journey/);assert.match(nodes['road-service-caption'].textContent,/equal utilization/);assert.doesNotMatch(nodes['truck-service-summary'].innerHTML,/cargo unit|empty return/);
   assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,4);
   assert.equal((nodes['truck-bars'].innerHTML.match(/class="truck-bar-row/g)||[]).length,4);
   assert.doesNotMatch(nodes['truck-bars'].innerHTML,/NaN|Infinity|Mitsubishi/);
@@ -60,7 +60,7 @@ test('Rampini joins passenger comparisons from 2025 with verified difficulty-nor
   assert.ok(!selectRoadVehicles(sources,{category:'passengers',year:2024}).some(b=>b.id===rampini.id));
   const selected=selectRoadVehicles(sources,{category:'passengers',year:2035});
   assert.ok(selected.some(b=>b.id===rampini.id));
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   renderTruckService({getElementById:id=>nodes[id]},selected,{distanceKm:1,passenger:true});
   for(const id of ['truck-service-readout','truck-bars']){
     assert.match(nodes[id].innerHTML,/Rampini Eltron/);assert.doesNotMatch(nodes[id].innerHTML,/Estimated costs/);

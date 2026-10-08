@@ -5,17 +5,11 @@ export const GAME_YEAR_SECONDS = 4 * 365;
 
 const motionCache = new WeakMap();
 
-// Passenger journeys count both directions; motion always uses the vehicle's empty mass.
-export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6}) {
-  const formationMultiplier=train.formationLoadingUnloadingSpeedMultiplier!==undefined?train.formationLoadingUnloadingSpeedMultiplier:train.loadingUnloadingSpeedMultiplier*train.carCount;
-  for (const [name, value] of Object.entries({distanceKm, baseRate, brakingDeceleration, capacity: train.passengerCapacity, multiplier: formationMultiplier, maintenance: train.economy.annualMaintenance})) {
+/** Acceleration, cruising and braking on one leg, using the captured empty-mass model. */
+export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5}) {
+  for (const [name,value] of Object.entries({distanceKm,brakingDeceleration})) {
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
   }
-  if (!Number.isInteger(train.carCount) || train.carCount <= 0) throw new RangeError('Car count must be a positive integer');
-  if (!Number.isFinite(stationDelaySeconds) || stationDelaySeconds < 0) throw new RangeError('Station delay must be non-negative and finite');
-  if (!Number.isFinite(fillRatio) || fillRatio < 0 || fillRatio > 1) throw new RangeError('Fill ratio must be between zero and one');
-  const passengers = train.passengerCapacity * fillRatio;
-  const rate = baseRate * formationMultiplier;
   let cache=motionCache.get(train.model);
   if (!cache) {cache=new Map();motionCache.set(train.model,cache);}
   const motionKey=`${distanceKm}:${brakingDeceleration}`;
@@ -39,6 +33,21 @@ export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, bra
     if (cache.size>=2048) cache.clear();
     cache.set(motionKey,motion);
   }
+  return {...motion};
+}
+
+// Passenger journeys count both directions; motion always uses the vehicle's empty mass.
+export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6}) {
+  const formationMultiplier=train.formationLoadingUnloadingSpeedMultiplier!==undefined?train.formationLoadingUnloadingSpeedMultiplier:train.loadingUnloadingSpeedMultiplier*train.carCount;
+  for (const [name, value] of Object.entries({distanceKm, baseRate, brakingDeceleration, capacity: train.passengerCapacity, multiplier: formationMultiplier, maintenance: train.economy.annualMaintenance})) {
+    if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
+  }
+  if (!Number.isInteger(train.carCount) || train.carCount <= 0) throw new RangeError('Car count must be a positive integer');
+  if (!Number.isFinite(stationDelaySeconds) || stationDelaySeconds < 0) throw new RangeError('Station delay must be non-negative and finite');
+  if (!Number.isFinite(fillRatio) || fillRatio < 0 || fillRatio > 1) throw new RangeError('Fill ratio must be between zero and one');
+  const passengers = train.passengerCapacity * fillRatio;
+  const rate = baseRate * formationMultiplier;
+  const motion=travelBetweenStops(train,{distanceKm,brakingDeceleration});
   const {travelSeconds,brakingSeconds,peakSpeedKmh}=motion;
   const loadingSeconds = passengers / rate;
   const stationSeconds = 2 * loadingSeconds + stationDelaySeconds; // Sequential unloading, then loading at each terminal.
