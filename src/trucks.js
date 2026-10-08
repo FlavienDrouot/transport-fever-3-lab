@@ -26,10 +26,11 @@ export function rankTrucks(trucks, roadSpeedLimit = null) {
   });
 }
 
-/** Catalogue filtering: "all" is unrestricted, not a general-purpose cargo class. */
+/** "All freight" selects general-purpose vehicles; specific groups also include them. */
 export function matchesFreightFilter(vehicle,cargo='all') {
-  return cargo==='all'||vehicle.freightSpecialization==='general'||
-    (!vehicle.freightSpecialization&&vehicle.cargoTypes==='all freight')||vehicle.freightSpecialization===cargo;
+  return vehicle.freightSpecialization==='general'||
+    (!vehicle.freightSpecialization&&vehicle.cargoTypes==='all freight')||
+    (cargo!=='all'&&vehicle.freightSpecialization===cargo);
 }
 
 /** Specific freight filters also include compatible general-purpose vehicles. */

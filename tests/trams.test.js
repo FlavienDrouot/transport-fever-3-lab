@@ -52,7 +52,7 @@ test('Seven freight tram additions retain specialized source data and compatibil
   const expected=[['sydney-24s',1910,10,35,37531,225186,2,22,'general'],['russian-x',1925,13,40,53076,318456,2,13,'general'],['tatra-t4-tanker',1968,20,55,125561,904041,4,28,'liquid'],['tatra-t4-tipper',1968,20,55,125561,904041,4,26,'bulk'],['tatra-t4-flatbed',1968,20,55,125561,904041,4,24,'flatbed'],['tatra-t4-box',1968,20,55,125561,904041,4,25,'goods'],['dresden-cargotram',2000,60,60,319350,3832200,16,90,'general']];
   assert.equal(new Set([...data.trams,...data.freightTrams].map(t=>t.id)).size,30);
   for(const [id,year,cap,speed,cost,price,rate,mass,special] of expected){const t=data.freightTrams.find(t=>t.id===id);assert.equal(t.year,year);assert.equal(t.cargoCapacity,cap);assert.equal(t.maxSpeedKmh,speed);assert.equal(t.economy.annualMaintenance,cost);assert.equal(t.economy.purchasePrice,price);assert.equal(t.loadingUnloadingSpeedMultiplier,rate);assert.equal(t.massTonnes,mass);assert.equal(t.freightSpecialization,special);assert.match(t.sourceCapture,/^codex-clipboard-.+\.png$/);}
-  assert.equal(trucksForCargo(data.freightTrams,'all').length,9);
+  assert.equal(trucksForCargo(data.freightTrams,'all').length,5);
   for(const cargo of ['liquid','bulk','flatbed','goods']){
     const compatible=trucksForCargo(data.freightTrams,cargo);assert.equal(compatible.length,6);assert.ok(compatible.every(t=>t.freightSpecialization==='general'||t.freightSpecialization===cargo));
     assert.equal(trucksByYear(compatible,1967).length,3);assert.equal(trucksByYear(compatible,1968).length,4);assert.equal(trucksByYear(compatible,2000).length,5);
