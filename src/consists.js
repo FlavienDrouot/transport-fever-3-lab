@@ -41,8 +41,6 @@ export function buildConsist(definition, catalogue, units) {
   if(!['passengers','freight'].includes(definition.category))throw new RangeError('Unsupported consist category');
   if(!carriers.includes(definition.carrier))throw new RangeError('Unsupported consist carrier');
   const freight=definition.category==='freight',cargo=definition.cargo??'all';
-  let resolvedCargo=cargo;
-  const selectedSpecializations=new Set();
   if(freight&&!cargoGroups.includes(cargo))throw new RangeError('Unsupported freight group');
   if(!Array.isArray(definition.components)||!definition.components.length)throw new RangeError('A consist needs components');
   const index=new Map();
@@ -93,11 +91,7 @@ export function buildConsist(definition, catalogue, units) {
       if(freight){
         const group=item.freightSpecialization;
         if(group!=='general'&&!cargoGroups.slice(1).includes(group))throw new RangeError(`Unsupported component freight group: ${item.id}`);
-        if(cargo==='all'&&group!=='general'){
-          selectedSpecializations.add(group);
-          if(selectedSpecializations.size>1)throw new RangeError('Choose freight vehicles from one specialization; general-purpose vehicles can be added to any specialization.');
-          resolvedCargo=group;
-        }else if(cargo!=='all'&&group!=='general'&&group!==cargo)throw new RangeError(`Component incompatible with selected freight: ${item.id}`);
+        if(group!=='general'&&group!==cargo)throw new RangeError(`Component incompatible with selected freight: ${item.id}`);
       }
       const capacity=positive(item,capacityKey),multiplier=positive(item,'loadingUnloadingSpeedMultiplier');
       sum.capacity=sum.capacity===null||capacity===null?null:sum.capacity+q*capacity;
@@ -126,7 +120,7 @@ export function buildConsist(definition, catalogue, units) {
     propulsion:[...propulsion],missing:[...missing],
     assumptions:['Coupling compatibility is not verified.','Locomotives without capacity fields contribute no transport capacity or handling rate.'],
   };
-  if(freight){train.freightSpecialization=resolvedCargo==='all'?'general':resolvedCargo;train.assumptions.push('Same-cargo aggregate handling; mixed commodities and payload effects are not validated.');}
+  if(freight){train.freightSpecialization=cargo==='all'?'general':cargo;train.assumptions.push('Same-cargo aggregate handling; mixed commodities and payload effects are not validated.');}
   train.model=[train.massTonnes,train.powerCh,train.tractionKgf,train.maxSpeedKmh].every(n=>Number.isFinite(n)&&n>0)?createModel(train,units):null;
   train.serviceReady=Boolean(train.model)&&sum.capacity>0&&sum.multiplier>0&&sum.annualMaintenance>0;
   return train;

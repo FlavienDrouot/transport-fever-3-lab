@@ -19,10 +19,8 @@ export function compositionDefinition(item){
 export function duplicateDefinition(item,id=`custom:${item.carrier}:${crypto.randomUUID()}`) {
   return {...compositionDefinition(item),id,name:`${item.name.slice(0,110)} · copy`};
 }
-export function canAddComponent(item,entries,catalogue,draft) {
-  if(!compatibleComponents([item],{...draft,year:2035}).length)return false;
-  if(draft.category!=='freight'||draft.cargo!=='all'||item.role==='locomotive'||item.freightSpecialization==='general')return true;
-  return entries.every(entry=>{const component=catalogue.find(t=>t.id===entry.componentId);return component.role==='locomotive'||component.freightSpecialization==='general'||component.freightSpecialization===item.freightSpecialization;});
+export function canAddComponent(item,draft) {
+  return compatibleComponents([item],{...draft,year:2035}).length>0;
 }
 export function restoreCompositions(raw,catalogue,units){
   const compositions=[],ids=new Set();let skipped=0;
@@ -111,7 +109,7 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
     const button=event.target.closest('[data-add]');if(!button)return;
     if(entries.length>=100){$('composition-message').textContent='Limit: 100 component rows. Use quantities for repeated vehicles.';return;}
     const item=catalogue.find(t=>t.id===button.dataset.add);
-    if(!canAddComponent(item,entries,catalogue,draftContext)){$('composition-message').textContent='This vehicle is incompatible with the current composition. Use New composition to build a different transport type.';return;}
+    if(!canAddComponent(item,draftContext)){$('composition-message').textContent='This vehicle is incompatible with the current composition. Use New composition to build a different transport type.';return;}
     entries.push({componentId:button.dataset.add,quantity:1});$('composition-message').textContent='';drawComposition();
   });
   $('composition-components').addEventListener('input',()=>{

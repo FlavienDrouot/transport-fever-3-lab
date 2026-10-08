@@ -93,11 +93,11 @@ test('Ten unique bulk tippers retain captured costs, capacity, speeds and double
   assert.equal(bulk.find(t=>t.id==='tipper-faw-j6p').additionalSourceCaptures.length,1);
 });
 test('Bulk comparisons include general-purpose vehicles, respect year and change costs with tipper handling',()=>{
-  assert.equal(trucksForCargo(catalogue.trucks,'all').length,52);
+  assert.equal(trucksForCargo(catalogue.trucks,'all').length,12);
   assert.equal(trucksForCargo(catalogue.trucks,'bulk').length,22);
   const early=trucksByYear(trucksForCargo(catalogue.trucks,'bulk'),1912);
   assert.equal(early.length,4);assert.ok(early.some(t=>t.id==='tipper-benz-3t'));
-  assert.ok(trucksForCargo(catalogue.trucks,'all').some(t=>t.freightSpecialization==='bulk'));
+  assert.ok(trucksForCargo(catalogue.trucks,'all').every(t=>t.freightSpecialization==='general'));
   assert.throws(()=>trucksForCargo(catalogue.trucks,'unknown'),RangeError);
   const rows=analyseTruckService(trucksForCargo(catalogue.trucks,'bulk'),{distanceKm:1});
   const general=rows.find(r=>r.truck.id==='faw-j6p'),tipper=rows.find(r=>r.truck.id==='tipper-faw-j6p');

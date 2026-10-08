@@ -14,7 +14,7 @@ test('Editor choices keep engines, reject mixed transport categories and filter 
   ];
   const ids=options=>compatibleComponents(catalogue,options).map(x=>x.id);
   assert.deepEqual(ids({category:'passengers',year:2020}),['engine','passenger-motor','passenger-wagon']);
-  assert.deepEqual(ids({category:'freight',cargo:'all',year:2020}),['engine','general','bulk','liquid-motor']);
+  assert.deepEqual(ids({category:'freight',cargo:'all',year:2020}),['engine','general']);
   assert.deepEqual(ids({category:'freight',cargo:'bulk',year:2020}),['engine','general','bulk']);
   assert.deepEqual(ids({category:'freight',cargo:'liquid',year:1960}),['engine','general']);
   assert.deepEqual(ids({category:'freight',cargo:'liquid',year:2020}),['engine','general','liquid-motor']);
@@ -59,7 +59,7 @@ test('Catalogue filters can browse other types while incompatible additions are 
   const engine={id:'engine',carrier:'rail',role:'locomotive',year:1900};
   const bulk={id:'bulk',carrier:'rail',role:'wagon',year:1920,cargoCapacity:20,freightSpecialization:'bulk'};
   const liquid={...bulk,id:'liquid',freightSpecialization:'liquid'},tram={...engine,id:'tram',carrier:'tram'},passenger={...bulk,id:'passenger',passengerCapacity:20,cargoCapacity:undefined};
-  const catalogue=[engine,bulk,liquid,tram,passenger],draft={carrier:'rail',category:'freight',cargo:'all',year:1900},entries=[{componentId:'bulk',quantity:1}];
-  assert.equal(canAddComponent(engine,entries,catalogue,draft),true);assert.equal(canAddComponent(bulk,entries,catalogue,draft),true);
-  for(const item of [liquid,tram,passenger])assert.equal(canAddComponent(item,entries,catalogue,draft),false);
+  const draft={carrier:'rail',category:'freight',cargo:'bulk',year:1900};
+  assert.equal(canAddComponent(engine,draft),true);assert.equal(canAddComponent(bulk,draft),true);
+  for(const item of [liquid,tram,passenger])assert.equal(canAddComponent(item,draft),false);
 });
