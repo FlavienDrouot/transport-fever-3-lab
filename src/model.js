@@ -34,5 +34,5 @@ export function createModel(train, units) {
     }
     return t2 + (x - x2) / vmax;
   }
-  return {stateAt, timeAt, tractionEndSeconds: t1, speedCapSeconds: t2, speedCapKm: x2 / 1000};
+  return {withSpeedLimit: limit => createModel({...train, maxSpeedKmh: Math.min(train.maxSpeedKmh, limit)}, units), stateAt, timeAt, tractionEndSeconds: t1, speedCapSeconds: t2, speedCapKm: x2 / 1000};
 }

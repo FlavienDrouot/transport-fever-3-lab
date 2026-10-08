@@ -4,6 +4,8 @@ export function createScale(mode, max, floor = 1) {
   const min = mode === 'log' ? floor : 0;
   const transform = n => mode === 'log' ? Math.log10(n) : n;
   const low = transform(min), span = transform(max) - low;
+  // Clipped plots may extrapolate coordinates without changing their domain.
+  const positionUnbounded = n => !Number.isFinite(n) || (mode === 'log' && n <= 0) ? NaN : (transform(n) - low) / span;
   const position = n => !Number.isFinite(n) || n < min || n > max ? NaN : (transform(n) - low) / span;
   const invert = fraction => mode === 'log' ? 10 ** (low + fraction * span) : fraction * max;
   const ticks = [];
@@ -17,5 +19,5 @@ export function createScale(mode, max, floor = 1) {
       }
     }
   }
-  return {mode, min, max, position, invert, ticks};
+  return {mode, min, max, position, positionUnbounded, invert, ticks};
 }

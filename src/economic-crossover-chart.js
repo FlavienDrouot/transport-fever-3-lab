@@ -1,4 +1,4 @@
-import {curveLabels, trainLegend} from './chart-labels.js';
+import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {analyseService as analyseLine} from './line.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {createScale} from './scales.js';
@@ -25,14 +25,13 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
       }));
     }
   }
-  const costs=rank?[1]:samples.flatMap(phase=>phase.flatMap(point=>point.values));
-  const upper=Math.max(1,...costs)*1.05;
-  const floor=Math.min(upper/10,Math.max(upper/10000,Math.min(...costs)));
+  const costs=rank?[1]:samples.flatMap((phase,index)=>phase.flatMap(point=>story.phases[index].leaders.map(id=>point.values[trains.findIndex(t=>t.id===id)])));
+  const upper=winningValueCeiling(costs);
+  const floor=Math.min(upper/10,Math.max(upper/10000,costs.reduce((minimum,cost)=>Math.min(minimum,cost),Infinity)));
   const efficiencyScale=createScale(verticalMode,upper,floor);
-  const sy=y=>rank ? T+(y-1)/Math.max(1,trains.length-1)*(H-T-B) : H-B-efficiencyScale.position(y)*(H-T-B);
+  const sy=y=>rank ? T+(y-1)/Math.max(1,trains.length-1)*(H-T-B) : H-B-efficiencyScale.positionUnbounded(y)*(H-T-B);
   const title=rank?'Economic rank crossovers':'Running cost around crossovers';
-  let svg=`<title>${title}</title><desc>Ranks by passenger throughput per maintenance cost within ${fmt(story.start)}–${fmt(story.end)} km. Demand assumed sufficient. Distance scale: ${distanceMode}.</desc><rect width="${W}" height="${H}" fill="white"/><text x="${L}" y="20">${rank?'Efficiency rank · first place at the top':'Running cost / passenger ($)'}</text>`;
-  for(const phase of story.phases) {const leader=trains.find(t=>t.id===phase.leaders[0]);svg+=`<rect x="${sx(phase.start)}" y="${T}" width="${sx(phase.end)-sx(phase.start)}" height="${H-T-B}" fill="${leader.color}" opacity=".045"/>`;}
+  let svg=`<title>${title}</title><desc>Ranks by passenger throughput per maintenance cost within ${fmt(story.start)}–${fmt(story.end)} km. Demand assumed sufficient. Distance scale: ${distanceMode}.</desc><text x="${L}" y="20">${rank?'Efficiency rank · first place at the top':'Running cost / passenger ($)'}</text>`;
   const ticks=rank?Array.from({length:trains.length},(_,i)=>i+1):efficiencyScale.ticks;
   for(const tick of ticks)svg+=`<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#e4e8e4" stroke-dasharray="2 5"/><text x="${L-10}" y="${sy(tick)+4}" text-anchor="end">${rank?fmt(tick):tick.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1})}</text>`;
   const xTicks=distanceMode==='linear'?Array.from({length:6},(_,i)=>story.start+(story.end-story.start)*i/5):knots;
@@ -42,26 +41,20 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
     if(boundary)svg+=`<line x1="${sx(x)}" x2="${sx(x)}" y1="${T}" y2="${H-B}" stroke="#c7a478" stroke-dasharray="4 4"/><text x="${sx(x)}" y="${H-B+10}" text-anchor="middle" style="fill:#8a5f2b">//</text>`;
     if(i%spacing===0 || i===xTicks.length-1)svg+=`<text x="${sx(x)}" y="${H-B+25}" text-anchor="${i===0?'start':i===xTicks.length-1?'end':'middle'}">${fmt(x)}</text>`;
   });
-  const draw=(t,path,winner)=>{
-    const opacity=highlighted?(highlighted===t.id?1:.12):rank||winner?1:.2;
-    svg+=`<path d="${path}" data-train="${escape(t.id)}" fill="none" stroke="${t.color}" stroke-dasharray="${t.dash||''}" stroke-width="${highlighted===t.id?4:!rank&&winner?3.5:1.7}" opacity="${opacity}"/><path class="curve-hit" data-train="${escape(t.id)}" d="${path}" fill="none" stroke="transparent" stroke-width="12"><title>${escape(t.name)}</title></path>`;
-  };
-  for(const t of [...trains].sort((a,b)=>Number(a.id===highlighted)-Number(b.id===highlighted))) {
-    if(rank) {
-      let path='';story.intervals.forEach((p,i)=>{const y=sy(p.ranks[t.id]);path+=`${i?'L':'M'}${sx(p.start)},${y} L${sx(p.end)},${y} `;});draw(t,path,true);
-    } else for(const [phaseIndex,phase] of story.phases.entries()) {
-      let path='',pen=false;
-      for(let i=0;i<=100;i++) {
-        const point=samples[phaseIndex][i],x=point.x;
-        const y=sy(point.values[trains.indexOf(t)]);
-        if(!Number.isFinite(y)){pen=false;continue;}
-        path+=pen&&targets.demandPerDirection!=null?`H${sx(x)} V${y} `:`${pen?'L':'M'}${sx(x)},${y} `;pen=true;
-      }
-      draw(t,path,phase.leaders.includes(t.id));
+  const paths=rank?rankPhaseSegments(trains,story.phases,story.intervals,sx,sy):[];
+  if(!rank)for(const t of trains)for(const [phaseIndex,phase] of story.phases.entries()){
+    let d='',pen=false;
+    for(const point of samples[phaseIndex]){
+      const x=sx(point.x),y=sy(point.values[trains.indexOf(t)]);
+      if(!Number.isFinite(y)){pen=false;continue;}
+      d+=pen&&targets.demandPerDirection!=null?`H${x} V${y} `:`${pen?'L':'M'}${x},${y} `;pen=true;
     }
+    paths.push({t,d,winner:phase.leaders.includes(t.id)});
   }
-  if(!rank)for(const phase of story.phases.slice(1))svg+=`<circle cx="${sx(phase.start)}" cy="${sy(analyseLine(trains.find(t=>t.id===phase.leaders[0]),{distanceKm:phase.start,fillRatio:fill,...targets}).maintenancePerJourney)}" r="4" fill="white" stroke="#27332e"><title>Leader changes at ${fmt(phase.start)} km</title></circle>`;
-  svg+=curveLabels(trains.map(t=>({t,y:sy(rank?story.intervals.at(-1).ranks[t.id]:samples.at(-1).at(-1).values[trains.indexOf(t)])})),{width:W,right:R,top:T,bottom:H-B,highlighted});
-  svg+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">One-way distance (km) · ${distanceMode}</text>`;
-  container.innerHTML=`<div class="phase-leaders" style="padding-left:${L}px;padding-right:${R}px">${story.phases.map(p=>`<div style="flex:0 0 ${(axis.position(p.end)-axis.position(p.start))*100}%">${p.leaders.map(id=>{const t=trains.find(t=>t.id===id);return `<span data-train="${escape(id)}" style="color:${t.color}">${escape(t.name)}</span>`;}).join(' / ')}</div>`).join('')}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}">${svg}</svg>${trainLegend(trains,W,highlighted)}`;
+  let overlay='';
+  if(!rank)for(const phase of story.phases.slice(1))overlay+=`<circle cx="${sx(phase.start)}" cy="${sy(analyseLine(trains.find(t=>t.id===phase.leaders[0]),{distanceKm:phase.start,fillRatio:fill,...targets}).maintenancePerJourney)}" r="4" fill="white" stroke="#27332e"><title>Leader changes at ${fmt(phase.start)} km</title></circle>`;
+  overlay+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">One-way distance (km) · ${distanceMode}</text>`;
+  renderPhaseDiagram(container,{trains,segments:paths,frame:svg,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title,highlighted,
+    bands:story.phases.map(p=>({leaders:p.leaders,width:axis.position(p.end)-axis.position(p.start)})),
+    endpoints:trains.map(t=>({t,y:sy(rank?story.intervals.at(-1).ranks[t.id]:samples.at(-1).at(-1).values[trains.indexOf(t)]),winner:story.phases.at(-1).leaders.includes(t.id)}))});
 }

@@ -1,10 +1,7 @@
 import {formatTime} from './format.js';
 const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = (n,d=0) => n.toLocaleString('en-GB',{maximumFractionDigits:d});
-const qualities={'Bon':'Good','Très bon':'Very good','Insuffisant':'Poor','Très insuffisant':'Very poor','Médiocre':'Mediocre'};
 export function renderDataView(dataset,trains,experiments) {
-  document.getElementById('raw-data-caption').textContent=`${trains.length} catalogue entries matching the year and search filters · selection does not hide data · normal difficulty`;
-  document.getElementById('raw-data-body').innerHTML=trains.map(t=>`<tr><th scope="row">${escape(t.name)}</th>${[t.year,t.maxSpeedKmh,fmt(t.massTonnes,1),fmt(t.lengthMetres,1),fmt(t.powerCh*dataset.source.horsepowerWatts/1000,1),fmt(t.tractionKgf),t.passengerCapacity,t.carCount,`${t.loadingUnloadingSpeedMultiplier}×`,t.propulsion,fmt(t.economy.purchasePrice),fmt(t.economy.annualMaintenance),qualities[t.noise]||t.noise,qualities[t.pollution]||t.pollution,qualities[t.comfort]||t.comfort].map(v=>`<td>${escape(v)}</td>`).join('')}</tr>`).join('');
   document.getElementById('experiment-cards').innerHTML=experiments.experiments.map(e=>`<article class="experiment-card"><div class="panel-top"><h3>${escape(e.topic)}</h3><span class="evidence-status">${escape(e.status)}</span></div><p>${escape(e.observation)}</p><p><strong>Used in the model:</strong> ${escape(e.adopted)}</p><p class="chart-help">${escape(e.limits)}</p></article>`).join('');
   document.getElementById('motion-validation').innerHTML=dataset.trains.flatMap(t=>(t.measurements||[]).map(m=>{const model=trains.find(x=>x.id===t.id)?.model;return model?`<tr><th scope="row">${escape(t.name)}</th><td>${fmt(m.distanceKm,1)}</td><td>${formatTime(m.videoSeconds-dataset.source.departureVideoSeconds)}</td><td>${formatTime(model.timeAt(m.distanceKm))}</td><td>${fmt(model.timeAt(m.distanceKm)-(m.videoSeconds-dataset.source.departureVideoSeconds),1)}</td></tr>`:'';})).join('') || '<tr><td colspan="5">No video observations for trains matching the current filters.</td></tr>';
 }
