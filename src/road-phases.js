@@ -1,3 +1,4 @@
+import {escapeHtml as escape, formatNumber} from './format.js';
 import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles} from './trucks.js';
 import {rankingStory} from './economic-crossovers.js';
 import {createPhaseScale,leadershipWeights} from './phase-scale.js';
@@ -5,8 +6,7 @@ import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-
 import {GAME_YEAR_SECONDS} from './line.js';
 import {fixedRateFleetCount} from './service-fleet.js';
 import {styleVehicleCatalogues} from './vehicle-styles.js';
-const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>n.toLocaleString('en-GB',{maximumFractionDigits:2});
+const fmt=n=>formatNumber(n,2);
 
 export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5}={}){
   if(!['distance','year','utilization'].includes(axis))throw new RangeError('Unsupported road phase axis');

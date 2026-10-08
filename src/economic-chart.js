@@ -1,9 +1,10 @@
+import {escapeHtml as escape, formatNumber} from './format.js';
 import {curveLabels, trainLegend} from './chart-labels.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
 import {createScale} from './scales.js';
+import {mountChartInteractions} from './chart-interactions.js';
 
-const escape = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
-const fmt = n => n.toLocaleString('en-GB', {maximumFractionDigits: 1});
+const fmt = n => formatNumber(n, 1);
 // Hover changes presentation only; reuse service calculations until inputs change.
 let cachedKey, cachedSeries;
 export function renderEconomicChart(container, {trains, distance, fill, mode, highlighted, targets = {}}) {
@@ -37,9 +38,10 @@ export function renderEconomicChart(container, {trains, distance, fill, mode, hi
     let path='', penDown=false;
     for (const p of points) {const y=p.y === null ? NaN : sy(p.y);if(!Number.isFinite(y)){penDown=false;continue;}path+=penDown&&(targets.demandPerYear!=null||targets.demandPerDirection!=null)?`H${sx(p.x).toFixed(2)} V${y.toFixed(2)} `:`${penDown?'L':'M'}${sx(p.x).toFixed(2)},${y.toFixed(2)} `;penDown=true;}
     const opacity = highlighted && t.id!==highlighted ? .15 : 1;
-    svg += `<path data-train="${escape(t.id)}" d="${path}" fill="none" stroke="${t.color}" stroke-width="${t.id===highlighted?4:2}" stroke-dasharray="${t.dash || ''}" opacity="${opacity}"/><path class="curve-hit" data-train="${escape(t.id)}" d="${path}" fill="none" stroke="transparent" stroke-width="12"><title>${escape(t.name)}</title></path>`;
+    svg += `<path class="train-curve" data-train="${escape(t.id)}" d="${path}" fill="none" stroke="${t.color}" stroke-width="${t.id===highlighted?4:2}" stroke-dasharray="${t.dash || ''}" opacity="${opacity}"/><path class="curve-hit" data-train="${escape(t.id)}" d="${path}" fill="none" stroke="transparent" stroke-width="12"><title>${escape(t.name)}</title></path>`;
   }
   svg += curveLabels(series.map(({t,points})=>({t,y:sy(points.at(-1).y)})),{width:W,right:R,top:T,bottom:H-B,highlighted});
   svg += `<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">One-way distance (km)</text>`;
   container.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title} over distance">${svg}</svg>${trainLegend(trains,W,highlighted)}${!fill?`<p class="chart-help">Zero utilization: no ${freight?'cargo deliveries':'passenger journeys'}. Choose positive utilization to compare trains.</p>`:''}`;
+  mountChartInteractions(container, {highlighted});
 }
