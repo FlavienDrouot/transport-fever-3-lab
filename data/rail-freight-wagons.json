@@ -1,0 +1,1334 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "date": "2026-10-08",
+    "method": "27 purchasable railway freight wagons transcribed from user-supplied condensed captures and matched by year, capacity, speed, handling where present, compatible cargo classes and exact normal-scale purchase cost. Mass, source model extents and verified-formula maintenance come from the matching extracted metadata. Original French labels retained; images are not redistributed.",
+    "limitations": "Campaign resources excluded. Source bounding-box length is used for configuration until a displayed length contradicts it. Coupling compatibility and mixed-commodity handling are not independently validated. British Mark 3 internal variants are retained as equivalent references rather than falsely distinguished by the capture. The 1921–1940 capture was supplied inline without a local attachment path."
+  },
+  "wagons": [
+    {
+      "id": "gondola-wagon-1891",
+      "name": "Gondola wagon 1891",
+      "sourceName": "Wagon tombereau 1891",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1891,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 50,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 175182,
+        "annualMaintenance": 36496
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 10,
+      "lengthMetres": 7.26784,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bulk_1_1794/bulk_1_1794.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "075023af31392c2855c2cc1e0a30d56203e369fccafd805e6cf0f1e184c3f288",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bulk_1_1794/bulk_1_1794.mdl"
+        ]
+      }
+    },
+    {
+      "id": "stake-wagon-1895",
+      "name": "Stake wagon 1895",
+      "sourceName": "Wagon à ranchers 1895",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1895,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 50,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 175182,
+        "annualMaintenance": 36496
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 10,
+      "lengthMetres": 7.26785,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/flatbed_1_1794/flatbed_1_1794.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "235e7563ff5c77edb6765fc4b314860a96f406779c7c83ddbb83654424e12c0e",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/flatbed_1_1794/flatbed_1_1794.mdl"
+        ]
+      }
+    },
+    {
+      "id": "box-wagon-1897",
+      "name": "Box wagon 1897",
+      "sourceName": "Wagon couvert 1879",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1897,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 50,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 175182,
+        "annualMaintenance": 36496
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 10,
+      "lengthMetres": 7.26784,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/boxcar_1_20/boxcar_1_20.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "cddd9b8ac3fcfb968cab103d1042f1bcbe3e7b95daddda332570d882957bf575",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/boxcar_1_20/boxcar_1_20.mdl"
+        ],
+        "nameNote": "Captured label says 1879, but the introduction column and extracted resource both say 1897. Original label retained; English name follows the introduction year."
+      }
+    },
+    {
+      "id": "freight-wagon-1899",
+      "name": "Freight wagon 1899",
+      "sourceName": "Wagon de marchandises 1899",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1899,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 50,
+      "loadingUnloadingSpeedMultiplier": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 175182,
+        "annualMaintenance": 29197
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 10,
+      "lengthMetres": 7.26784,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/univ_1_szap/univ_1_szap.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "8be91372d8e2452a555f3d883b474458c4abdf55590c08a643ebea86257290c9",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/univ_1_szap/univ_1_szap.mdl"
+        ]
+      }
+    },
+    {
+      "id": "tank-wagon-1899",
+      "name": "Tank wagon 1899",
+      "sourceName": "Wagon-citerne 1899",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1899,
+      "cargoCapacity": 8,
+      "maxSpeedKmh": 50,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 175182,
+        "annualMaintenance": 36496
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 10,
+      "lengthMetres": 7.26784,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/liquid_1_n55/liquid_1_n55.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "e24ddc2e47325f430f4654671b3d52e0910f0f5176659c58429230a1864652ea",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/liquid_1_n55/liquid_1_n55.mdl"
+        ]
+      }
+    },
+    {
+      "id": "box-wagon-1910",
+      "name": "Box wagon 1910",
+      "sourceName": "Wagon couvert 1910",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1910,
+      "cargoCapacity": 10,
+      "maxSpeedKmh": 80,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 300018,
+        "annualMaintenance": 62504
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 11,
+      "lengthMetres": 9.706199999999999,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/boxcar_2_verb/boxcar_2_verb.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "bd45da834dc4404a3b422bc572af949ac125bb2bd5f5eb73499dfa4fdff1151c",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/boxcar_2_verb/boxcar_2_verb.mdl"
+        ]
+      }
+    },
+    {
+      "id": "tank-wagon-1912",
+      "name": "Tank wagon 1912",
+      "sourceName": "Wagon-citerne 1912",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1912,
+      "cargoCapacity": 10,
+      "maxSpeedKmh": 80,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 300018,
+        "annualMaintenance": 62504
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 15,
+      "lengthMetres": 8.84029,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/liquid_2_zh/liquid_2_zh.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "20cdb9b6437c0965282f2fef1765124706e2826743ca6f0dd452b90918ac02fc",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/liquid_2_zh/liquid_2_zh.mdl"
+        ]
+      }
+    },
+    {
+      "id": "freight-wagon-1913",
+      "name": "Freight wagon 1913",
+      "sourceName": "Wagon de marchandises 1913",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1913,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 80,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 420024,
+        "annualMaintenance": 70004
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 13,
+      "lengthMetres": 12.83666,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/univ_2_r/univ_2_r.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "78a999138c5eb126e9ac348f305956c6e2e1c501ea1b561a1e294daacc6f9ccc",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/univ_2_r/univ_2_r.mdl"
+        ]
+      }
+    },
+    {
+      "id": "gondola-wagon-1915",
+      "name": "Gondola wagon 1915",
+      "sourceName": "Wagon tombereau 1915",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1915,
+      "cargoCapacity": 10,
+      "maxSpeedKmh": 80,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 300018,
+        "annualMaintenance": 62504
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 20,
+      "lengthMetres": 7.98672,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bulk_2_ok/bulk_2_ok.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "f1d909087734704910c23a84e82a6f94895d8d3f2fdd93fef52c75dde4564477",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bulk_2_ok/bulk_2_ok.mdl"
+        ]
+      }
+    },
+    {
+      "id": "stake-wagon-1920",
+      "name": "Stake wagon 1920",
+      "sourceName": "Wagon à ranchers 1920",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1920,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 80,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 420024,
+        "annualMaintenance": 87505
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 13,
+      "lengthMetres": 12.83666,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/flatbed_2_r/flatbed_2_r.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "bb7bccfab971075d53f07b7a90ebc0a1fd0f6bcf5f7846cb976549db36102cc6",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/flatbed_2_r/flatbed_2_r.mdl"
+        ]
+      }
+    },
+    {
+      "id": "tank-wagon-1926",
+      "name": "Tank wagon 1926",
+      "sourceName": "Wagon-citerne 1926",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1926,
+      "cargoCapacity": 12,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 421902,
+        "annualMaintenance": 87896
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 20,
+      "lengthMetres": 9.48,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/liquid_3_uglx/liquid_3_uglx.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "2d6b198f57df85e98aca13df796e01f36ed48b7b9dea92c3f642c69884d7207b",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/liquid_3_uglx/liquid_3_uglx.mdl"
+        ]
+      }
+    },
+    {
+      "id": "freight-wagon-1930",
+      "name": "Freight wagon 1930",
+      "sourceName": "Wagon de marchandises 1930",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1930,
+      "cargoCapacity": 15,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 527382,
+        "annualMaintenance": 87897
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 18,
+      "lengthMetres": 12.62,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/univ_3_acl/univ_3_acl.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "412db4ea43d450e6749477fbc40b69abbfed057db959fd786866c0adfcd1f4fd",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/univ_3_acl/univ_3_acl.mdl"
+        ]
+      }
+    },
+    {
+      "id": "box-wagon-1930",
+      "name": "Box wagon 1930",
+      "sourceName": "Wagon couvert 1930",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1930,
+      "cargoCapacity": 16,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 562536,
+        "annualMaintenance": 117195
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 30,
+      "lengthMetres": 15.10534,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/boxcar_3_223/boxcar_3_223.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "efcc47fad18157f2ead68ded20859f24edbc78266713169de559479f72fe5c28",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/boxcar_3_223/boxcar_3_223.mdl"
+        ]
+      }
+    },
+    {
+      "id": "gondola-wagon-1940",
+      "name": "Gondola wagon 1940",
+      "sourceName": "Wagon tombereau 1940",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1940,
+      "cargoCapacity": 14,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 492222,
+        "annualMaintenance": 102546
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 30,
+      "lengthMetres": 13.15457,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bulk_3_steel/bulk_3_steel.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "1aac3570d3d1c82b399077d364086f814e8c7e2079a94a0989f2068ccdae5542",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bulk_3_steel/bulk_3_steel.mdl"
+        ]
+      }
+    },
+    {
+      "id": "stake-wagon-1945",
+      "name": "Stake wagon 1945",
+      "sourceName": "Wagon à ranchers 1945",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1945,
+      "cargoCapacity": 20,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 703170,
+        "annualMaintenance": 146494
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 18,
+      "lengthMetres": 19.966,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/flatbed_3_sslmas/flatbed_3_sslmas.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "1f44e3da47374eee53d65b2a8991849f1c06b27375567b548f2add59862d3fe7",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/flatbed_3_sslmas/flatbed_3_sslmas.mdl"
+        ]
+      }
+    },
+    {
+      "id": "tank-wagon-1950",
+      "name": "Tank wagon 1950",
+      "sourceName": "Wagon-citerne 1950",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1950,
+      "cargoCapacity": 15,
+      "maxSpeedKmh": 120,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 602568,
+        "annualMaintenance": 125535
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 20,
+      "lengthMetres": 11.3779,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/liquid_4_ekw/liquid_4_ekw.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "ad01d082a5efd09d03c8c1dbc6b102c5e7221a2f8bdc9703ad7f7955f4d01915",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/liquid_4_ekw/liquid_4_ekw.mdl"
+        ]
+      }
+    },
+    {
+      "id": "box-wagon-1952",
+      "name": "Box wagon 1952",
+      "sourceName": "Wagon couvert 1952",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1952,
+      "cargoCapacity": 18,
+      "maxSpeedKmh": 120,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 723084,
+        "annualMaintenance": 150643
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 25,
+      "lengthMetres": 13.71423,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/boxcar_4_alu/boxcar_4_alu.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "4136c0f4bb11728c39e03d2348ff200bdde8c8b9e8258156c275751f4a1eb789",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/boxcar_4_alu/boxcar_4_alu.mdl"
+        ]
+      }
+    },
+    {
+      "id": "freight-wagon-1960",
+      "name": "Freight wagon 1960",
+      "sourceName": "Wagon de marchandises 1960",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1960,
+      "cargoCapacity": 15,
+      "maxSpeedKmh": 150,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 712200,
+        "annualMaintenance": 118700
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 20,
+      "lengthMetres": 14.06323,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/univ_4_rlmmso58/univ_4_rlmmso58.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "1d1c8e76f969a6d94dcf3fa1cc4f65e4784a96416738c2a4c25dae7ca03fa1b2",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/univ_4_rlmmso58/univ_4_rlmmso58.mdl"
+        ]
+      }
+    },
+    {
+      "id": "stake-wagon-1968",
+      "name": "Stake wagon 1968",
+      "sourceName": "Wagon à ranchers 1968",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1968,
+      "cargoCapacity": 18,
+      "maxSpeedKmh": 140,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 811236,
+        "annualMaintenance": 169008
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 25,
+      "lengthMetres": 14.72,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/flatbed_4_464/flatbed_4_464.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "e17cdeecf400db82dcf4ed2e1c4c8d0c727773ec411809ee14ea86e72b3d23a5",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/flatbed_4_464/flatbed_4_464.mdl"
+        ]
+      }
+    },
+    {
+      "id": "gondola-wagon-1971",
+      "name": "Gondola wagon 1971",
+      "sourceName": "Wagon tombereau 1971",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1971,
+      "cargoCapacity": 20,
+      "maxSpeedKmh": 140,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 901374,
+        "annualMaintenance": 187786
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 35,
+      "lengthMetres": 16.14392,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bulk_4_002/bulk_4_002.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "d3e34857c8c21d326b75ad5c596c6276932cc3860a4d8431077f75f8b9e012cf",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bulk_4_002/bulk_4_002.mdl"
+        ]
+      }
+    },
+    {
+      "id": "box-wagon-1972",
+      "name": "Box wagon 1972",
+      "sourceName": "Wagon couvert 1972",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1972,
+      "cargoCapacity": 20,
+      "maxSpeedKmh": 150,
+      "loadingUnloadingSpeedMultiplier": 6,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 949596,
+        "annualMaintenance": 197833
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 18,
+      "lengthMetres": 14.04502,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/boxcar_5_hbi/boxcar_5_hbi.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "ec8f8dd4168dd6f01a485454c427b9945df0b2b86629169ef84cca442e06ef12",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/boxcar_5_hbi/boxcar_5_hbi.mdl"
+        ]
+      }
+    },
+    {
+      "id": "tank-wagon-1982",
+      "name": "Tank wagon 1982",
+      "sourceName": "Wagon-citerne 1982",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1982,
+      "cargoCapacity": 18,
+      "maxSpeedKmh": 160,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 897624,
+        "annualMaintenance": 187005
+      },
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 25,
+      "lengthMetres": 11.78,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/liquid_5_3752/liquid_5_3752.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "1f311acb28e0f68fecd8ceb0f035803bb890a6e90aade37f67f412e4e2970e17",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/liquid_5_3752/liquid_5_3752.mdl"
+        ]
+      }
+    },
+    {
+      "id": "freight-wagon-1999",
+      "name": "Freight wagon 1999",
+      "sourceName": "Wagon de marchandises 1999",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1999,
+      "cargoCapacity": 22,
+      "maxSpeedKmh": 180,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1200858,
+        "annualMaintenance": 200143
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "general",
+      "cargoTypes": "all freight",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 25,
+      "lengthMetres": 19.71038,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/univ_5_rns/univ_5_rns.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "d5158e9a8a20bdc2c7548b50c5d08018b5efa27fa976099c2065399d3a7de283",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/univ_5_rns/univ_5_rns.mdl"
+        ]
+      }
+    },
+    {
+      "id": "stake-wagon-2000",
+      "name": "Stake wagon 2000",
+      "sourceName": "Wagon à ranchers 2000",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 2000,
+      "cargoCapacity": 22,
+      "maxSpeedKmh": 180,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1200858,
+        "annualMaintenance": 250179
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "flatbed",
+      "cargoTypes": "flatbed freight",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 25,
+      "lengthMetres": 22.5652,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/flatbed_5_rnoos644/flatbed_5_rnoos644.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "0d4fa66a9bfa35c6872b01222246a1fe343e21879d9eb2d60235347f640cf757",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/flatbed_5_rnoos644/flatbed_5_rnoos644.mdl"
+        ]
+      }
+    },
+    {
+      "id": "box-wagon-2000",
+      "name": "Box wagon 2000",
+      "sourceName": "Wagon couvert 2000",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 2000,
+      "cargoCapacity": 25,
+      "maxSpeedKmh": 180,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1364610,
+        "annualMaintenance": 284294
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "goods",
+      "cargoTypes": "goods freight",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 25,
+      "lengthMetres": 23.3368,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/boxcar_6_256/boxcar_6_256.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "330ef893ef0c44cbebe8e12aff76c80edfe07c163ae88ba9ea39d9aee8198e02",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/boxcar_6_256/boxcar_6_256.mdl"
+        ]
+      }
+    },
+    {
+      "id": "gondola-wagon-2001",
+      "name": "Gondola wagon 2001",
+      "sourceName": "Wagon tombereau 2001",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 2001,
+      "cargoCapacity": 18,
+      "maxSpeedKmh": 180,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 982518,
+        "annualMaintenance": 204691
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "bulk",
+      "cargoTypes": "bulk freight",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 40,
+      "lengthMetres": 12.27518,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bulk_5_falns/bulk_5_falns.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "901bb19529cc43759a720ae3dbc675d05a7e39abeef3c2fef3bf53cf764fa7ff",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bulk_5_falns/bulk_5_falns.mdl"
+        ]
+      }
+    },
+    {
+      "id": "tank-wagon-2005",
+      "name": "Tank wagon 2005",
+      "sourceName": "Wagon-citerne 2005",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 2005,
+      "cargoCapacity": 22,
+      "maxSpeedKmh": 200,
+      "loadingUnloadingSpeedMultiplier": 8,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1303014,
+        "annualMaintenance": 271461
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "freightSpecialization": "liquid",
+      "cargoTypes": "liquid freight",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 30,
+      "lengthMetres": 16.53592,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/liquid_6_zacns/liquid_6_zacns.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "131f8054d5d9a611c1c482539490618ba41c6ae45ce645ae6dd28e6b77a72340",
+        "observedFields": [
+          "year",
+          "cargoCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/liquid_6_zacns/liquid_6_zacns.mdl"
+        ]
+      }
+    }
+  ]
+}

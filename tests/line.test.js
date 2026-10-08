@@ -50,9 +50,9 @@ test('Lower maintenance improves efficiency without changing throughput or trave
   assert.equal(a.travelSeconds,b.travelSeconds);
   assert.equal(b.efficiency,2*a.efficiency);
 });
-test('All 16 supplied formations contribute their expected aggregate rate', async () => {
+test('All supplied formations contribute their expected aggregate rate', async () => {
   const data=JSON.parse(await readFile(new URL('../data/trains.json',import.meta.url)));
-  const rates={'draisine':2,'uerdingen':2.5,'acf-m300':2,'roter-pfeil':5,'metroliner':3,'tee-vt115':42,'shinkansen-0':16,'intercity-125':30,'etr-450':44,'re450':12,'ice-1':44,'tgv':30,'talent-1':12,'lastochka':10,'twindexx':12,'fuxing':28};
+  const rates={'draisine':2,'uerdingen':2.5,'acf-m300':2,'roter-pfeil':5,'metroliner':3,'tee-vt115':30,'shinkansen-0':16,'intercity-125':24,'etr-450':44,'re450':9,'ice-1':36,'tgv':30,'talent-1':4,'lastochka':10,'twindexx':12,'fuxing':28,'avelia-liberty':45};
   assert.equal(data.trains.length,Object.keys(rates).length);
   for(const t of data.trains){
     const r=analyseLine({...t,model:createModel(t,data.source)},{distanceKm:10});

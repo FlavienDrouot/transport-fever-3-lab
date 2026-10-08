@@ -1,88 +1,147 @@
 import {buildConsist} from './consists.js';
+import {vehicleThumbnail} from './vehicle-thumbnails.js';
+import {matchesFreightFilter} from './trucks.js';
 
-const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>n==null?'Unknown':n.toLocaleString('en-GB',{maximumFractionDigits:2});
+const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>n==null?'—':n.toLocaleString('en-GB',{maximumFractionDigits:2});
+export const COMPOSITION_STORAGE_KEY='tf3-compositions-v1';
 
-export function compatibleComponents(catalogue,{category,cargo='all',year=2035}) {
-  return catalogue.filter(item=>item.year<=year&&
+export function compatibleComponents(catalogue,{carrier,category,cargo='all',year=2035}) {
+  return catalogue.filter(item=>(!carrier||item.carrier===carrier)&&item.year<=year&&
     (item.role==='locomotive'||(category==='passengers'?item.passengerCapacity>0:
-      item.cargoCapacity>0&&(item.freightSpecialization==='general'||item.freightSpecialization===cargo))));
+      item.cargoCapacity>0&&matchesFreightFilter(item,cargo))));
+}
+export function compositionDefinition(item){
+  return {schemaVersion:1,id:item.id,name:item.name,carrier:item.carrier,category:item.category,
+    ...(item.category==='freight'?{cargo:item.freightSpecialization==='general'?'all':item.freightSpecialization}:{}),
+    components:item.components.map(c=>({...c}))};
+}
+export function duplicateDefinition(item,id=`custom:${item.carrier}:${crypto.randomUUID()}`) {
+  return {...compositionDefinition(item),id,name:`${item.name.slice(0,110)} · copy`};
+}
+export function canAddComponent(item,entries,catalogue,draft) {
+  if(!compatibleComponents([item],{...draft,year:2035}).length)return false;
+  if(draft.category!=='freight'||draft.cargo!=='all'||item.role==='locomotive'||item.freightSpecialization==='general')return true;
+  return entries.every(entry=>{const component=catalogue.find(t=>t.id===entry.componentId);return component.role==='locomotive'||component.freightSpecialization==='general'||component.freightSpecialization===item.freightSpecialization;});
+}
+export function restoreCompositions(raw,catalogue,units){
+  const compositions=[],ids=new Set();let skipped=0;
+  if(!raw)return {compositions,skipped};
+  try {
+    if(raw.length>256000)throw new RangeError('Stored definitions too large');
+    const data=JSON.parse(raw);
+    if(data.schemaVersion!==1||!Array.isArray(data.compositions)||data.compositions.length>100)throw new RangeError('Invalid stored definitions');
+    for(const definition of data.compositions){
+      try {
+        if(!definition.id?.startsWith('custom:')||ids.has(definition.id)||definition.components?.length>100)throw new RangeError('Invalid stored identity');
+        const item=buildConsist(definition,catalogue,units);
+        if(!item.serviceReady)throw new RangeError('Incomplete saved composition');
+        ids.add(item.id);compositions.push(item);
+      }catch{skipped++;}
+    }
+  }catch{return {compositions:[],skipped:1};}
+  return {compositions,skipped};
 }
 
-/** A local, experimental editor. Saved formations are not source catalogue records. */
-export function mountConsistEditor(document,{catalogue,units,onChange}) {
-  const list=document.getElementById('custom-tram-list');
-  const name=document.getElementById('custom-tram-name');
-  const rows=document.getElementById('custom-tram-components');
-  const summary=document.getElementById('custom-tram-summary');
-  const save=document.getElementById('custom-tram-save');
-  const reset=document.getElementById('custom-tram-reset');
-  const add=document.getElementById('custom-tram-add');
-  const form=document.getElementById('custom-tram-form');
-  let context={category:'freight',cargo:'all',year:2035},entries=[],editing=null,sequence=0,preview=null;
-  const saved=new Map();
-  const candidates=()=>compatibleComponents(catalogue,context);
-  const defaultEngine=()=>candidates().find(item=>item.role==='powered-carriage')??candidates().find(item=>item.role==='locomotive');
-  function drawRows(){
-    const available=candidates();
-    rows.innerHTML=entries.map((entry,i)=>{
-      const choices=i===0?available.filter(x=>x.role!=='wagon'):[...available];
-      const selected=catalogue.find(x=>x.id===entry.componentId);
-      if(selected&&!choices.some(x=>x.id===selected.id))choices.push({...selected,name:`${selected.name} (unavailable)`});
-      const options=[['locomotive','Locomotives'],['powered-carriage','Powered trams'],['wagon','Wagons']].map(([role,label])=>{
-        const items=choices.filter(item=>item.role===role);
-        return items.length?`<optgroup label="${label}">${items.map(item=>`<option value="${escape(item.id)}"${item.id===entry.componentId?' selected':''}>${escape(item.name)} · ${item.year}</option>`).join('')}</optgroup>`:'';
-      }).join('');
-      return `<div class="consist-row" data-row="${i}"><div><label for="consist-component-${i}">${i===0?'Powered vehicle':'Component'} ${i+1}</label><select id="consist-component-${i}" data-component required><option value="">Choose a vehicle</option>${options}</select></div><div><label for="consist-quantity-${i}">Quantity</label><input id="consist-quantity-${i}" data-quantity type="number" min="1" max="1000" step="1" value="${entry.quantity}" required></div>${i?`<button type="button" data-remove="${i}" aria-label="Remove component ${i+1}">Remove</button>`:''}</div>`;
-    }).join('');
-    add.disabled=!available.length;
-    updatePreview();
-  }
-  function readRows(){
-    entries=[...rows.querySelectorAll('[data-row]')].map(row=>({componentId:row.querySelector('[data-component]').value,quantity:row.querySelector('[data-quantity]').valueAsNumber}));
+/** The same builder serves rail and tram; storage contains definitions, never cached totals. */
+export function mountConsistEditor(document,{catalogue,units,onChange,storage=null,thumbnails=null}) {
+  const $=id=>document.getElementById(id);
+  const saved=new Map();let entries=[],editing=null,preview=null;
+  let context={carrier:'rail',category:'passengers',cargo:'all',year:2035};
+  let draftContext={...context};
+  let restored;
+  try{restored=restoreCompositions(storage?.getItem(COMPOSITION_STORAGE_KEY),catalogue,units);}catch{restored={compositions:[],skipped:0};}
+  restored.compositions.forEach(item=>saved.set(item.id,item));
+  const available=()=>compatibleComponents(catalogue,context);
+  const radio=(name,value)=>{$(name).querySelector(`input[value="${value}"]`).checked=true;};
+  const readRadio=name=>$(name).querySelector('input:checked').value;
+  function drawCatalogue(){
+    const query=$('configuration-search').value.trim().toLowerCase(),role=readRadio('configuration-role');
+    const choices=available().filter(item=>(role==='all'||item.role===role)&&`${item.name} ${item.sourceName??''} ${item.year}`.toLowerCase().includes(query)).sort((a,b)=>a.year-b.year||a.name.localeCompare(b.name));
+    $('component-count').textContent=`${choices.length} vehicles · ${context.carrier==='rail'?'Rail':'Tram'} · ${context.category==='passengers'?'Passengers':context.cargo==='all'?'All freight':context.cargo}`;
+    $('component-catalogue-body').innerHTML=choices.map(item=>`<tr><th scope="row">${escape(item.name)}<small>${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':context.carrier==='rail'?'Multiple unit':'Powered tram'}</small></th><td class="component-thumbnail-cell">${vehicleThumbnail(item,thumbnails)}</td><td>${item.year}</td><td>${fmt(item.passengerCapacity??item.cargoCapacity)}</td><td>${fmt(item.maxSpeedKmh)}</td><td>${item.loadingUnloadingSpeedMultiplier==null?'—':`${fmt(item.loadingUnloadingSpeedMultiplier)}×`}</td><td>${fmt(item.lengthMetres)}</td><td>${item.powerCh==null?'—':fmt(item.powerCh*units.horsepowerWatts/1000)}</td><td>$${fmt(item.economy.annualMaintenance)}</td><td><button type="button" data-add="${escape(item.id)}" aria-label="Add ${escape(item.name)}">+ Add</button></td></tr>`).join('')||'<tr><td colspan="10">No vehicles match these filters.</td></tr>';
   }
   function updatePreview(){
-    preview=null;save.disabled=true;
+    preview=null;$('composition-save').disabled=true;
+    if(!entries.length){$('composition-summary').textContent='Add vehicles from the catalogue to start your composition.';return;}
     try {
-      if(entries.some(entry=>!candidates().some(item=>item.id===entry.componentId)))throw new RangeError('Choose components available for this category, freight group and year.');
-      preview=buildConsist({schemaVersion:1,id:editing??`custom:tram:${sequence+1}`,name:name.value,carrier:'tram',category:context.category,cargo:context.cargo,components:entries},catalogue,units);
+      preview=buildConsist({schemaVersion:1,id:editing??`custom:${draftContext.carrier}:${crypto.randomUUID()}`,name:$('composition-name').value,carrier:draftContext.carrier,category:draftContext.category,cargo:draftContext.cargo,components:entries},catalogue,units);
       if(!preview.serviceReady)throw new RangeError(`Missing data: ${preview.missing.join(', ')}`);
-      summary.innerHTML=`<dl class="consist-totals">${[
-        ['Capacity',`${fmt(preview.passengerCapacity??preview.cargoCapacity)} ${context.category==='passengers'?'passengers':'cargo units'}`],
-        ['Maximum speed',`${fmt(preview.maxSpeedKmh)} km/h`],['Empty mass',`${fmt(preview.massTonnes)} t`],['Length',`${fmt(preview.lengthMetres)} m`],
-        ['Power',`${fmt(preview.powerCh)} ch`],['Traction',`${fmt(preview.tractionKgf)} kgf`],
-        ['Handling',`${fmt(preview.handlingRate)} ${context.category==='passengers'?'passengers':'cargo units'}/s before facility bonuses`],
+      $('composition-summary').innerHTML=`<dl class="consist-totals">${[
+        ['Capacity',`${fmt(preview.passengerCapacity??preview.cargoCapacity)} ${draftContext.category==='passengers'?'passengers':'cargo units'}`],
+        ['Length',`${fmt(preview.lengthMetres)} m`],['Maximum speed',`${fmt(preview.maxSpeedKmh)} km/h`],
+        ['Empty mass',`${fmt(preview.massTonnes)} t`],['Power',`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],['Traction',`${fmt(preview.tractionKgf)} kgf`],
+        ['Handling',`${preview.handlingRate.toLocaleString('en-GB',{maximumFractionDigits:4})} ${draftContext.category==='passengers'?'passengers':'cargo units'}/s`],
         ['Purchase',`$${fmt(preview.economy.purchasePrice)}`],['Running costs',`$${fmt(preview.economy.annualMaintenance)}/year`]
       ].map(([key,value])=>`<div><dt>${key}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
-      save.disabled=false;
-    } catch(error){summary.textContent=error.message;preview=null;}
-    save.textContent=editing?'Update comparison':'Add to comparison';
-    reset.textContent=editing?'Cancel edit':'New composition';
+      $('composition-save').disabled=false;
+    }catch(error){$('composition-summary').textContent=error.message;preview=null;}
+    $('composition-save').textContent=editing?'Update composition':'Save composition';
+  }
+  function drawComposition(focusIndex=null){
+    $('composition-components').innerHTML=entries.map((entry,i)=>{
+      const item=catalogue.find(c=>c.id===entry.componentId);
+      return `<li data-row="${i}" class="composition-component"><span class="component-kind">${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':'Powered unit'}</span><strong>${escape(item.name)}</strong>${vehicleThumbnail(item,thumbnails)}<label>Quantity<input data-quantity type="number" min="1" max="1000" step="1" value="${entry.quantity}" required aria-label="Quantity of ${escape(item.name)}, component ${i+1}"></label><div class="component-actions"><button type="button" data-move="${i}" data-direction="-1" aria-label="Move component ${i+1} left"${i===0?' disabled':''}>←</button><button type="button" data-move="${i}" data-direction="1" aria-label="Move component ${i+1} right"${i===entries.length-1?' disabled':''}>→</button><button type="button" data-remove="${i}" aria-label="Remove component ${i+1}">×</button></div></li>`;
+    }).join('');
+    $('composition-context').textContent=`${draftContext.carrier==='rail'?'Rail':'Tram'} · ${draftContext.category==='passengers'?'Passengers':draftContext.cargo==='all'?'Freight':draftContext.cargo}`;
+    updatePreview();
+    if(focusIndex!=null)$('composition-components').querySelector(`[data-row="${focusIndex}"] input`)?.focus();
   }
   function drawSaved(){
-    list.innerHTML=saved.size?`<ul class="consist-saved">${[...saved.values()].map(item=>`<li><span>${escape(item.name)} · ${item.category==='passengers'?'Passengers':escape(item.freightSpecialization)} · ${item.year}</span><button type="button" data-edit="${escape(item.id)}">Edit</button><button type="button" data-delete="${escape(item.id)}">Remove</button></li>`).join('')}</ul>`:'<p class="chart-help">No custom compositions yet.</p>';
+    $('composition-saved').innerHTML=saved.size?`<ul class="consist-saved">${[...saved.values()].map(item=>`<li><span><strong>${escape(item.name)}</strong><small>${item.carrier==='rail'?'Rail':'Tram'} · ${item.category==='passengers'?'Passengers':escape(item.freightSpecialization)} · ${item.year}</small></span><button type="button" data-edit="${escape(item.id)}" aria-label="Edit ${escape(item.name)}">Edit</button><button type="button" data-duplicate="${escape(item.id)}" aria-label="Duplicate ${escape(item.name)}">Duplicate</button><button type="button" data-delete="${escape(item.id)}" aria-label="Delete ${escape(item.name)}">×</button></li>`).join('')}</ul>`:'<p class="chart-help">No saved compositions yet.</p>';
   }
-  function newDraft(){editing=null;name.value='Custom tram';entries=[{componentId:defaultEngine()?.id??'',quantity:1}];drawRows();}
-  rows.addEventListener('input',()=>{readRows();updatePreview();});
-  rows.addEventListener('change',()=>{readRows();updatePreview();});
-  rows.addEventListener('click',event=>{const button=event.target.closest('[data-remove]');if(!button)return;entries.splice(Number(button.dataset.remove),1);drawRows();});
-  name.addEventListener('input',updatePreview);
-  add.addEventListener('click',()=>{entries.push({componentId:candidates().find(x=>x.role==='wagon')?.id??defaultEngine()?.id??'',quantity:1});drawRows();rows.lastElementChild.querySelector('select').focus();});
-  reset.addEventListener('click',newDraft);
-  form.addEventListener('submit',event=>{
-    event.preventDefault();readRows();updatePreview();if(!preview)return;
-    saved.set(preview.id,{...preview,vehicleType:'Custom tram'});
-    if(!editing)sequence++;
-    editing=preview.id;drawSaved();updatePreview();onChange();
+  function publish(change){
+    let persisted=false;
+    try {if(storage){storage.setItem(COMPOSITION_STORAGE_KEY,JSON.stringify({schemaVersion:1,compositions:[...saved.values()].map(compositionDefinition)}));persisted=true;}}catch{}
+    $('composition-message').textContent=change.removed?'Composition removed.':`Saved${persisted?' in this browser':''}. Available in ${change.item.carrier==='tram'?'Road (Include trams)':change.item.category==='passengers'?'Race and Economics':'Race'}.${persisted?'':' Browser storage is unavailable; keep this page open.'}`;
+    drawSaved();onChange(change);
+  }
+  function newDraft(){draftContext={...context};editing=null;entries=[];$('composition-name').value=context.carrier==='rail'?'Custom train':'Custom tram';$('composition-message').textContent='';$('composition-save').textContent='Save composition';drawComposition();}
+  function syncFilters(){
+    $('configuration-cargo-group').hidden=context.category!=='freight';$('configuration-year').value=context.year;$('configuration-year-value').textContent=context.year;
+    drawCatalogue();
+  }
+  for(const id of ['configuration-carrier','configuration-category','configuration-cargo','configuration-year'])$(id).addEventListener('input',()=>{
+    const next={carrier:readRadio('configuration-carrier'),category:readRadio('configuration-category'),cargo:readRadio('configuration-cargo'),year:$('configuration-year').valueAsNumber};
+    context=next;syncFilters();
   });
-  list.addEventListener('click',event=>{
-    const remove=event.target.closest('[data-delete]'),edit=event.target.closest('[data-edit]');
-    if(remove){saved.delete(remove.dataset.delete);if(editing===remove.dataset.delete)newDraft();drawSaved();onChange();}
-    if(edit){const item=saved.get(edit.dataset.edit);if(item.category!==context.category||(item.category==='freight'&&item.freightSpecialization!==(context.cargo==='all'?'general':context.cargo))){summary.textContent='Select the saved composition’s category and freight group above before editing it.';return;}editing=item.id;name.value=item.name;entries=item.components.map(x=>({...x}));drawRows();name.focus();}
+  $('configuration-search').addEventListener('input',drawCatalogue);
+  $('configuration-role').addEventListener('change',drawCatalogue);
+  $('component-catalogue-body').addEventListener('click',event=>{
+    const button=event.target.closest('[data-add]');if(!button)return;
+    if(entries.length>=100){$('composition-message').textContent='Limit: 100 component rows. Use quantities for repeated vehicles.';return;}
+    const item=catalogue.find(t=>t.id===button.dataset.add);
+    if(!canAddComponent(item,entries,catalogue,draftContext)){$('composition-message').textContent='This vehicle is incompatible with the current composition. Use New composition to build a different transport type.';return;}
+    entries.push({componentId:button.dataset.add,quantity:1});$('composition-message').textContent='';drawComposition();
   });
-  drawSaved();newDraft();
-  return {
-    setContext(next){const changed=next.category!==context.category||next.cargo!==context.cargo;context={...next};if(changed)newDraft();else drawRows();},
-    getCompositions(){return [...saved.values()];},
-  };
+  $('composition-components').addEventListener('input',()=>{
+    entries=[...$('composition-components').querySelectorAll('[data-row]')].map(row=>({componentId:entries[Number(row.dataset.row)].componentId,quantity:row.querySelector('input').valueAsNumber}));updatePreview();
+  });
+  $('composition-components').addEventListener('click',event=>{
+    const remove=event.target.closest('[data-remove]'),move=event.target.closest('[data-move]');
+    if(remove){const i=Number(remove.dataset.remove);entries.splice(i,1);drawComposition(Math.min(i,entries.length-1));}
+    if(move){const i=Number(move.dataset.move),j=i+Number(move.dataset.direction);[entries[i],entries[j]]=[entries[j],entries[i]];drawComposition(j);}
+  });
+  $('composition-name').addEventListener('input',updatePreview);
+  $('composition-new').addEventListener('click',newDraft);
+  $('composition-form').addEventListener('submit',event=>{
+    event.preventDefault();updatePreview();if(!preview)return;
+    if(!editing&&saved.size>=100){$('composition-message').textContent='Limit: 100 saved compositions. Remove an unused composition first.';return;}
+    const item={...preview,vehicleType:preview.carrier==='rail'?'Custom train':'Custom tram'};
+    saved.set(item.id,item);editing=item.id;publish({item});updatePreview();
+  });
+  $('composition-saved').addEventListener('click',event=>{
+    const remove=event.target.closest('[data-delete]'),edit=event.target.closest('[data-edit]'),duplicate=event.target.closest('[data-duplicate]');
+    if(remove){saved.delete(remove.dataset.delete);if(editing===remove.dataset.delete)newDraft();publish({removed:remove.dataset.delete});}
+    if(edit||duplicate){
+      const original=saved.get(edit?.dataset.edit??duplicate.dataset.duplicate);
+      const item=duplicate?duplicateDefinition(original):original;context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,item.year)};
+      for(const key of ['carrier','category','cargo'])radio(`configuration-${key}`,context[key]);
+      $('configuration-search').value='';radio('configuration-role','all');syncFilters();
+      draftContext={...context};editing=duplicate?null:item.id;$('composition-name').value=item.name;entries=item.components.map(c=>({...c}));drawComposition();$('composition-name').focus();
+    }
+  });
+  syncFilters();drawSaved();newDraft();
+  if(restored.skipped)$('composition-message').textContent='Some saved compositions could not be restored with the current catalogue.';
+  return {getCompositions(){return [...saved.values()];}};
 }

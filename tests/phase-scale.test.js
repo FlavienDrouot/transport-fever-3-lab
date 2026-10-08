@@ -13,6 +13,31 @@ test('Single-phase scale is linear and invalid knots fail explicitly',()=>{
  for(const knots of [[],[0],[0,0],[1,0],[0,NaN]])assert.throws(()=>createPhaseScale(knots),RangeError);
 });
 
+test('Many weighted intervals preserve exact knots, interpolation and extrapolation',()=>{
+ const knots=Array.from({length:1025},(_,i)=>i*i+3*i-10);
+ const weights=knots.slice(1).map((_,i)=>1+i%7);
+ const total=weights.reduce((a,b)=>a+b,0),positions=[0];
+ for(const weight of weights)positions.push(positions.at(-1)+weight/total);
+ positions[positions.length-1]=1;
+ const axis=createPhaseScale(knots,weights);
+ for(let i=0;i<knots.length;i++){
+  assert.equal(axis.position(knots[i]),positions[i]);
+  assert.equal(axis.invert(positions[i]),knots[i]);
+ }
+ for(let i=0;i<weights.length;i++){
+  const value=knots[i]+(knots[i+1]-knots[i])*.375;
+  const position=positions[i]+(positions[i+1]-positions[i])*.375;
+  assert.equal(axis.position(value),position);
+  assert.ok(Math.abs(axis.invert(position)-value)<1e-8);
+ }
+ for(const [i,fraction] of [[0,-.5],[weights.length-1,1.5]]){
+  const value=knots[i]+(knots[i+1]-knots[i])*fraction;
+  const position=positions[i]+(positions[i+1]-positions[i])*fraction;
+  assert.equal(axis.position(value),position);
+  assert.ok(Math.abs(axis.invert(position)-value)<1e-8);
+ }
+});
+
 test('Final leadership tail gets 30% of an earlier phase and remains reversible',async()=>{
  const {leadershipWeights}=await import('../src/phase-scale.js');
  const axis=createPhaseScale([0,2,10,100],leadershipWeights(3));

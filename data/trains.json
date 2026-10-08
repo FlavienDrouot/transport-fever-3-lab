@@ -2,19 +2,19 @@
   "schemaVersion": 2,
   "source": {
     "title": "Branche · Analyser Transport Fever 3",
-    "date": "2026-10-05",
+    "date": "2026-10-08",
     "inspirationVideo": {
       "title": "I Raced Every Multiple Unit in Transport Fever 3! Which one is the best?",
       "url": "https://www.youtube.com/watch?v=KgUHw9Ya60M",
       "author": "Flowengineer",
       "authorUrl": "https://www.youtube.com/@Flowengineer"
     },
-    "method": "Physical parameters and all visible card values transcribed from 16 game screenshots supplied by Flavien on 2026-10-05. Economic difficulty is normal, as stated by Flavien. Original capture filenames identify the evidence; images are not redistributed. Video timings retained for the original four trains only.",
+    "method": "Physical parameters and all visible card values transcribed from 17 game screenshots supplied by Flavien on 2026-10-05 and 2026-10-08. Economic difficulty is normal, as stated by Flavien. Original capture filenames identify the evidence; images are not redistributed. Video timings retained for the original four trains only.",
     "departureVideoSeconds": 32,
     "horsepowerWatts": 735.5,
     "kgfNewtons": 9.80665,
     "limitations": "Rounded manual measurements; marker positions are uncertain. The 15 km point is approximate. An ideal model on level track without resistance, braking or stops; it does not establish the game’s actual physics.",
-    "catalogueCoverage": "All 16 distinct names visible across the three supplied catalogue-list captures have corresponding vehicle cards. Completeness outside these captures, active filters, game version and mods are unverified.",
+    "catalogueCoverage": "The original 16 list-capture names and the additional Avelia Liberty detailed card cover the installed standard multiple units and railcars identified by Flavien. Locomotives, individual wagons, campaign-specific vehicles and other game builds remain outside this coverage.",
     "economicDifficulty": "normal",
     "economicDifficultyScaling": "Other difficulties change costs by multiplication or division according to Flavien; coefficients are not yet verified.",
     "catalogueListCaptures": [
@@ -22,7 +22,7 @@
       "codex-clipboard-377712b6-6637-4b62-9938-b431aaf5ad83.png",
       "codex-clipboard-dfa00543-64f5-46e1-bbc9-58294eb2ec4c.png"
     ],
-    "carCountMethod": "Formation counts supplied by Flavien on 2026-10-06. Loading/unloading multiplier is applied per car; all counted cars are provisionally assumed to contribute equally."
+    "carCountMethod": "Original formation counts supplied by Flavien on 2026-10-06 are retained as visual composition evidence. Loading uses the explicit extracted component sum for all 17 entries, excluding zero-loading-speed power cars and counting single-model articulated railcars once."
   },
   "trains": [
     {
@@ -104,7 +104,19 @@
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Très insuffisant",
-      "carCount": 2
+      "carCount": 2,
+      "formationLoadingUnloadingSpeedMultiplier": 3,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/metroliner/metroliner.mu.lua",
+        "sourceHash": "c9f0ae97db1612b78fe4ac5c329c63bf5c8cca121e2f72fee1815a8355d15965",
+        "componentIds": [
+          "base::/vehicle/train/metroliner/metroliner.mdl",
+          "base::/vehicle/train/metroliner/metroliner.mdl"
+        ],
+        "contributingElements": 2,
+        "sourceElementCount": 2,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "twindexx",
@@ -181,11 +193,25 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 3.0,
+      "loadingUnloadingSpeedMultiplier": 3,
       "noise": "Très bon",
       "pollution": "Bon",
       "comfort": "Insuffisant",
-      "carCount": 4
+      "carCount": 4,
+      "formationLoadingUnloadingSpeedMultiplier": 12,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/twindexx/twindexx.mu.lua",
+        "sourceHash": "822121cfb1b05a6738dea618de5dcb177ba99d9e1928e1f4c0c9765d72665d12",
+        "componentIds": [
+          "base::/vehicle/train/twindexx/twindexx_front.mdl",
+          "base::/vehicle/train/twindexx/twindexx_middle1.mdl",
+          "base::/vehicle/train/twindexx/twindexx_middle1.mdl",
+          "base::/vehicle/train/twindexx/twindexx_front.mdl"
+        ],
+        "contributingElements": 4,
+        "sourceElementCount": 4,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "tgv",
@@ -262,11 +288,31 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 3.0,
+      "loadingUnloadingSpeedMultiplier": 3,
       "noise": "Très insuffisant",
       "pollution": "Très bon",
       "comfort": "Médiocre",
-      "carCount": 10
+      "carCount": 10,
+      "formationLoadingUnloadingSpeedMultiplier": 30,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/tgv_duplex/tgv_duplex.mu.lua",
+        "sourceHash": "6dd530ee12d5451c8a476cbd6bc2e60e8b64f6a97b6f3dd41b0b4c1b6dacf6ea",
+        "componentIds": [
+          "base::/vehicle/train/tgv_duplex/tgv_front.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle1.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle2.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle2.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle3.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle4.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle4.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle4.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_middle5.mdl",
+          "base::/vehicle/train/tgv_duplex/tgv_front.mdl"
+        ],
+        "contributingElements": 10,
+        "sourceElementCount": 10,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "fuxing",
@@ -352,13 +398,31 @@
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "carCount": 8
+      "carCount": 8,
+      "formationLoadingUnloadingSpeedMultiplier": 28,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/fuxing_hao/fuxing_hao.mu.lua",
+        "sourceHash": "9f33c1208910f91563502dc1f6080dd64ad5b164208afab31e43e3cb7089af7a",
+        "componentIds": [
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_front.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_middle1.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_middle2.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_middle1.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_middle1.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_middle2.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_middle1.mdl",
+          "base::/vehicle/train/fuxing_hao/fuxing_hao_front.mdl"
+        ],
+        "contributingElements": 8,
+        "sourceElementCount": 8,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "draisine",
       "name": "Handcar",
       "year": 1860,
-      "massTonnes": 1.0,
+      "massTonnes": 1,
       "tractionKgf": 102,
       "powerCh": 1.4,
       "maxSpeedKmh": 40,
@@ -419,11 +483,22 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 2.0,
+      "loadingUnloadingSpeedMultiplier": 2,
       "noise": "Très bon",
       "pollution": "Très bon",
       "comfort": "Très insuffisant",
-      "carCount": 1
+      "carCount": 1,
+      "formationLoadingUnloadingSpeedMultiplier": 2,
+      "formationProvenance": {
+        "resourceId": "urbangames_deluxe_upgrade_pack::/vehicle/train/handcar/handcar.mdl",
+        "sourceHash": "37fd6635bc2eac4a77ee57c0cf45791e4da333aab28beb971526f0f605b434de",
+        "componentIds": [
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/handcar/handcar.mdl"
+        ],
+        "contributingElements": 1,
+        "sourceElementCount": 1,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "acf-m300",
@@ -490,11 +565,22 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 2.0,
+      "loadingUnloadingSpeedMultiplier": 2,
       "noise": "Bon",
       "pollution": "Bon",
       "comfort": "Très insuffisant",
-      "carCount": 1
+      "carCount": 1,
+      "formationLoadingUnloadingSpeedMultiplier": 2,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/m_300/m_300.mdl",
+        "sourceHash": "0f801cae345f045d3beaa4ac2b776b94164f41869ba8d888d3d3cda9484a2d13",
+        "componentIds": [
+          "base::/vehicle/train/m_300/m_300.mdl"
+        ],
+        "contributingElements": 1,
+        "sourceElementCount": 1,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "roter-pfeil",
@@ -561,11 +647,22 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 5.0,
+      "loadingUnloadingSpeedMultiplier": 5,
       "noise": "Médiocre",
       "pollution": "Bon",
       "comfort": "Très bon",
-      "carCount": 1
+      "carCount": 1,
+      "formationLoadingUnloadingSpeedMultiplier": 5,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/roterpfeil/roterpfeil.mdl",
+        "sourceHash": "ef8f159995482d633c5ec17f03ae3707aa033fa1952f0376efa0f691d229840f",
+        "componentIds": [
+          "base::/vehicle/train/roterpfeil/roterpfeil.mdl"
+        ],
+        "contributingElements": 1,
+        "sourceElementCount": 1,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "uerdingen",
@@ -636,7 +733,18 @@
       "noise": "Très bon",
       "pollution": "Très bon",
       "comfort": "Très insuffisant",
-      "carCount": 1
+      "carCount": 1,
+      "formationLoadingUnloadingSpeedMultiplier": 2.5,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/schienenbus/schienenbus.mdl",
+        "sourceHash": "6ce70957c29095028306b01742bec45c035f1dda0dee0409c63113a0bb7c6d7d",
+        "componentIds": [
+          "base::/vehicle/train/schienenbus/schienenbus.mdl"
+        ],
+        "contributingElements": 1,
+        "sourceElementCount": 1,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "tee-vt115",
@@ -703,11 +811,28 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 6.0,
+      "loadingUnloadingSpeedMultiplier": 6,
       "noise": "Insuffisant",
       "pollution": "Bon",
       "comfort": "Très bon",
-      "carCount": 7
+      "carCount": 7,
+      "formationLoadingUnloadingSpeedMultiplier": 30,
+      "formationProvenance": {
+        "resourceId": "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5.mu.lua",
+        "sourceHash": "3b496f8bddd190060a0616528b05c99e4d0ba8da3a3ee781bb5eae83574d6776",
+        "componentIds": [
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_front.mdl",
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle1.mdl",
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle2.mdl",
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle3.mdl",
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle4.mdl",
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle1.mdl",
+          "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_front.mdl"
+        ],
+        "contributingElements": 5,
+        "sourceElementCount": 7,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "shinkansen-0",
@@ -774,11 +899,29 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 2.0,
+      "loadingUnloadingSpeedMultiplier": 2,
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Médiocre",
-      "carCount": 8
+      "carCount": 8,
+      "formationLoadingUnloadingSpeedMultiplier": 16,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/shinkansen_0s/shinkansen_0s.mu.lua",
+        "sourceHash": "f2adc2aca687181700cef6038f26f5864cab07333577c3fee1afa7cc7fdd6eb1",
+        "componentIds": [
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_front.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle1.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle2.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle1.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle2.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle1.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle2.mdl",
+          "base::/vehicle/train/shinkansen_0s/shinkansen_0s_back.mdl"
+        ],
+        "contributingElements": 8,
+        "sourceElementCount": 8,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "intercity-125",
@@ -845,11 +988,31 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 3.0,
+      "loadingUnloadingSpeedMultiplier": 3,
       "noise": "Très insuffisant",
       "pollution": "Insuffisant",
       "comfort": "Médiocre",
-      "carCount": 10
+      "carCount": 10,
+      "formationLoadingUnloadingSpeedMultiplier": 24,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/hst_125/hst_125.mu.lua",
+        "sourceHash": "ab72c394286ed3b412e036cf898520932b60ed6e976937a1ee9e604113887315",
+        "componentIds": [
+          "base::/vehicle/train/hst_125/hst_125_front.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle2.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_front.mdl"
+        ],
+        "contributingElements": 8,
+        "sourceElementCount": 10,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "etr-450",
@@ -916,11 +1079,32 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 4.0,
+      "loadingUnloadingSpeedMultiplier": 4,
       "noise": "Insuffisant",
       "pollution": "Très bon",
       "comfort": "Bon",
-      "carCount": 11
+      "carCount": 11,
+      "formationLoadingUnloadingSpeedMultiplier": 44,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/fs_etr_450/etr_450.mu.lua",
+        "sourceHash": "06e315716856d91c595cae66a87603d632080687e80183518f83882b2d5849e5",
+        "componentIds": [
+          "base::/vehicle/train/fs_etr_450/etr_450_front.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle1.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle2.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle2.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle1.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle1.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle1.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle2.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle2.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_middle1.mdl",
+          "base::/vehicle/train/fs_etr_450/etr_450_front.mdl"
+        ],
+        "contributingElements": 11,
+        "sourceElementCount": 11,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "re450",
@@ -987,11 +1171,25 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 3.0,
+      "loadingUnloadingSpeedMultiplier": 3,
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "carCount": 4
+      "carCount": 4,
+      "formationLoadingUnloadingSpeedMultiplier": 9,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/re_450/re_450.mu.lua",
+        "sourceHash": "317644da3e99d7f8de9b93d19b9e3d1b6d4a73f15a63f289f49b68ff02e69e3b",
+        "componentIds": [
+          "base::/vehicle/train/re_450/re_450_front.mdl",
+          "base::/vehicle/train/re_450/re_450_middle1.mdl",
+          "base::/vehicle/train/re_450/re_450_middle1.mdl",
+          "base::/vehicle/train/re_450/re_450_back.mdl"
+        ],
+        "contributingElements": 3,
+        "sourceElementCount": 4,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "ice-1",
@@ -1058,11 +1256,32 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 4.0,
+      "loadingUnloadingSpeedMultiplier": 4,
       "noise": "Insuffisant",
       "pollution": "Bon",
       "comfort": "Médiocre",
-      "carCount": 11
+      "carCount": 11,
+      "formationLoadingUnloadingSpeedMultiplier": 36,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/ice1/ice1.mu.lua",
+        "sourceHash": "1db444f358c91891a389d7057c72faea7a8de5fbe612a21f46f664cb4e777653",
+        "componentIds": [
+          "base::/vehicle/train/ice1/ice1_front.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle2.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_middle1.mdl",
+          "base::/vehicle/train/ice1/ice1_front.mdl"
+        ],
+        "contributingElements": 9,
+        "sourceElementCount": 11,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "talent-1",
@@ -1129,11 +1348,22 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 4.0,
+      "loadingUnloadingSpeedMultiplier": 4,
       "noise": "Très insuffisant",
       "pollution": "Insuffisant",
       "comfort": "Insuffisant",
-      "carCount": 3
+      "carCount": 3,
+      "formationLoadingUnloadingSpeedMultiplier": 4,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/talent1/talent1.mdl",
+        "sourceHash": "2c00b30d9f16c3b7be975586e12c2fb63b392ad6c9cd7420be5188455d1e6724",
+        "componentIds": [
+          "base::/vehicle/train/talent1/talent1.mdl"
+        ],
+        "contributingElements": 1,
+        "sourceElementCount": 1,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     },
     {
       "id": "lastochka",
@@ -1200,11 +1430,118 @@
         ],
         "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
       },
-      "loadingUnloadingSpeedMultiplier": 2.0,
+      "loadingUnloadingSpeedMultiplier": 2,
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Très insuffisant",
-      "carCount": 5
+      "carCount": 5,
+      "formationLoadingUnloadingSpeedMultiplier": 10,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/es1_lastochka/es1_lastochka.mu.lua",
+        "sourceHash": "311c4d0762e06f6d3e58bc9fb6ec98f3e83e24c934ae0e00f22aee497ebf9304",
+        "componentIds": [
+          "base::/vehicle/train/es1_lastochka/es1_lastochka_front.mdl",
+          "base::/vehicle/train/es1_lastochka/es1_lastochka_middle1.mdl",
+          "base::/vehicle/train/es1_lastochka/es1_lastochka_middle2.mdl",
+          "base::/vehicle/train/es1_lastochka/es1_lastochka_middle1.mdl",
+          "base::/vehicle/train/es1_lastochka/es1_lastochka_front.mdl"
+        ],
+        "contributingElements": 5,
+        "sourceElementCount": 5,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
+    },
+    {
+      "id": "avelia-liberty",
+      "name": "Avelia Liberty",
+      "year": 2025,
+      "massTonnes": 410,
+      "tractionKgf": 40789,
+      "powerCh": 12617,
+      "maxSpeedKmh": 260,
+      "color": "#4679c2",
+      "dash": "",
+      "lengthMetres": 217,
+      "passengerCapacity": 94,
+      "propulsion": "electric",
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 39320364,
+        "annualMaintenance": 6553394
+      },
+      "sourceCapture": {
+        "attachment": "codex-clipboard-99fbc411-ef47-4af0-afbb-69880d1b16de.png",
+        "date": "2026-10-08",
+        "language": "fr",
+        "raw": {
+          "name": "Avelia Liberty",
+          "year": "2025",
+          "purchasePrice": "$39 320 364",
+          "maintenance": "$6 553 394/an",
+          "cargo": "Passagers",
+          "capacity": "94",
+          "propulsion": "Électrique",
+          "maxSpeed": "260 km/h",
+          "mass": "410 t",
+          "length": "217 m",
+          "tractiveEffort": "40 789 kgf",
+          "power": "12 617 ch"
+        },
+        "otherVisibleIcons": [
+          "paint-bucket"
+        ],
+        "notes": "Detailed vehicle card supplied by Flavien; costs exactly match the normal-scale sum of the extracted ordered formation components. The screenshot shows the whole formation, not an individual power car. Images are not redistributed.",
+        "indicators": [
+          {
+            "icon": "hand-and-clock",
+            "displayValue": "5.0x",
+            "label": "Vitesse de chargement/déchargement"
+          },
+          {
+            "icon": "sound-waves",
+            "displayValue": "Insuffisant",
+            "label": "Bruit"
+          },
+          {
+            "icon": "cloud",
+            "displayValue": "Très bon",
+            "label": "Pollution"
+          },
+          {
+            "icon": "wheelchair",
+            "displayValue": "Bon",
+            "label": "Confort"
+          }
+        ],
+        "indicatorLabelsSource": "Labels confirmed by Flavien on 2026-10-05: loading/unloading speed, noise, pollution, comfort."
+      },
+      "loadingUnloadingSpeedMultiplier": 5,
+      "noise": "Insuffisant",
+      "pollution": "Très bon",
+      "comfort": "Bon",
+      "carCount": 11,
+      "formationLoadingUnloadingSpeedMultiplier": 45,
+      "formationProvenance": {
+        "resourceId": "base::/vehicle/train/avelia_liberty/avelia_liberty.mu.lua",
+        "sourceHash": "4802e73d7e0a539572a7538962122a390856704e3d57bd3b8cf34b377c91fb50",
+        "componentIds": [
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_front.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle1.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_middle3.mdl",
+          "base::/vehicle/train/avelia_liberty/avelia_liberty_front.mdl"
+        ],
+        "contributingElements": 9,
+        "sourceElementCount": 11,
+        "method": "Aggregate handling is the sum of loadSpeed for passenger-carrying extracted model instances. Elements with zero loading speed contribute zero. Visual sections within a single model are not separate instances. Captured mechanical, economic and capacity values remain unchanged."
+      }
     }
   ]
 }
