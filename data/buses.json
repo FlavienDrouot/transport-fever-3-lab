@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "source": {
-    "date": "2026-10-07",
-    "method": "Values transcribed from twenty-three passenger vehicle cards supplied by Flavien: twenty-two attachment files and one inline Saurer Tüscher image. Generic French names are translated; model names are retained. Images are not redistributed. Rampini Eltron physical values were transcribed from an additional 2025 vehicle card; its normal-scale source costs are checked against the very-hard capture using the confirmed 150% purchase and maintenance settings. The original captured costs are preserved separately.",
-    "limitations": "Captured passenger road vehicle subset (1892–2025) only; not a complete bus catalogue. Values used as captured; difficulty and retirement dates are not separately confirmed. Handling rates and terminal delays have not been measured for these vehicles. Rampini costs are normalized to the normal scale using the confirmed 150% very-hard factors; displayed currency rounding is retained."
+    "date": "2026-10-08",
+    "method": "Values transcribed from twenty-three passenger vehicle cards supplied by Flavien: twenty-two attachment files and one inline Saurer Tüscher image. Generic French names are translated; model names are retained. Images are not redistributed. Rampini Eltron physical values were transcribed from an additional 2025 vehicle card; its normal-scale source costs are checked against the very-hard capture using the confirmed 150% purchase and maintenance settings. The original captured costs are preserved separately. King Long Merry Combo combines a condensed capture with extracted physical metadata and the verified maintenance formula.",
+    "limitations": "Covers all installed non-campaign buses (1892–2029). Values combine in-game captures and matched source metadata. Retirement dates are not applied. Handling rates and terminal delays have not been measured for these vehicles. Rampini costs use the confirmed 150% very-hard factors to recover normal settings; displayed currency rounding is retained."
   },
   "buses": [
     {
@@ -547,6 +547,53 @@
       "pollution": "Très bon",
       "comfort": "Médiocre",
       "sourceResourceId": "base::/vehicle/bus/rampini_2025/rampini_2025.mdl"
+    },
+    {
+      "id": "king-long-merry-combo",
+      "name": "King Long Merry Combo",
+      "sourceName": "King Long Merry Combo",
+      "year": 2029,
+      "passengerCapacity": 22,
+      "maxSpeedKmh": 120,
+      "economy": {
+        "purchasePrice": 4541424,
+        "annualMaintenance": 189226
+      },
+      "massTonnes": 18.0,
+      "lengthMetres": 12.488299999999999,
+      "tractionKgf": 3569.006745422749,
+      "powerCh": 653,
+      "loadingUnloadingSpeedMultiplier": 2.5,
+      "propulsion": "electric",
+      "noise": "Très bon",
+      "pollution": "Bon",
+      "sourceCapture": "inline condensed road catalogue capture supplied by Flavien on 2026-10-08",
+      "dataProvenance": {
+        "method": "condensed_capture_plus_source_metadata",
+        "resourceId": "base::/vehicle/bus/king_long/king_long.mdl",
+        "sha256": "345ad0ee3f6679cddfc50cabe931dc7954a6fdf1e42a3b4bb864428e4570cfbc",
+        "observedFields": [
+          "sourceName",
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice",
+          "comfort"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "economy.annualMaintenance"
+        ],
+        "limitations": "Length uses model extents. Maintenance uses the extracted formula; purchase price agrees exactly with the in-game capture."
+      },
+      "comfort": "Très bon"
     }
   ]
 }

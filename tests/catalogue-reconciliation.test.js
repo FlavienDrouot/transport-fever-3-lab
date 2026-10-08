@@ -55,5 +55,15 @@ test('Reconciliation is reproducible and the generated catalogue retains support
   assert.ok(rampini.nameReconciliation.evidence.some(e=>e.field==='power'));
   assert.equal(rampini.name.status,'matched_to_captured_characteristics');
   const rejected=catalogue.vehicles.find(v=>v.id.includes('freightliner_fld_112_box'));
-  assert.equal(rejected.name.value,null);assert.ok(rejected.nameCandidates.some(c=>c.conflicts.includes('capacity')));
+  assert.equal(rejected.name.value,'Freightliner FLD 112 Box Truck');assert.ok(rejected.nameReconciliation.evidence.some(e=>e.field==='capacity'&&e.difference===0));
+});
+test('Source-backed tram fields do not become independent capture evidence',async()=>{
+  const data=JSON.parse(await readFile(new URL('../data/trams.json',import.meta.url)));
+  const cards=[...data.trams,...data.freightTrams].filter(v=>v.dataProvenance);
+  const results=reconcileNames(catalogue,cards.map(card=>({reference:card.id,category:'tram',card})));
+  for(const result of results){
+    assert.equal(result.status,'matched');assert.equal(result.sourceId,result.card.dataProvenance.resourceId);
+    assert.equal(result.candidates[0].matches,5);
+    assert.deepEqual(result.candidates[0].evidence.map(e=>e.field).sort(),['capacity','handling','power','speed','year']);
+  }
 });
