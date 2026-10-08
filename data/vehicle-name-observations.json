@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "source": {"method": "Additional captured identity evidence, not calculator inputs. Costs omitted because this Rampini capture was taken in very hard difficulty, as confirmed by Flavien. The same physical observation is also available in the bus calculator dataset, with its normal-scale economic estimates stored separately."},
+  "vehicles": [{
+    "id": "rampini-eltron", "name": "Rampini Eltron", "sourceName": "Rampini Eltron", "year": 2025,
+    "passengerCapacity": 12, "maxSpeedKmh": 80, "massTonnes": 12, "lengthMetres": 7.9,
+    "tractionKgf": 3059, "powerCh": 286, "loadingUnloadingSpeedMultiplier": 3,
+    "sourceCapture": "codex-clipboard-b7c0ffb1-526d-4b09-8d62-9c6f545a46a1.png"
+  }]
+}

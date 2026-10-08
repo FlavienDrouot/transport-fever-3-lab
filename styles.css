@@ -30,8 +30,8 @@
 .panel-top{justify-content:flex-start;align-items:baseline;gap:8px 16px}.panel-top .chart-help{margin:0}
 
 .picker-toggle,.picker-close{display:none}.catalogue-heading-actions{display:flex;align-items:center;gap:8px}
-#train-drawer{position:fixed;inset:0 0 0 auto;margin:0;padding:0;width:min(90vw,360px);height:100vh;height:100dvh;max-height:none;max-width:none;border:0;background:white;color:inherit;box-shadow:-6px 0 30px #0002}
-#train-drawer::backdrop{background:#18251c66}
+#train-drawer,#road-drawer{position:fixed;inset:0 0 0 auto;margin:0;padding:0;width:min(90vw,360px);height:100vh;height:100dvh;max-height:none;max-width:none;border:0;background:white;color:inherit;box-shadow:-6px 0 30px #0002}
+#train-drawer::backdrop,#road-drawer::backdrop{background:#18251c66}
 body.picker-open{overflow:hidden}
 @media(max-width:700px){
   .picker-toggle{display:inline-flex;align-items:center;gap:6px}.picker-toggle span{font-size:18px;line-height:1}.picker-close{display:block;font-size:24px;line-height:1;padding:4px 8px}
@@ -50,7 +50,7 @@ body.picker-open{overflow:hidden}
 
 #crossovers{scroll-margin-top:80px}.section-nav{flex-wrap:wrap;row-gap:0}@media(max-width:700px){.section-nav{column-gap:16px}.section-nav a{min-height:35px}#crossovers{scroll-margin-top:16px}}
 
-.phase-leaders{display:flex;padding:12px 18px 0 65px;gap:0}.phase-leaders>div{flex:1;min-width:0;text-align:center;font-size:12px;font-weight:600;padding:0 5px;overflow-wrap:anywhere}
+.phase-leaders{display:flex;padding:12px 18px 0 65px;gap:0}.phase-leaders>div{display:flex;justify-content:center;flex:1;min-width:0;text-align:center;font-size:12px;font-weight:600;padding:0 4px;box-sizing:border-box;overflow:hidden;white-space:nowrap}.phase-leaders [data-train]{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phase-leaders>.phase-leader-compact{padding:0;overflow:visible;position:relative;z-index:1}.phase-leader-compact [data-train]{display:flex;align-items:center;justify-content:center;flex:0 0 24px;min-width:24px;height:24px;font-size:24px;line-height:1;overflow:visible;cursor:pointer}
 #crossovers td:first-child{width:auto;white-space:nowrap}#crossovers th:first-child{white-space:nowrap}
 
 #crossover-curves{scroll-margin-top:80px}#crossover-curves td:first-child{width:auto;white-space:nowrap}@media(max-width:700px){#crossover-curves{scroll-margin-top:16px}}
@@ -120,7 +120,7 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 
 .theme-toggle{margin-left:auto;white-space:nowrap}.theme-toggle+.github-star{margin-left:0}
 :root[data-theme=dark]{color-scheme:dark;color:#dde8e1;background:#17201c;--green:#70d9bf;--muted:#a4b5aa;--line:#37483e;--surface:#17201c;--tint:#24352b}
-[data-theme=dark] .app-header,[data-theme=dark] .economic-controls,[data-theme=dark] #train-drawer,[data-theme=dark] input[type=search],[data-theme=dark] button,[data-theme=dark] select{background:var(--surface);color:#dde8e1}
+[data-theme=dark] .app-header,[data-theme=dark] .economic-controls,[data-theme=dark] #train-drawer,[data-theme=dark] #road-drawer,[data-theme=dark] input[type=search],[data-theme=dark] button,[data-theme=dark] select{background:var(--surface);color:#dde8e1}
 [data-theme=dark] .brand,[data-theme=dark] .formula,[data-theme=dark] .info-disclosure h3,[data-theme=dark] .year-filter output,[data-theme=dark] .analysis-nav a[aria-current=page],[data-theme=dark] .footer-credits,[data-theme=dark] .community-footer h2{color:#dde8e1}
 [data-theme=dark] th,[data-theme=dark] .formula,[data-theme=dark] button:hover,[data-theme=dark] .train-row:hover,[data-theme=dark] .train-row:focus-within{background:var(--tint)}
 [data-theme=dark] td,[data-theme=dark] .train-row{border-bottom-color:var(--line)}
@@ -142,9 +142,17 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 .service-targets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0;font-size:11px}.target-control label{display:flex;align-items:center;gap:6px}.target-control>div{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}.target-control input[type=number]{width:85px;min-width:0;padding:3px 6px;border:1px solid var(--line);border-radius:5px;background:transparent}.target-control input[type=checkbox]{accent-color:var(--green)}.target-control input:disabled{opacity:.5}
 [data-theme=dark] .formula{color:#dde8e1!important}
 
-/* Road layout and shared form help. */
-.control-help{font-size:11px;color:var(--muted);margin:0;line-height:1.45}.service-option-group{min-width:0;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:0}.service-option-group legend{padding:0 5px;font-weight:600;font-size:12px}.service-option-group .target-control{margin:12px 0 4px}.service-option-group .target-control>.control-help{margin:5px 0 0}.service-option-group .group-description{font-style:italic;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px}.service-option-group .target-control>.field-help{margin:4px 0 0 25px;font-size:10px;max-width:46ch}
-.workspace.truck-view{grid-template-columns:minmax(0,1fr)}.truck-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0;font-size:12px}.truck-controls>div{margin:0}.truck-table{max-height:none}.truck-table table{min-width:700px}.truck-table th{white-space:normal;line-height:1.4}.truck-table tbody th{position:static;background:transparent;color:inherit;font-size:inherit;font-weight:500;padding:10px 12px}.truck-table tbody th,.truck-table tbody td{border-bottom:1px solid var(--line)}.truck-table td{font-variant-numeric:tabular-nums}.truck-table th:nth-child(3),.truck-table td:nth-child(3){font-weight:600}#trucks,#truck-results,#truck-method{scroll-margin-top:calc(var(--app-header-offset) + 16px)}.analysis-nav{flex-wrap:wrap}
+/* Keep everyday inputs visible; group optional service constraints in one disclosure. */
+.service-basics{display:grid;grid-template-columns:1.2fr 1.2fr .8fr;gap:20px;margin:14px 0;font-size:12px}.service-basics>div{display:flex;flex-direction:column;gap:6px;min-width:0}.service-basics label{font-weight:550}.service-basics input[type=range]{width:100%;min-width:0;accent-color:var(--green);margin:0}.service-basics output{font-weight:600;min-height:25px;display:flex;align-items:center}.service-basics select{align-self:flex-start;min-height:25px}.control-help{font-size:11px;color:var(--muted);margin:0;line-height:1.45}.service-options{border-top:1px solid var(--line);padding:10px 0 2px;font-size:12px}.service-options>summary{font-size:12px;color:var(--green);line-height:1.6}.service-options>summary span{font-weight:400;font-size:11px;color:var(--muted);margin-left:12px}.service-options-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:14px}.service-option-group{min-width:0;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:0}.service-option-group legend{padding:0 5px;font-weight:600;font-size:12px}.service-option-group .target-control{margin:12px 0 4px}.service-option-group .target-control>.control-help{margin:5px 0 0}.service-detail-toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}.service-detail-toggle input{accent-color:var(--green)}
+.line-table table{min-width:760px}.line-table th{white-space:normal;line-height:1.4;padding:8px;min-width:45px}.line-table td{padding:8px;font-variant-numeric:tabular-nums}.line-table th:nth-child(2){min-width:140px}.line-table th:nth-child(3){min-width:90px}.line-table .table-unit{display:block;font-weight:400;font-size:10px;color:var(--muted)}.line-table:not(.show-details) th:nth-child(n+11),.line-table:not(.show-details) td:nth-child(n+11){display:none}.line-table .service-exclusion{white-space:normal}.line-table.show-details table{min-width:1300px}
+@media(max-width:900px){.service-basics{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.infrastructure-control{grid-column:1/-1}.service-options>summary span{display:block;margin:3px 0 0 14px}}
+@media(max-width:700px){.service-options-grid{grid-template-columns:1fr;gap:14px}.service-basics{gap:12px}.service-detail-toggle{align-items:flex-start}.service-options>summary span{font-size:10px}}
+
+.service-option-group .group-description{font-style:italic;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px}.service-option-group .target-control>.field-help{margin:4px 0 0 25px;font-size:10px;max-width:46ch}
+
+.frequency-toggle:disabled{opacity:.5}.frequency-toggle:disabled label{cursor:default}.frequency-toggle label span{font-size:11px}.target-control .frequency-toggle{flex-wrap:nowrap;max-width:100%}
+
+.workspace.data-view{grid-template-columns:minmax(0,1fr)}.truck-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0;font-size:12px}.truck-controls>div{margin:0}.truck-table{max-height:none}.truck-table table{min-width:700px}.truck-table th{white-space:normal;line-height:1.4}.truck-table tbody th{position:static;background:transparent;color:inherit;font-size:inherit;font-weight:500;padding:10px 12px}.truck-table tbody th,.truck-table tbody td{border-bottom:1px solid var(--line)}.truck-table td{font-variant-numeric:tabular-nums}.truck-table th:nth-child(3),.truck-table td:nth-child(3){font-weight:600}#trucks,#truck-results,#truck-method{scroll-margin-top:calc(var(--app-header-offset) + 16px)}.analysis-nav{flex-wrap:wrap}
 @media(min-width:701px) and (max-width:1400px){.app-header{height:auto;min-height:60px;flex-wrap:wrap;gap:12px}.app-header .section-nav{order:5;width:100%;min-height:36px;padding:0;border:0}}
 @media(max-width:700px){.app-header .analysis-nav{order:3;flex-basis:100%;justify-content:space-between;gap:8px;flex-wrap:nowrap}.app-header .section-nav{order:4}}
 
@@ -159,3 +167,69 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 @media(max-width:700px){.road-settings{grid-template-columns:minmax(0,1fr);gap:14px}.road-handling{grid-column:auto}.road-settings .service-option-group{height:auto}}
 
 .road-vehicle-kind{display:block;font-size:10px;color:var(--muted);font-weight:400}.truck-bar-row:has(.road-vehicle-kind){min-height:44px}
+
+.consist-editor{margin:20px 0;padding:14px;border:1px solid var(--line);border-radius:6px}.consist-row{display:grid;grid-template-columns:minmax(0,1fr) 95px auto;gap:12px;align-items:end;margin:14px 0;font-size:12px}.consist-row>div{display:flex;flex-direction:column;gap:6px}.consist-row select{width:100%;min-width:0}.consist-row input,.consist-editor input[type=text]{width:100%;padding:6px;border:1px solid var(--line);border-radius:5px;background:transparent}.consist-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;font-size:12px}.consist-totals dt{color:var(--muted)}.consist-totals dd{margin:2px 0;font-weight:600}.consist-actions{display:flex;gap:10px;margin:16px 0}.consist-saved{list-style:none;padding:0}.consist-saved li{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:12px}.consist-saved li span{flex:1;overflow-wrap:anywhere}.consist-editor [role=status]{margin:14px 0;font-size:12px}@media(max-width:700px){.consist-row{grid-template-columns:minmax(0,1fr) 80px}.consist-row>button{grid-column:1/-1;justify-self:start}.consist-totals{grid-template-columns:repeat(2,minmax(0,1fr))}.consist-saved li{flex-wrap:wrap}.consist-saved li span{flex-basis:100%}}
+
+.source-filters{display:flex;flex-wrap:wrap;gap:1rem;align-items:end;margin:1rem 0}
+.source-filters>div{display:grid;gap:.35rem;flex:1 1 12rem}
+.source-filters input,.source-filters select{max-width:100%}
+#source-formations>details{margin:.75rem 0;overflow-wrap:anywhere}
+
+/* Route controls use the same desktop side-panel / mobile drawer pattern as trains. */
+.workspace.truck-view{grid-template-columns:minmax(0,1fr) 340px}
+.road-sidebar{top:var(--app-header-offset,0px);max-height:calc(100dvh - var(--app-header-offset,0px));overflow-y:auto;scrollbar-gutter:stable}
+.road-sidebar>.catalogue-heading{flex-shrink:0;margin-bottom:12px}
+.road-sidebar .road-settings{display:flex;flex-direction:column;gap:14px;margin:0}
+.road-sidebar .road-settings .service-option-group{width:100%;height:auto;padding:10px 12px}
+.road-sidebar .consist-editor{padding:10px;margin-top:16px}
+.road-sidebar .consist-row{grid-template-columns:minmax(0,1fr) 70px;gap:8px}
+.road-sidebar .consist-row>button{grid-column:1/-1;justify-self:start}
+.road-sidebar .consist-totals{grid-template-columns:repeat(2,minmax(0,1fr))}
+.road-sidebar .consist-actions,.road-sidebar .consist-saved li{flex-wrap:wrap}
+.road-sidebar .consist-saved li span{flex-basis:100%}
+@media(max-width:700px){
+  .workspace.truck-view{grid-template-columns:minmax(0,1fr)}
+  #road-drawer .road-sidebar{display:flex;position:static;border:0;padding:16px;height:100%;max-height:none;overflow-y:auto;overscroll-behavior-y:contain}
+  #road-drawer .road-sidebar>*{flex-shrink:0}
+}
+
+.compact-rows>tr:nth-child(n+11){display:none}
+.table-preview-toggle{margin:12px 0 6px}
+
+/* Compact route controls; detailed explanations remain in keyboard-accessible help. */
+.road-sidebar>.road-settings{flex-shrink:0}
+.road-sidebar .road-settings{gap:10px}
+.road-sidebar .road-settings .service-option-group{padding:8px 10px}
+.road-sidebar .road-settings .road-field{gap:5px;margin:10px 0}
+.road-sidebar .road-settings .target-control{margin:10px 0 0}
+.road-sidebar .road-settings .truck-year-filter{margin:10px 0 0}
+.road-sidebar .road-settings .year-stepper{margin-top:3px}
+.road-sidebar .road-settings .year-stepper input{margin:0}
+.road-sidebar .road-category-row,.road-sidebar .road-facility-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.road-sidebar .road-category-row .road-family-toggle{margin:0}
+.road-sidebar .road-inline-check{display:inline-flex;align-items:center;gap:5px;font-size:11px;min-height:28px;cursor:pointer}
+.road-sidebar .road-inline-check input{margin:0;accent-color:var(--green)}
+.road-sidebar .road-family-toggle label span{font-size:11px;padding:5px 7px}
+.road-sidebar .road-value-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.road-sidebar .road-value-row>label{font-weight:550}
+.road-sidebar .line-distance-entry input{width:70px}
+.road-sidebar .road-speed-control{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.road-sidebar .road-speed-control>div{margin:0;flex-wrap:nowrap}
+.road-sidebar .road-speed-control input[type=number]{width:60px}
+@media(pointer:coarse){.road-sidebar .road-inline-check,.road-sidebar .road-family-toggle label span{min-height:36px}}
+
+.road-sidebar .control-info{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--muted);padding:2px;width:20px;min-width:20px;height:24px;font-size:14px;cursor:help}
+.road-sidebar .control-info:hover,.road-sidebar .control-info:focus-visible{color:var(--green)}
+.road-sidebar #road-freight-filter{flex-direction:row;align-items:center;gap:4px}
+.road-sidebar #road-freight-filter>fieldset{flex:1}
+.road-sidebar .truck-year-filter{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:4px}
+.road-sidebar .truck-year-filter .year-stepper{grid-column:1/-1}
+.road-sidebar #road-return-control{display:flex;align-items:center;gap:4px}
+.road-sidebar .road-facility-row{gap:4px}
+.road-sidebar .road-category-row{gap:4px}
+
+.road-stop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.road-stop{min-width:0;border:0;padding:0;margin:0;display:grid;grid-template-columns:minmax(0,1fr) 20px;align-items:center;gap:3px}
+.road-stop legend{padding:0;margin-bottom:5px;color:var(--muted)}
+#road-phases{scroll-margin-top:calc(var(--app-header-offset) + 16px)}
+.phase-leaders [data-train]:focus-visible,.chart .end-label:focus-visible,.train-legend [data-train]:focus-visible{outline:2px solid currentColor;outline-offset:3px}

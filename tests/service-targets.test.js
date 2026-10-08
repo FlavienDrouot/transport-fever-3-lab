@@ -35,3 +35,79 @@ test('Frequency alone preserves occupancy and scales capacity and maintenance to
 test('Invalid demand and interval policies are rejected',()=>{
   for(const extra of [{demandPerDirection:0},{demandPerDirection:NaN},{maxHeadwaySeconds:-1},{frequencyMode:'exact'},{demandPerDirection:100,fillRatio:0}])assert.throws(()=>analyseService(train,{distanceKm:10,...extra}),RangeError);
 });
+
+test('Infrastructure limits speed and lengthens a long journey without changing source data',()=>{
+  const raw=data.trains.find(t=>t.id==='fuxing'), fast={...raw,model:createModel(raw,data.source)};
+  const options={distanceKm:30,fillRatio:.7};
+  const unrestricted=analyseService(fast,options);
+  for(const speed of [100,160,350]){
+    const r=analyseService(fast,{...options,infrastructureSpeedKmh:speed});
+    assert.ok(r.peakSpeedKmh<=speed+1e-7);assert.ok(r.travelSeconds>=unrestricted.travelSeconds-1e-7);
+  }
+  assert.equal(fast.maxSpeedKmh,350);
+  assert.throws(()=>analyseService(fast,{...options,infrastructureSpeedKmh:120}),RangeError);
+});
+test('A platform limit rejects one overlong unit but includes an exact fit',()=>{
+  const options={distanceKm:10,platformLengthMetres:train.lengthMetres};
+  assert.equal(analyseService(train,options).eligible,true);
+  const excluded=analyseService(train,{...options,platformLengthMetres:train.lengthMetres-1});
+  assert.equal(excluded.eligible,false);assert.equal(excluded.maintenancePerJourney,null);
+  assert.throws(()=>analyseService(train,{...options,platformLengthMetres:0}),RangeError);
+});
+test('Coupling scales capacity, length, rates and costs and keeps the same motion',()=>{
+  const raw=data.trains.find(t=>t.id==='talent-1'), t={...raw,model:createModel(raw,data.source)};
+  const options={distanceKm:10,demandPerDirection:1100,maxHeadwaySeconds:180,frequencyMode:'closest',infrastructureSpeedKmh:160};
+  const single=analyseService(t,options), coupled=analyseService(t,{...options,allowMultipleUnits:true,platformLengthMetres:192});
+  assert.ok(coupled.unitsPerTrain>1);assert.ok(coupled.trainLengthMetres<=192);
+  assert.ok(Math.abs(coupled.headwaySeconds-180)<Math.abs(single.headwaySeconds-180));
+  close(coupled.travelSeconds,single.travelSeconds);close(coupled.perDirectionJourneysPerYear,1100);
+  close(coupled.capacityPerTrain,t.passengerCapacity*coupled.unitsPerTrain);
+  close(coupled.rate,single.rate*coupled.unitsPerTrain);
+  close(coupled.fleetMaintenance,t.economy.annualMaintenance*coupled.trainCount*coupled.unitsPerTrain);
+  close(coupled.trainLengthMetres,t.lengthMetres*coupled.unitsPerTrain);
+  assert.ok(coupled.actualOccupancyRatio<=1);
+  const maximum=analyseService(t,{...options,frequencyMode:'maximum',allowMultipleUnits:true,platformLengthMetres:192});
+  assert.ok(maximum.headwaySeconds<=180+1e-7);
+});
+test('Coupling is inactive without frequency or without rate',()=>{
+  const options={distanceKm:10,demandPerDirection:1000,allowMultipleUnits:true};
+  assert.equal(analyseService(train,options).unitsPerTrain,1);
+  assert.equal(analyseService(train,{distanceKm:10,maxHeadwaySeconds:180,allowMultipleUnits:true}).unitsPerTrain,1);
+});
+
+test('Frequency takes precedence over lower costs when coupling is enabled',()=>{
+  const raw=data.trains.find(t=>t.id==='talent-1'), t={...raw,model:createModel(raw,data.source)};
+  const options={distanceKm:10,demandPerDirection:1000,maxHeadwaySeconds:180,frequencyMode:'closest',platformLengthMetres:192};
+  const single=analyseService(t,options), chosen=analyseService(t,{...options,allowMultipleUnits:true});
+  assert.ok(chosen.unitsPerTrain>1);assert.ok(chosen.fleetMaintenance>single.fleetMaintenance);
+  assert.ok(Math.abs(Math.round(chosen.headwaySeconds)-180)<Math.abs(Math.round(single.headwaySeconds)-180));
+});
+test('Handcars and Uerdingen can couple for a five-minute service without a platform limit',()=>{
+  for(const id of ['draisine','uerdingen']){
+    const raw=data.trains.find(t=>t.id===id), t={...raw,model:createModel(raw,data.source)};
+    const options={distanceKm:10,demandPerDirection:1000,maxHeadwaySeconds:300,allowMultipleUnits:true};
+    const r=analyseService(t,options);assert.ok(r.unitsPerTrain>1);assert.ok(r.headwaySeconds>240&&r.headwaySeconds<=300);
+    close(r.perDirectionJourneysPerYear,1000);assert.ok(r.actualOccupancyRatio<=1+1e-9);
+    const limited=analyseService(t,{...options,platformLengthMetres:100});assert.ok(limited.trainLengthMetres<=100+1e-9);
+  }
+});
+test('Analytical coupling agrees with exhaustive bounded compositions and fleets',()=>{
+  for(const id of ['draisine','uerdingen','talent-1']){
+    const raw=data.trains.find(t=>t.id===id), t={...raw,model:createModel(raw,data.source)};
+    for(const frequencyMode of ['maximum','closest'])for(const target of [45,180,300]){
+      const options={distanceKm:2.5,fillRatio:.8,demandPerDirection:350,maxHeadwaySeconds:target,frequencyMode,allowMultipleUnits:true,platformLengthMetres:raw.lengthMetres*6};
+      const chosen=analyseService(t,options), base=analyseLine(t,options),flow=350/GAME_YEAR_SECONDS;
+      const fixed=2*base.travelSeconds+12,A=4*flow/base.rate;
+      let expected=null;
+      for(let k=1;k<=6;k++)for(let n=1;n<=200;n++){
+        if(n<=A/k)continue;
+        const h=fixed/(n-A/k),passengers=flow*h;
+        if(passengers>raw.passengerCapacity*.8*k+1e-8 || (frequencyMode==='maximum'&&h>target+1e-7))continue;
+        const candidate={error:Math.abs(Math.round(h)-target),cost:n*k*raw.economy.annualMaintenance,k,n};
+        if(!expected||candidate.error<expected.error||(candidate.error===expected.error&&(candidate.cost<expected.cost||(candidate.cost===expected.cost&&k<expected.k))))expected=candidate;
+      }
+      assert.ok(expected);assert.equal(Math.abs(Math.round(chosen.headwaySeconds)-target),expected.error,`${id} ${frequencyMode} ${target}`);
+      close(chosen.fleetMaintenance,expected.cost);assert.equal(chosen.unitsPerTrain,expected.k);
+    }
+  }
+});

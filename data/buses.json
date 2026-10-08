@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "source": {
     "date": "2026-10-07",
-    "method": "Values transcribed from twenty-three passenger vehicle cards supplied by Flavien: twenty-two attachment files and one inline Saurer Tüscher image. Generic French names are translated; model names are retained. Images are not redistributed.",
-    "limitations": "Captured passenger road vehicle subset (1892–2019) only; not a complete bus catalogue. Values used as captured; difficulty and retirement dates are not separately confirmed. Handling rates and terminal delays have not been measured for these vehicles."
+    "method": "Values transcribed from twenty-three passenger vehicle cards supplied by Flavien: twenty-two attachment files and one inline Saurer Tüscher image. Generic French names are translated; model names are retained. Images are not redistributed. Rampini Eltron physical values were transcribed from an additional 2025 vehicle card; its normal-scale source costs are checked against the very-hard capture using the confirmed 150% purchase and maintenance settings. The original captured costs are preserved separately.",
+    "limitations": "Captured passenger road vehicle subset (1892–2025) only; not a complete bus catalogue. Values used as captured; difficulty and retirement dates are not separately confirmed. Handling rates and terminal delays have not been measured for these vehicles. Rampini costs are normalized to the normal scale using the confirmed 150% very-hard factors; displayed currency rounding is retained."
   },
   "buses": [
     {
@@ -512,6 +512,41 @@
       "pollution": "Très bon",
       "comfort": "Bon",
       "sourceCapture": "codex-clipboard-f9e3ae45-d1f3-44df-a9f9-e7f59d6ead53.png"
+    },
+    {
+      "id": "rampini-eltron",
+      "name": "Rampini Eltron",
+      "sourceName": "Rampini Eltron",
+      "year": 2025,
+      "passengerCapacity": 12,
+      "maxSpeedKmh": 80,
+      "massTonnes": 12,
+      "lengthMetres": 7.9,
+      "tractionKgf": 3059,
+      "powerCh": 286,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "sourceCapture": "codex-clipboard-b7c0ffb1-526d-4b09-8d62-9c6f545a46a1.png",
+      "economy": {
+        "purchasePrice": 932052,
+        "annualMaintenance": 77671,
+        "difficulty": "normal",
+        "status": "verified-difficulty-normalization",
+        "sourceId": "base::/vehicle/bus/rampini_2025/rampini_2025.mdl",
+        "ruleSha256": "4ad248c1dd46a6b2d825dfb7be513bd1c0d23a6fd6f5c43b81634003a56ac79e",
+        "observedCosts": {
+          "difficulty": "very hard",
+          "purchasePrice": 1398078,
+          "annualMaintenance": 116507,
+          "purchaseMultiplier": 1.5,
+          "maintenanceMultiplier": 1.5
+        },
+        "validation": "Source normal-scale costs agree with the captured very-hard costs at 150% for purchase and maintenance, within currency display rounding. Difficulty multipliers confirmed by the user-supplied finance settings screenshot."
+      },
+      "propulsion": "electric",
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceResourceId": "base::/vehicle/bus/rampini_2025/rampini_2025.mdl"
     }
   ]
 }
