@@ -1,9 +1,9 @@
+import {escapeHtml as escape, formatNumber} from './format.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {analyseService as analyseLine} from './line.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {createScale} from './scales.js';
-const escape = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = x => x.toLocaleString('en-GB',{maximumFractionDigits:2});
+const fmt = x => formatNumber(x,2);
 
 export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle='Running cost / passenger ($)',ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true}) {
   if(!story.phases.length) {container.textContent=trains.length?'Choose a positive occupancy to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}

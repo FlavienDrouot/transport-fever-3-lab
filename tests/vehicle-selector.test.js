@@ -39,3 +39,18 @@ test('Both families have labelled checkboxes, highlight identifiers and visible 
   assert.match(html,/--train-color:var\(--green\)/);assert.ok(html.includes('data-train="x&quot;"'));
   assert.match(html,/aria-label="Compare &lt;truck&gt;"/);assert.match(html,/ checked /);assert.match(html,/&lt;cargo&gt;/);assert.ok(!html.includes('<truck>'));
 });
+
+for(const family of ['train','road'])test(`${family}: focus and pointer highlighting share the row contract without rebuilding selection`,()=>{
+  const {root,get}=fixture(),document={activeElement:null};root.ownerDocument=document;
+  const ids=Object.fromEntries(['search','sort','count','select','clear','list','empty'].map(key=>[key,`${family}-${key}`]));
+  const selected=new Set(items.map(t=>t.id)),seen=[],row={dataset:{train:'fast'},classList:{toggle(name,on){this.highlighted=on;}}};
+  const input={value:'fast',checked:true,matches:()=>true,closest:()=>row};
+  const list=get(ids.list);list.contains=node=>node===input;list.querySelectorAll=selector=>selector==='[data-train]'?[row]:[input];
+  let writes=0;Object.defineProperty(list,'innerHTML',{set(){writes++;}});
+  const picker=mountVehicleSelector(root,{ids,getItems:()=>items,getSelected:()=>selected,describe:t=>t.name,onChange:()=>picker.render(),onHighlight:id=>{seen.push(id);picker.highlight(id);}});
+  picker.render();assert.equal(writes,1);
+  document.activeElement=input;list.handlers.focusin({target:input});list.handlers.pointerleave();
+  assert.equal(row.classList.highlighted,true);assert.deepEqual(seen,['fast','fast']);
+  input.checked=false;list.handlers.change({target:input});assert.equal(selected.has('fast'),false);assert.equal(writes,1);assert.equal(document.activeElement,input);
+  list.handlers.focusout({relatedTarget:null});assert.equal(row.classList.highlighted,false);assert.equal(writes,1);
+});

@@ -1,4 +1,4 @@
-const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {escapeHtml as escape} from './format.js';
 // Right-hand labels on wide plots; a colored legend preserves plot space on phones.
 export function curveLabels(points, {width, right, top, bottom, highlighted}) {
   if(width<700)return '';
@@ -10,5 +10,6 @@ export function curveLabels(points, {width, right, top, bottom, highlighted}) {
 }
 export function trainLegend(trains,width,highlighted){
   if(width>=700)return '';
-  return `<p class="train-legend">${trains.map(t=>`<span data-train="${escape(t.id)}" style="color:${t.color};opacity:${highlighted&&highlighted!==t.id?.3:1}">${escape(t.name)}</span>`).join('')}</p>`;
+  const legend = `<p class="train-legend">${trains.map(t=>`<span data-train="${escape(t.id)}" style="color:${t.color};opacity:${highlighted&&highlighted!==t.id?.3:1}">${escape(t.name)}</span>`).join('')}</p>`;
+  return trains.length > 10 ? `<details class="legend-disclosure"><summary>Vehicle legend · ${trains.length} names</summary>${legend}</details>` : legend;
 }
