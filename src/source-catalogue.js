@@ -1,8 +1,9 @@
+import {escapeHtml as escape, formatNumber} from './format.js';
+import {validateNumberInputs} from './numeric-controls.js';
 import {isCampaignResource} from './catalogue-reconciliation.js';
 import {updateTablePreview} from './table-preview.js';
-const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtYear=value=>Number.isFinite(value)?String(value):'Unknown';
-const fmt=value=>Number.isFinite(value)?value.toLocaleString('en-GB',{maximumFractionDigits:2}):'Unknown';
+const fmt=value=>formatNumber(value,2);
 export function sourceName(item) {
   return item.name?.value??item.name?.translation?.translation_key??item.name?.translation_key??item.id;
 }
@@ -20,14 +21,27 @@ export function sourceRows(vehicles) {
     const capacity=d.capacity??v.capacity.display_observed??v.capacity.display_candidate;
     const power=d.powerKw??(v.engines.raw?.every(e=>Number.isFinite(e.power))?v.engines.raw.reduce((sum,e)=>sum+e.power,0):null);
     const cost=(field,prediction)=>Number.isFinite(field.value)&&field.value>=0?field.value:prediction;
-    return `<tr><th scope="row">${escape(sourceName(v))}</th><td>${escape(v.kind.replaceAll('_',' '))}</td><td>${escape(v.category)}</td><td>${fmtYear(d.year??v.availability.raw?.yearFrom)}${v.availability.raw?.yearTo>0?`–${fmtYear(v.availability.raw.yearTo)}`:''}</td><td>${fmt(d.maxSpeedKmh??(v.topSpeed.value==null?null:v.topSpeed.value*3.6))}</td><td>${fmt(d.massTonnes??(v.emptyMass.value==null?null:v.emptyMass.value/1000))}</td><td>${fmt(power)}</td><td>${fmt(d.lengthMetres??v.length.value)}</td><td>${fmt(capacity)}</td><td>${fmt(d.purchasePrice??cost(v.purchasePrice,v.derivedCosts?.purchase_price))}</td><td>${fmt(d.annualMaintenance??cost(v.annualMaintenance,v.derivedCosts?.annual_maintenance))}</td></tr>`;
-  }).join('')||'<tr><td colspan="11">No vehicles match these filters.</td></tr>';
+    const fields=[
+      ['Kind',v.kind.replaceAll('_',' ')],['Category',v.category],
+      ['Source years',`${fmtYear(d.year??v.availability.raw?.yearFrom)}${v.availability.raw?.yearTo>0?`–${fmtYear(v.availability.raw.yearTo)}`:''}`],
+      ['Speed (km/h)',fmt(d.maxSpeedKmh??(v.topSpeed.value==null?null:v.topSpeed.value*3.6))],
+      ['Empty mass (t)',fmt(d.massTonnes??(v.emptyMass.value==null?null:v.emptyMass.value/1000))],
+      ['Power (kW)',fmt(power)],['Length (m)',fmt(d.lengthMetres??v.length.value)],['Capacity',fmt(capacity)],
+      ['Purchase ($)',fmt(d.purchasePrice??cost(v.purchasePrice,v.derivedCosts?.purchase_price))],
+      ['Maintenance ($/year)',fmt(d.annualMaintenance??cost(v.annualMaintenance,v.derivedCosts?.annual_maintenance))],
+    ];
+    const name=escape(sourceName(v));
+    const mobile=`<details class="source-mobile-details"><summary>${name}<small>${escape(fields[2][1])} · ${escape(fields[3][1])} km/h · capacity ${escape(fields[7][1])}</small></summary><dl>${fields.map(([label,value])=>`<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl></details>`;
+    return `<tr><th scope="row"><span class="source-desktop-name">${name}</span>${mobile}</th>${fields.map(([,value])=>`<td>${escape(value)}</td>`).join('')}</tr>`;
+  }).join('')||'<tr><td class="source-empty" colspan="11">No vehicles match these filters.</td></tr>';
 }
 
 export function mountSourceCatalogue(document,catalogue) {
   const node=id=>document.getElementById(id);
   node('source-catalogue-summary').textContent=`${catalogue.vehicles.filter(v=>!isCampaignResource(v)).length} models · ${catalogue.formations.length} formation definitions · Steam build ${catalogue.source.steamBuildId} · collected ${catalogue.source.generatedAt.slice(0,10)}`;
   const update=()=>{
+    const error=node('source-input-error');
+    if(error&&!validateNumberInputs([node('source-year')],error))return;
     const vehicles=filterSourceVehicles(catalogue,{query:node('source-search').value,category:node('source-category').value,
       year:node('source-year').valueAsNumber,includeAuxiliary:node('source-auxiliary').checked});
     node('source-catalogue-caption').textContent=`${vehicles.length} matching models · campaign vehicles excluded`;

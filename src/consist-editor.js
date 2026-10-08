@@ -1,9 +1,9 @@
+import {escapeHtml as escape, formatNumber} from './format.js';
 import {buildConsist} from './consists.js';
 import {vehicleThumbnail} from './vehicle-thumbnails.js';
 import {matchesFreightFilter} from './trucks.js';
 
-const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>n==null?'—':n.toLocaleString('en-GB',{maximumFractionDigits:2});
+const fmt=n=>n==null?'—':formatNumber(n,2);
 export const COMPOSITION_STORAGE_KEY='tf3-compositions-v1';
 
 export function compatibleComponents(catalogue,{carrier,category,cargo='all',year=2035}) {

@@ -1,11 +1,11 @@
+import {escapeHtml as escape, formatNumber} from './format.js';
 import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles} from './trucks.js';
 import {rankingStory} from './economic-crossovers.js';
 import {createPhaseScale,leadershipWeights} from './phase-scale.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {fixedRateFleetCount} from './service-fleet.js';
-const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>n.toLocaleString('en-GB',{maximumFractionDigits:2});
+const fmt=n=>formatNumber(n,2);
 const palette=['#147d64','#527ac1','#ad5a28','#9270b9','#bf5074','#798329','#3897a7','#bf8437'];
 
 export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5}={}){

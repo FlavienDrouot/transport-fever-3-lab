@@ -1,14 +1,7 @@
 import {curveLabels,trainLegend} from './chart-labels.js';
-const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const charts=new WeakMap();
-const bindings=new WeakMap();
-const observers=new WeakMap();
-
-// Optional application bridge, without rebuilding the focused chart.
-export function observePhaseHighlight(document,group,onHighlight){
-  if(!observers.has(document))observers.set(document,new Map());
-  observers.get(document).set(group,onHighlight);
-}
+import {escapeHtml as escape} from './format.js';
+export {observeChartHighlight as observePhaseHighlight} from './chart-interactions.js';
+import {mountChartInteractions} from './chart-interactions.js';
 
 // Keep the winning envelope readable even when a losing vehicle is an outlier.
 export function winningValueCeiling(values,margin=.15){
@@ -55,39 +48,6 @@ export function rankPhaseSegments(trains,phases,intervals,sx,sy){
     flush();
     return {t,d,transitions,winner:phase.leaders.includes(t.id)};
   })).filter(segment=>segment.d);
-}
-
-function applyHighlight(container,id){
-  const config=bindings.get(container)?.config;if(!config)return;
-  const segments=[...container.querySelectorAll('.phase-segment')];
-  for(const segment of segments){
-    const appearance=phaseAppearance(segment.dataset.winner==='true',config.emphasize,id,segment.dataset.train);
-    segment.setAttribute('opacity',appearance.opacity);segment.setAttribute('stroke-width',appearance.width);
-  }
-  segments.sort((a,b)=>Number(a.dataset.train===id)-Number(b.dataset.train===id)||Number(a.dataset.winner==='true')-Number(b.dataset.winner==='true'));
-  for(const segment of segments)segment.parentNode.appendChild(segment);
-  for(const label of container.querySelectorAll('.end-label,.train-legend [data-train],.phase-leaders [data-train]')){
-    const opacity=id?(label.dataset.train===id?1:.25):Number(label.dataset.baseOpacity??1);
-    if(label.classList.contains('end-label'))label.setAttribute('opacity',opacity);else label.style.opacity=opacity;
-  }
-}
-
-function mountInteractions(container,config){
-  if(!container.addEventListener||!container.ownerDocument)return;
-  let binding=bindings.get(container);
-  if(binding){binding.config=config;return;}
-  binding={config};bindings.set(container,binding);
-  const document=container.ownerDocument;
-  if(!charts.has(document))charts.set(document,new Set());charts.get(document).add(container);
-  const update=id=>{
-    for(const chart of charts.get(document))if(bindings.get(chart).config.group===binding.config.group)applyHighlight(chart,id);
-    observers.get(document)?.get(binding.config.group)?.(id);
-  };
-  const targetId=target=>target?.closest?.('[data-train]')?.dataset.train;
-  container.addEventListener('pointerover',event=>update(targetId(event.target)));
-  container.addEventListener('pointerleave',()=>update(targetId(document.activeElement)&&container.contains(document.activeElement)?targetId(document.activeElement):undefined));
-  container.addEventListener('focusin',event=>update(targetId(event.target)));
-  container.addEventListener('focusout',event=>update(container.contains(event.relatedTarget)?targetId(event.relatedTarget):undefined));
 }
 
 // Analyses provide their axis/grid and sampled model paths. This component owns
@@ -137,6 +97,5 @@ export function renderPhaseDiagram(container,{trains,segments,bands,endpoints,fr
       label.dataset.baseOpacity=label.classList.contains('end-label')&&emphasize&&point?.winner===false?.3:1;
     }
   }
-  mountInteractions(container,{emphasize,group});
-  if(container.querySelectorAll)applyHighlight(container,highlighted);
+  mountChartInteractions(container,{group,highlighted,selector:'.phase-segment',appearance:(segment,id)=>phaseAppearance(segment.dataset.winner==='true',emphasize,id,segment.dataset.train)});
 }
