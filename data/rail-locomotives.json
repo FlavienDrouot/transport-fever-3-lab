@@ -1,0 +1,1422 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "date": "2026-10-08",
+    "method": "Thirty distinct purchasable locomotives transcribed from four condensed in-game captures supplied by Flavien. Each matches one source model or complete ordered formation by introduction year, speed, power and exact normal-scale purchase cost. Remaining mechanical values and verified-formula maintenance come from the matching extracted components. Images are not redistributed.",
+    "limitations": "Campaign resources excluded. EMD F-Unit and Chinese Class SS4G retain the complete two-element purchasable formation. Coupling compatibility and vehicle-specific performance remain subject to the calculator model assumptions."
+  },
+  "locomotives": [
+    {
+      "id": "prussian-class-t-3",
+      "name": "Prussian Class T 3",
+      "sourceName": "Prussian Class T 3",
+      "role": "locomotive",
+      "year": 1882,
+      "maxSpeedKmh": 50,
+      "powerCh": 272,
+      "massTonnes": 38,
+      "lengthMetres": 8.60674,
+      "tractionKgf": 5098.581064889641,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1094868,
+        "annualMaintenance": 182478
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/br89/br89.mdl",
+        "sourceHash": "37e95c0ce8c01c3f059a0f4c4c020630daa4b502f4cde4df1b5c7c891bc28033",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/br89/br89.mdl"
+        ]
+      }
+    },
+    {
+      "id": "2-6-0-mogul",
+      "name": "2-6-0 Mogul",
+      "sourceName": "2-6-0 Mogul",
+      "role": "locomotive",
+      "year": 1885,
+      "maxSpeedKmh": 75,
+      "powerCh": 544,
+      "massTonnes": 122,
+      "lengthMetres": 18.61484,
+      "tractionKgf": 8157.7297038234265,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1912398,
+        "annualMaintenance": 318733
+      },
+      "noise": "Très bon",
+      "pollution": "Médiocre",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/mogul_2_6_0/mogul_2_6_0.mdl",
+        "sourceHash": "a13f27a3c0b35f8457cdbd1cc13e39fd0da7d3b60fafc73652793760fd0db650",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/mogul_2_6_0/mogul_2_6_0.mdl"
+        ]
+      }
+    },
+    {
+      "id": "russian-class-ob",
+      "name": "Russian Class OB",
+      "sourceName": "Russian Class OB",
+      "role": "locomotive",
+      "year": 1890,
+      "maxSpeedKmh": 60,
+      "powerCh": 600,
+      "massTonnes": 52,
+      "lengthMetres": 16.97107,
+      "tractionKgf": 9687.304023290319,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 2265576,
+        "annualMaintenance": 377596
+      },
+      "noise": "Très bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/russian_class_ob/russian_class_ob.mdl",
+        "sourceHash": "e2007409f82580ee9d2ae99586e326fce08373fcac01558c07bb9e3bf2e97fdd",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/russian_class_ob/russian_class_ob.mdl"
+        ]
+      }
+    },
+    {
+      "id": "4-4-2-atlantic",
+      "name": "4-4-2 Atlantic",
+      "sourceName": "4-4-2 Atlantic",
+      "role": "locomotive",
+      "year": 1906,
+      "maxSpeedKmh": 100,
+      "powerCh": 952,
+      "massTonnes": 130,
+      "lengthMetres": 23.59,
+      "tractionKgf": 10197.162129779283,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 3076356,
+        "annualMaintenance": 512726
+      },
+      "noise": "Bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/atlantic_4_4_2/atlantic_4_4_2.mdl",
+        "sourceHash": "ad212a941aaf31de8930d22742b9ae1753623790433a7cc950ed2165ad523421",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/atlantic_4_4_2/atlantic_4_4_2.mdl"
+        ]
+      }
+    },
+    {
+      "id": "baden-class-vi-c",
+      "name": "Baden Class VI c",
+      "sourceName": "Baden Class VI c",
+      "role": "locomotive",
+      "year": 1914,
+      "maxSpeedKmh": 90,
+      "powerCh": 789,
+      "massTonnes": 76,
+      "lengthMetres": 12.6161,
+      "tractionKgf": 8667.58781031239,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 2626134,
+        "annualMaintenance": 437689
+      },
+      "noise": "Très bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/br75_4/br75_4.mdl",
+        "sourceHash": "f88ac6fbba99796d2e113ba8d425774aea78a555196d2ae5bd2bcb7817bd95d1",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/br75_4/br75_4.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-class-jf1",
+      "name": "Chinese Class JF1",
+      "sourceName": "Chinese Class JF1",
+      "role": "locomotive",
+      "year": 1918,
+      "maxSpeedKmh": 80,
+      "powerCh": 1564,
+      "massTonnes": 100,
+      "lengthMetres": 23.36673,
+      "tractionKgf": 25492.90532444821,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 5390976,
+        "annualMaintenance": 898496
+      },
+      "noise": "Très bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/china_jf1/china_jf1.mdl",
+        "sourceHash": "9e99716c2a63752f05860afc087650463e0c5be5d1ccb79394ea86b3ff6f40fd",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/china_jf1/china_jf1.mdl"
+        ]
+      }
+    },
+    {
+      "id": "ce-6-8-ii-crocodile",
+      "name": "Ce 6/8 II Crocodile",
+      "sourceName": "Ce 6/8 II Crocodile",
+      "role": "locomotive",
+      "year": 1921,
+      "maxSpeedKmh": 90,
+      "powerCh": 2243,
+      "massTonnes": 128,
+      "lengthMetres": 19.90044,
+      "tractionKgf": 15295.743194668925,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 7470888,
+        "annualMaintenance": 1245148
+      },
+      "noise": "Médiocre",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/c6_8/c6_8.mdl",
+        "sourceHash": "6f327800b6902a01c09ddd0fa25b822fb470328ac14dc441665bf36ba8771313",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/c6_8/c6_8.mdl"
+        ]
+      }
+    },
+    {
+      "id": "russian-class-su",
+      "name": "Russian Class SU",
+      "sourceName": "Russian Class SU",
+      "role": "locomotive",
+      "year": 1927,
+      "maxSpeedKmh": 115,
+      "powerCh": 1649,
+      "massTonnes": 85,
+      "lengthMetres": 23.523500000000002,
+      "tractionKgf": 10605.048614970454,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 5132868,
+        "annualMaintenance": 855478
+      },
+      "noise": "Bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-a23908a9-0489-479b-ad49-ebffa90f4a3e.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/russian_class_su/russian_class_su.mdl",
+        "sourceHash": "84a3b70ce35229c8b17a78c1fa491a515da0b026308ea5f88e6ad23575f1b904",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/russian_class_su/russian_class_su.mdl"
+        ]
+      }
+    },
+    {
+      "id": "alco-hh-600",
+      "name": "ALCO HH 600",
+      "sourceName": "ALCO HH 600",
+      "role": "locomotive",
+      "year": 1930,
+      "maxSpeedKmh": 70,
+      "powerCh": 612,
+      "massTonnes": 93,
+      "lengthMetres": 12.88,
+      "tractionKgf": 12746.452662224105,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1099191,
+        "annualMaintenance": 366397
+      },
+      "noise": "Très bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/alco_hh600/alco_hh600.mdl",
+        "sourceHash": "a91fa21dbc23eb62e9b3f8a1bf22789679dd8e03dd50be7a9d14f53b58d50ae3",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/alco_hh600/alco_hh600.mdl"
+        ]
+      }
+    },
+    {
+      "id": "pennsylvanian-class-gg1",
+      "name": "Pennsylvanian Class GG1",
+      "sourceName": "Pennsylvanian Class GG1",
+      "role": "locomotive",
+      "year": 1934,
+      "maxSpeedKmh": 160,
+      "powerCh": 4079,
+      "massTonnes": 215,
+      "lengthMetres": 23.84,
+      "tractionKgf": 29673.741797657713,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 11687898,
+        "annualMaintenance": 1947983
+      },
+      "noise": "Insuffisant",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/class_prr_gg1/class_prr_gg1.mdl",
+        "sourceHash": "6977e5cc11ffb658b9be88a2f70c15a692b0f3fa17fef71fbd51f02d9810eb95",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/class_prr_gg1/class_prr_gg1.mdl"
+        ]
+      }
+    },
+    {
+      "id": "british-class-a4",
+      "name": "British Class A4",
+      "sourceName": "British Class A4",
+      "role": "locomotive",
+      "year": 1935,
+      "maxSpeedKmh": 145,
+      "powerCh": 2700,
+      "massTonnes": 105,
+      "lengthMetres": 21.7743,
+      "tractionKgf": 16111.516165051267,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 7922934,
+        "annualMaintenance": 1320489
+      },
+      "noise": "Bon",
+      "pollution": "Médiocre",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/lner_class_a4/lner_class_a4.mdl",
+        "sourceHash": "15f811a8385b79df090d3cc5df7a9259c410b3ead0d3cd858d27e41d5aa625b0",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/lner_class_a4/lner_class_a4.mdl"
+        ]
+      }
+    },
+    {
+      "id": "german-class-e-94",
+      "name": "German Class E 94",
+      "sourceName": "German Class E 94",
+      "role": "locomotive",
+      "year": 1940,
+      "maxSpeedKmh": 90,
+      "powerCh": 4079,
+      "massTonnes": 119,
+      "lengthMetres": 18.6,
+      "tractionKgf": 37015.698531098795,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 13583436,
+        "annualMaintenance": 2263906
+      },
+      "noise": "Bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/br_e94/br_e94.mdl",
+        "sourceHash": "de2a8713a150b1d4d9a19a7c7fe8a733a9912aca9ea13a5403d97bf707c02415",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/br_e94/br_e94.mdl"
+        ]
+      }
+    },
+    {
+      "id": "alco-4-8-8-4-big-boy",
+      "name": "ALCO 4-8-8-4 Big Boy",
+      "sourceName": "ALCO 4-8-8-4 Big Boy",
+      "role": "locomotive",
+      "year": 1941,
+      "maxSpeedKmh": 130,
+      "powerCh": 6200,
+      "massTonnes": 567,
+      "lengthMetres": 40.15,
+      "tractionKgf": 61386.91602127128,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 18693072,
+        "annualMaintenance": 3115512
+      },
+      "noise": "Très insuffisant",
+      "pollution": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/bigboy/bigboy.mdl",
+        "sourceHash": "bf6bd3c7324a046691a421b91a07e568a88d510bd5cea066adf3de6696a3c6c3",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/bigboy/bigboy.mdl"
+        ]
+      }
+    },
+    {
+      "id": "swiss-re-4-4-i",
+      "name": "Swiss Re 4/4 I",
+      "sourceName": "Swiss Re 4/4 I",
+      "role": "locomotive",
+      "year": 1946,
+      "maxSpeedKmh": 125,
+      "powerCh": 2515,
+      "massTonnes": 57,
+      "lengthMetres": 14.63451,
+      "tractionKgf": 14072.083739095411,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 7660104,
+        "annualMaintenance": 1276684
+      },
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/re_44i/re_44i.mdl",
+        "sourceHash": "1fe79e7aa8370e3c7299a18ac42a4dfdf0d0405d5bb264f7e12a8548d351b55a",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/re_44i/re_44i.mdl"
+        ]
+      }
+    },
+    {
+      "id": "emd-f-unit",
+      "name": "EMD F-Unit",
+      "sourceName": "EMD F-Unit",
+      "role": "locomotive",
+      "year": 1949,
+      "maxSpeedKmh": 130,
+      "powerCh": 2991,
+      "massTonnes": 145.2,
+      "lengthMetres": 31.25,
+      "tractionKgf": 50985.81064889642,
+      "propulsion": "diesel",
+      "carCount": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 9018588,
+        "annualMaintenance": 1503098
+      },
+      "noise": "Bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/emd_f/emd_f.mu.lua",
+        "sourceHash": "2dafee8bd747aadb18e8fa8bfafdda5a17b177a6f41070e89b1c2ea82ad70e54",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/emd_f/emd_fa.mdl",
+          "base::/vehicle/train/emd_f/emd_fb.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-class-rm",
+      "name": "Chinese Class RM",
+      "sourceName": "Chinese Class RM",
+      "role": "locomotive",
+      "year": 1958,
+      "maxSpeedKmh": 110,
+      "powerCh": 1414,
+      "massTonnes": 80,
+      "lengthMetres": 23.72984,
+      "tractionKgf": 18354.89183360271,
+      "propulsion": "steam",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 4453194,
+        "annualMaintenance": 742199
+      },
+      "noise": "Bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-b3977285-8f47-4b78-9b61-87163e90e276.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/china_rm/china_rm.mdl",
+        "sourceHash": "c6ba1f709baa7325d1ebb6bebd68562beb2ce5cd1b3112bcf25fbda577554c9f",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/china_rm/china_rm.mdl"
+        ]
+      }
+    },
+    {
+      "id": "german-class-v-100",
+      "name": "German Class V 100",
+      "sourceName": "German Class V 100",
+      "role": "locomotive",
+      "year": 1958,
+      "maxSpeedKmh": 90,
+      "powerCh": 1100,
+      "massTonnes": 62,
+      "lengthMetres": 12.548929999999999,
+      "tractionKgf": 18048.976969709332,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 3663000,
+        "annualMaintenance": 610500
+      },
+      "noise": "Bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/db_v100/db_v100.mdl",
+        "sourceHash": "c2942994b7303bc328fe74c30c9962c3c4c61b5507cd0bbb53d0f34631ba45a4",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/db_v100/db_v100.mdl"
+        ]
+      }
+    },
+    {
+      "id": "austrian-class-1042",
+      "name": "Austrian Class 1042",
+      "sourceName": "Austrian Class 1042",
+      "role": "locomotive",
+      "year": 1960,
+      "maxSpeedKmh": 140,
+      "powerCh": 4487,
+      "massTonnes": 83.9,
+      "lengthMetres": 16.17438,
+      "tractionKgf": 26512.621537426137,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 13279128,
+        "annualMaintenance": 2213188
+      },
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/obb_1042/obb_1042.mdl",
+        "sourceHash": "9b6e5fda866c00efa14fa993c48600b85befd1a71ddf4a6e04e863d19af24ef4",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/obb_1042/obb_1042.mdl"
+        ]
+      }
+    },
+    {
+      "id": "emd-sd40-2",
+      "name": "EMD SD40-2",
+      "sourceName": "EMD SD40-2",
+      "role": "locomotive",
+      "year": 1972,
+      "maxSpeedKmh": 105,
+      "powerCh": 4079,
+      "massTonnes": 167,
+      "lengthMetres": 19.87988,
+      "tractionKgf": 41808.36473209506,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 13008504,
+        "annualMaintenance": 2168084
+      },
+      "noise": "Insuffisant",
+      "pollution": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/emd_sd40/emd_sd40.mdl",
+        "sourceHash": "55b1a9a3c564d5e3ae6b8b6b5fd2f66afcc96a91c71186fa3758e2a38d7124a9",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/emd_sd40/emd_sd40.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-class-df5",
+      "name": "Chinese Class DF5",
+      "sourceName": "Chinese Class DF5",
+      "role": "locomotive",
+      "year": 1976,
+      "maxSpeedKmh": 80,
+      "powerCh": 1632,
+      "massTonnes": 138,
+      "lengthMetres": 17.66,
+      "tractionKgf": 33140.77692178267,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 5625366,
+        "annualMaintenance": 937561
+      },
+      "noise": "Bon",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/china_df5/china_df5.mdl",
+        "sourceHash": "d87bcdd26ee7f440c729c16e9ef325d8db27cdbe9d20f7b76e7b84281efd71ba",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/china_df5/china_df5.mdl"
+        ]
+      }
+    },
+    {
+      "id": "emd-aem-7",
+      "name": "EMD AEM-7",
+      "sourceName": "EMD AEM-7",
+      "role": "locomotive",
+      "year": 1978,
+      "maxSpeedKmh": 200,
+      "powerCh": 5874,
+      "massTonnes": 133,
+      "lengthMetres": 15.5,
+      "tractionKgf": 13562.225632606447,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 15991428,
+        "annualMaintenance": 2665238
+      },
+      "noise": "Médiocre",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/emd_aem_7/emd_aem_7.mdl",
+        "sourceHash": "d1b36d22501ab07c2b48f2e0c01bc53a843a49f8af8d999c706d073269da24d4",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/emd_aem_7/emd_aem_7.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-class-ss4g",
+      "name": "Chinese Class SS4G",
+      "sourceName": "Chinese Class SS4G",
+      "role": "locomotive",
+      "year": 1980,
+      "maxSpeedKmh": 100,
+      "powerCh": 11829,
+      "massTonnes": 184,
+      "lengthMetres": 32.502579999999995,
+      "tractionKgf": 44459.62688583767,
+      "propulsion": "electric",
+      "carCount": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 38234712,
+        "annualMaintenance": 6372452
+      },
+      "noise": "Bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/shaoshan_4g/shaoshan_4g.mu.lua",
+        "sourceHash": "f95ef3e84a4445f7323be6641110bfe32eaa8508ef99814b7ac9d5a9f79b93a7",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/shaoshan_4g/shaoshan_4g.mdl",
+          "base::/vehicle/train/shaoshan_4g/shaoshan_4g.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-class-df4b",
+      "name": "Chinese Class DF4B",
+      "sourceName": "Chinese Class DF4B",
+      "role": "locomotive",
+      "year": 1984,
+      "maxSpeedKmh": 120,
+      "powerCh": 3603,
+      "massTonnes": 138,
+      "lengthMetres": 20.88,
+      "tractionKgf": 24779.103975363658,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 11089068,
+        "annualMaintenance": 1848178
+      },
+      "noise": "Insuffisant",
+      "pollution": "Insuffisant",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/china_df4b/china_df4b.mdl",
+        "sourceHash": "f1723657dd25c27d0441d5bfc7a1e7da9b5a302e11854e643225a02f2e940703",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/china_df4b/china_df4b.mdl"
+        ]
+      }
+    },
+    {
+      "id": "japanese-class-ef66",
+      "name": "Japanese Class EF66",
+      "sourceName": "Japanese Class EF66",
+      "role": "locomotive",
+      "year": 1989,
+      "maxSpeedKmh": 120,
+      "powerCh": 5303,
+      "massTonnes": 100.8,
+      "lengthMetres": 18,
+      "tractionKgf": 29571.77017635992,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 16319760,
+        "annualMaintenance": 2719960
+      },
+      "noise": "Bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-184771f1-ef81-4aef-9313-01b6b8e11348.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/jr_ef66_100/jr_ef66_100.mdl",
+        "sourceHash": "065dfe0d7add0580aaaa4b27fc4bdf8f0f104befa1c180a295712bd4068ca4a8",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/jr_ef66_100/jr_ef66_100.mdl"
+        ]
+      }
+    },
+    {
+      "id": "ge-p42dc",
+      "name": "GE P42DC",
+      "sourceName": "GE P42DC",
+      "role": "locomotive",
+      "year": 1995,
+      "maxSpeedKmh": 160,
+      "powerCh": 4310,
+      "massTonnes": 122,
+      "lengthMetres": 21.614800000000002,
+      "tractionKgf": 28552.053963381994,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 12350214,
+        "annualMaintenance": 2058369
+      },
+      "noise": "Médiocre",
+      "pollution": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-eb3318e0-0988-4dc0-8c4c-54b7c80564ff.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/ge_p42_dc/ge_p42_dc.mdl",
+        "sourceHash": "ffa0bacd9e48ca5efe765513d874a195c192ccd82e365014eda59b2c15ed302f",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/ge_p42_dc/ge_p42_dc.mdl"
+        ]
+      }
+    },
+    {
+      "id": "norwegian-class-el-18",
+      "name": "Norwegian Class El 18",
+      "sourceName": "Norwegian Class El 18",
+      "role": "locomotive",
+      "year": 1996,
+      "maxSpeedKmh": 200,
+      "powerCh": 7342,
+      "massTonnes": 82,
+      "lengthMetres": 18.62,
+      "tractionKgf": 28042.195856893028,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 39978576,
+        "annualMaintenance": 3331548
+      },
+      "noise": "Insuffisant",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-eb3318e0-0988-4dc0-8c4c-54b7c80564ff.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/el_18/el_18.mdl",
+        "sourceHash": "bd17c54201ef43e0f6859709ba2dca98e21b6cd4224e07c6497a947173ec5ef7",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/el_18/el_18.mdl"
+        ]
+      }
+    },
+    {
+      "id": "german-class-185",
+      "name": "German Class 185",
+      "sourceName": "German Class 185",
+      "role": "locomotive",
+      "year": 2000,
+      "maxSpeedKmh": 160,
+      "powerCh": 5710,
+      "massTonnes": 84,
+      "lengthMetres": 18.84444,
+      "tractionKgf": 30591.48638933785,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 16363056,
+        "annualMaintenance": 2727176
+      },
+      "noise": "Bon",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-eb3318e0-0988-4dc0-8c4c-54b7c80564ff.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/br_185_traxx/br_185_traxx.mdl",
+        "sourceHash": "2b7bed6c426cbeb93bd3a66716942289866dd3d3985144c212fe0739a30bef02",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/br_185_traxx/br_185_traxx.mdl"
+        ]
+      }
+    },
+    {
+      "id": "german-class-246",
+      "name": "German Class 246",
+      "sourceName": "German Class 246",
+      "role": "locomotive",
+      "year": 2008,
+      "maxSpeedKmh": 160,
+      "powerCh": 2991,
+      "massTonnes": 80,
+      "lengthMetres": 18.84444,
+      "tractionKgf": 27532.337750404065,
+      "propulsion": "diesel",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 8571126,
+        "annualMaintenance": 1428521
+      },
+      "noise": "Bon",
+      "pollution": "Médiocre",
+      "sourceCapture": "codex-clipboard-eb3318e0-0988-4dc0-8c4c-54b7c80564ff.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/br_246_traxx/br_246_traxx.mdl",
+        "sourceHash": "abb64162295412ecffbeebfc87f17032d3d76b0aa00406a774b8fdab957b1bb9",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/br_246_traxx/br_246_traxx.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-class-hxd3b",
+      "name": "Chinese Class HXD3B",
+      "sourceName": "Chinese Class HXD3B",
+      "role": "locomotive",
+      "year": 2009,
+      "maxSpeedKmh": 120,
+      "powerCh": 13052,
+      "massTonnes": 150,
+      "lengthMetres": 22.363599999999998,
+      "tractionKgf": 51597.64037668317,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 40171710,
+        "annualMaintenance": 6695285
+      },
+      "noise": "Médiocre",
+      "pollution": "Bon",
+      "sourceCapture": "codex-clipboard-eb3318e0-0988-4dc0-8c4c-54b7c80564ff.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/china_hxd3b/china_hxd3b.mdl",
+        "sourceHash": "97e0ae8d49aee6ed8479a28c53c83833b4194abcf2d1fe3dc83e8df50b8ab474",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/china_hxd3b/china_hxd3b.mdl"
+        ]
+      }
+    },
+    {
+      "id": "stadler-eurodual",
+      "name": "Stadler Eurodual",
+      "sourceName": "Stadler Eurodual",
+      "role": "locomotive",
+      "year": 2018,
+      "maxSpeedKmh": 160,
+      "powerCh": 9517,
+      "massTonnes": 91,
+      "lengthMetres": 22.1909,
+      "tractionKgf": 50985.81064889642,
+      "propulsion": "electric",
+      "carCount": 1,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 27271764,
+        "annualMaintenance": 4545294
+      },
+      "noise": "Insuffisant",
+      "pollution": "Médiocre",
+      "sourceCapture": "codex-clipboard-eb3318e0-0988-4dc0-8c4c-54b7c80564ff.png",
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/eurodual/eurodual.mdl",
+        "sourceHash": "8c7588f081b966f1c3852c922a2d4e9ba4f2389175b7e052df29ef35930b12d9",
+        "observedFields": [
+          "year",
+          "maxSpeedKmh",
+          "powerCh",
+          "noise",
+          "pollution",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "tractionKgf",
+          "propulsion",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/eurodual/eurodual.mdl"
+        ]
+      }
+    }
+  ]
+}

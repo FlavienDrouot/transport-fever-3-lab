@@ -2,7 +2,7 @@ import {createServer} from 'node:http';
 import {readFile, realpath} from 'node:fs/promises';
 import {resolve, sep} from 'node:path';
 
-const types = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8'};
+const types = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png'};
 
 /** Only public site assets: repository metadata and developer files are never served. */
 export function createDevServer(root) {
@@ -14,7 +14,7 @@ export function createDevServer(root) {
     try {
       const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
       const file = path === '/' ? 'index.html' : path.slice(1);
-      if (!['index.html', 'styles.css'].includes(file) && !/^(src\/[^/]+\.js|data\/[^/]+\.json)$/.test(file)) {
+      if (!['index.html', 'styles.css'].includes(file) && !/^(src\/[^/]+\.js|data\/[^/]+\.json|assets\/vehicle-thumbnails\/[a-f0-9]{64}\.png)$/.test(file)) {
         response.writeHead(404).end('Not found'); return;
       }
       const target = await realpath(resolve(directory, file));

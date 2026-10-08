@@ -16,12 +16,49 @@ test('One presentation contract highlights winners, ties and hovered losers',()=
 test('Rank paths preserve leadership transitions and introduction gaps',()=>{
   const segments=config.segments;
   assert.equal(segments.length,3);
-  assert.equal(segments.find(s=>s.t.id==='a'&&!s.winner).d,'M1,2 L2,2 ');
-  assert.equal(segments.find(s=>s.t.id==='b').d,'M1,1 L2,1 ');
-  assert.equal(segments.find(s=>s.t.id==='a'&&!s.winner).transitions,'M1,1 L1,2 ');
+  assert.equal(segments.find(s=>s.t.id==='a'&&!s.winner).d,'M1,2 H2 ');
+  assert.equal(segments.find(s=>s.t.id==='b').d,'M1,1 H2 ');
+  assert.equal(segments.find(s=>s.t.id==='a'&&!s.winner).transitions,'M1,1 V2 ');
   assert.equal(segments.find(s=>s.t.id==='b').transitions,'');
   const tied=rankPhaseSegments(trains,[{start:0,end:2,leaders:['a','b']}],intervals,x=>x,y=>y);
   assert.ok(tied.every(s=>s.winner));
+});
+test('Rank plateaus merge within leadership phases without crossing availability gaps',()=>{
+  const ranks=[
+    {start:0,end:1,ranks:{a:1,b:2}},
+    {start:1,end:2,ranks:{a:1,b:2}},
+    {start:2,end:3,ranks:{a:1,b:null}},
+    {start:3,end:4,ranks:{a:2,b:2}},
+    {start:4,end:5,ranks:{a:2,b:1}},
+    {start:6,end:7,ranks:{a:3,b:1}},
+  ];
+  const leadership=[{start:.5,end:3,leaders:['a']},{start:3,end:7,leaders:['b']}];
+  const segments=rankPhaseSegments(trains,leadership,ranks,x=>x*10,y=>y*20);
+  assert.equal(segments.length,4);
+  const aFirst=segments.find(s=>s.t.id==='a'&&s.winner);
+  const aLast=segments.find(s=>s.t.id==='a'&&!s.winner);
+  const bFirst=segments.find(s=>s.t.id==='b'&&!s.winner);
+  const bLast=segments.find(s=>s.t.id==='b'&&s.winner);
+  assert.equal(aFirst.d,'M5,20 H30 ');
+  assert.equal(aFirst.transitions,'');
+  assert.equal(aLast.d,'M30,40 H50 M60,60 H70 ');
+  assert.equal(aLast.transitions,'M30,20 V40 ');
+  assert.equal(bFirst.d,'M5,40 H20 ');
+  assert.equal(bLast.d,'M30,40 H40 M40,20 H50 M60,20 H70 ');
+  assert.equal(bLast.transitions,'M40,40 V20 ');
+});
+test('Leadership boundaries split plateaus while keeping tied winner grouping',()=>{
+  const ranks=[{start:0,end:4,ranks:{a:1,b:1}}];
+  const leadership=[{start:0,end:1,leaders:['a']},{start:1,end:3,leaders:['a','b']},{start:3,end:4,leaders:['b']}];
+  const segments=rankPhaseSegments(trains,leadership,ranks,x=>x,y=>y);
+  assert.deepEqual(segments.map(s=>({id:s.t.id,d:s.d,winner:s.winner,transitions:s.transitions})),[
+    {id:'a',d:'M0,1 H1 ',winner:true,transitions:''},
+    {id:'a',d:'M1,1 H3 ',winner:true,transitions:''},
+    {id:'a',d:'M3,1 H4 ',winner:false,transitions:''},
+    {id:'b',d:'M0,1 H1 ',winner:false,transitions:''},
+    {id:'b',d:'M1,1 H3 ',winner:true,transitions:''},
+    {id:'b',d:'M3,1 H4 ',winner:true,transitions:''},
+  ]);
 });
 test('All diagrams get clipping, wide hit paths, leader names and responsive labels',()=>{
   const container={id:'cost',clientWidth:900};renderPhaseDiagram(container,config);
@@ -86,4 +123,21 @@ test('Narrow leadership bands use compact markers with complete accessible names
   renderPhaseDiagram(container,{...config,bands:[{width:.005,leaders:['a']},{width:.995,leaders:['b']}]});
   assert.match(container.innerHTML,/class="phase-leader-compact"[^>]*><span data-train="a" title="A &amp; train" aria-label="A &amp; train"[^>]*>•<\/span>/);
   assert.match(container.innerHTML,/title="B" aria-label="B"[^>]*>B<\/span>/);
+});
+
+test('Repeated phase styling shares geometry while retaining disjoint paths and wide hit targets',()=>{
+  const container={id:'compound'};
+  const segments=[
+    {t:trains[0],winner:true,d:'M0,1 H1 '},
+    {t:trains[0],winner:false,d:'M1,2 H2 ',transitions:'M1,1 V2 '},
+    {t:trains[0],winner:true,d:'M3,1 H4 '},
+  ];
+  renderPhaseDiagram(container,{...config,segments});
+  assert.equal((container.innerHTML.match(/class="train-curve phase-segment/g)||[]).length,2);
+  assert.equal((container.innerHTML.match(/class="curve-hit"/g)||[]).length,2);
+  assert.match(container.innerHTML,/<path id="compound-clip-curve-\d+" d="M0,1 H1  M3,1 H4 "/);
+  const definitions=[...container.innerHTML.matchAll(/<path id="([^"]+)" d=/g)].map(m=>m[1]);
+  for(const id of definitions)assert.equal((container.innerHTML.match(new RegExp(`href="#${id}"`,'g'))||[]).length,2);
+  assert.match(container.innerHTML,/class="rank-transition" d="M1,1 V2 "/);
+  assert.match(container.innerHTML,/stroke-width="12" pointer-events="stroke"/);
 });

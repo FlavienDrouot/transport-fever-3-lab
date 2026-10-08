@@ -8,8 +8,9 @@ export function sourceName(item) {
 }
 export function filterSourceVehicles(catalogue,{query='',category='all',year=2035,includeAuxiliary=false}={}) {
   const search=query.trim().toLowerCase();
-  return catalogue.vehicles.filter(v=>!isCampaignResource(v)&&(includeAuxiliary||v.isTransportVehicle)&&
-    (category==='all'||v.category===category)&&
+  const entries=[...catalogue.vehicles,...catalogue.formations.filter(f=>f.displayValues).map(f=>({...f,category:'train',kind:'locomotive formation',isTransportVehicle:true,availability:{raw:{yearFrom:f.displayValues.year}}}))];
+  return entries.filter(v=>!isCampaignResource(v)&&(includeAuxiliary||v.isTransportVehicle)&&
+    (category==='all'||(v.category==='train'&&v.displayValues?.role==='wagon'?'waggon':v.category)===category)&&
     (v.availability.raw?.yearFrom==null||v.availability.raw.yearFrom<=year)&&
     `${sourceName(v)} ${v.name?.translation?.translation_key??''} ${v.id} ${v.kind}`.toLowerCase().includes(search));
 }
@@ -34,6 +35,6 @@ export function mountSourceCatalogue(document,catalogue) {
     updateTablePreview(document,'source-catalogue-body');
   };
   for(const id of ['source-search','source-category','source-year','source-auxiliary'])node(id).addEventListener('input',update);
-  node('source-formations').innerHTML=catalogue.formations.map(f=>`<details><summary>${escape(sourceName(f))} · ${f.components.length} components</summary><p>${escape(f.id)}</p>${f.nameReconciliation?`<p>Name matched to ${escape(f.nameReconciliation.observation)}. Identity only; formation totals remain provisional.</p>`:''}<ol>${f.components.map(c=>`<li>${escape(c.name)} · ${c.forward?'forward':'reversed'}</li>`).join('')}</ol></details>`).join('');
+  node('source-formations').innerHTML=catalogue.formations.map(f=>`<details><summary>${escape(sourceName(f))} · ${f.components.length} components</summary><p>${escape(f.id)}</p>${f.nameReconciliation?`<p>${f.displayValues?'Captured whole-locomotive values are included in the catalogue above.':`Name matched to ${escape(f.nameReconciliation.observation)}. Identity only; formation totals remain provisional.`}</p>`:''}<ol>${f.components.map(c=>`<li>${escape(c.name)} · ${c.forward?'forward':'reversed'}</li>`).join('')}</ol></details>`).join('');
   update();
 }

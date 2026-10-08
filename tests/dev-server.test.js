@@ -16,7 +16,10 @@ test('Le serveur sert les assets actuels et refuse les fichiers privés, travers
       assert.equal(response.status, 200);
       assert.equal(response.headers.get('cache-control'), 'no-store');
     }
-    for (const path of ['/.git/config', '/package.json', '/README.md', '/src/..%2f..%2f.git/config', '/%ff', '/.codex/environments/environment.toml']) assert.equal((await fetch(base + path)).status, 404);
+    const thumbnails=JSON.parse(await (await fetch(base+'/data/vehicle-thumbnails.json')).text());
+    const image=Object.values(thumbnails.components)[0].parts[0].src.slice(1);
+    const png=await fetch(base+image);assert.equal(png.status,200);assert.equal(png.headers.get('content-type'),'image/png');
+    for (const path of ['/.git/config', '/.git/tf3-imports/thumbnails-20261008-123815/tf3-vehicle-thumbnails.zip', '/assets/vehicle-thumbnails/NOTICE.md', '/package.json', '/README.md', '/src/..%2f..%2f.git/config', '/%ff', '/.codex/environments/environment.toml']) assert.equal((await fetch(base + path)).status, 404);
     assert.equal((await fetch(base, {method: 'POST'})).status, 405);
     assert.equal(await (await fetch(base, {method: 'HEAD'})).text(), '');
   } finally {

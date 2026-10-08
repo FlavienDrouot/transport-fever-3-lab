@@ -1,3 +1,5 @@
+import {sizeFleet} from './service-fleet.js';
+import {withRailSpeedLimit} from './rail-motion.js';
 // Default calendar: four simulation seconds per day, 365 days per year.
 export const GAME_YEAR_SECONDS = 4 * 365;
 
@@ -58,29 +60,11 @@ function analyseSingleService(train, options, fleetCount = null) {
     if(value!==null && (!Number.isFinite(value)||value<=0))throw new RangeError(`${name} must be positive or null`);
   if(!['maximum','closest'].includes(frequencyMode))throw new RangeError('Invalid frequency mode');
   const baseline=analyseLine(train,options);
-  const roundUp=value=>Math.max(1,Math.ceil(value-1e-10));
-  let trainCount=1, line=baseline;
-  if(demandPerDirection!==null){
-    if(!baseline.passengers)throw new RangeError('A positive occupancy limit is required for passenger demand');
-    const flow=demandPerDirection/GAME_YEAR_SECONDS;
-    const fixedCycle=2*baseline.travelSeconds+2*(options.stationDelaySeconds??6);
-    const transferFactor=4*flow/baseline.rate;
-    const capacityCount=flow*baseline.roundTripSeconds/baseline.passengers;
-    const frequencyCount=maxHeadwaySeconds===null?1:transferFactor+fixedCycle/maxHeadwaySeconds;
-    const minimum=roundUp(capacityCount);
-    trainCount=roundUp(Math.max(capacityCount,frequencyCount));
-    if(maxHeadwaySeconds!==null && frequencyMode==='closest'){
-      const candidates=[Math.max(minimum,Math.floor(frequencyCount)),Math.max(minimum,Math.ceil(frequencyCount))];
-      trainCount=candidates.sort((a,b)=>Math.abs(fixedCycle/(a-transferFactor)-maxHeadwaySeconds)-Math.abs(fixedCycle/(b-transferFactor)-maxHeadwaySeconds)||a-b)[0];
-    }
-    if (fleetCount !== null) trainCount=fleetCount;
-    const passengers=flow*fixedCycle/(trainCount-transferFactor);
-    line=analyseLine(train,{...options,fillRatio:Math.min(options.fillRatio??1,passengers/train.passengerCapacity)});
-  }else if(maxHeadwaySeconds!==null){
-    const count=baseline.roundTripSeconds/maxHeadwaySeconds;
-    trainCount=roundUp(count);
-    if(frequencyMode==='closest')trainCount=[Math.max(1,Math.floor(count)),Math.max(1,Math.ceil(count))].sort((a,b)=>Math.abs(baseline.roundTripSeconds/a-maxHeadwaySeconds)-Math.abs(baseline.roundTripSeconds/b-maxHeadwaySeconds)||a-b)[0];
-  }
+  if(demandPerDirection!==null&&!baseline.passengers)throw new RangeError('A positive occupancy limit is required for passenger demand');
+  const fleet=sizeFleet({cycleSeconds:baseline.roundTripSeconds,transferSeconds:4*baseline.loadingSeconds,unitsPerCycle:2*baseline.passengers||1,yearSeconds:GAME_YEAR_SECONDS},
+    {demandPerYear:demandPerDirection===null?null:2*demandPerDirection,maxHeadwaySeconds,frequencyMode},fleetCount);
+  const trainCount=fleet.count;
+  const line=fleet.loadScale===1?baseline:analyseLine(train,{...options,fillRatio:(options.fillRatio??1)*fleet.loadScale});
   const journeysPerHour=line.journeysPerHour*trainCount;
   const fleetMaintenance=train.economy.annualMaintenance*trainCount;
   const journeysPerSecond=journeysPerHour/3600;
@@ -102,18 +86,11 @@ export function serviceEligible(train, {platformLengthMetres = null} = {}) {
   return platformLengthMetres === null || (Number.isFinite(train.lengthMetres) && train.lengthMetres <= platformLengthMetres + 1e-9);
 }
 
-const speedModels = new WeakMap();
 export function analyseService(train, options) {
   const {infrastructureSpeedKmh = null, allowMultipleUnits = false, platformLengthMetres = null} = options;
   if (infrastructureSpeedKmh !== null && ![100,160,350].includes(infrastructureSpeedKmh)) throw new RangeError('Infrastructure speed must be 100, 160 or 350 km/h');
   if (!serviceEligible(train, options)) return {eligible:false, efficiency:0, maintenancePerJourney:null};
-  let vehicle=train;
-  if (infrastructureSpeedKmh !== null) {
-    let models=speedModels.get(train.model);
-    if (!models) {models=new Map();speedModels.set(train.model,models);}
-    if (!models.has(infrastructureSpeedKmh)) models.set(infrastructureSpeedKmh,train.model.withSpeedLimit(infrastructureSpeedKmh));
-    vehicle={...train,model:models.get(infrastructureSpeedKmh)};
-  }
+  const vehicle=infrastructureSpeedKmh===null?train:withRailSpeedLimit(train,infrastructureSpeedKmh);
   const resultFor = (units, fleetCount = null) => {
     const composition={...vehicle,passengerCapacity:vehicle.passengerCapacity*units,carCount:vehicle.carCount*units,
       economy:{...vehicle.economy,annualMaintenance:vehicle.economy.annualMaintenance*units}};

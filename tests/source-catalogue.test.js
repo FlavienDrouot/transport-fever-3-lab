@@ -33,10 +33,10 @@ test('Rail sample observations are separate from predicted costs and preserve ph
 });
 
 test('Inventory filters expose future models and distinguish installed non-transport resources',()=>{
-  const all=filterSourceVehicles(catalogue,{includeAuxiliary:true});assert.equal(all.length,catalogue.vehicles.filter(v=>!v.provenance.owner.includes('campaign')).length);
+  const all=filterSourceVehicles(catalogue,{includeAuxiliary:true});assert.equal(all.length,catalogue.vehicles.filter(v=>!v.provenance.owner.includes('campaign')).length+2);
   const before=filterSourceVehicles(catalogue,{year:2020,includeAuxiliary:true});assert.equal(all.length-before.length,20);
   assert.equal(Math.max(...all.map(v=>v.availability.raw?.yearFrom??0)),2035);
-  assert.equal(filterSourceVehicles(catalogue).length,catalogue.vehicles.filter(v=>v.isTransportVehicle&&!v.provenance.owner.includes('campaign')).length);
+  assert.equal(filterSourceVehicles(catalogue).length,catalogue.vehicles.filter(v=>v.isTransportVehicle&&!v.provenance.owner.includes('campaign')).length+2);
   assert.equal(filterSourceVehicles(catalogue,{category:'train',query:'alco_hh600'}).length,1);
   assert.equal(filterSourceVehicles(catalogue,{query:'does not exist'}).length,0);
   const unresolved=all.find(v=>!v.name.value&&v.name.translation?.translation_key);assert.equal(sourceName(unresolved),unresolved.name.translation.translation_key);

@@ -1,0 +1,799 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "date": "2026-10-08",
+    "method": "16 purchasable railway passenger wagons transcribed from user-supplied condensed captures and matched by year, capacity, speed, handling where present, compatible cargo classes and exact normal-scale purchase cost. Mass, source model extents and verified-formula maintenance come from the matching extracted metadata. Original French labels retained; images are not redistributed.",
+    "limitations": "Campaign resources excluded. Source bounding-box length is used for configuration until a displayed length contradicts it. Coupling compatibility and mixed-commodity handling are not independently validated. British Mark 3 internal variants are retained as equivalent references rather than falsely distinguished by the capture. The 1921–1940 capture was supplied inline without a local attachment path."
+  },
+  "wagons": [
+    {
+      "id": "bavarian-passenger-carriage",
+      "name": "Bavarian passenger carriage",
+      "sourceName": "Voiture voyageurs bavaroise",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1880,
+      "passengerCapacity": 8,
+      "maxSpeedKmh": 50,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 175182,
+        "annualMaintenance": 29197
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 8,
+      "lengthMetres": 8.83638,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bay_05/bay_05.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "88c4f3711a2b1ba408d50a30450f570fe04fcfb6494309d49e8ca608c5ed4776",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bay_05/bay_05.mdl"
+        ]
+      }
+    },
+    {
+      "id": "compartment-carriage",
+      "name": "Compartment carriage",
+      "sourceName": "Wagon à compartiments",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1890,
+      "passengerCapacity": 12,
+      "maxSpeedKmh": 60,
+      "loadingUnloadingSpeedMultiplier": 3.5,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 295920,
+        "annualMaintenance": 49320
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "codex-clipboard-6abbd6a3-6eba-4d15-8d3a-b4500ce2aa80.png",
+      "massTonnes": 10,
+      "lengthMetres": 11.317,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/compartment_car/compartment_car.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "5efdec55b13571a528f19cefd47e62708f6237f2e244545032ddf45b347074c3",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/compartment_car/compartment_car.mdl"
+        ]
+      }
+    },
+    {
+      "id": "russian-suburban-carriage",
+      "name": "Russian suburban carriage",
+      "sourceName": "Voiture de banlieue russe",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1910,
+      "passengerCapacity": 19,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 668016,
+        "annualMaintenance": 111336
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 35,
+      "lengthMetres": 23.39,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/suburban_2nd/suburban_2nd.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "d9e070df608a4818f77deab887c4a4ed4f497d2b2d14df5868b5b48333aa98a3",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/suburban_2nd/suburban_2nd.mdl"
+        ]
+      }
+    },
+    {
+      "id": "heavyweight-28-1-parlor",
+      "name": "Heavyweight 28-1 Parlor",
+      "sourceName": "Heavyweight 28-1 Parlor",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1915,
+      "passengerCapacity": 22,
+      "maxSpeedKmh": 120,
+      "loadingUnloadingSpeedMultiplier": 3.5,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1325655,
+        "annualMaintenance": 147295
+      },
+      "noise": "Insuffisant",
+      "pollution": "Très bon",
+      "comfort": "Très bon",
+      "sourceCapture": "codex-clipboard-fb695075-102a-4dbe-9348-4ca5c4d1a811.png",
+      "massTonnes": 35,
+      "lengthMetres": 25.049999999999997,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/parlor/parlor.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "afe3a90fcd24a8ad68ac196d467ef44bbc92a72f52f2825d7ba105770b2f346c",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/parlor/parlor.mdl"
+        ]
+      }
+    },
+    {
+      "id": "german-donnerbuchse",
+      "name": "German Donnerbüchse",
+      "sourceName": "Donnerbuchse allemande",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1921,
+      "passengerCapacity": 15,
+      "maxSpeedKmh": 90,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 391205,
+        "annualMaintenance": 81501
+      },
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 20,
+      "lengthMetres": 13.86057,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/donnerbuechse/donnerbuechse.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "d2d1657a71c8c4014ba875cf22040bf498f7b7c183f8ca889ab9088d4a08cfa6",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/donnerbuechse/donnerbuechse.mdl"
+        ]
+      }
+    },
+    {
+      "id": "egorov-20-2",
+      "name": "Egorov 20 2",
+      "sourceName": "Egorov 20 2",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1930,
+      "passengerCapacity": 20,
+      "maxSpeedKmh": 100,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 703170,
+        "annualMaintenance": 117195
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 42,
+      "lengthMetres": 21.3217,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/egorov_20_2/egorov_20_2.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "eba0a421b0c2172c14837b34334e301d55b38efe6628c61d9f1ff6aa56da4693",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/egorov_20_2/egorov_20_2.mdl"
+        ]
+      }
+    },
+    {
+      "id": "streamlined-carriage",
+      "name": "Streamlined carriage",
+      "sourceName": "Wagon profilé",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1935,
+      "passengerCapacity": 22,
+      "maxSpeedKmh": 160,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1097094,
+        "annualMaintenance": 182849
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "User-supplied inline capture of wagons introduced in 1921–1940 (2026-10-08)",
+      "massTonnes": 30,
+      "lengthMetres": 26.14,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/streamlined_nyc/streamlined_nyc.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "0ed0009fdcb529a73bd7ae1366ba108ca0c998f66c106d52c03806152d669e81",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/streamlined_nyc/streamlined_nyc.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-type-yz-22",
+      "name": "Chinese Type YZ 22",
+      "sourceName": "Chinese Type YZ 22",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1950,
+      "passengerCapacity": 24,
+      "maxSpeedKmh": 120,
+      "loadingUnloadingSpeedMultiplier": 4,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 964110,
+        "annualMaintenance": 160685
+      },
+      "noise": "Médiocre",
+      "pollution": "Très bon",
+      "comfort": "Bon",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 42,
+      "lengthMetres": 24.3049,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/china_type_yz_22/china_type_yz_22.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "5dc520f9b587b92d0aa18d37dbd3e86f739697e9f7a91ed27f37dfdf9ea5fb63",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/china_type_yz_22/china_type_yz_22.mdl"
+        ]
+      }
+    },
+    {
+      "id": "swiss-einheitswagen-ii",
+      "name": "Swiss Einheitswagen II",
+      "sourceName": "Swiss Einheitswagen II",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1962,
+      "passengerCapacity": 25,
+      "maxSpeedKmh": 140,
+      "loadingUnloadingSpeedMultiplier": 2.5,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1126716,
+        "annualMaintenance": 187786
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant",
+      "sourceCapture": "codex-clipboard-a05d1d0b-0a0d-4f47-86a7-36613e25d784.png",
+      "massTonnes": 30,
+      "lengthMetres": 24.76,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/ew_ii/ew_ii.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "ca7391d0bcc5658b70b56cb323bcd87bb94bb948780ef9c2f7256354357c52b0",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/ew_ii/ew_ii.mdl"
+        ]
+      }
+    },
+    {
+      "id": "british-mark-3-carriage",
+      "name": "British Mark 3 carriage",
+      "sourceName": "Wagon British Mark 3",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1975,
+      "passengerCapacity": 15,
+      "maxSpeedKmh": 200,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 888420,
+        "annualMaintenance": 148070
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 36,
+      "lengthMetres": 22.96,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+        "sourceCategory": "train",
+        "sourceHash": "cc86d5f24e30d1ed59168218eb1dab6fd8f0ffed5be48ff141d8c0ea2f0cfb5a",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl"
+        ],
+        "equivalentResourceIds": [
+          "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+          "base::/vehicle/train/hst_125/hst_125_middle2.mdl"
+        ],
+        "equivalenceReason": "The capture cannot distinguish the two British Mark 3 internal models. Capacity, handling, mass, length, speed, year, cargo compatibility and costs are identical; retain both resource identities as one configurable wagon."
+      }
+    },
+    {
+      "id": "bombardier-bilevel",
+      "name": "Bombardier BiLevel",
+      "sourceName": "Bombardier BiLevel",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1976,
+      "passengerCapacity": 35,
+      "maxSpeedKmh": 140,
+      "loadingUnloadingSpeedMultiplier": 2,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1577406,
+        "annualMaintenance": 262901
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Très insuffisant",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 50,
+      "lengthMetres": 26.0744,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/bilevel/bilevel.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "cb3011610e3b808a78b991ab3416c59f8a2ff86156fcad887c02eee9581a4d16",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/bilevel/bilevel.mdl"
+        ]
+      }
+    },
+    {
+      "id": "swiss-einheitswagen-iv",
+      "name": "Swiss Einheitswagen IV",
+      "sourceName": "Swiss Einheitswagen IV",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1981,
+      "passengerCapacity": 26,
+      "maxSpeedKmh": 200,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1539930,
+        "annualMaintenance": 256655
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Insuffisant",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 42,
+      "lengthMetres": 26.34,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/ew_iv/ew_iv.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "1cb1f55a47cc8852fdabab731f6b92d1f6c611d65e905b8b7210f8c7c54619d1",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/ew_iv/ew_iv.mdl"
+        ]
+      }
+    },
+    {
+      "id": "chinese-type-25c",
+      "name": "Chinese Type 25C",
+      "sourceName": "Chinese Type 25C",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1990,
+      "passengerCapacity": 26,
+      "maxSpeedKmh": 160,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1296564,
+        "annualMaintenance": 216094
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "codex-clipboard-6a1e859b-c8b7-441a-a3d1-5302d3dc3668.png",
+      "massTonnes": 49,
+      "lengthMetres": 26.3466,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/china_type_25c/china_type_25c.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "148770ab75a89d9de6476bd47fc703a5ca53add04c9fb07116a38b0502f4d0c5",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/china_type_25c/china_type_25c.mdl"
+        ]
+      }
+    },
+    {
+      "id": "swiss-dpz-carriage",
+      "name": "Swiss DPZ carriage",
+      "sourceName": "Wagon Swiss DPZ",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 1990,
+      "passengerCapacity": 33,
+      "maxSpeedKmh": 140,
+      "loadingUnloadingSpeedMultiplier": 3,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1464732,
+        "annualMaintenance": 244122
+      },
+      "noise": "Bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 50,
+      "lengthMetres": 27.3902,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/train/re_450/re_450_middle1.mdl",
+        "sourceCategory": "train",
+        "sourceHash": "108df371903b1e1043d4b08d76f2ebc81e04d12c427ce9e762ac46e255f990b2",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/train/re_450/re_450_middle1.mdl"
+        ]
+      }
+    },
+    {
+      "id": "russian-type-61-4447",
+      "name": "Russian Type 61-4447",
+      "sourceName": "Russian Type 61-4447",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 2010,
+      "passengerCapacity": 24,
+      "maxSpeedKmh": 200,
+      "loadingUnloadingSpeedMultiplier": 3.5,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1421472,
+        "annualMaintenance": 236912
+      },
+      "noise": "Insuffisant",
+      "pollution": "Très bon",
+      "comfort": "Très bon",
+      "sourceCapture": "codex-clipboard-ff061847-ce9a-4a78-8bdd-728cae87ea07.png",
+      "massTonnes": 58,
+      "lengthMetres": 25.4799,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/tvz_61_4447/tvz_61_4447.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "105b790474c7ef3749633bef45ce234b6dd4cd585f75a9fab137ec3aef4efce5",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/tvz_61_4447/tvz_61_4447.mdl"
+        ]
+      }
+    },
+    {
+      "id": "siemens-viaggio",
+      "name": "Siemens Viaggio",
+      "sourceName": "Siemens Viaggio",
+      "carrier": "rail",
+      "role": "wagon",
+      "year": 2025,
+      "passengerCapacity": 26,
+      "maxSpeedKmh": 200,
+      "loadingUnloadingSpeedMultiplier": 3.5,
+      "economy": {
+        "difficulty": "normal",
+        "currencySymbol": "$",
+        "purchasePrice": 1539930,
+        "annualMaintenance": 256655
+      },
+      "noise": "Très bon",
+      "pollution": "Très bon",
+      "comfort": "Médiocre",
+      "sourceCapture": "codex-clipboard-bab47198-b0ee-499c-94d8-ccc48464cea7.png",
+      "massTonnes": 58,
+      "lengthMetres": 26.5,
+      "carCount": 1,
+      "dataProvenance": {
+        "method": "condensed_capture_and_extracted_metadata",
+        "resourceId": "base::/vehicle/waggon/viaggio/viaggio.mdl",
+        "sourceCategory": "waggon",
+        "sourceHash": "d827993029086ea6f61371cabf9f3f83e73b11604d305014a5601e951bb0ea11",
+        "observedFields": [
+          "year",
+          "passengerCapacity",
+          "maxSpeedKmh",
+          "loadingUnloadingSpeedMultiplier",
+          "noise",
+          "pollution",
+          "comfort",
+          "economy.purchasePrice"
+        ],
+        "sourceFields": [
+          "massTonnes",
+          "lengthMetres",
+          "carCount",
+          "economy.annualMaintenance"
+        ],
+        "componentIds": [
+          "base::/vehicle/waggon/viaggio/viaggio.mdl"
+        ]
+      }
+    }
+  ]
+}

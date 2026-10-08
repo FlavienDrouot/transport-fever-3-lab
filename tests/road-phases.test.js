@@ -66,3 +66,26 @@ test('A costly losing vehicle cannot stretch the cost axis away from the winner'
   assert.doesNotMatch(withOutlier,/<text class="end-label" data-train="outlier"/);
   assert.match(withOutlier,/data-train="outlier"/); // Its curve remains in the clipped plot.
 });
+
+test('Changing only the swept scenario value moves its marker without rebuilding curves; other inputs invalidate the cache',()=>{
+  const nodes=Object.fromEntries(['road-phase-axis','road-cost-scale','road-rank-scale','road-phase-help','road-cost-phases-chart','road-rank-phases-chart'].map(id=>[id,{id,value:'focus',clientWidth:900,querySelector(){return {value:this.value};}}]));
+  nodes['road-phase-axis'].value='distance';
+  const charts=['road-cost-phases-chart','road-rank-phases-chart'].map(id=>{
+    const node=nodes[id],title={textContent:''};
+    const marker={style:{},attrs:{},setAttribute(key,value){this.attrs[key]=value;},querySelector(){return title;}};
+    node.writes=0;let html='';Object.defineProperty(node,'innerHTML',{get(){return html;},set(value){html=value;node.writes++;}});
+    node.querySelector=selector=>selector==='.phase-current-setting'?marker:null;
+    return {node,marker,title};
+  });
+  const document={getElementById:id=>nodes[id]},datasets={trucks:vehicles,buses:[],trams:[],freightTrams:[]},selection={category:'freight',year:2035};
+  const targetOptions={...options,demandPerYear:1000};
+  renderRoadPhases(document,datasets,selection,targetOptions);
+  renderRoadPhases(document,datasets,selection,{...targetOptions,distanceKm:2});
+  for(const {node,marker,title} of charts){
+    assert.equal(node.writes,1);assert.equal(title.textContent,'Current setting: 2');assert.equal(marker.attrs.x1,marker.attrs.x2);
+  }
+  renderRoadPhases(document,datasets,selection,{...targetOptions,distanceKm:2,fillRatio:.5});
+  for(const {node} of charts)assert.equal(node.writes,2);
+  renderRoadPhases(document,datasets,selection,{...targetOptions,distanceKm:8,fillRatio:.5});
+  for(const {node} of charts)assert.equal(node.writes,3); // Extended distance domain.
+});

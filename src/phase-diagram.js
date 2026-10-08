@@ -23,16 +23,36 @@ export function phaseAppearance(winner,emphasize,highlighted,id){
 // Horizontal rank plateaus carry emphasis; vertical transitions are neutral.
 // Availability gaps never connect unrelated segments.
 export function rankPhaseSegments(trains,phases,intervals,sx,sy){
-  return trains.flatMap(t=>phases.map(phase=>{
-    let d='',transitions='';
-    intervals.forEach((interval,index)=>{
+  // Both partitions are ordered. Share their intersections across vehicles,
+  // rather than scanning every rank interval again for each leadership phase.
+  let first=0;
+  const intersections=phases.map(phase=>{
+    while(first<intervals.length&&intervals[first].end<=phase.start)first++;
+    const overlaps=[];
+    for(let index=first;index<intervals.length&&intervals[index].start<phase.end;index++){
+      const interval=intervals[index];
       const start=Math.max(interval.start,phase.start),end=Math.min(interval.end,phase.end);
-      if(end<=start)return;
-      const rank=interval.ranks[t.id];if(rank==null)return;
-      const previous=start===interval.start?intervals[index-1]?.ranks[t.id]:null;
-      if(previous!=null&&previous!==rank)transitions+=`M${sx(start)},${sy(previous)} L${sx(start)},${sy(rank)} `;
-      d+=`M${sx(start)},${sy(rank)} L${sx(end)},${sy(rank)} `;
-    });
+      if(end>start)overlaps.push({interval,index,start,end,xStart:sx(start),xEnd:sx(end)});
+    }
+    return overlaps;
+  });
+  const rankYs=new Map();
+  const rankY=rank=>{if(!rankYs.has(rank))rankYs.set(rank,sy(rank));return rankYs.get(rank);};
+  return trains.flatMap(t=>phases.map((phase,phaseIndex)=>{
+    let d='',transitions='',plateau;
+    const flush=()=>{
+      if(plateau)d+=`M${plateau.xStart},${rankY(plateau.rank)} H${plateau.xEnd} `;
+      plateau=null;
+    };
+    for(const {interval,index,start,end,xStart,xEnd} of intersections[phaseIndex]){
+      const rank=interval.ranks[t.id];if(rank==null){flush();continue;}
+      const before=intervals[index-1];
+      const previous=start===interval.start&&before?.end===start?before.ranks[t.id]:null;
+      if(previous!=null&&previous!==rank)transitions+=`M${xStart},${rankY(previous)} V${rankY(rank)} `;
+      if(plateau&&plateau.rank===rank&&plateau.end===start){plateau.end=end;plateau.xEnd=xEnd;}
+      else {flush();plateau={start,end,rank,xStart,xEnd};}
+    }
+    flush();
     return {t,d,transitions,winner:phase.leaders.includes(t.id)};
   })).filter(segment=>segment.d);
 }
@@ -73,14 +93,25 @@ function mountInteractions(container,config){
 // Analyses provide their axis/grid and sampled model paths. This component owns
 // the presentation and interaction contract for every phase plot.
 export function renderPhaseDiagram(container,{trains,segments,bands,endpoints,frame='',overlay='',width:W,height:H,left:L,right:R,top:T,bottom:B,title,highlighted,emphasize=true,group='rail'}){
+  container.classList?.add('phase-diagram');
+  if(container.style)container.style.containIntrinsicSize=`auto ${H+32}px`;
   const clipId=`${container.id||'phase'}-clip`;
-  const sorted=[...segments].sort((a,b)=>Number(a.t.id===highlighted)-Number(b.t.id===highlighted)||Number(a.winner)-Number(b.winner));
+  // Compound paths preserve gaps and winner styling with at most two paths per vehicle.
+  const groups=new Map();
+  for(const segment of segments){
+    const key=JSON.stringify([segment.t.id,!!segment.winner]);
+    if(!groups.has(key))groups.set(key,{t:segment.t,winner:segment.winner,paths:[],transitions:[]});
+    const group=groups.get(key);group.paths.push(segment.d);if(segment.transitions)group.transitions.push(segment.transitions);
+  }
+  const combined=[...groups.values()].map(group=>({t:group.t,winner:group.winner,d:group.paths.join(' '),transitions:group.transitions.join(' ')}));
+  const sorted=combined.sort((a,b)=>Number(a.t.id===highlighted)-Number(b.t.id===highlighted)||Number(a.winner)-Number(b.winner));
   const transitions=sorted.filter(s=>s.transitions).map(({t,transitions})=>`<path class="rank-transition" d="${transitions}" fill="none" stroke="${t.color}" stroke-dasharray="${t.dash||''}" stroke-width="1.2" opacity=".25" pointer-events="none"/>`).join('');
-  const curves=sorted.map(({t,d,winner})=>{
+  const geometry=sorted.map(({d},i)=>`<path id="${escape(clipId)}-curve-${i}" d="${d}"/>`).join('');
+  const curves=sorted.map(({t,winner},i)=>{
     const {opacity,width}=phaseAppearance(winner,emphasize,highlighted,t.id);
-    return `<path class="train-curve phase-segment ${winner?'winning-segment':'other-segment'}" data-train="${escape(t.id)}" data-winner="${winner}" d="${d}" fill="none" stroke="${t.color}" stroke-dasharray="${t.dash||''}" stroke-width="${width}" opacity="${opacity}"/>`;
+    return `<use class="train-curve phase-segment ${winner?'winning-segment':'other-segment'}" data-train="${escape(t.id)}" data-winner="${winner}" href="#${escape(clipId)}-curve-${i}" fill="none" stroke="${t.color}" stroke-dasharray="${t.dash||''}" stroke-width="${width}" opacity="${opacity}"/>`;
   }).join('');
-  const hits=sorted.map(({t,d,winner})=>`<path class="curve-hit" data-train="${escape(t.id)}" d="${d}" fill="none" stroke="transparent" stroke-width="12" pointer-events="stroke"><title>${escape(t.name)}${winner?' · leading phase':''}</title></path>`).join('');
+  const hits=sorted.map(({t,winner},i)=>`<use class="curve-hit" data-train="${escape(t.id)}" href="#${escape(clipId)}-curve-${i}" fill="none" stroke="transparent" stroke-width="12" pointer-events="stroke"><title>${escape(t.name)}${winner?' · leading phase':''}</title></use>`).join('');
   const points=endpoints.filter(p=>p.y>=T&&p.y<=H-B).map(p=>({...p,opacity:highlighted?(p.t.id===highlighted?1:.25):emphasize&&p.winner===false?.3:1}));
   const labels=curveLabels(points,{width:W,right:R,top:T,bottom:H-B,highlighted});
   const byId=new Map(trains.map(t=>[t.id,t]));
@@ -97,7 +128,7 @@ export function renderPhaseDiagram(container,{trains,segments,bands,endpoints,fr
     }).join(' / ')}</div>`;
   }).join('');
 
-  container.innerHTML=`<div class="phase-leaders" style="padding-left:${L}px;padding-right:${R}px">${leaders}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escape(title)}"><defs><clipPath id="${escape(clipId)}"><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/></clipPath></defs><rect width="${W}" height="${H}" fill="white"/>${shading}${frame}<g clip-path="url(#${escape(clipId)})"><g class="rank-transitions">${transitions}</g><g class="phase-curves">${curves}</g><g class="phase-hits">${hits}</g></g>${overlay}${labels}</svg>${trainLegend(trains,W,highlighted)}`;
+  container.innerHTML=`<div class="phase-leaders" style="padding-left:${L}px;padding-right:${R}px">${leaders}</div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escape(title)}"><defs>${geometry}<clipPath id="${escape(clipId)}"><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/></clipPath></defs><rect width="${W}" height="${H}" fill="white"/>${shading}${frame}<g clip-path="url(#${escape(clipId)})"><g class="rank-transitions">${transitions}</g><g class="phase-curves">${curves}</g><g class="phase-hits">${hits}</g></g>${overlay}${labels}</svg>${trainLegend(trains,W,highlighted)}`;
   // Names are the keyboard equivalent of the wide pointer hit areas.
   if(container.querySelectorAll){
     for(const label of container.querySelectorAll('.end-label,.train-legend [data-train],.phase-leaders [data-train]')){

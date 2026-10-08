@@ -1,3 +1,4 @@
+import {sizeFleet} from './service-fleet.js';
 import {updateTablePreview} from './table-preview.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {formatTime} from './format.js';
@@ -25,10 +26,16 @@ export function rankTrucks(trucks, roadSpeedLimit = null) {
   });
 }
 
-/** General-purpose vehicles are compatible with each captured freight specialization. */
+/** Catalogue filtering: "all" is unrestricted, not a general-purpose cargo class. */
+export function matchesFreightFilter(vehicle,cargo='all') {
+  return cargo==='all'||vehicle.freightSpecialization==='general'||
+    (!vehicle.freightSpecialization&&vehicle.cargoTypes==='all freight')||vehicle.freightSpecialization===cargo;
+}
+
+/** Specific freight filters also include compatible general-purpose vehicles. */
 export function trucksForCargo(trucks,cargo='all') {
   if(!['all','bulk','goods','flatbed','liquid'].includes(cargo))throw new RangeError('Unsupported freight specialization');
-  return trucks.filter(truck=>truck.freightSpecialization==='general'||(!truck.freightSpecialization&&truck.cargoTypes==='all freight')||(cargo!=='all'&&truck.freightSpecialization===cargo));
+  return trucks.filter(truck=>matchesFreightFilter(truck,cargo));
 }
 
 export function trucksByYear(trucks,year) {
@@ -96,13 +103,27 @@ export function analysePassengerRoadService(vehicles,options) {
 // Retain the bus-specific entry point for existing callers.
 export const analyseBusService=analysePassengerRoadService;
 
+export function analyseRoadFleet(vehicles, options) {
+  const analyse=options.passenger?analysePassengerRoadService:analyseTruckService;
+  const baseline=analyse(vehicles,options);
+  const rows=baseline.map(row=>{
+    const fleet=sizeFleet({cycleSeconds:row.roundTripSeconds,transferSeconds:row.loadingSeconds+row.unloadingSeconds,unitsPerCycle:row.deliveredPerCycle,yearSeconds:GAME_YEAR_SECONDS},options);
+    const actual=fleet.loadScale===1?row:analyse([row.truck],{...options,fillRatio:(options.fillRatio??1)*fleet.loadScale})[0];
+    return {...actual,vehicleCount:fleet.count,actualFillRatio:(options.fillRatio??1)*fleet.loadScale,headwaySeconds:actual.roundTripSeconds/fleet.count,
+      fleetMaintenance:actual.truck.economy.annualMaintenance*fleet.count,deliveredPerYear:actual.cargoPerYear*fleet.count};
+  }).sort((a,b)=>a.costPerCargo-b.costPerCargo||a.truck.name.localeCompare(b.truck.name));
+  let rank=0,prior;
+  return rows.map((row,i)=>{if(prior===undefined||Math.abs(row.costPerCargo-prior)>Math.max(1,Math.abs(prior))*1e-12)rank=i+1;prior=row.costPerCargo;return {...row,rank};});
+}
+
 export function renderTruckService(document,trucks,options) {
   const passenger=options.passenger===true;
-  const rows=passenger?analysePassengerRoadService(trucks,options):analyseTruckService(trucks,options);
+  const rows=analyseRoadFleet(trucks,options);
   const unit=passenger?'passenger journey':'cargo unit';
+  document.getElementById('truck-service-readout').closest('table').classList.toggle('has-targets',options.demandPerYear!=null||options.maxHeadwaySeconds!=null);
   document.getElementById('truck-service-summary').textContent=rows.length?`Lowest running cost / ${unit}: ${rows.filter(row=>row.rank===1).map(row=>row.truck.name).join(' / ')} · $${fmt(rows[0].costPerCargo,2)}. A–B–A · ${fmt(options.distanceKm,1)} km per leg · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'} · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}.`:'No vehicles introduced by this year in the captured catalogue.';
   renderTruckBars(document.getElementById('truck-bars'),rows);
-  document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td></tr>`).join('');
+  document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td><td class="road-fleet-column">${row.vehicleCount}</td><td class="road-fleet-column">${fmt(row.actualFillRatio*100,1)}%</td><td class="road-fleet-column">${formatTime(row.headwaySeconds)}</td><td class="road-fleet-column">${fmt(row.deliveredPerYear,0)}</td><td class="road-fleet-column">$${fmt(row.fleetMaintenance,0)}</td></tr>`).join('');
   updateTablePreview(document,'truck-service-readout');
 }
 

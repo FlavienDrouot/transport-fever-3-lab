@@ -17,7 +17,7 @@ export function isCampaignResource(v){return /(?:^|_)campaign(?:_|$)/i.test(v.pr
 export function modelFingerprint(v){
   const engines=v.engines.raw??[];
   const candidate=v.capacity.display_candidate;
-  const capacity=v.capacity.display_observed??(Number.isFinite(candidate)&&['ROAD','TRAM'].includes(v.carrier)?Math.round(candidate):candidate);
+  const capacity=v.capacity.display_observed??(Number.isFinite(candidate)?Math.round(candidate):candidate);
   return {year:v.availability.raw?.yearFrom,speed:v.topSpeed.unit==='m/s'&&v.topSpeed.value!=null?v.topSpeed.value*3.6:null,
     mass:v.emptyMass.unit==='kg'&&v.emptyMass.value!=null?v.emptyMass.value/1000:null,length:v.length.value,
     capacity,
@@ -40,7 +40,8 @@ function observationFingerprint(card,formation){
   const read=field=>!observed||observed.includes(field)?card[field]:null;
   return {year:read('year'),speed:read('maxSpeedKmh'),mass:read('massTonnes'),length:read('lengthMetres'),
     capacity:read('passengerCapacity')??read('cargoCapacity'),power:read('powerCh'),traction:read('tractionKgf'),
-    handling:read('loadingUnloadingSpeedMultiplier')==null?null:read('loadingUnloadingSpeedMultiplier')*(formation?card.carCount??1:1)};
+    handling:formation&&card.formationLoadingUnloadingSpeedMultiplier!=null?card.formationLoadingUnloadingSpeedMultiplier:
+      read('loadingUnloadingSpeedMultiplier')==null?null:read('loadingUnloadingSpeedMultiplier')*(formation?card.carCount??1:1)};
 }
 
 function cargoCompatible(card,classes){
@@ -54,21 +55,51 @@ export function reconcileNames(catalogue,observations){
   const candidates=[...catalogue.vehicles.filter(v=>v.isTransportVehicle&&!isCampaignResource(v)).map(v=>({record:v,category:v.category,formation:false,values:modelFingerprint(v)})),
     ...catalogue.formations.map(f=>({record:f,category:'train',formation:true,values:formationFingerprint(f,catalogue.vehicles)})).filter(c=>c.values)];
   const results=observations.map(observation=>{
+    // Condensed locomotive lists expose three physical fields and purchase cost.
+    // Require all four to agree uniquely; derived physical fields are not evidence.
+    const condensedLocomotive=observation.category==='train'&&observation.card.role==='locomotive'&&
+      observation.card.dataProvenance?.observedFields?.includes('economy.purchasePrice');
+    const condensedWagon=observation.card.role==='wagon'&&['train','waggon'].includes(observation.category)&&
+      observation.card.dataProvenance?.observedFields?.includes('economy.purchasePrice');
     const ranked=candidates.filter(c=>c.category===observation.category&&cargoCompatible(observation.card,c.values.cargoClasses)).map(c=>{
       const expected=observationFingerprint(observation.card,c.formation);
       const evidence=Object.keys(tolerances).filter(field=>Number.isFinite(expected[field])&&Number.isFinite(c.values[field])).map(field=>({field,observed:expected[field],source:c.values[field],difference:Math.abs(expected[field]-c.values[field]),tolerance:tolerances[field]}));
+      if((condensedLocomotive&&c.values.capacity===0&&c.values.power>0)||
+        (condensedWagon&&!c.formation&&/wagon$/.test(c.record.kind)&&c.values.capacity>0&&c.values.power===0)){
+        const price=c.formation?sum(c.values.componentIds,id=>catalogue.vehicles.find(v=>v.id===id)?.derivedCosts?.purchase_price):c.record.derivedCosts?.purchase_price;
+        const captured=observation.card.economy?.purchasePrice;
+        if(Number.isFinite(price)&&Number.isFinite(captured))evidence.push({field:'purchasePrice',observed:captured,source:price,difference:Math.abs(captured-price),tolerance:0.5});
+      }
       const matches=evidence.filter(e=>e.difference<=e.tolerance);
       const conflicts=evidence.filter(e=>e.difference>e.tolerance);
       return {sourceId:c.record.id,formation:c.formation,matches:matches.length,evidence,conflicts:conflicts.map(e=>e.field)};
     }).filter(c=>c.evidence.some(e=>e.field==='year'&&e.difference===0)&&c.matches>=4).sort((a,b)=>a.conflicts.length-b.conflicts.length||b.matches-a.matches||a.sourceId.localeCompare(b.sourceId));
-    const strong=ranked.filter(c=>c.matches>=5&&(c.conflicts.length===0||
+    const strong=ranked.filter(c=>condensedWagon?
+      c.conflicts.length===0&&['year','speed','capacity','purchasePrice'].every(field=>c.evidence.some(e=>e.field===field&&e.difference<=e.tolerance)):
+      condensedLocomotive?
+      c.conflicts.length===0&&['year','speed','power','purchasePrice'].every(field=>c.evidence.some(e=>e.field===field&&e.difference<=e.tolerance)):
+      c.matches>=5&&(c.conflicts.length===0||
       (c.conflicts.every(field=>field==='length')||(c.matches>=6&&c.formation&&c.conflicts.every(field=>field==='length'||field==='handling')))));
-    return {...observation,status:strong.length===1?'matched':strong.length>1?'ambiguous':'unmatched',sourceId:strong.length===1?strong[0].sourceId:null,candidates:ranked.slice(0,5)};
+    // One captured wagon can have explicitly documented cosmetic source variants.
+    // Accept the group only when ALL candidates are those variants, and their
+    // complete calculator properties agree. Never collapse arbitrary duplicates.
+    const aliases=observation.card.dataProvenance?.equivalentResourceIds;
+    const signature=id=>{
+      const v=catalogue.vehicles.find(v=>v.id===id);
+      return v?JSON.stringify([v.category,v.kind,modelFingerprint(v),v.derivedCosts?.purchase_price,v.derivedCosts?.annual_maintenance]):null;
+    };
+    const equivalent=condensedWagon&&strong.length>1&&Array.isArray(aliases)&&aliases.length===strong.length&&
+      new Set(aliases).size===aliases.length&&strong.every(c=>aliases.includes(c.sourceId))&&
+      signature(aliases[0])!=null&&aliases.every(id=>signature(id)===signature(aliases[0]));
+    const matched=strong.length===1||equivalent;
+    return {...observation,status:matched?'matched':strong.length>1?'ambiguous':'unmatched',sourceId:matched?strong[0].sourceId:null,
+      ...(equivalent?{sourceIds:strong.map(c=>c.sourceId)}:{}),candidates:ranked.slice(0,5)};
   });
   // A resource must not silently inherit different names from multiple cards.
   const matched=results.filter(r=>r.status==='matched');
-  const conflictingIds=new Set(matched.filter(result=>matched.some(other=>other!==result&&other.sourceId===result.sourceId&&other.card.name!==result.card.name)).map(r=>r.sourceId));
-  for(const result of matched)if(conflictingIds.has(result.sourceId)){result.status='ambiguous';result.sourceId=null;}
+  const ids=result=>result.sourceIds??[result.sourceId];
+  const conflictingIds=new Set(matched.flatMap(result=>matched.some(other=>other!==result&&ids(other).some(id=>ids(result).includes(id))&&other.card.name!==result.card.name)?ids(result):[]));
+  for(const result of matched)if(ids(result).some(id=>conflictingIds.has(id))){result.status='ambiguous';result.sourceId=null;delete result.sourceIds;}
   return results;
 }
 export function applyReconciledNames(catalogue,results){
@@ -81,15 +112,16 @@ export function applyReconciledNames(catalogue,results){
     delete item.nameCandidates;
     const proposals=results.filter(r=>r.status!=='matched'&&r.candidates.some(c=>c.sourceId===item.id));
     if(proposals.length)item.nameCandidates=proposals.map(r=>({observation:r.reference,name:r.card.name,status:r.status,evidence:r.candidates.find(c=>c.sourceId===item.id).evidence,conflicts:r.candidates.find(c=>c.sourceId===item.id).conflicts}));
-    const matches=results.filter(r=>r.status==='matched'&&r.sourceId===item.id);
+    const matches=results.filter(r=>r.status==='matched'&&(r.sourceIds??[r.sourceId]).includes(item.id));
     if(!matches.length)continue;
     const match=matches[0];
     item.nameReconciliation={method:'unique_characteristic_match',observation:match.reference,sourceCapture:match.card.sourceCapture,
       sourceName:match.card.sourceName??match.card.name,secondaryFieldsRule:'Source extents and inferred formation handling are supporting evidence; Model extent differences are allowed with at least five concordant characteristics; formation handling differences require six.',evidence:match.candidates.find(c=>c.sourceId===item.id).evidence,
+      ...(match.sourceIds?{equivalentResourceIds:match.sourceIds}:{}),
       limitation:'Identity match only; capacity candidates, predicted costs and runtime availability retain their original validation status.'};
-    if(['bus','truck','tram'].includes(item.category)){
+    if(['bus','truck','tram','train','waggon'].includes(item.category)||match.card.role==='locomotive'){
       const card=match.card;
-      item.displayValues={year:card.year,capacity:card.passengerCapacity??card.cargoCapacity??0,maxSpeedKmh:card.maxSpeedKmh,
+      item.displayValues={...(card.role?{role:card.role}:{}),year:card.year,capacity:card.passengerCapacity??card.cargoCapacity??0,maxSpeedKmh:card.maxSpeedKmh,
         massTonnes:card.massTonnes,lengthMetres:card.lengthMetres,powerKw:card.powerCh==null?0:card.powerCh*735.5/1000,
         loadingUnloadingSpeedMultiplier:card.loadingUnloadingSpeedMultiplier,purchasePrice:card.economy?.purchasePrice,
         annualMaintenance:card.economy?.annualMaintenance};

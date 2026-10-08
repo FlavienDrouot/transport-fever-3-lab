@@ -1,0 +1,3318 @@
+{
+  "schemaVersion": 1,
+  "source": "Original Transport Fever 3 purchase-list miniatures; unchanged PNG conversions.",
+  "components": {
+    "rail:locomotive:prussian-class-t-3": {
+      "resourceId": "base::/vehicle/train/br89/br89.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/ca0ae7a084e2d5b8fcb0627253aba4dc3210c42da598455a91fc0c1637e03db9.png",
+          "width": 136,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:2-6-0-mogul": {
+      "resourceId": "base::/vehicle/train/mogul_2_6_0/mogul_2_6_0.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e858c7afac097668164f8b2ad4af9c1591944e18f871b2f0f9874f3c0c39e3c5.png",
+          "width": 296,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:russian-class-ob": {
+      "resourceId": "base::/vehicle/train/russian_class_ob/russian_class_ob.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/ffb9f9bf0ee4706cb85c5804bd748e11965a376d59122f220be37bba72daa383.png",
+          "width": 272,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:4-4-2-atlantic": {
+      "resourceId": "base::/vehicle/train/atlantic_4_4_2/atlantic_4_4_2.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e7c9d55bb052372af4f8f667255b5b7d89a63fa4a9d6372625dd46841e10d234.png",
+          "width": 376,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:baden-class-vi-c": {
+      "resourceId": "base::/vehicle/train/br75_4/br75_4.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/58ee6af2133b4ac022ccd932446f03e7d2f2f59f36c1463de9cc8fcf68ce37e3.png",
+          "width": 200,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:chinese-class-jf1": {
+      "resourceId": "base::/vehicle/train/china_jf1/china_jf1.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/09293106270e3edcd4d8f6f3b2e53b0e5a8b98d7430d2419e8bbb0a9bf1650af.png",
+          "width": 372,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:ce-6-8-ii-crocodile": {
+      "resourceId": "base::/vehicle/train/c6_8/c6_8.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4972660278fb948fa17f465923a5a6d4eda2b02efe66a1c523dbe7286121d2de.png",
+          "width": 320,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:russian-class-su": {
+      "resourceId": "base::/vehicle/train/russian_class_su/russian_class_su.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9c08cf39f5caa9417ec305b1e43295422efe290ea179562143d6da21d15906ea.png",
+          "width": 376,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:alco-hh-600": {
+      "resourceId": "base::/vehicle/train/alco_hh600/alco_hh600.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/c6913750e23e97718c83d041a7dd3d6d6bf82e877cff16eceb7e192090b84521.png",
+          "width": 208,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:pennsylvanian-class-gg1": {
+      "resourceId": "base::/vehicle/train/class_prr_gg1/class_prr_gg1.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/720e3cc477b2e05bc356b927b842d94b21c1294f9b282f067faeb979b3cce6a5.png",
+          "width": 380,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:british-class-a4": {
+      "resourceId": "base::/vehicle/train/lner_class_a4/lner_class_a4.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4730ddd097f1f47cbe790e8065623b8ae99219be1c411de6bc1bbdf837e02f24.png",
+          "width": 348,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:german-class-e-94": {
+      "resourceId": "base::/vehicle/train/br_e94/br_e94.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4240f24aecbd9499b9f88e4fa8037863975c44e3aa7bb8b78446ded9353da55a.png",
+          "width": 296,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:alco-4-8-8-4-big-boy": {
+      "resourceId": "base::/vehicle/train/bigboy/bigboy.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/d42ad37b7bcd4e1f68b07aead2861ceaab8cb3d66b67e0f690c214d61df9bb0b.png",
+          "width": 644,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:swiss-re-4-4-i": {
+      "resourceId": "base::/vehicle/train/re_44i/re_44i.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e1adc86b4aaa91a1db3a248fad1c1406ca78361716dc766b8ffa3d37cc31632c.png",
+          "width": 236,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:emd-f-unit": {
+      "resourceId": "base::/vehicle/train/emd_f/emd_f.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/f03ce3c3497dea105b1cf5ca30df1998fe4efb185e9bdca11a8be2c3ac8e2046.png",
+          "width": 252,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/0b5419077de1b0b9220cd60551151f6cf78c60125f6d9182e0b369c50c763617.png",
+          "width": 248,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:chinese-class-rm": {
+      "resourceId": "base::/vehicle/train/china_rm/china_rm.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/c57aea8bd9b576eaffb09603b4779f1d5521a943f106f110f14f03b656df2ae6.png",
+          "width": 380,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:german-class-v-100": {
+      "resourceId": "base::/vehicle/train/db_v100/db_v100.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/941c931d84e83d722cbe62f37b445fd24ed0394b90139702f432c0ce61c22dc4.png",
+          "width": 200,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:austrian-class-1042": {
+      "resourceId": "base::/vehicle/train/obb_1042/obb_1042.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/add91f3f506cb090bc50419838c5bdf229e217710809c780c29d1a908dd771ad.png",
+          "width": 260,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:emd-sd40-2": {
+      "resourceId": "base::/vehicle/train/emd_sd40/emd_sd40.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/7f4185ab3003a522eb2b8d156012b032b6a525f003f50d565c3a64831221a9ae.png",
+          "width": 320,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:chinese-class-df5": {
+      "resourceId": "base::/vehicle/train/china_df5/china_df5.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a83c8e567986a2ed601f811b8d78995de6bc09cbbd99cae15ebf95e943034398.png",
+          "width": 284,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:emd-aem-7": {
+      "resourceId": "base::/vehicle/train/emd_aem_7/emd_aem_7.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/300f61126a5a7f4e0f9c8beea98bf0a040efe57f1da77c586f1df19bc1daaccc.png",
+          "width": 248,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:chinese-class-ss4g": {
+      "resourceId": "base::/vehicle/train/shaoshan_4g/shaoshan_4g.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/f90a01fdf53da8e050324f4c4e05b8dac1ab5dd8e850640591a801dc89b5266d.png",
+          "width": 260,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/f90a01fdf53da8e050324f4c4e05b8dac1ab5dd8e850640591a801dc89b5266d.png",
+          "width": 260,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:locomotive:chinese-class-df4b": {
+      "resourceId": "base::/vehicle/train/china_df4b/china_df4b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/59242eb35c651621007b7fbe41e4ed6f1dc8296aa937f311fb85151ec1e9a84b.png",
+          "width": 336,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:japanese-class-ef66": {
+      "resourceId": "base::/vehicle/train/jr_ef66_100/jr_ef66_100.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/6c03d966365cf9759d3c632f6c9f1b15bde13be76ee6016e8055529ee5293337.png",
+          "width": 288,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:ge-p42dc": {
+      "resourceId": "base::/vehicle/train/ge_p42_dc/ge_p42_dc.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/796f4772198323cbe039498089fb4bd28d0ebeeba7c30bd44ca67a1e395c4f62.png",
+          "width": 344,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:norwegian-class-el-18": {
+      "resourceId": "base::/vehicle/train/el_18/el_18.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/8909f5279c34f5ea51965bb20a68fe47fd78f37410349b903eacf5795056136c.png",
+          "width": 296,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:german-class-185": {
+      "resourceId": "base::/vehicle/train/br_185_traxx/br_185_traxx.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/7ff0dec1e6dc38d2d174db306a28cef24bcbf7dfd87e06514bc77c78f1a0c327.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:german-class-246": {
+      "resourceId": "base::/vehicle/train/br_246_traxx/br_246_traxx.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/75a4ef57b60810dc08e14c80b31899c7765e9b563e018f1c13ce0f1f8009ccc4.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:chinese-class-hxd3b": {
+      "resourceId": "base::/vehicle/train/china_hxd3b/china_hxd3b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4c7ce55f5b2e9c31c03e497db7f349d2aee384c190d4982e9a7307be19f2b922.png",
+          "width": 356,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:locomotive:stadler-eurodual": {
+      "resourceId": "base::/vehicle/train/eurodual/eurodual.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/193bf3eb64258b7f7a641e6c848ea273249d636410194d0f983a41b0e1a0ed88.png",
+          "width": 356,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:bavarian-passenger-carriage": {
+      "resourceId": "base::/vehicle/waggon/bay_05/bay_05.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1278a2923e15a3ab2c5c6f91cf5eeeb960b51aff984cd8e658950450309ad0bb.png",
+          "width": 140,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:compartment-carriage": {
+      "resourceId": "base::/vehicle/waggon/compartment_car/compartment_car.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/8e53b24067b7c21b518e07fb98f743136190ce53da9628db3c8cb3f6c3494955.png",
+          "width": 180,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:russian-suburban-carriage": {
+      "resourceId": "base::/vehicle/waggon/suburban_2nd/suburban_2nd.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/802c8c7af985c1c86db2e455b9c3e39f8d2c405b4600a724deefae313109ba5f.png",
+          "width": 376,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:heavyweight-28-1-parlor": {
+      "resourceId": "base::/vehicle/waggon/parlor/parlor.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a7f6c181c8e440de8ad82bb953c6b6077fc1529a7487ebb84ae64cfd56d39986.png",
+          "width": 400,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:german-donnerbuchse": {
+      "resourceId": "base::/vehicle/waggon/donnerbuechse/donnerbuechse.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e076cf7a3417ce9d62afb30943ef192060b3b64a41457e9add89c9383f59cc78.png",
+          "width": 220,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:egorov-20-2": {
+      "resourceId": "base::/vehicle/waggon/egorov_20_2/egorov_20_2.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a59d37940d19c9559431eef94efd192c6a4412cfd9a7c093611c5126606f0c6a.png",
+          "width": 340,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:streamlined-carriage": {
+      "resourceId": "base::/vehicle/waggon/streamlined_nyc/streamlined_nyc.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/fbdca3e42c82427c21083d8e1088688db30fd2ef130938cae0d0122a784e269a.png",
+          "width": 416,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:chinese-type-yz-22": {
+      "resourceId": "base::/vehicle/waggon/china_type_yz_22/china_type_yz_22.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/62f6bf5cee67caa7f439dee9da0fec39a36b2c4a192627430e8f1476efbb231f.png",
+          "width": 388,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:swiss-einheitswagen-ii": {
+      "resourceId": "base::/vehicle/waggon/ew_ii/ew_ii.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/0239dc135c7421585070cbbf95a175c6e1eb556f736142635c080bb3c04490b1.png",
+          "width": 396,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:british-mark-3-carriage": {
+      "resourceId": "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:bombardier-bilevel": {
+      "resourceId": "base::/vehicle/waggon/bilevel/bilevel.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/fa953c746de8bc709ae62468e361be5194e79799a928c33772f9c8af9f9ed627.png",
+          "width": 416,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:swiss-einheitswagen-iv": {
+      "resourceId": "base::/vehicle/waggon/ew_iv/ew_iv.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/18b8a6db1f24791aa258f1cb73e37c2e066ca81f234ac067fbaaef56f9b163f4.png",
+          "width": 420,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:chinese-type-25c": {
+      "resourceId": "base::/vehicle/waggon/china_type_25c/china_type_25c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/787de0c5eda411855377ae818e4ee6d08c4a7fa98de043b835575596d7b294bb.png",
+          "width": 420,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:swiss-dpz-carriage": {
+      "resourceId": "base::/vehicle/train/re_450/re_450_middle1.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e48767ddef2f97c8407b4b0eca54be2c0074f7059aaea1b5035dcd08f9230858.png",
+          "width": 440,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:russian-type-61-4447": {
+      "resourceId": "base::/vehicle/waggon/tvz_61_4447/tvz_61_4447.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/c891269eabfd5b89c88dac3be3289c81d9cc48e98c223761a2da20f1e0a25bf0.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:passenger-wagon:siemens-viaggio": {
+      "resourceId": "base::/vehicle/waggon/viaggio/viaggio.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/bb7ffbb3e2a569c77c7098e472cb1ce2b0fbeaf7cb8d8b23c715db0d2ea282ab.png",
+          "width": 424,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:gondola-wagon-1891": {
+      "resourceId": "base::/vehicle/waggon/bulk_1_1794/bulk_1_1794.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e262bfa3787a3f68e21e7be414465d318183cee3d3000735d3b03feef1173af6.png",
+          "width": 116,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:stake-wagon-1895": {
+      "resourceId": "base::/vehicle/waggon/flatbed_1_1794/flatbed_1_1794.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4e3463523c91138c80ed88b3d3537945a0e7d2fa6deeb3bbc7d8edc9674d8376.png",
+          "width": 116,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:box-wagon-1897": {
+      "resourceId": "base::/vehicle/waggon/boxcar_1_20/boxcar_1_20.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/5b65acb96d0a8be6f588b3891b5b4fa90b796db599b68d49f408d8c7aad34583.png",
+          "width": 116,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:freight-wagon-1899": {
+      "resourceId": "base::/vehicle/waggon/univ_1_szap/univ_1_szap.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/d7fbadcd0b94111918e7f292a58f5e83f216fdc2704f09ed1ef53055378ca3e3.png",
+          "width": 116,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:tank-wagon-1899": {
+      "resourceId": "base::/vehicle/waggon/liquid_1_n55/liquid_1_n55.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/b527311852e96d07530b377d939c17601917cacc4fa08b96eec9dfdc2063a351.png",
+          "width": 116,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:box-wagon-1910": {
+      "resourceId": "base::/vehicle/waggon/boxcar_2_verb/boxcar_2_verb.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/74662ad1b39be39353d1dc42c963b7deb7e137224ceddcf162fc295d56f7dafa.png",
+          "width": 156,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:tank-wagon-1912": {
+      "resourceId": "base::/vehicle/waggon/liquid_2_zh/liquid_2_zh.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/eff1b8412c032a7ec5c81e590a978fac9f62deb249391b9f8121af5f727ad6a3.png",
+          "width": 140,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:freight-wagon-1913": {
+      "resourceId": "base::/vehicle/waggon/univ_2_r/univ_2_r.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/10cfd0a415897b9185a3eedfbe81416e970196f3e55efeb408a8a27c6ecde7a6.png",
+          "width": 204,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:gondola-wagon-1915": {
+      "resourceId": "base::/vehicle/waggon/bulk_2_ok/bulk_2_ok.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4eceb841231094fcb27fb5f08de4cbc9250c9f3c0314d96a82fc6c1ebcd469d1.png",
+          "width": 128,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:stake-wagon-1920": {
+      "resourceId": "base::/vehicle/waggon/flatbed_2_r/flatbed_2_r.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/f1660b42c19b052f5b5ae31a77a6a77ea113b3fac591ed0c91eee4bde783f656.png",
+          "width": 204,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:tank-wagon-1926": {
+      "resourceId": "base::/vehicle/waggon/liquid_3_uglx/liquid_3_uglx.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/09ac261c06c159236a398b0b8325140d5adcce86576610bf601880f3f8f3eb0e.png",
+          "width": 160,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:freight-wagon-1930": {
+      "resourceId": "base::/vehicle/waggon/univ_3_acl/univ_3_acl.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/feef60f99ecdf0508f554802f0f64565c67d51eb0a659f05cebd071bf898806b.png",
+          "width": 204,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:box-wagon-1930": {
+      "resourceId": "base::/vehicle/waggon/boxcar_3_223/boxcar_3_223.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/702a1bdd862d790e720c9f5d72f81f26dcfac083705ed0e3c34941a395b3b83d.png",
+          "width": 240,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:gondola-wagon-1940": {
+      "resourceId": "base::/vehicle/waggon/bulk_3_steel/bulk_3_steel.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/c66d88747aa895938c8270666a36fb44f7ef969ea370f88864289af5cdd906f4.png",
+          "width": 212,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:stake-wagon-1945": {
+      "resourceId": "base::/vehicle/waggon/flatbed_3_sslmas/flatbed_3_sslmas.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/0f467068ccf437954e441be880b047970144b3d9c423b45c5edc6ddd747b9262.png",
+          "width": 320,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:tank-wagon-1950": {
+      "resourceId": "base::/vehicle/waggon/liquid_4_ekw/liquid_4_ekw.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9edfb20c60533239d50bb9e535fa9b5b0f4da9477afe381f48e9d9e725917c0c.png",
+          "width": 184,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:box-wagon-1952": {
+      "resourceId": "base::/vehicle/waggon/boxcar_4_alu/boxcar_4_alu.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/0cb1bbd49b01b7f2680ce78cf1dc63c1f8dc927f75103a01e29cafdeb2a0e2e9.png",
+          "width": 220,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:freight-wagon-1960": {
+      "resourceId": "base::/vehicle/waggon/univ_4_rlmmso58/univ_4_rlmmso58.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1e9bbafa1be2cc1931293f6133d0b8c927bdddf297f0cb1cba414e48e6d49f33.png",
+          "width": 224,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:stake-wagon-1968": {
+      "resourceId": "base::/vehicle/waggon/flatbed_4_464/flatbed_4_464.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/6d9895b7bd275f4a52dc8f93275088c7c1f63fae04d2d2487738e998e2bc13f0.png",
+          "width": 240,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:gondola-wagon-1971": {
+      "resourceId": "base::/vehicle/waggon/bulk_4_002/bulk_4_002.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/efb84c1bd547b17a71da86e5c4aa5e7fd6a49b2039683182c5f82aa50780c4c8.png",
+          "width": 260,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:box-wagon-1972": {
+      "resourceId": "base::/vehicle/waggon/boxcar_5_hbi/boxcar_5_hbi.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/8dde0be623dc8d9d750e60fed7ef514439f7bd8d5ceb40a72c33596128942e0b.png",
+          "width": 224,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:tank-wagon-1982": {
+      "resourceId": "base::/vehicle/waggon/liquid_5_3752/liquid_5_3752.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a1195c55a8ae38685f06de73e024b0feaed216bc1d166af0dc25a6f21468627a.png",
+          "width": 196,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:freight-wagon-1999": {
+      "resourceId": "base::/vehicle/waggon/univ_5_rns/univ_5_rns.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1d2051e3c1437d36622d4e65b67fa65b95619fe44abf8dfec5cd518a93985ec9.png",
+          "width": 316,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:stake-wagon-2000": {
+      "resourceId": "base::/vehicle/waggon/flatbed_5_rnoos644/flatbed_5_rnoos644.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/b8311f4ff487eafb9af2c27ee1dc174fb8e59c0db512c7574930f4b36328fcf6.png",
+          "width": 360,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:box-wagon-2000": {
+      "resourceId": "base::/vehicle/waggon/boxcar_6_256/boxcar_6_256.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a305ad2c343cf7fe0bfa539b2350648a5598b4004a4ac43c1f607fb61274fe61.png",
+          "width": 372,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:gondola-wagon-2001": {
+      "resourceId": "base::/vehicle/waggon/bulk_5_falns/bulk_5_falns.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/aeb150291978625381e203a91ce0c881d3cafbc1ed65d8c3566b9a0d688b7492.png",
+          "width": 196,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:freight-wagon:tank-wagon-2005": {
+      "resourceId": "base::/vehicle/waggon/liquid_6_zacns/liquid_6_zacns.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/6e769a3d1873e93042c993dc9b1f1bbbdf202b12b2336b557db3cb0dca2eb946.png",
+          "width": 264,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:metroliner": {
+      "resourceId": "base::/vehicle/train/metroliner/metroliner.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/c783a722098d5196b4dec12ff06be936c560b29dfa4d719ed2ba5c505698643f.png",
+          "width": 412,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/c783a722098d5196b4dec12ff06be936c560b29dfa4d719ed2ba5c505698643f.png",
+          "width": 412,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:twindexx": {
+      "resourceId": "base::/vehicle/train/twindexx/twindexx.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/55d73cea5178332d1c7c179c17019856fedfc0d8e803c0cd5150c074f852c689.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/6cab1d34bdc86e39e840efb257379178a60e22e7a70ad46bc4ea63b7bc2a9295.png",
+          "width": 396,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/6cab1d34bdc86e39e840efb257379178a60e22e7a70ad46bc4ea63b7bc2a9295.png",
+          "width": 396,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/55d73cea5178332d1c7c179c17019856fedfc0d8e803c0cd5150c074f852c689.png",
+          "width": 408,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:tgv": {
+      "resourceId": "base::/vehicle/train/tgv_duplex/tgv_duplex.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/d53ed236655e15c6e4bec75fdde09a30577ee667ef36195580b96102eff280d1.png",
+          "width": 352,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/fbd290d7ee978cf2c2597cd4c9529dd5314f9abee83508a197d12c0cf9760aec.png",
+          "width": 348,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/63a416703387ac7efdcb7e2257ce0bd022418aef2609353a8b101514daa338e6.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/63a416703387ac7efdcb7e2257ce0bd022418aef2609353a8b101514daa338e6.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/04abfa89c9b4de888dea44065c435db42b5f0f9023eade736bf68f079ece84c7.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/43959fa2e53228e117dcdb0f0c99d46fd25fce1170da27201e354d13463f078f.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/43959fa2e53228e117dcdb0f0c99d46fd25fce1170da27201e354d13463f078f.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/43959fa2e53228e117dcdb0f0c99d46fd25fce1170da27201e354d13463f078f.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/fa4950c7cdd7717534045cd4f2362d98ebb17a8a16c3eeb3c9f9c423fb2d1515.png",
+          "width": 352,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/d53ed236655e15c6e4bec75fdde09a30577ee667ef36195580b96102eff280d1.png",
+          "width": 352,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:fuxing": {
+      "resourceId": "base::/vehicle/train/fuxing_hao/fuxing_hao.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/213d4e2229fa65906cfa948739f9beb2b627456ddc638df08763145980338fe9.png",
+          "width": 448,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/83b17a8cf37da5221ba8479c7337f25b50ba842c914c1fed06fe2d4ff702718b.png",
+          "width": 412,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/6d5586a6abbf39cedb1669aec9ebd6856994ddbc543f26c53b68cc67d4b3f037.png",
+          "width": 412,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/83b17a8cf37da5221ba8479c7337f25b50ba842c914c1fed06fe2d4ff702718b.png",
+          "width": 412,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/83b17a8cf37da5221ba8479c7337f25b50ba842c914c1fed06fe2d4ff702718b.png",
+          "width": 412,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/6d5586a6abbf39cedb1669aec9ebd6856994ddbc543f26c53b68cc67d4b3f037.png",
+          "width": 412,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/83b17a8cf37da5221ba8479c7337f25b50ba842c914c1fed06fe2d4ff702718b.png",
+          "width": 412,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/213d4e2229fa65906cfa948739f9beb2b627456ddc638df08763145980338fe9.png",
+          "width": 448,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:draisine": {
+      "resourceId": "urbangames_deluxe_upgrade_pack::/vehicle/train/handcar/handcar.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/7efd16c31ee49d2ec03354b7996adb2d13eddf282c4d2d8923a767dbc2cdb0e3.png",
+          "width": 62,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:acf-m300": {
+      "resourceId": "base::/vehicle/train/m_300/m_300.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/8b759a302ce21802647fe0f1aaa4ebce88987bc9729fc6d87909e3527bfdad36.png",
+          "width": 288,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:roter-pfeil": {
+      "resourceId": "base::/vehicle/train/roterpfeil/roterpfeil.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/741b4a6c90520126587ec3cd6337b00fa8019b046307c2de08bd2f178c19e7c5.png",
+          "width": 356,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:uerdingen": {
+      "resourceId": "base::/vehicle/train/schienenbus/schienenbus.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/04280b6b2a95a382895676c621dcc9437585f88d9dd3d2adcc5731f41e816329.png",
+          "width": 224,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:tee-vt115": {
+      "resourceId": "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/8572b463090adeec52fa1177e744a077fd008f5428c3baafb4ed891bb2f61809.png",
+          "width": 320,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3c8bff04f8e91f6754db6d1fdddbe951b81f7ca1d3045987a222cda75bb6b0bf.png",
+          "width": 292,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/750e1eaa1e331f44523e27c18bcd35cb8b2bc0ad6d215d660153d1fa8c80ffbc.png",
+          "width": 292,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/f95b4076f0b03609bd2182ca62ae0041dae15a6edf8c1b2fbf3ac7fee6e519cf.png",
+          "width": 292,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/9a19524561424d069bb24fc47611e259417c6f7b3b5760f6cbe89cfb246b7bdc.png",
+          "width": 292,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3c8bff04f8e91f6754db6d1fdddbe951b81f7ca1d3045987a222cda75bb6b0bf.png",
+          "width": 292,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/8572b463090adeec52fa1177e744a077fd008f5428c3baafb4ed891bb2f61809.png",
+          "width": 320,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:shinkansen-0": {
+      "resourceId": "base::/vehicle/train/shinkansen_0s/shinkansen_0s.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/40d759707a03b16b507e4839b00288e3b418f92395db90822ce2d7d7b292cbb7.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/02de428be33c5227ab15e7158a3f50e24ea07487041dd6a8f9ba344436e03cd0.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/8eb45290309cdc86a1d3d76311b24e00c870ac06dfbdf6908434c09aba99b0eb.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/02de428be33c5227ab15e7158a3f50e24ea07487041dd6a8f9ba344436e03cd0.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/8eb45290309cdc86a1d3d76311b24e00c870ac06dfbdf6908434c09aba99b0eb.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/02de428be33c5227ab15e7158a3f50e24ea07487041dd6a8f9ba344436e03cd0.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/8eb45290309cdc86a1d3d76311b24e00c870ac06dfbdf6908434c09aba99b0eb.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/6aec73c9f983ca5c94a7b227b40481e83bf49972771cbbf3459a68418bbe0980.png",
+          "width": 404,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:intercity-125": {
+      "resourceId": "base::/vehicle/train/hst_125/hst_125.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/4b72da6f93f4fb13ba77fb11fda08c6810f51984d431f1629c06ea9bd9f59ebc.png",
+          "width": 284,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/7f30953d5d60a4bbd17263871c8122b1c2692e26504933b5d0648d5129a3a913.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png",
+          "width": 368,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/4b72da6f93f4fb13ba77fb11fda08c6810f51984d431f1629c06ea9bd9f59ebc.png",
+          "width": 284,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:etr-450": {
+      "resourceId": "base::/vehicle/train/fs_etr_450/etr_450.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/fde9032ba75a64d54767a7ea01c7e0a58fc8e15ed5682321d07987642d708216.png",
+          "width": 436,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/cbd0edc21a3aebe43aef5c763ca372669e7fff3a441a8f8992bc4cc1dded19d2.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/cbd0edc21a3aebe43aef5c763ca372669e7fff3a441a8f8992bc4cc1dded19d2.png",
+          "width": 408,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7.png",
+          "width": 408,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/cbd0edc21a3aebe43aef5c763ca372669e7fff3a441a8f8992bc4cc1dded19d2.png",
+          "width": 408,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/cbd0edc21a3aebe43aef5c763ca372669e7fff3a441a8f8992bc4cc1dded19d2.png",
+          "width": 408,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7.png",
+          "width": 408,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/fde9032ba75a64d54767a7ea01c7e0a58fc8e15ed5682321d07987642d708216.png",
+          "width": 436,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:re450": {
+      "resourceId": "base::/vehicle/train/re_450/re_450.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a960c20e815ea394121be57f791cdddb14ff25af9646ea73fef606bdaea7dc25.png",
+          "width": 300,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/e48767ddef2f97c8407b4b0eca54be2c0074f7059aaea1b5035dcd08f9230858.png",
+          "width": 440,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/e48767ddef2f97c8407b4b0eca54be2c0074f7059aaea1b5035dcd08f9230858.png",
+          "width": 440,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/f086d399a86ab4ae97fb817d263e4245f570890de3441d41bc9be55630a26994.png",
+          "width": 436,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:ice-1": {
+      "resourceId": "base::/vehicle/train/ice1/ice1.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1d5aabc2f1f3d9cb3b17ff7a0c72eeb8026f3a1d1557a50c4148531a05eecded.png",
+          "width": 328,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/e245b3ff63f49f9a5bb029dc7ea70f6b77af00e32e628c24a5aa3ac4e398b09d.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png",
+          "width": 428,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/1d5aabc2f1f3d9cb3b17ff7a0c72eeb8026f3a1d1557a50c4148531a05eecded.png",
+          "width": 328,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:talent-1": {
+      "resourceId": "base::/vehicle/train/talent1/talent1.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/7cd4bb6cdc7207bd547a28c88f16096d1d85b9379a1e57e460853b38aed42458.png",
+          "width": 764,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "rail:multiple-unit:lastochka": {
+      "resourceId": "base::/vehicle/train/es1_lastochka/es1_lastochka.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/7734e898c4c1bc1dbfad7d10747b44f1cdfd15de2229148c919cf7ecc4d9fa1e.png",
+          "width": 416,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/f574c2c32ac7cdb9c38710ba1f4c3f2363b62a225464e44e388ebd7dad01f6e9.png",
+          "width": 396,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/5be658ce2f4a62b2d958e9780c44699d01d4869f1ab949f18f62dd851b21d30a.png",
+          "width": 396,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/f574c2c32ac7cdb9c38710ba1f4c3f2363b62a225464e44e388ebd7dad01f6e9.png",
+          "width": 396,
+          "height": 112,
+          "reverse": true
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/7734e898c4c1bc1dbfad7d10747b44f1cdfd15de2229148c919cf7ecc4d9fa1e.png",
+          "width": 416,
+          "height": 112,
+          "reverse": true
+        }
+      ]
+    },
+    "rail:multiple-unit:avelia-liberty": {
+      "resourceId": "base::/vehicle/train/avelia_liberty/avelia_liberty.mu.lua",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/dfa2dc267932982dcae41597302139612568fa4dcfcbd6e331e4e490c3210371.png",
+          "width": 296,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/c8aa2d3253633cefa6c49a617c8b3a6835263f96f6026124f894dd9adc294120.png",
+          "width": 360,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png",
+          "width": 308,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/e3c383a834cf58d6b4ff9609d432ce55fd988db882f88e951930a30ef139e189.png",
+          "width": 360,
+          "height": 112,
+          "reverse": false
+        },
+        {
+          "src": "./assets/vehicle-thumbnails/4c860c5799256e6a37b66c5a01d2f256f081d33c4a211552b8c09ef37973bc95.png",
+          "width": 296,
+          "height": 112,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:locomotive:steam-tram-locomotive": {
+      "resourceId": "base::/vehicle/tram/dampftram/dampftram.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/985e3348d1fcab2c017e68202e9c9e22dea54ba76024ee810bf8210e806c1390.png",
+          "width": 80,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:locomotive:swiss-ge22": {
+      "resourceId": "base::/vehicle/tram/sig_ge_2_2/sig_ge_2_2.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9dc07dc145b3cffdf29c3a92c8d6b845a8845333ae44facab683baec9896c73d.png",
+          "width": 108,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:locomotive:ge-25ton-switcher": {
+      "resourceId": "base::/vehicle/tram/ge_25_ton_sw/ge_25_ton_sw.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/5d1aceea5899b3e684b6df6b0cfd8f3b9299b69e67a86fbc62eba605062a624d.png",
+          "width": 80,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:locomotive:schoma-tm22": {
+      "resourceId": "base::/vehicle/tram/schoema_gm_2_2/schoema_gm_2_2.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/2386a1e83bac5aa76062bd0dae64a9fb18f13a25a115722ee94b7955753f1bb2.png",
+          "width": 104,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:locomotive:vienna-lh": {
+      "resourceId": "base::/vehicle/tram/type_lh/type_lh.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9b7cc57ce489905d02b62bb096e19155bd60cfa9bd3c838a45c4aae695742653.png",
+          "width": 116,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-wagon:open-wagon": {
+      "resourceId": "base::/vehicle/tram/odessa/odessa.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/20e16400b90cd3c999f90397c3e61a6c2260053d85e69ac6e9e9dcd4f3265aa1.png",
+          "width": 104,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-wagon:closed-wagon": {
+      "resourceId": "base::/vehicle/tram/closed_pax_wagon/closed_pax_wagon.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/cd38b48d25142237c6f93aef9236040cf057fb1f92109a5b328adefc91c36980.png",
+          "width": 104,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-wagon:double-deck-wagon": {
+      "resourceId": "base::/vehicle/tram/double_deck_wagon/double_deck_wagon.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/abf84f89036a262322afec69981c257277588ca19dcff249e2ca2fc24b70020b.png",
+          "width": 136,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-wagon:nuremberg-f-wagon": {
+      "resourceId": "base::/vehicle/tram/moscow_f/moscow_nuremberg.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/5bcac48b497f6258b2438a2f4671f57fce1f86351b62244ee565f5a653b45414.png",
+          "width": 156,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-wagon:gotha-t1-wagon": {
+      "resourceId": "base::/vehicle/tram/typ1/typ1_wagon.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1bae6671939d77e53704bd646c89e733674ec3af34515e54cb9959846a6413fd.png",
+          "width": 168,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-wagon:duewag-wagon": {
+      "resourceId": "base::/vehicle/tram/duewag_grossraum/duewag_bw.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/3383ac9ba9672afabcb7ef0442474e45c7daf3c545cbf2e0b71ed1346c1089aa.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:general-1895": {
+      "resourceId": "base::/vehicle/tram/cargo_a/univ_car_a.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/aef0ff794410f6624beadaaf91d5f9f774adb30ee1017d95a7793244d657b9e1.png",
+          "width": 76,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:box-1896": {
+      "resourceId": "base::/vehicle/tram/cargo_a/box_car_a.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9d75b0697dfb848757ce1b3def0bb7e337f4d826159942e1399c4c70203626bf.png",
+          "width": 76,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:flatbed-1897": {
+      "resourceId": "base::/vehicle/tram/cargo_a/stake_car_a.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/da13ff3c5ae177702c543a36706113c9b9d421201d753808db9632af7eb652c6.png",
+          "width": 76,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:gondola-1898": {
+      "resourceId": "base::/vehicle/tram/cargo_a/bulk_car_a.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/7829ebd032a1b8310b9ec44848412ddfe48299fd4ff796a770b2552c2df441dc.png",
+          "width": 84,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:tank-1899": {
+      "resourceId": "base::/vehicle/tram/cargo_a/tank_car_a.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9904765d6428320fe48d4e8108519aca185d257fe61ff0f171fa7f38de73895d.png",
+          "width": 108,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:general-1950": {
+      "resourceId": "base::/vehicle/tram/cargo_b/univ_car_b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a89caeea99926dae9196499550ee2443a8ceee026b11586b05954fa90eb80eef.png",
+          "width": 152,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:tank-1950": {
+      "resourceId": "base::/vehicle/tram/cargo_b/tank_car_b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/24c2cc666c2f38c29141870413416fac6f1abdbc536a06b76ac173afd4072aea.png",
+          "width": 156,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:gondola-1950": {
+      "resourceId": "base::/vehicle/tram/cargo_b/bulk_car_b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/08782ac5b21caab42235bf97610bc9e78890138e9ef27c87f6d3107f01ea5e34.png",
+          "width": 132,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:flatbed-1950": {
+      "resourceId": "base::/vehicle/tram/cargo_b/stake_car_b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/abf839a6c997031a5124373e72b52320d731989090f75bae0901fcf991ad3d7d.png",
+          "width": 152,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:box-1950": {
+      "resourceId": "base::/vehicle/tram/cargo_b/box_car_b.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/656e90f7fd90ed3c34fc2cc3c67a142b26ab101f4a578b08d0cce9d140af8212.png",
+          "width": 152,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:general-2005": {
+      "resourceId": "base::/vehicle/tram/cargo_c/univ_car_c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/2aeb688748e1284a9541821c19ff47684dc2bc9de8c9a2cb4e2aaa0e99ec6e75.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:tank-2005": {
+      "resourceId": "base::/vehicle/tram/cargo_c/tank_car_c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/546a85073348c8afa18c75a31b51d7ce999993f80fe836e6d72b92b68cb5b846.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:gondola-2005": {
+      "resourceId": "base::/vehicle/tram/cargo_c/bulk_car_c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/df30ee371668064a22bf9c360f0ce0f892d3d7c8a8fd31afcbf9be1aa1c9f186.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:flatbed-2005": {
+      "resourceId": "base::/vehicle/tram/cargo_c/stake_car_c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/ddaf561d392731010bde768e1bfacf6c23534862f34df6f4b655c2a99f0d7070.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-wagon:box-2005": {
+      "resourceId": "base::/vehicle/tram/cargo_c/box_car_c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/69d48caf2ec38e190a3b0de0c5aa5766752747b815256916f8c2592fa6a2a2b8.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:horse-tram": {
+      "resourceId": "base::/vehicle/tram/double_horse/double_horse.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/250a0baab7ecef07d039c99b4a3a1e9cced86e7d8e1bd2219e4576823f83cee5.png",
+          "width": 160,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:aeg": {
+      "resourceId": "base::/vehicle/tram/halle/halle.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/bbae692caa3395e9ff2b66ab7398cf636d5e558a2d581f9b703cbf42efa609ff.png",
+          "width": 116,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:nuremberg-f": {
+      "resourceId": "base::/vehicle/tram/moscow_f/moscow_f.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/6759272de0411a65edd5e0196296e77f1331edcb59222ace28aa2a23458df9b9.png",
+          "width": 156,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:gotha-t1": {
+      "resourceId": "base::/vehicle/tram/typ1/typ1.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/9c50c5d93431648965dfe11ab93b8fd4162167dc8d7bf6d3732351acfc0e15a0.png",
+          "width": 168,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:milano-4000": {
+      "resourceId": "base::/vehicle/tram/atm_4000/atm_4000.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/3cfc2ee8029d88339aa18f3bd5d750e3fe25ba3c93d2384cd641aa19655bfecd.png",
+          "width": 316,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:pittsburgh-pcc1643": {
+      "resourceId": "base::/vehicle/tram/pcc_1643_pittsburgh/pcc_1643_pittsburgh.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/688aca7d8fae5122af768aebe65f5a8bd39f52ae4b0f9a7cb28ad6a16bbe80a4.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:duewag": {
+      "resourceId": "base::/vehicle/tram/duewag_grossraum/duewag_tw.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a1e51bc6e6bb052d46b4e7d48d313719aee850b7191a95af2cfb16a92c2e9849.png",
+          "width": 240,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:zurich-mirage": {
+      "resourceId": "base::/vehicle/tram/be4_6mirage/be4_6mirage.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1c9e957fcc4f2e72b28c765765edb0c698aab144953faa7c571e4d1f61fe1cba.png",
+          "width": 328,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:tatra-t4": {
+      "resourceId": "base::/vehicle/tram/tatra_t4/tatra_t4.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/c62ffe7baeb141e644ca46359144d16fe1aa1b106726b4c928dd67a2bd65c2c3.png",
+          "width": 232,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:duewag-n8c": {
+      "resourceId": "base::/vehicle/tram/duewag_n8c/duewag_n8c.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/ec3120bf060847ec9b2df3e2b0f2f5bda24e803ca4e2e1e9497ca28a1dba993e.png",
+          "width": 420,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:toronto-clrv": {
+      "resourceId": "base::/vehicle/tram/toronto_clrv/toronto_clrv.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/437fd96083d5359194b8ed5bae8ebf9d25aeea4ebb6aaf7885be3af2e365433c.png",
+          "width": 252,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:hong-kong": {
+      "resourceId": "urbangames_deluxe_upgrade_pack::/vehicle/tram/hongkong/hongkong.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/22e93dcf9342db949053c5690dec9f903c6877f2de186b751200a4de4f8f131b.png",
+          "width": 148,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:st-petersburg-lvs86": {
+      "resourceId": "base::/vehicle/tram/lvs_86/lvs_86.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/b348a7475b8dd5dd59c1098b5a70e6b6191349e7cddb20a07cd1a3adfaeb66cb.png",
+          "width": 360,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:toyama-8000": {
+      "resourceId": "base::/vehicle/tram/toyama_8000/toyama_8000.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/072cf91aa5ffe39b5ccab8e64f565594acd975f1605ee7bae69b8bb0b1dfdb04.png",
+          "width": 208,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:bombardier-k4000": {
+      "resourceId": "base::/vehicle/tram/bombardier_k4000/bombardier_k4000.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/5c4c18ab592d7d1a0820d932f898f3fd4491d8898bdd376a4e654a414e13e1bc.png",
+          "width": 456,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:skoda-10t": {
+      "resourceId": "base::/vehicle/tram/skoda_10t/skoda_10t.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/609bcba3cb52b3de7c62882c1f071ae54366319de985c712cd0c8d07c58643de.png",
+          "width": 320,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:changchun-3000": {
+      "resourceId": "base::/vehicle/tram/changchun3000/changchun3000.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/44ccbf04f7211312c80521033bba70c3afa08dd809a3c0ca013786a36866187d.png",
+          "width": 940,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:moscow-vityaz-m": {
+      "resourceId": "base::/vehicle/tram/vityaz_m/vityaz_m.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e9e00a87790b755a84bc90fbf429f67f33051c0b488d77a23f513c925a62b731.png",
+          "width": 436,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:caf-urbos-3": {
+      "resourceId": "base::/vehicle/tram/caf_urbos3/caf_urbos3.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/86e19a14a3328a9a3b359112e6f877f95d79a4af6e6eff95174b2f60818b2e8a.png",
+          "width": 548,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:stadler-citylink": {
+      "resourceId": "base::/vehicle/tram/stadler_citylink/stadler_citylink.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/1d13ee3ebd0a773debeefbb8837c1e7a776683ff1a0022ceb401ab47c91abc3f.png",
+          "width": 596,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:passenger-motor:stadler-tina": {
+      "resourceId": "base::/vehicle/tram/stadler_tina/stadler_tina.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/419ebf6723f4e7ea47b4c4943793737c0b26769733c8ee36ca999076aa428162.png",
+          "width": 732,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:horse-freight-tram": {
+      "resourceId": "base::/vehicle/tram/double_horse/double_horse_cargo.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/e0a979288c486253e1e852e47bae22d4132eea81e68c70b72e2443f6b088b34a.png",
+          "width": 116,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:sydney-24s": {
+      "resourceId": "base::/vehicle/tram/freightcar_24s/freightcar_24s.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/71c1660addd4fd7822fece22b7f03236e74d683af162944ff63367b9a96a003d.png",
+          "width": 152,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:russian-x": {
+      "resourceId": "base::/vehicle/tram/series_x/series_x.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/a90369886e06e4f28c9d47eaf32f7de306731643e123758de96443b153d95a14.png",
+          "width": 164,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:tatra-t4-tanker": {
+      "resourceId": "base::/vehicle/tram/tatra_t4/tatra_t4_tank.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/62a181acf9a69e0988b9119c7ec1fe6277fa64720a7c5e23d69492a743959ffd.png",
+          "width": 232,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:tatra-t4-tipper": {
+      "resourceId": "base::/vehicle/tram/tatra_t4/tatra_t4_bulk.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/77963356a58b0581a161fafbc445a8e14eaf3b8eb154699fd48034832ceeb895.png",
+          "width": 232,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:tatra-t4-flatbed": {
+      "resourceId": "base::/vehicle/tram/tatra_t4/tatra_t4_stake.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/b161f1b4509315b655e9ddfc029b3ea296d982e8bee98b1519342cd32a1d7367.png",
+          "width": 232,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:tatra-t4-box": {
+      "resourceId": "base::/vehicle/tram/tatra_t4/tatra_t4_box.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/96ca78db08b186c46cba819cfd06253c33f60ca58f30e7d689b82365a88d3435.png",
+          "width": 232,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:dresden-cargotram": {
+      "resourceId": "base::/vehicle/tram/car_go_tram/car_go_tram.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/fbb232779f2b3ca86625bec4a0eb3c0b49d8b51307ca5d1379d1ccfe858d7bd2.png",
+          "width": 1024,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    },
+    "tram:freight-motor:articulated-freight-tram": {
+      "resourceId": "base::/vehicle/tram/f_tram_univ/f_tram_univ.mdl",
+      "parts": [
+        {
+          "src": "./assets/vehicle-thumbnails/3e68ebd65a142ce62ef043f2407b5ffe5229da556c92746e6c77623ce1445b6e.png",
+          "width": 572,
+          "height": 96,
+          "reverse": false
+        }
+      ]
+    }
+  },
+  "assets": {
+    "0239dc135c7421585070cbbf95a175c6e1eb556f736142635c080bb3c04490b1.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/ew_ii/icons/ew_ii_icon_small@2x.tga",
+      "sha256": "0239dc135c7421585070cbbf95a175c6e1eb556f736142635c080bb3c04490b1",
+      "width": 396,
+      "height": 112
+    },
+    "02de428be33c5227ab15e7158a3f50e24ea07487041dd6a8f9ba344436e03cd0.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/shinkansen_0s/icons/shinkansen_0s_middle1_icon_small@2x.tga",
+      "sha256": "02de428be33c5227ab15e7158a3f50e24ea07487041dd6a8f9ba344436e03cd0",
+      "width": 404,
+      "height": 112
+    },
+    "04280b6b2a95a382895676c621dcc9437585f88d9dd3d2adcc5731f41e816329.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/schienenbus/icons/schienenbus_icon_small@2x.tga",
+      "sha256": "04280b6b2a95a382895676c621dcc9437585f88d9dd3d2adcc5731f41e816329",
+      "width": 224,
+      "height": 112
+    },
+    "04abfa89c9b4de888dea44065c435db42b5f0f9023eade736bf68f079ece84c7.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/tgv_duplex/icons/tgv_middle3_icon_small@2x.tga",
+      "sha256": "04abfa89c9b4de888dea44065c435db42b5f0f9023eade736bf68f079ece84c7",
+      "width": 300,
+      "height": 112
+    },
+    "072cf91aa5ffe39b5ccab8e64f565594acd975f1605ee7bae69b8bb0b1dfdb04.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/toyama_8000/icons/toyama_8000_icon_small@2x.tga",
+      "sha256": "072cf91aa5ffe39b5ccab8e64f565594acd975f1605ee7bae69b8bb0b1dfdb04",
+      "width": 208,
+      "height": 96
+    },
+    "08782ac5b21caab42235bf97610bc9e78890138e9ef27c87f6d3107f01ea5e34.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_b/icons/bulk_car_b_icon_small@2x.tga",
+      "sha256": "08782ac5b21caab42235bf97610bc9e78890138e9ef27c87f6d3107f01ea5e34",
+      "width": 132,
+      "height": 96
+    },
+    "09293106270e3edcd4d8f6f3b2e53b0e5a8b98d7430d2419e8bbb0a9bf1650af.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/china_jf1/icons/china_jf1_icon_small@2x.tga",
+      "sha256": "09293106270e3edcd4d8f6f3b2e53b0e5a8b98d7430d2419e8bbb0a9bf1650af",
+      "width": 372,
+      "height": 112
+    },
+    "09ac261c06c159236a398b0b8325140d5adcce86576610bf601880f3f8f3eb0e.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/liquid_3_uglx/icons/liquid_3_uglx_icon_small@2x.tga",
+      "sha256": "09ac261c06c159236a398b0b8325140d5adcce86576610bf601880f3f8f3eb0e",
+      "width": 160,
+      "height": 112
+    },
+    "0b5419077de1b0b9220cd60551151f6cf78c60125f6d9182e0b369c50c763617.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/emd_f/icons/emd_fb_icon_small@2x.tga",
+      "sha256": "0b5419077de1b0b9220cd60551151f6cf78c60125f6d9182e0b369c50c763617",
+      "width": 248,
+      "height": 112
+    },
+    "0cb1bbd49b01b7f2680ce78cf1dc63c1f8dc927f75103a01e29cafdeb2a0e2e9.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/boxcar_4_alu/icons/boxcar_4_alu_icon_small@2x.tga",
+      "sha256": "0cb1bbd49b01b7f2680ce78cf1dc63c1f8dc927f75103a01e29cafdeb2a0e2e9",
+      "width": 220,
+      "height": 112
+    },
+    "0f467068ccf437954e441be880b047970144b3d9c423b45c5edc6ddd747b9262.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/flatbed_3_sslmas/icons/flatbed_3_sslmas_icon_small@2x.tga",
+      "sha256": "0f467068ccf437954e441be880b047970144b3d9c423b45c5edc6ddd747b9262",
+      "width": 320,
+      "height": 112
+    },
+    "10cfd0a415897b9185a3eedfbe81416e970196f3e55efeb408a8a27c6ecde7a6.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/univ_2_r/icons/univ_2_r_icon_small@2x.tga",
+      "sha256": "10cfd0a415897b9185a3eedfbe81416e970196f3e55efeb408a8a27c6ecde7a6",
+      "width": 204,
+      "height": 112
+    },
+    "1278a2923e15a3ab2c5c6f91cf5eeeb960b51aff984cd8e658950450309ad0bb.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bay_05/icons/bay_05_icon_small@2x.tga",
+      "sha256": "1278a2923e15a3ab2c5c6f91cf5eeeb960b51aff984cd8e658950450309ad0bb",
+      "width": 140,
+      "height": 112
+    },
+    "18b8a6db1f24791aa258f1cb73e37c2e066ca81f234ac067fbaaef56f9b163f4.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/ew_iv/icons/ew_iv_icon_small@2x.tga",
+      "sha256": "18b8a6db1f24791aa258f1cb73e37c2e066ca81f234ac067fbaaef56f9b163f4",
+      "width": 420,
+      "height": 112
+    },
+    "193bf3eb64258b7f7a641e6c848ea273249d636410194d0f983a41b0e1a0ed88.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/eurodual/icons/eurodual_icon_small@2x.tga",
+      "sha256": "193bf3eb64258b7f7a641e6c848ea273249d636410194d0f983a41b0e1a0ed88",
+      "width": 356,
+      "height": 112
+    },
+    "1bae6671939d77e53704bd646c89e733674ec3af34515e54cb9959846a6413fd.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/typ1/icons/typ1_wagon_icon_small@2x.tga",
+      "sha256": "1bae6671939d77e53704bd646c89e733674ec3af34515e54cb9959846a6413fd",
+      "width": 168,
+      "height": 96
+    },
+    "1c9e957fcc4f2e72b28c765765edb0c698aab144953faa7c571e4d1f61fe1cba.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/be4_6mirage/icons/be4_6mirage_icon_small@2x.tga",
+      "sha256": "1c9e957fcc4f2e72b28c765765edb0c698aab144953faa7c571e4d1f61fe1cba",
+      "width": 328,
+      "height": 96
+    },
+    "1d13ee3ebd0a773debeefbb8837c1e7a776683ff1a0022ceb401ab47c91abc3f.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/stadler_citylink/icons/stadler_citylink_icon_small@2x.tga",
+      "sha256": "1d13ee3ebd0a773debeefbb8837c1e7a776683ff1a0022ceb401ab47c91abc3f",
+      "width": 596,
+      "height": 96
+    },
+    "1d2051e3c1437d36622d4e65b67fa65b95619fe44abf8dfec5cd518a93985ec9.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/univ_5_rns/icons/univ_5_rns_icon_small@2x.tga",
+      "sha256": "1d2051e3c1437d36622d4e65b67fa65b95619fe44abf8dfec5cd518a93985ec9",
+      "width": 316,
+      "height": 112
+    },
+    "1d5aabc2f1f3d9cb3b17ff7a0c72eeb8026f3a1d1557a50c4148531a05eecded.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/ice1/icons/ice1_front_icon_small@2x.tga",
+      "sha256": "1d5aabc2f1f3d9cb3b17ff7a0c72eeb8026f3a1d1557a50c4148531a05eecded",
+      "width": 328,
+      "height": 112
+    },
+    "1e9bbafa1be2cc1931293f6133d0b8c927bdddf297f0cb1cba414e48e6d49f33.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/univ_4_rlmmso58/icons/univ_4_rlmmso58_icon_small@2x.tga",
+      "sha256": "1e9bbafa1be2cc1931293f6133d0b8c927bdddf297f0cb1cba414e48e6d49f33",
+      "width": 224,
+      "height": 112
+    },
+    "20e16400b90cd3c999f90397c3e61a6c2260053d85e69ac6e9e9dcd4f3265aa1.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/odessa/icons/odessa_icon_small@2x.tga",
+      "sha256": "20e16400b90cd3c999f90397c3e61a6c2260053d85e69ac6e9e9dcd4f3265aa1",
+      "width": 104,
+      "height": 96
+    },
+    "213d4e2229fa65906cfa948739f9beb2b627456ddc638df08763145980338fe9.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/fuxing_hao/icons/fuxing_hao_front_icon_small@2x.tga",
+      "sha256": "213d4e2229fa65906cfa948739f9beb2b627456ddc638df08763145980338fe9",
+      "width": 448,
+      "height": 112
+    },
+    "22e93dcf9342db949053c5690dec9f903c6877f2de186b751200a4de4f8f131b.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/tram/hongkong/icons/hongkong_icon_small@2x.tga",
+      "sha256": "22e93dcf9342db949053c5690dec9f903c6877f2de186b751200a4de4f8f131b",
+      "width": 148,
+      "height": 96
+    },
+    "2386a1e83bac5aa76062bd0dae64a9fb18f13a25a115722ee94b7955753f1bb2.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/schoema_gm_2_2/icons/schoema_gm_2_2_icon_small@2x.tga",
+      "sha256": "2386a1e83bac5aa76062bd0dae64a9fb18f13a25a115722ee94b7955753f1bb2",
+      "width": 104,
+      "height": 96
+    },
+    "24c2cc666c2f38c29141870413416fac6f1abdbc536a06b76ac173afd4072aea.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_b/icons/tank_car_b_icon_small@2x.tga",
+      "sha256": "24c2cc666c2f38c29141870413416fac6f1abdbc536a06b76ac173afd4072aea",
+      "width": 156,
+      "height": 96
+    },
+    "250a0baab7ecef07d039c99b4a3a1e9cced86e7d8e1bd2219e4576823f83cee5.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/double_horse/icons/double_horse_icon_small@2x.tga",
+      "sha256": "250a0baab7ecef07d039c99b4a3a1e9cced86e7d8e1bd2219e4576823f83cee5",
+      "width": 160,
+      "height": 96
+    },
+    "2aeb688748e1284a9541821c19ff47684dc2bc9de8c9a2cb4e2aaa0e99ec6e75.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_c/icons/univ_car_c_icon_small@2x.tga",
+      "sha256": "2aeb688748e1284a9541821c19ff47684dc2bc9de8c9a2cb4e2aaa0e99ec6e75",
+      "width": 240,
+      "height": 96
+    },
+    "300f61126a5a7f4e0f9c8beea98bf0a040efe57f1da77c586f1df19bc1daaccc.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/emd_aem_7/icons/emd_aem_7_icon_small@2x.tga",
+      "sha256": "300f61126a5a7f4e0f9c8beea98bf0a040efe57f1da77c586f1df19bc1daaccc",
+      "width": 248,
+      "height": 112
+    },
+    "3383ac9ba9672afabcb7ef0442474e45c7daf3c545cbf2e0b71ed1346c1089aa.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/duewag_grossraum/icons/duewag_bw_icon_small@2x.tga",
+      "sha256": "3383ac9ba9672afabcb7ef0442474e45c7daf3c545cbf2e0b71ed1346c1089aa",
+      "width": 240,
+      "height": 96
+    },
+    "3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/hst_125/icons/hst_125_middle1_icon_small@2x.tga",
+      "sha256": "3b286e9d6123785329faec8e217db05e05b59648e60797c9f79de02e130480c0",
+      "width": 368,
+      "height": 112
+    },
+    "3c8bff04f8e91f6754db6d1fdddbe951b81f7ca1d3045987a222cda75bb6b0bf.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/train/db_vt_11_5/icons/db_vt_11_5_middle1_icon_small@2x.tga",
+      "sha256": "3c8bff04f8e91f6754db6d1fdddbe951b81f7ca1d3045987a222cda75bb6b0bf",
+      "width": 292,
+      "height": 112
+    },
+    "3cfc2ee8029d88339aa18f3bd5d750e3fe25ba3c93d2384cd641aa19655bfecd.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/atm_4000/icons/atm_4000_icon_small@2x.tga",
+      "sha256": "3cfc2ee8029d88339aa18f3bd5d750e3fe25ba3c93d2384cd641aa19655bfecd",
+      "width": 316,
+      "height": 96
+    },
+    "3e68ebd65a142ce62ef043f2407b5ffe5229da556c92746e6c77623ce1445b6e.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/f_tram_univ/icons/f_tram_univ_icon_small@2x.tga",
+      "sha256": "3e68ebd65a142ce62ef043f2407b5ffe5229da556c92746e6c77623ce1445b6e",
+      "width": 572,
+      "height": 96
+    },
+    "40d759707a03b16b507e4839b00288e3b418f92395db90822ce2d7d7b292cbb7.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/shinkansen_0s/icons/shinkansen_0s_front_icon_small@2x.tga",
+      "sha256": "40d759707a03b16b507e4839b00288e3b418f92395db90822ce2d7d7b292cbb7",
+      "width": 404,
+      "height": 112
+    },
+    "419ebf6723f4e7ea47b4c4943793737c0b26769733c8ee36ca999076aa428162.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/stadler_tina/icons/stadler_tina_icon_small@2x.tga",
+      "sha256": "419ebf6723f4e7ea47b4c4943793737c0b26769733c8ee36ca999076aa428162",
+      "width": 732,
+      "height": 96
+    },
+    "4240f24aecbd9499b9f88e4fa8037863975c44e3aa7bb8b78446ded9353da55a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/br_e94/icons/br_e94_icon_small@2x.tga",
+      "sha256": "4240f24aecbd9499b9f88e4fa8037863975c44e3aa7bb8b78446ded9353da55a",
+      "width": 296,
+      "height": 112
+    },
+    "437fd96083d5359194b8ed5bae8ebf9d25aeea4ebb6aaf7885be3af2e365433c.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/toronto_clrv/icons/toronto_clrv_icon_small@2x.tga",
+      "sha256": "437fd96083d5359194b8ed5bae8ebf9d25aeea4ebb6aaf7885be3af2e365433c",
+      "width": 252,
+      "height": 96
+    },
+    "43959fa2e53228e117dcdb0f0c99d46fd25fce1170da27201e354d13463f078f.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/tgv_duplex/icons/tgv_middle4_icon_small@2x.tga",
+      "sha256": "43959fa2e53228e117dcdb0f0c99d46fd25fce1170da27201e354d13463f078f",
+      "width": 300,
+      "height": 112
+    },
+    "44ccbf04f7211312c80521033bba70c3afa08dd809a3c0ca013786a36866187d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/changchun3000/icons/changchun3000_icon_small@2x.tga",
+      "sha256": "44ccbf04f7211312c80521033bba70c3afa08dd809a3c0ca013786a36866187d",
+      "width": 940,
+      "height": 96
+    },
+    "4730ddd097f1f47cbe790e8065623b8ae99219be1c411de6bc1bbdf837e02f24.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/lner_class_a4/icons/lner_class_a4_icon_small@2x.tga",
+      "sha256": "4730ddd097f1f47cbe790e8065623b8ae99219be1c411de6bc1bbdf837e02f24",
+      "width": 348,
+      "height": 112
+    },
+    "4972660278fb948fa17f465923a5a6d4eda2b02efe66a1c523dbe7286121d2de.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/c6_8/icons/c6_8_icon_small@2x.tga",
+      "sha256": "4972660278fb948fa17f465923a5a6d4eda2b02efe66a1c523dbe7286121d2de",
+      "width": 320,
+      "height": 112
+    },
+    "4b72da6f93f4fb13ba77fb11fda08c6810f51984d431f1629c06ea9bd9f59ebc.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/hst_125/icons/hst_125_front_icon_small@2x.tga",
+      "sha256": "4b72da6f93f4fb13ba77fb11fda08c6810f51984d431f1629c06ea9bd9f59ebc",
+      "width": 284,
+      "height": 112
+    },
+    "4c7ce55f5b2e9c31c03e497db7f349d2aee384c190d4982e9a7307be19f2b922.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/china_hxd3b/icons/china_hxd3b_icon_small@2x.tga",
+      "sha256": "4c7ce55f5b2e9c31c03e497db7f349d2aee384c190d4982e9a7307be19f2b922",
+      "width": 356,
+      "height": 112
+    },
+    "4c860c5799256e6a37b66c5a01d2f256f081d33c4a211552b8c09ef37973bc95.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/avelia_liberty/icons/avelia_liberty_back_icon_small@2x.tga",
+      "sha256": "4c860c5799256e6a37b66c5a01d2f256f081d33c4a211552b8c09ef37973bc95",
+      "width": 296,
+      "height": 112
+    },
+    "4e3463523c91138c80ed88b3d3537945a0e7d2fa6deeb3bbc7d8edc9674d8376.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/flatbed_1_1794/icons/flatbed_1_1794_icon_small@2x.tga",
+      "sha256": "4e3463523c91138c80ed88b3d3537945a0e7d2fa6deeb3bbc7d8edc9674d8376",
+      "width": 116,
+      "height": 112
+    },
+    "4eceb841231094fcb27fb5f08de4cbc9250c9f3c0314d96a82fc6c1ebcd469d1.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bulk_2_ok/icons/bulk_2_ok_icon_small@2x.tga",
+      "sha256": "4eceb841231094fcb27fb5f08de4cbc9250c9f3c0314d96a82fc6c1ebcd469d1",
+      "width": 128,
+      "height": 112
+    },
+    "546a85073348c8afa18c75a31b51d7ce999993f80fe836e6d72b92b68cb5b846.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_c/icons/tank_car_c_icon_small@2x.tga",
+      "sha256": "546a85073348c8afa18c75a31b51d7ce999993f80fe836e6d72b92b68cb5b846",
+      "width": 240,
+      "height": 96
+    },
+    "55d73cea5178332d1c7c179c17019856fedfc0d8e803c0cd5150c074f852c689.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/twindexx/icons/twindexx_front_icon_small@2x.tga",
+      "sha256": "55d73cea5178332d1c7c179c17019856fedfc0d8e803c0cd5150c074f852c689",
+      "width": 408,
+      "height": 112
+    },
+    "58ee6af2133b4ac022ccd932446f03e7d2f2f59f36c1463de9cc8fcf68ce37e3.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/br75_4/icons/br75_4_icon_small@2x.tga",
+      "sha256": "58ee6af2133b4ac022ccd932446f03e7d2f2f59f36c1463de9cc8fcf68ce37e3",
+      "width": 200,
+      "height": 112
+    },
+    "59242eb35c651621007b7fbe41e4ed6f1dc8296aa937f311fb85151ec1e9a84b.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/china_df4b/icons/china_df4b_icon_small@2x.tga",
+      "sha256": "59242eb35c651621007b7fbe41e4ed6f1dc8296aa937f311fb85151ec1e9a84b",
+      "width": 336,
+      "height": 112
+    },
+    "5b65acb96d0a8be6f588b3891b5b4fa90b796db599b68d49f408d8c7aad34583.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/boxcar_1_20/icons/boxcar_1_20_icon_small@2x.tga",
+      "sha256": "5b65acb96d0a8be6f588b3891b5b4fa90b796db599b68d49f408d8c7aad34583",
+      "width": 116,
+      "height": 112
+    },
+    "5bcac48b497f6258b2438a2f4671f57fce1f86351b62244ee565f5a653b45414.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/moscow_f/icons/moscow_nuremberg_icon_small@2x.tga",
+      "sha256": "5bcac48b497f6258b2438a2f4671f57fce1f86351b62244ee565f5a653b45414",
+      "width": 156,
+      "height": 96
+    },
+    "5be658ce2f4a62b2d958e9780c44699d01d4869f1ab949f18f62dd851b21d30a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/es1_lastochka/icons/es1_lastochka_middle2_icon_small@2x.tga",
+      "sha256": "5be658ce2f4a62b2d958e9780c44699d01d4869f1ab949f18f62dd851b21d30a",
+      "width": 396,
+      "height": 112
+    },
+    "5c4c18ab592d7d1a0820d932f898f3fd4491d8898bdd376a4e654a414e13e1bc.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/bombardier_k4000/icons/bombardier_k4000_icon_small@2x.tga",
+      "sha256": "5c4c18ab592d7d1a0820d932f898f3fd4491d8898bdd376a4e654a414e13e1bc",
+      "width": 456,
+      "height": 96
+    },
+    "5d1aceea5899b3e684b6df6b0cfd8f3b9299b69e67a86fbc62eba605062a624d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/ge_25_ton_sw/icons/ge_25_ton_sw_icon_small@2x.tga",
+      "sha256": "5d1aceea5899b3e684b6df6b0cfd8f3b9299b69e67a86fbc62eba605062a624d",
+      "width": 80,
+      "height": 96
+    },
+    "609bcba3cb52b3de7c62882c1f071ae54366319de985c712cd0c8d07c58643de.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/skoda_10t/icons/skoda_10t_icon_small@2x.tga",
+      "sha256": "609bcba3cb52b3de7c62882c1f071ae54366319de985c712cd0c8d07c58643de",
+      "width": 320,
+      "height": 96
+    },
+    "62a181acf9a69e0988b9119c7ec1fe6277fa64720a7c5e23d69492a743959ffd.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/tatra_t4/icons/tatra_t4_tank_icon_small@2x.tga",
+      "sha256": "62a181acf9a69e0988b9119c7ec1fe6277fa64720a7c5e23d69492a743959ffd",
+      "width": 232,
+      "height": 96
+    },
+    "62f6bf5cee67caa7f439dee9da0fec39a36b2c4a192627430e8f1476efbb231f.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/china_type_yz_22/icons/china_type_yz_22_icon_small@2x.tga",
+      "sha256": "62f6bf5cee67caa7f439dee9da0fec39a36b2c4a192627430e8f1476efbb231f",
+      "width": 388,
+      "height": 112
+    },
+    "63a416703387ac7efdcb7e2257ce0bd022418aef2609353a8b101514daa338e6.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/tgv_duplex/icons/tgv_middle2_icon_small@2x.tga",
+      "sha256": "63a416703387ac7efdcb7e2257ce0bd022418aef2609353a8b101514daa338e6",
+      "width": 300,
+      "height": 112
+    },
+    "656e90f7fd90ed3c34fc2cc3c67a142b26ab101f4a578b08d0cce9d140af8212.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_b/icons/box_car_b_icon_small@2x.tga",
+      "sha256": "656e90f7fd90ed3c34fc2cc3c67a142b26ab101f4a578b08d0cce9d140af8212",
+      "width": 152,
+      "height": 96
+    },
+    "6759272de0411a65edd5e0196296e77f1331edcb59222ace28aa2a23458df9b9.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/moscow_f/icons/moscow_f_icon_small@2x.tga",
+      "sha256": "6759272de0411a65edd5e0196296e77f1331edcb59222ace28aa2a23458df9b9",
+      "width": 156,
+      "height": 96
+    },
+    "688aca7d8fae5122af768aebe65f5a8bd39f52ae4b0f9a7cb28ad6a16bbe80a4.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/pcc_1643_pittsburgh/icons/pcc_1643_pittsburgh_icon_small@2x.tga",
+      "sha256": "688aca7d8fae5122af768aebe65f5a8bd39f52ae4b0f9a7cb28ad6a16bbe80a4",
+      "width": 240,
+      "height": 96
+    },
+    "69d48caf2ec38e190a3b0de0c5aa5766752747b815256916f8c2592fa6a2a2b8.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_c/icons/box_car_c_icon_small@2x.tga",
+      "sha256": "69d48caf2ec38e190a3b0de0c5aa5766752747b815256916f8c2592fa6a2a2b8",
+      "width": 240,
+      "height": 96
+    },
+    "6aec73c9f983ca5c94a7b227b40481e83bf49972771cbbf3459a68418bbe0980.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/shinkansen_0s/icons/shinkansen_0s_back_icon_small@2x.tga",
+      "sha256": "6aec73c9f983ca5c94a7b227b40481e83bf49972771cbbf3459a68418bbe0980",
+      "width": 404,
+      "height": 112
+    },
+    "6c03d966365cf9759d3c632f6c9f1b15bde13be76ee6016e8055529ee5293337.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/jr_ef66_100/icons/jr_ef66_100_icon_small@2x.tga",
+      "sha256": "6c03d966365cf9759d3c632f6c9f1b15bde13be76ee6016e8055529ee5293337",
+      "width": 288,
+      "height": 112
+    },
+    "6cab1d34bdc86e39e840efb257379178a60e22e7a70ad46bc4ea63b7bc2a9295.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/twindexx/icons/twindexx_middle1_icon_small@2x.tga",
+      "sha256": "6cab1d34bdc86e39e840efb257379178a60e22e7a70ad46bc4ea63b7bc2a9295",
+      "width": 396,
+      "height": 112
+    },
+    "6d5586a6abbf39cedb1669aec9ebd6856994ddbc543f26c53b68cc67d4b3f037.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/fuxing_hao/icons/fuxing_hao_middle2_icon_small@2x.tga",
+      "sha256": "6d5586a6abbf39cedb1669aec9ebd6856994ddbc543f26c53b68cc67d4b3f037",
+      "width": 412,
+      "height": 112
+    },
+    "6d9895b7bd275f4a52dc8f93275088c7c1f63fae04d2d2487738e998e2bc13f0.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/flatbed_4_464/icons/flatbed_4_464_icon_small@2x.tga",
+      "sha256": "6d9895b7bd275f4a52dc8f93275088c7c1f63fae04d2d2487738e998e2bc13f0",
+      "width": 240,
+      "height": 112
+    },
+    "6e769a3d1873e93042c993dc9b1f1bbbdf202b12b2336b557db3cb0dca2eb946.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/liquid_6_zacns/icons/liquid_6_zacns_icon_small@2x.tga",
+      "sha256": "6e769a3d1873e93042c993dc9b1f1bbbdf202b12b2336b557db3cb0dca2eb946",
+      "width": 264,
+      "height": 112
+    },
+    "702a1bdd862d790e720c9f5d72f81f26dcfac083705ed0e3c34941a395b3b83d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/boxcar_3_223/icons/boxcar_3_223_icon_small@2x.tga",
+      "sha256": "702a1bdd862d790e720c9f5d72f81f26dcfac083705ed0e3c34941a395b3b83d",
+      "width": 240,
+      "height": 112
+    },
+    "71c1660addd4fd7822fece22b7f03236e74d683af162944ff63367b9a96a003d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/freightcar_24s/icons/freightcar_24s_icon_small@2x.tga",
+      "sha256": "71c1660addd4fd7822fece22b7f03236e74d683af162944ff63367b9a96a003d",
+      "width": 152,
+      "height": 96
+    },
+    "720e3cc477b2e05bc356b927b842d94b21c1294f9b282f067faeb979b3cce6a5.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/class_prr_gg1/icons/class_prr_gg1_icon_small@2x.tga",
+      "sha256": "720e3cc477b2e05bc356b927b842d94b21c1294f9b282f067faeb979b3cce6a5",
+      "width": 380,
+      "height": 112
+    },
+    "741b4a6c90520126587ec3cd6337b00fa8019b046307c2de08bd2f178c19e7c5.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/roterpfeil/icons/roterpfeil_icon_small@2x.tga",
+      "sha256": "741b4a6c90520126587ec3cd6337b00fa8019b046307c2de08bd2f178c19e7c5",
+      "width": 356,
+      "height": 112
+    },
+    "74662ad1b39be39353d1dc42c963b7deb7e137224ceddcf162fc295d56f7dafa.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/boxcar_2_verb/icons/boxcar_2_verb_icon_small@2x.tga",
+      "sha256": "74662ad1b39be39353d1dc42c963b7deb7e137224ceddcf162fc295d56f7dafa",
+      "width": 156,
+      "height": 112
+    },
+    "750e1eaa1e331f44523e27c18bcd35cb8b2bc0ad6d215d660153d1fa8c80ffbc.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/train/db_vt_11_5/icons/db_vt_11_5_middle2_icon_small@2x.tga",
+      "sha256": "750e1eaa1e331f44523e27c18bcd35cb8b2bc0ad6d215d660153d1fa8c80ffbc",
+      "width": 292,
+      "height": 112
+    },
+    "75a4ef57b60810dc08e14c80b31899c7765e9b563e018f1c13ce0f1f8009ccc4.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/br_246_traxx/icons/br_246_traxx_icon_small@2x.tga",
+      "sha256": "75a4ef57b60810dc08e14c80b31899c7765e9b563e018f1c13ce0f1f8009ccc4",
+      "width": 300,
+      "height": 112
+    },
+    "7734e898c4c1bc1dbfad7d10747b44f1cdfd15de2229148c919cf7ecc4d9fa1e.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/es1_lastochka/icons/es1_lastochka_front_icon_small@2x.tga",
+      "sha256": "7734e898c4c1bc1dbfad7d10747b44f1cdfd15de2229148c919cf7ecc4d9fa1e",
+      "width": 416,
+      "height": 112
+    },
+    "77963356a58b0581a161fafbc445a8e14eaf3b8eb154699fd48034832ceeb895.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/tatra_t4/icons/tatra_t4_bulk_icon_small@2x.tga",
+      "sha256": "77963356a58b0581a161fafbc445a8e14eaf3b8eb154699fd48034832ceeb895",
+      "width": 232,
+      "height": 96
+    },
+    "7829ebd032a1b8310b9ec44848412ddfe48299fd4ff796a770b2552c2df441dc.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_a/icons/bulk_car_a_icon_small@2x.tga",
+      "sha256": "7829ebd032a1b8310b9ec44848412ddfe48299fd4ff796a770b2552c2df441dc",
+      "width": 84,
+      "height": 96
+    },
+    "787de0c5eda411855377ae818e4ee6d08c4a7fa98de043b835575596d7b294bb.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/china_type_25c/icons/china_type_25c_icon_small@2x.tga",
+      "sha256": "787de0c5eda411855377ae818e4ee6d08c4a7fa98de043b835575596d7b294bb",
+      "width": 420,
+      "height": 112
+    },
+    "796f4772198323cbe039498089fb4bd28d0ebeeba7c30bd44ca67a1e395c4f62.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/ge_p42_dc/icons/ge_p42_dc_icon_small@2x.tga",
+      "sha256": "796f4772198323cbe039498089fb4bd28d0ebeeba7c30bd44ca67a1e395c4f62",
+      "width": 344,
+      "height": 112
+    },
+    "7cd4bb6cdc7207bd547a28c88f16096d1d85b9379a1e57e460853b38aed42458.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/talent1/icons/talent1_icon_small@2x.tga",
+      "sha256": "7cd4bb6cdc7207bd547a28c88f16096d1d85b9379a1e57e460853b38aed42458",
+      "width": 764,
+      "height": 112
+    },
+    "7efd16c31ee49d2ec03354b7996adb2d13eddf282c4d2d8923a767dbc2cdb0e3.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/train/handcar/icons/handcar_icon_small@2x.tga",
+      "sha256": "7efd16c31ee49d2ec03354b7996adb2d13eddf282c4d2d8923a767dbc2cdb0e3",
+      "width": 62,
+      "height": 112
+    },
+    "7f30953d5d60a4bbd17263871c8122b1c2692e26504933b5d0648d5129a3a913.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/hst_125/icons/hst_125_middle2_icon_small@2x.tga",
+      "sha256": "7f30953d5d60a4bbd17263871c8122b1c2692e26504933b5d0648d5129a3a913",
+      "width": 368,
+      "height": 112
+    },
+    "7f4185ab3003a522eb2b8d156012b032b6a525f003f50d565c3a64831221a9ae.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/emd_sd40/icons/emd_sd40_icon_small@2x.tga",
+      "sha256": "7f4185ab3003a522eb2b8d156012b032b6a525f003f50d565c3a64831221a9ae",
+      "width": 320,
+      "height": 112
+    },
+    "7ff0dec1e6dc38d2d174db306a28cef24bcbf7dfd87e06514bc77c78f1a0c327.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/br_185_traxx/icons/br_185_traxx_icon_small@2x.tga",
+      "sha256": "7ff0dec1e6dc38d2d174db306a28cef24bcbf7dfd87e06514bc77c78f1a0c327",
+      "width": 300,
+      "height": 112
+    },
+    "802c8c7af985c1c86db2e455b9c3e39f8d2c405b4600a724deefae313109ba5f.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/suburban_2nd/icons/suburban_2nd_icon_small@2x.tga",
+      "sha256": "802c8c7af985c1c86db2e455b9c3e39f8d2c405b4600a724deefae313109ba5f",
+      "width": 376,
+      "height": 112
+    },
+    "83b17a8cf37da5221ba8479c7337f25b50ba842c914c1fed06fe2d4ff702718b.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/fuxing_hao/icons/fuxing_hao_middle1_icon_small@2x.tga",
+      "sha256": "83b17a8cf37da5221ba8479c7337f25b50ba842c914c1fed06fe2d4ff702718b",
+      "width": 412,
+      "height": 112
+    },
+    "8572b463090adeec52fa1177e744a077fd008f5428c3baafb4ed891bb2f61809.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/train/db_vt_11_5/icons/db_vt_11_5_front_icon_small@2x.tga",
+      "sha256": "8572b463090adeec52fa1177e744a077fd008f5428c3baafb4ed891bb2f61809",
+      "width": 320,
+      "height": 112
+    },
+    "86e19a14a3328a9a3b359112e6f877f95d79a4af6e6eff95174b2f60818b2e8a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/caf_urbos3/icons/caf_urbos3_icon_small@2x.tga",
+      "sha256": "86e19a14a3328a9a3b359112e6f877f95d79a4af6e6eff95174b2f60818b2e8a",
+      "width": 548,
+      "height": 96
+    },
+    "8909f5279c34f5ea51965bb20a68fe47fd78f37410349b903eacf5795056136c.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/el_18/icons/el_18_icon_small@2x.tga",
+      "sha256": "8909f5279c34f5ea51965bb20a68fe47fd78f37410349b903eacf5795056136c",
+      "width": 296,
+      "height": 112
+    },
+    "8b759a302ce21802647fe0f1aaa4ebce88987bc9729fc6d87909e3527bfdad36.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/m_300/icons/m_300_icon_small@2x.tga",
+      "sha256": "8b759a302ce21802647fe0f1aaa4ebce88987bc9729fc6d87909e3527bfdad36",
+      "width": 288,
+      "height": 112
+    },
+    "8dde0be623dc8d9d750e60fed7ef514439f7bd8d5ceb40a72c33596128942e0b.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/boxcar_5_hbi/icons/boxcar_5_hbi_icon_small@2x.tga",
+      "sha256": "8dde0be623dc8d9d750e60fed7ef514439f7bd8d5ceb40a72c33596128942e0b",
+      "width": 224,
+      "height": 112
+    },
+    "8e53b24067b7c21b518e07fb98f743136190ce53da9628db3c8cb3f6c3494955.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/compartment_car/icons/compartment_car_icon_small@2x.tga",
+      "sha256": "8e53b24067b7c21b518e07fb98f743136190ce53da9628db3c8cb3f6c3494955",
+      "width": 180,
+      "height": 112
+    },
+    "8eb45290309cdc86a1d3d76311b24e00c870ac06dfbdf6908434c09aba99b0eb.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/shinkansen_0s/icons/shinkansen_0s_middle2_icon_small@2x.tga",
+      "sha256": "8eb45290309cdc86a1d3d76311b24e00c870ac06dfbdf6908434c09aba99b0eb",
+      "width": 404,
+      "height": 112
+    },
+    "941c931d84e83d722cbe62f37b445fd24ed0394b90139702f432c0ce61c22dc4.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/db_v100/icons/db_v100_icon_small@2x.tga",
+      "sha256": "941c931d84e83d722cbe62f37b445fd24ed0394b90139702f432c0ce61c22dc4",
+      "width": 200,
+      "height": 112
+    },
+    "96ca78db08b186c46cba819cfd06253c33f60ca58f30e7d689b82365a88d3435.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/tatra_t4/icons/tatra_t4_box_icon_small@2x.tga",
+      "sha256": "96ca78db08b186c46cba819cfd06253c33f60ca58f30e7d689b82365a88d3435",
+      "width": 232,
+      "height": 96
+    },
+    "985e3348d1fcab2c017e68202e9c9e22dea54ba76024ee810bf8210e806c1390.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/dampftram/icons/dampftram_icon_small@2x.tga",
+      "sha256": "985e3348d1fcab2c017e68202e9c9e22dea54ba76024ee810bf8210e806c1390",
+      "width": 80,
+      "height": 96
+    },
+    "9904765d6428320fe48d4e8108519aca185d257fe61ff0f171fa7f38de73895d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_a/icons/tank_car_a_icon_small@2x.tga",
+      "sha256": "9904765d6428320fe48d4e8108519aca185d257fe61ff0f171fa7f38de73895d",
+      "width": 108,
+      "height": 96
+    },
+    "9a19524561424d069bb24fc47611e259417c6f7b3b5760f6cbe89cfb246b7bdc.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/train/db_vt_11_5/icons/db_vt_11_5_middle4_icon_small@2x.tga",
+      "sha256": "9a19524561424d069bb24fc47611e259417c6f7b3b5760f6cbe89cfb246b7bdc",
+      "width": 292,
+      "height": 112
+    },
+    "9b7cc57ce489905d02b62bb096e19155bd60cfa9bd3c838a45c4aae695742653.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/type_lh/icons/type_lh_icon_small@2x.tga",
+      "sha256": "9b7cc57ce489905d02b62bb096e19155bd60cfa9bd3c838a45c4aae695742653",
+      "width": 116,
+      "height": 96
+    },
+    "9c08cf39f5caa9417ec305b1e43295422efe290ea179562143d6da21d15906ea.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/russian_class_su/icons/russian_class_su_icon_small@2x.tga",
+      "sha256": "9c08cf39f5caa9417ec305b1e43295422efe290ea179562143d6da21d15906ea",
+      "width": 376,
+      "height": 112
+    },
+    "9c50c5d93431648965dfe11ab93b8fd4162167dc8d7bf6d3732351acfc0e15a0.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/typ1/icons/typ1_icon_small@2x.tga",
+      "sha256": "9c50c5d93431648965dfe11ab93b8fd4162167dc8d7bf6d3732351acfc0e15a0",
+      "width": 168,
+      "height": 96
+    },
+    "9d75b0697dfb848757ce1b3def0bb7e337f4d826159942e1399c4c70203626bf.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_a/icons/box_car_a_icon_small@2x.tga",
+      "sha256": "9d75b0697dfb848757ce1b3def0bb7e337f4d826159942e1399c4c70203626bf",
+      "width": 76,
+      "height": 96
+    },
+    "9dc07dc145b3cffdf29c3a92c8d6b845a8845333ae44facab683baec9896c73d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/sig_ge_2_2/icons/sig_ge_2_2_icon_small@2x.tga",
+      "sha256": "9dc07dc145b3cffdf29c3a92c8d6b845a8845333ae44facab683baec9896c73d",
+      "width": 108,
+      "height": 96
+    },
+    "9edfb20c60533239d50bb9e535fa9b5b0f4da9477afe381f48e9d9e725917c0c.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/liquid_4_ekw/icons/liquid_4_ekw_icon_small@2x.tga",
+      "sha256": "9edfb20c60533239d50bb9e535fa9b5b0f4da9477afe381f48e9d9e725917c0c",
+      "width": 184,
+      "height": 112
+    },
+    "a1195c55a8ae38685f06de73e024b0feaed216bc1d166af0dc25a6f21468627a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/liquid_5_3752/icons/liquid_5_3752_icon_small@2x.tga",
+      "sha256": "a1195c55a8ae38685f06de73e024b0feaed216bc1d166af0dc25a6f21468627a",
+      "width": 196,
+      "height": 112
+    },
+    "a1e51bc6e6bb052d46b4e7d48d313719aee850b7191a95af2cfb16a92c2e9849.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/duewag_grossraum/icons/duewag_tw_icon_small@2x.tga",
+      "sha256": "a1e51bc6e6bb052d46b4e7d48d313719aee850b7191a95af2cfb16a92c2e9849",
+      "width": 240,
+      "height": 96
+    },
+    "a305ad2c343cf7fe0bfa539b2350648a5598b4004a4ac43c1f607fb61274fe61.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/boxcar_6_256/icons/boxcar_6_256_icon_small@2x.tga",
+      "sha256": "a305ad2c343cf7fe0bfa539b2350648a5598b4004a4ac43c1f607fb61274fe61",
+      "width": 372,
+      "height": 112
+    },
+    "a59d37940d19c9559431eef94efd192c6a4412cfd9a7c093611c5126606f0c6a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/egorov_20_2/icons/egorov_20_2_icon_small@2x.tga",
+      "sha256": "a59d37940d19c9559431eef94efd192c6a4412cfd9a7c093611c5126606f0c6a",
+      "width": 340,
+      "height": 112
+    },
+    "a7f6c181c8e440de8ad82bb953c6b6077fc1529a7487ebb84ae64cfd56d39986.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/parlor/icons/parlor_icon_small@2x.tga",
+      "sha256": "a7f6c181c8e440de8ad82bb953c6b6077fc1529a7487ebb84ae64cfd56d39986",
+      "width": 400,
+      "height": 112
+    },
+    "a83c8e567986a2ed601f811b8d78995de6bc09cbbd99cae15ebf95e943034398.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/china_df5/icons/china_df5_icon_small@2x.tga",
+      "sha256": "a83c8e567986a2ed601f811b8d78995de6bc09cbbd99cae15ebf95e943034398",
+      "width": 284,
+      "height": 112
+    },
+    "a89caeea99926dae9196499550ee2443a8ceee026b11586b05954fa90eb80eef.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_b/icons/univ_car_b_icon_small@2x.tga",
+      "sha256": "a89caeea99926dae9196499550ee2443a8ceee026b11586b05954fa90eb80eef",
+      "width": 152,
+      "height": 96
+    },
+    "a90369886e06e4f28c9d47eaf32f7de306731643e123758de96443b153d95a14.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/series_x/icons/series_x_icon_small@2x.tga",
+      "sha256": "a90369886e06e4f28c9d47eaf32f7de306731643e123758de96443b153d95a14",
+      "width": 164,
+      "height": 96
+    },
+    "a960c20e815ea394121be57f791cdddb14ff25af9646ea73fef606bdaea7dc25.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/re_450/icons/re_450_front_icon_small@2x.tga",
+      "sha256": "a960c20e815ea394121be57f791cdddb14ff25af9646ea73fef606bdaea7dc25",
+      "width": 300,
+      "height": 112
+    },
+    "abf839a6c997031a5124373e72b52320d731989090f75bae0901fcf991ad3d7d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_b/icons/stake_car_b_icon_small@2x.tga",
+      "sha256": "abf839a6c997031a5124373e72b52320d731989090f75bae0901fcf991ad3d7d",
+      "width": 152,
+      "height": 96
+    },
+    "abf84f89036a262322afec69981c257277588ca19dcff249e2ca2fc24b70020b.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/double_deck_wagon/icons/double_deck_wagon_icon_small@2x.tga",
+      "sha256": "abf84f89036a262322afec69981c257277588ca19dcff249e2ca2fc24b70020b",
+      "width": 136,
+      "height": 96
+    },
+    "add91f3f506cb090bc50419838c5bdf229e217710809c780c29d1a908dd771ad.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/obb_1042/icons/obb_1042_icon_small@2x.tga",
+      "sha256": "add91f3f506cb090bc50419838c5bdf229e217710809c780c29d1a908dd771ad",
+      "width": 260,
+      "height": 112
+    },
+    "aeb150291978625381e203a91ce0c881d3cafbc1ed65d8c3566b9a0d688b7492.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bulk_5_falns/icons/bulk_5_falns_icon_small@2x.tga",
+      "sha256": "aeb150291978625381e203a91ce0c881d3cafbc1ed65d8c3566b9a0d688b7492",
+      "width": 196,
+      "height": 112
+    },
+    "aef0ff794410f6624beadaaf91d5f9f774adb30ee1017d95a7793244d657b9e1.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_a/icons/univ_car_a_icon_small@2x.tga",
+      "sha256": "aef0ff794410f6624beadaaf91d5f9f774adb30ee1017d95a7793244d657b9e1",
+      "width": 76,
+      "height": 96
+    },
+    "b161f1b4509315b655e9ddfc029b3ea296d982e8bee98b1519342cd32a1d7367.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/tatra_t4/icons/tatra_t4_stake_icon_small@2x.tga",
+      "sha256": "b161f1b4509315b655e9ddfc029b3ea296d982e8bee98b1519342cd32a1d7367",
+      "width": 232,
+      "height": 96
+    },
+    "b348a7475b8dd5dd59c1098b5a70e6b6191349e7cddb20a07cd1a3adfaeb66cb.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/lvs_86/icons/lvs_86_icon_small@2x.tga",
+      "sha256": "b348a7475b8dd5dd59c1098b5a70e6b6191349e7cddb20a07cd1a3adfaeb66cb",
+      "width": 360,
+      "height": 96
+    },
+    "b527311852e96d07530b377d939c17601917cacc4fa08b96eec9dfdc2063a351.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/liquid_1_n55/icons/liquid_1_n55_icon_small@2x.tga",
+      "sha256": "b527311852e96d07530b377d939c17601917cacc4fa08b96eec9dfdc2063a351",
+      "width": 116,
+      "height": 112
+    },
+    "b8311f4ff487eafb9af2c27ee1dc174fb8e59c0db512c7574930f4b36328fcf6.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/flatbed_5_rnoos644/icons/flatbed_5_rnoos644_icon_small@2x.tga",
+      "sha256": "b8311f4ff487eafb9af2c27ee1dc174fb8e59c0db512c7574930f4b36328fcf6",
+      "width": 360,
+      "height": 112
+    },
+    "bb7ffbb3e2a569c77c7098e472cb1ce2b0fbeaf7cb8d8b23c715db0d2ea282ab.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/viaggio/icons/viaggio_icon_small@2x.tga",
+      "sha256": "bb7ffbb3e2a569c77c7098e472cb1ce2b0fbeaf7cb8d8b23c715db0d2ea282ab",
+      "width": 424,
+      "height": 112
+    },
+    "bbae692caa3395e9ff2b66ab7398cf636d5e558a2d581f9b703cbf42efa609ff.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/halle/icons/halle_icon_small@2x.tga",
+      "sha256": "bbae692caa3395e9ff2b66ab7398cf636d5e558a2d581f9b703cbf42efa609ff",
+      "width": 116,
+      "height": 96
+    },
+    "beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/ice1/icons/ice1_middle1_icon_small@2x.tga",
+      "sha256": "beaf1f920a62947edd8b9e578ebce9f6ab2a8f4f9a68c020dc78dcb60edcbcce",
+      "width": 428,
+      "height": 112
+    },
+    "beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/fs_etr_450/icons/etr_450_middle1_icon_small@2x.tga",
+      "sha256": "beb8a25d4cd806880aa522aa6c7742023b33c84db3dd54331dac457b1fac77b7",
+      "width": 408,
+      "height": 112
+    },
+    "c57aea8bd9b576eaffb09603b4779f1d5521a943f106f110f14f03b656df2ae6.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/china_rm/icons/china_rm_icon_small@2x.tga",
+      "sha256": "c57aea8bd9b576eaffb09603b4779f1d5521a943f106f110f14f03b656df2ae6",
+      "width": 380,
+      "height": 112
+    },
+    "c62ffe7baeb141e644ca46359144d16fe1aa1b106726b4c928dd67a2bd65c2c3.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/tatra_t4/icons/tatra_t4_icon_small@2x.tga",
+      "sha256": "c62ffe7baeb141e644ca46359144d16fe1aa1b106726b4c928dd67a2bd65c2c3",
+      "width": 232,
+      "height": 96
+    },
+    "c66d88747aa895938c8270666a36fb44f7ef969ea370f88864289af5cdd906f4.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bulk_3_steel/icons/bulk_3_steel_icon_small@2x.tga",
+      "sha256": "c66d88747aa895938c8270666a36fb44f7ef969ea370f88864289af5cdd906f4",
+      "width": 212,
+      "height": 112
+    },
+    "c6913750e23e97718c83d041a7dd3d6d6bf82e877cff16eceb7e192090b84521.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/alco_hh600/icons/alco_hh600_icon_small@2x.tga",
+      "sha256": "c6913750e23e97718c83d041a7dd3d6d6bf82e877cff16eceb7e192090b84521",
+      "width": 208,
+      "height": 112
+    },
+    "c783a722098d5196b4dec12ff06be936c560b29dfa4d719ed2ba5c505698643f.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/metroliner/icons/metroliner_icon_small@2x.tga",
+      "sha256": "c783a722098d5196b4dec12ff06be936c560b29dfa4d719ed2ba5c505698643f",
+      "width": 412,
+      "height": 112
+    },
+    "c891269eabfd5b89c88dac3be3289c81d9cc48e98c223761a2da20f1e0a25bf0.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/tvz_61_4447/icons/tvz_61_4447_icon_small@2x.tga",
+      "sha256": "c891269eabfd5b89c88dac3be3289c81d9cc48e98c223761a2da20f1e0a25bf0",
+      "width": 408,
+      "height": 112
+    },
+    "c8aa2d3253633cefa6c49a617c8b3a6835263f96f6026124f894dd9adc294120.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/avelia_liberty/icons/avelia_liberty_middle1_icon_small@2x.tga",
+      "sha256": "c8aa2d3253633cefa6c49a617c8b3a6835263f96f6026124f894dd9adc294120",
+      "width": 360,
+      "height": 112
+    },
+    "ca0ae7a084e2d5b8fcb0627253aba4dc3210c42da598455a91fc0c1637e03db9.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/br89/icons/br89_icon_small@2x.tga",
+      "sha256": "ca0ae7a084e2d5b8fcb0627253aba4dc3210c42da598455a91fc0c1637e03db9",
+      "width": 136,
+      "height": 112
+    },
+    "cbd0edc21a3aebe43aef5c763ca372669e7fff3a441a8f8992bc4cc1dded19d2.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/fs_etr_450/icons/etr_450_middle2_icon_small@2x.tga",
+      "sha256": "cbd0edc21a3aebe43aef5c763ca372669e7fff3a441a8f8992bc4cc1dded19d2",
+      "width": 408,
+      "height": 112
+    },
+    "cd38b48d25142237c6f93aef9236040cf057fb1f92109a5b328adefc91c36980.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/closed_pax_wagon/icons/closed_pax_wagon_icon_small@2x.tga",
+      "sha256": "cd38b48d25142237c6f93aef9236040cf057fb1f92109a5b328adefc91c36980",
+      "width": 104,
+      "height": 96
+    },
+    "d42ad37b7bcd4e1f68b07aead2861ceaab8cb3d66b67e0f690c214d61df9bb0b.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/bigboy/icons/bigboy_icon_small@2x.tga",
+      "sha256": "d42ad37b7bcd4e1f68b07aead2861ceaab8cb3d66b67e0f690c214d61df9bb0b",
+      "width": 644,
+      "height": 112
+    },
+    "d53ed236655e15c6e4bec75fdde09a30577ee667ef36195580b96102eff280d1.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/tgv_duplex/icons/tgv_front_icon_small@2x.tga",
+      "sha256": "d53ed236655e15c6e4bec75fdde09a30577ee667ef36195580b96102eff280d1",
+      "width": 352,
+      "height": 112
+    },
+    "d7fbadcd0b94111918e7f292a58f5e83f216fdc2704f09ed1ef53055378ca3e3.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/univ_1_szap/icons/univ_1_szap_icon_small@2x.tga",
+      "sha256": "d7fbadcd0b94111918e7f292a58f5e83f216fdc2704f09ed1ef53055378ca3e3",
+      "width": 116,
+      "height": 112
+    },
+    "da13ff3c5ae177702c543a36706113c9b9d421201d753808db9632af7eb652c6.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_a/icons/stake_car_a_icon_small@2x.tga",
+      "sha256": "da13ff3c5ae177702c543a36706113c9b9d421201d753808db9632af7eb652c6",
+      "width": 76,
+      "height": 96
+    },
+    "ddaf561d392731010bde768e1bfacf6c23534862f34df6f4b655c2a99f0d7070.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_c/icons/stake_car_c_icon_small@2x.tga",
+      "sha256": "ddaf561d392731010bde768e1bfacf6c23534862f34df6f4b655c2a99f0d7070",
+      "width": 240,
+      "height": 96
+    },
+    "df30ee371668064a22bf9c360f0ce0f892d3d7c8a8fd31afcbf9be1aa1c9f186.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/cargo_c/icons/bulk_car_c_icon_small@2x.tga",
+      "sha256": "df30ee371668064a22bf9c360f0ce0f892d3d7c8a8fd31afcbf9be1aa1c9f186",
+      "width": 240,
+      "height": 96
+    },
+    "dfa2dc267932982dcae41597302139612568fa4dcfcbd6e331e4e490c3210371.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/avelia_liberty/icons/avelia_liberty_front_icon_small@2x.tga",
+      "sha256": "dfa2dc267932982dcae41597302139612568fa4dcfcbd6e331e4e490c3210371",
+      "width": 296,
+      "height": 112
+    },
+    "e076cf7a3417ce9d62afb30943ef192060b3b64a41457e9add89c9383f59cc78.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/donnerbuechse/icons/donnerbuechse_icon_small@2x.tga",
+      "sha256": "e076cf7a3417ce9d62afb30943ef192060b3b64a41457e9add89c9383f59cc78",
+      "width": 220,
+      "height": 112
+    },
+    "e0a979288c486253e1e852e47bae22d4132eea81e68c70b72e2443f6b088b34a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/double_horse/icons/double_horse_cargo_icon_small@2x.tga",
+      "sha256": "e0a979288c486253e1e852e47bae22d4132eea81e68c70b72e2443f6b088b34a",
+      "width": 116,
+      "height": 96
+    },
+    "e1adc86b4aaa91a1db3a248fad1c1406ca78361716dc766b8ffa3d37cc31632c.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/re_44i/icons/re_44i_icon_small@2x.tga",
+      "sha256": "e1adc86b4aaa91a1db3a248fad1c1406ca78361716dc766b8ffa3d37cc31632c",
+      "width": 236,
+      "height": 112
+    },
+    "e245b3ff63f49f9a5bb029dc7ea70f6b77af00e32e628c24a5aa3ac4e398b09d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/ice1/icons/ice1_middle2_icon_small@2x.tga",
+      "sha256": "e245b3ff63f49f9a5bb029dc7ea70f6b77af00e32e628c24a5aa3ac4e398b09d",
+      "width": 428,
+      "height": 112
+    },
+    "e262bfa3787a3f68e21e7be414465d318183cee3d3000735d3b03feef1173af6.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bulk_1_1794/icons/bulk_1_1794_icon_small@2x.tga",
+      "sha256": "e262bfa3787a3f68e21e7be414465d318183cee3d3000735d3b03feef1173af6",
+      "width": 116,
+      "height": 112
+    },
+    "e3c383a834cf58d6b4ff9609d432ce55fd988db882f88e951930a30ef139e189.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/avelia_liberty/icons/avelia_liberty_middle3_icon_small@2x.tga",
+      "sha256": "e3c383a834cf58d6b4ff9609d432ce55fd988db882f88e951930a30ef139e189",
+      "width": 360,
+      "height": 112
+    },
+    "e48767ddef2f97c8407b4b0eca54be2c0074f7059aaea1b5035dcd08f9230858.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/re_450/icons/re_450_middle1_icon_small@2x.tga",
+      "sha256": "e48767ddef2f97c8407b4b0eca54be2c0074f7059aaea1b5035dcd08f9230858",
+      "width": 440,
+      "height": 112
+    },
+    "e7c9d55bb052372af4f8f667255b5b7d89a63fa4a9d6372625dd46841e10d234.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/atlantic_4_4_2/icons/atlantic_4_4_2_icon_small@2x.tga",
+      "sha256": "e7c9d55bb052372af4f8f667255b5b7d89a63fa4a9d6372625dd46841e10d234",
+      "width": 376,
+      "height": 112
+    },
+    "e858c7afac097668164f8b2ad4af9c1591944e18f871b2f0f9874f3c0c39e3c5.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/mogul_2_6_0/icons/mogul_2_6_0_icon_small@2x.tga",
+      "sha256": "e858c7afac097668164f8b2ad4af9c1591944e18f871b2f0f9874f3c0c39e3c5",
+      "width": 296,
+      "height": 112
+    },
+    "e9e00a87790b755a84bc90fbf429f67f33051c0b488d77a23f513c925a62b731.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/vityaz_m/icons/vityaz_m_icon_small@2x.tga",
+      "sha256": "e9e00a87790b755a84bc90fbf429f67f33051c0b488d77a23f513c925a62b731",
+      "width": 436,
+      "height": 96
+    },
+    "ec3120bf060847ec9b2df3e2b0f2f5bda24e803ca4e2e1e9497ca28a1dba993e.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/duewag_n8c/icons/duewag_n8c_icon_small@2x.tga",
+      "sha256": "ec3120bf060847ec9b2df3e2b0f2f5bda24e803ca4e2e1e9497ca28a1dba993e",
+      "width": 420,
+      "height": 96
+    },
+    "ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/avelia_liberty/icons/avelia_liberty_middle2_icon_small@2x.tga",
+      "sha256": "ecb96f359e5c15a714bc036020c47e7485fde76f51c22d15289e76c56c2d9b5a",
+      "width": 308,
+      "height": 112
+    },
+    "efb84c1bd547b17a71da86e5c4aa5e7fd6a49b2039683182c5f82aa50780c4c8.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bulk_4_002/icons/bulk_4_002_icon_small@2x.tga",
+      "sha256": "efb84c1bd547b17a71da86e5c4aa5e7fd6a49b2039683182c5f82aa50780c4c8",
+      "width": 260,
+      "height": 112
+    },
+    "eff1b8412c032a7ec5c81e590a978fac9f62deb249391b9f8121af5f727ad6a3.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/liquid_2_zh/icons/liquid_2_zh_icon_small@2x.tga",
+      "sha256": "eff1b8412c032a7ec5c81e590a978fac9f62deb249391b9f8121af5f727ad6a3",
+      "width": 140,
+      "height": 112
+    },
+    "f03ce3c3497dea105b1cf5ca30df1998fe4efb185e9bdca11a8be2c3ac8e2046.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/emd_f/icons/emd_fa_icon_small@2x.tga",
+      "sha256": "f03ce3c3497dea105b1cf5ca30df1998fe4efb185e9bdca11a8be2c3ac8e2046",
+      "width": 252,
+      "height": 112
+    },
+    "f086d399a86ab4ae97fb817d263e4245f570890de3441d41bc9be55630a26994.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/re_450/icons/re_450_back_icon_small@2x.tga",
+      "sha256": "f086d399a86ab4ae97fb817d263e4245f570890de3441d41bc9be55630a26994",
+      "width": 436,
+      "height": 112
+    },
+    "f1660b42c19b052f5b5ae31a77a6a77ea113b3fac591ed0c91eee4bde783f656.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/flatbed_2_r/icons/flatbed_2_r_icon_small@2x.tga",
+      "sha256": "f1660b42c19b052f5b5ae31a77a6a77ea113b3fac591ed0c91eee4bde783f656",
+      "width": 204,
+      "height": 112
+    },
+    "f574c2c32ac7cdb9c38710ba1f4c3f2363b62a225464e44e388ebd7dad01f6e9.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/es1_lastochka/icons/es1_lastochka_middle1_icon_small@2x.tga",
+      "sha256": "f574c2c32ac7cdb9c38710ba1f4c3f2363b62a225464e44e388ebd7dad01f6e9",
+      "width": 396,
+      "height": 112
+    },
+    "f90a01fdf53da8e050324f4c4e05b8dac1ab5dd8e850640591a801dc89b5266d.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/shaoshan_4g/icons/shaoshan_4g_icon_small@2x.tga",
+      "sha256": "f90a01fdf53da8e050324f4c4e05b8dac1ab5dd8e850640591a801dc89b5266d",
+      "width": 260,
+      "height": 112
+    },
+    "f95b4076f0b03609bd2182ca62ae0041dae15a6edf8c1b2fbf3ac7fee6e519cf.png": {
+      "sourceContent": "urbangames_deluxe_upgrade_pack",
+      "sourceResource": "/vehicle/train/db_vt_11_5/icons/db_vt_11_5_middle3_icon_small@2x.tga",
+      "sha256": "f95b4076f0b03609bd2182ca62ae0041dae15a6edf8c1b2fbf3ac7fee6e519cf",
+      "width": 292,
+      "height": 112
+    },
+    "fa4950c7cdd7717534045cd4f2362d98ebb17a8a16c3eeb3c9f9c423fb2d1515.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/tgv_duplex/icons/tgv_middle5_icon_small@2x.tga",
+      "sha256": "fa4950c7cdd7717534045cd4f2362d98ebb17a8a16c3eeb3c9f9c423fb2d1515",
+      "width": 352,
+      "height": 112
+    },
+    "fa953c746de8bc709ae62468e361be5194e79799a928c33772f9c8af9f9ed627.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/bilevel/icons/bilevel_icon_small@2x.tga",
+      "sha256": "fa953c746de8bc709ae62468e361be5194e79799a928c33772f9c8af9f9ed627",
+      "width": 416,
+      "height": 112
+    },
+    "fbb232779f2b3ca86625bec4a0eb3c0b49d8b51307ca5d1379d1ccfe858d7bd2.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/tram/car_go_tram/icons/car_go_tram_icon_small@2x.tga",
+      "sha256": "fbb232779f2b3ca86625bec4a0eb3c0b49d8b51307ca5d1379d1ccfe858d7bd2",
+      "width": 1024,
+      "height": 96
+    },
+    "fbd290d7ee978cf2c2597cd4c9529dd5314f9abee83508a197d12c0cf9760aec.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/tgv_duplex/icons/tgv_middle1_icon_small@2x.tga",
+      "sha256": "fbd290d7ee978cf2c2597cd4c9529dd5314f9abee83508a197d12c0cf9760aec",
+      "width": 348,
+      "height": 112
+    },
+    "fbdca3e42c82427c21083d8e1088688db30fd2ef130938cae0d0122a784e269a.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/streamlined_nyc/icons/streamlined_nyc_icon_small@2x.tga",
+      "sha256": "fbdca3e42c82427c21083d8e1088688db30fd2ef130938cae0d0122a784e269a",
+      "width": 416,
+      "height": 112
+    },
+    "fde9032ba75a64d54767a7ea01c7e0a58fc8e15ed5682321d07987642d708216.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/fs_etr_450/icons/etr_450_front_icon_small@2x.tga",
+      "sha256": "fde9032ba75a64d54767a7ea01c7e0a58fc8e15ed5682321d07987642d708216",
+      "width": 436,
+      "height": 112
+    },
+    "feef60f99ecdf0508f554802f0f64565c67d51eb0a659f05cebd071bf898806b.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/waggon/univ_3_acl/icons/univ_3_acl_icon_small@2x.tga",
+      "sha256": "feef60f99ecdf0508f554802f0f64565c67d51eb0a659f05cebd071bf898806b",
+      "width": 204,
+      "height": 112
+    },
+    "ffb9f9bf0ee4706cb85c5804bd748e11965a376d59122f220be37bba72daa383.png": {
+      "sourceContent": "base",
+      "sourceResource": "/vehicle/train/russian_class_ob/icons/russian_class_ob_icon_small@2x.tga",
+      "sha256": "ffb9f9bf0ee4706cb85c5804bd748e11965a376d59122f220be37bba72daa383",
+      "width": 272,
+      "height": 112
+    }
+  }
+}

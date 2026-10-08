@@ -20,7 +20,7 @@ test('Trams share passenger cycles, without freight bonuses or inferred section 
   assert.ok(data.trams.every(t=>t.cargoCapacity===undefined));
 });
 test('Tram filtered chart and table use passenger vocabulary and handle years before introduction',()=>{
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{}]));const document={getElementById:id=>nodes[id]};
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));const document={getElementById:id=>nodes[id]};
   renderTruckService(document,trucksByYear(data.trams,1920),{distanceKm:1,passenger:true});
   assert.match(nodes['truck-service-summary'].textContent,/passenger journey/);assert.doesNotMatch(nodes['truck-service-summary'].textContent,/cargo unit/);
   assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,3);assert.equal((nodes['truck-bars'].innerHTML.match(/class="truck-bar-row/g)||[]).length,3);
@@ -46,13 +46,13 @@ test('Horse freight tram is separate from its passenger variant and applies conf
   const options={distanceKm:1};const [empty]=analyseTruckService([freight],options);assert.equal(empty.deliveredPerCycle,7);assert.equal(empty.loadingSeconds,112);assert.equal(empty.roundTripSeconds,592);
   const [loaded]=analyseTruckService([freight],{...options,loadedReturn:true,specializedTerminal:true,specializedWarehouse:true});assert.equal(loaded.deliveredPerCycle,14);assert.equal(loaded.handlingMultiplier,4);assert.equal(loaded.loadingSeconds,56);assert.equal(loaded.roundTripSeconds,484);
   const [p]=analysePassengerRoadService([passenger],{...options,specializedTerminal:true,specializedWarehouse:true});assert.equal(p.handlingMultiplier,1);assert.equal(p.deliveredPerCycle,12);
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{}]));renderTruckService({getElementById:id=>nodes[id]},[freight],{...options,specializedTerminal:true});assert.match(nodes['truck-service-summary'].textContent,/cargo unit/);assert.match(nodes['truck-service-summary'].textContent,/handling A ×2 \/ B ×2/);
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));renderTruckService({getElementById:id=>nodes[id]},[freight],{...options,specializedTerminal:true});assert.match(nodes['truck-service-summary'].textContent,/cargo unit/);assert.match(nodes['truck-service-summary'].textContent,/handling A ×2 \/ B ×2/);
 });
 test('Seven freight tram additions retain specialized source data and compatibility groups',()=>{
   const expected=[['sydney-24s',1910,10,35,37531,225186,2,22,'general'],['russian-x',1925,13,40,53076,318456,2,13,'general'],['tatra-t4-tanker',1968,20,55,125561,904041,4,28,'liquid'],['tatra-t4-tipper',1968,20,55,125561,904041,4,26,'bulk'],['tatra-t4-flatbed',1968,20,55,125561,904041,4,24,'flatbed'],['tatra-t4-box',1968,20,55,125561,904041,4,25,'goods'],['dresden-cargotram',2000,60,60,319350,3832200,16,90,'general']];
   assert.equal(new Set([...data.trams,...data.freightTrams].map(t=>t.id)).size,30);
   for(const [id,year,cap,speed,cost,price,rate,mass,special] of expected){const t=data.freightTrams.find(t=>t.id===id);assert.equal(t.year,year);assert.equal(t.cargoCapacity,cap);assert.equal(t.maxSpeedKmh,speed);assert.equal(t.economy.annualMaintenance,cost);assert.equal(t.economy.purchasePrice,price);assert.equal(t.loadingUnloadingSpeedMultiplier,rate);assert.equal(t.massTonnes,mass);assert.equal(t.freightSpecialization,special);assert.match(t.sourceCapture,/^codex-clipboard-.+\.png$/);}
-  assert.equal(trucksForCargo(data.freightTrams,'all').length,5);
+  assert.equal(trucksForCargo(data.freightTrams,'all').length,9);
   for(const cargo of ['liquid','bulk','flatbed','goods']){
     const compatible=trucksForCargo(data.freightTrams,cargo);assert.equal(compatible.length,6);assert.ok(compatible.every(t=>t.freightSpecialization==='general'||t.freightSpecialization===cargo));
     assert.equal(trucksByYear(compatible,1967).length,3);assert.equal(trucksByYear(compatible,1968).length,4);assert.equal(trucksByYear(compatible,2000).length,5);

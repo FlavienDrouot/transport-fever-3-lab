@@ -74,7 +74,7 @@ test('Invalid references, quantities, carriers, categories and selected cargo fa
   assert.throws(()=>buildConsist(baseline,[engine,a,a],units),RangeError);
   assert.throws(()=>buildConsist(baseline,[engine,{...a,carrier:'tram'}],units),RangeError);
   assert.throws(()=>buildConsist(baseline,[engine,{...a,passengerCapacity:5}],units),RangeError);
-  assert.throws(()=>buildConsist(baseline,[engine,{...a,freightSpecialization:'liquid'}],units),RangeError);
+  assert.throws(()=>buildConsist({...baseline,cargo:'bulk'},[engine,{...a,freightSpecialization:'liquid'}],units),RangeError);
   assert.throws(()=>buildConsist({...baseline,components:[{componentId:a.id,quantity:1}]},catalogue,units),RangeError);
   assert.throws(()=>buildConsist(baseline,[engine,{...a,massTonnes:-1}],units),RangeError);
 });
@@ -117,6 +117,16 @@ test('Rail multiple units contribute full formation handling once when used as p
   assert.equal(formation.carCount,2*metroliner.carCount+1);
   assert.equal(formation.powerCh,2*metroliner.powerCh);
   assert.equal(analyseLine(formation,{distanceKm:1}).rate,formation.formationLoadingUnloadingSpeedMultiplier);
+});
+
+test('Powered rail components preserve explicit handling totals through coupling',async()=>{
+  const source=JSON.parse(await readFile(new URL('../data/trains.json',import.meta.url)));
+  const avelia=source.trains.find(x=>x.id==='avelia-liberty');
+  const powered=poweredVehicleComponents([avelia],{carrier:'rail',catalogue:'multiple-unit',perCarHandling:true});
+  const formation=buildConsist({schemaVersion:1,id:'custom:avelia',name:'Coupled Avelia',carrier:'rail',category:'passengers',components:[{componentId:powered[0].id,quantity:2}]},powered,units);
+  assert.equal(formation.passengerCapacity,188);assert.equal(formation.carCount,22);
+  assert.equal(formation.formationLoadingUnloadingSpeedMultiplier,90);
+  assert.equal(analyseLine(formation,{distanceKm:1}).rate,90);
 });
 
 test('Dresden complete freight tram handling does not multiply its five sections a second time',async()=>{

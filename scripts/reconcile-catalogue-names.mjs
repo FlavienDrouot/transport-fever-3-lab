@@ -1,11 +1,11 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import {reconcileNames,applyReconciledNames} from '../src/catalogue-reconciliation.js';
 const catalogue=JSON.parse(await readFile('data/source-catalogue.json','utf8'));
-const files=[['buses','buses','bus'],['trucks','trucks','truck'],['trams','trams','tram'],['trams','freightTrams','tram'],['tram-locomotives','locomotives','tram'],['tram-passenger-wagons','wagons','tram'],['tram-freight-wagons','wagons','tram'],['trains','trains','train'],['vehicle-name-observations','vehicles','bus']];
+const files=[['buses','buses','bus'],['trucks','trucks','truck'],['trams','trams','tram'],['trams','freightTrams','tram'],['tram-locomotives','locomotives','tram'],['tram-passenger-wagons','wagons','tram'],['tram-freight-wagons','wagons','tram'],['trains','trains','train'],['rail-locomotives','locomotives','train'],['rail-passenger-wagons','wagons','waggon'],['rail-freight-wagons','wagons','waggon'],['vehicle-name-observations','vehicles','bus']];
 const observations=[];
 for(const [file,key,category] of files){
   const data=JSON.parse(await readFile(`data/${file}.json`,'utf8'));
-  observations.push(...data[key].map(card=>({reference:`data/${file}.json#${card.id}`,category,card})));
+  observations.push(...data[key].map(card=>({reference:`data/${file}.json#${card.id}`,category:card.dataProvenance?.sourceCategory??category,card})));
 }
 const results=reconcileNames(catalogue,observations);
 await writeFile('data/source-catalogue.json',JSON.stringify(applyReconciledNames(catalogue,results),null,2)+'\n');

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {rankTrucks,trucksByYear,trucksForCargo,analyseTruckService,renderTruckService} from '../src/trucks.js';
 const catalogue=JSON.parse(await readFile(new URL('../data/trucks.json',import.meta.url)));
-const data={...catalogue,trucks:trucksForCargo(catalogue.trucks.filter(t=>!t.dataProvenance),'all')};
+const data={...catalogue,trucks:catalogue.trucks.filter(t=>!t.dataProvenance&&t.freightSpecialization==='general')};
 test('All eleven supplied freight cards retain capacity, speed, costs and capture provenance',()=>{
   const expected=[['small-horse-wagon',4,16,14285],['horse-wagon',6,20,24221],['steam-truck',10,25,45899],['amo-f15',12,40,73490],['saurer-c',15,60,119756],['gmc-660',22,70,194915],['isuzu-elf',10,80,97089],['mercedes-urban-etruck',18,80,174759],['man-19304',18,80,174759],['gaz-3307',16,90,168558],['faw-j6p',40,120,516072]];
   assert.equal(data.trucks.length,11);assert.equal(new Set(data.trucks.map(t=>t.id)).size,11);
@@ -45,7 +45,7 @@ test('Freight handling changes short-route rankings and tends to the long-haul p
 test('Freight calculator rejects invalid assumptions and renders all vehicles with finite costs',()=>{
   for(const invalid of [{distanceKm:0},{distanceKm:NaN},{fillRatio:0},{fillRatio:1.1},{loadedReturn:'yes'}])assert.throws(()=>analyseTruckService(data.trucks,{distanceKm:10,...invalid}));
   assert.throws(()=>analyseTruckService([{...data.trucks[0],loadingUnloadingSpeedMultiplier:0}],{distanceKm:10}));
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{}]));
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   renderTruckService({getElementById:id=>nodes[id]},data.trucks,{distanceKm:10,loadedReturn:false,roadSpeedLimit:80});
   assert.match(nodes['truck-service-summary'].textContent,/empty return/);assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,11);assert.doesNotMatch(nodes['truck-service-readout'].innerHTML,/NaN|Infinity/);
 });
@@ -59,7 +59,7 @@ test('Truck year filtering includes introduction boundaries and preserves older 
   assert.throws(()=>trucksByYear(data.trucks,NaN),RangeError);
 });
 test('Bars and table use the same filtered cost ranking and proportional zero-based widths',()=>{
-  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{}]));
+  const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   const options={distanceKm:1,roadSpeedLimit:80};
   const filtered=trucksByYear(data.trucks,1942), rows=analyseTruckService(filtered,options);
   renderTruckService({getElementById:id=>nodes[id]},filtered,options);
@@ -93,11 +93,11 @@ test('Ten unique bulk tippers retain captured costs, capacity, speeds and double
   assert.equal(bulk.find(t=>t.id==='tipper-faw-j6p').additionalSourceCaptures.length,1);
 });
 test('Bulk comparisons include general-purpose vehicles, respect year and change costs with tipper handling',()=>{
-  assert.equal(trucksForCargo(catalogue.trucks,'all').length,12);
+  assert.equal(trucksForCargo(catalogue.trucks,'all').length,52);
   assert.equal(trucksForCargo(catalogue.trucks,'bulk').length,22);
   const early=trucksByYear(trucksForCargo(catalogue.trucks,'bulk'),1912);
   assert.equal(early.length,4);assert.ok(early.some(t=>t.id==='tipper-benz-3t'));
-  assert.ok(!trucksForCargo(catalogue.trucks,'all').some(t=>t.freightSpecialization==='bulk'));
+  assert.ok(trucksForCargo(catalogue.trucks,'all').some(t=>t.freightSpecialization==='bulk'));
   assert.throws(()=>trucksForCargo(catalogue.trucks,'unknown'),RangeError);
   const rows=analyseTruckService(trucksForCargo(catalogue.trucks,'bulk'),{distanceKm:1});
   const general=rows.find(r=>r.truck.id==='faw-j6p'),tipper=rows.find(r=>r.truck.id==='tipper-faw-j6p');
@@ -118,7 +118,7 @@ test('Eight flatbeds retain their own card data and freight compatibility',()=>{
   const flatbeds=catalogue.trucks.filter(t=>t.freightSpecialization==='flatbed');assert.equal(flatbeds.length,8);
   for(const [id,year,cap,speed,cost,rate,length] of expected){const t=flatbeds.find(t=>t.id==='flatbed-'+id);assert.equal(t.year,year);assert.equal(t.cargoCapacity,cap);assert.equal(t.maxSpeedKmh,speed);assert.equal(t.economy.annualMaintenance,cost);assert.equal(t.loadingUnloadingSpeedMultiplier,rate);assert.equal(t.lengthMetres,length);assert.equal(t.sourceCargoLabel,'Plateau');assert.match(t.sourceCapture,/^codex-clipboard-.+\.png$/);}
   const compatible=trucksForCargo(catalogue.trucks,'flatbed');assert.equal(compatible.length,20);assert.ok(compatible.every(t=>['general','flatbed'].includes(t.freightSpecialization)));
-  for(const cargo of ['all','bulk','goods'])assert.ok(!trucksForCargo(catalogue.trucks,cargo).some(t=>t.freightSpecialization==='flatbed'));
+  for(const cargo of ['bulk','goods'])assert.ok(!trucksForCargo(catalogue.trucks,cargo).some(t=>t.freightSpecialization==='flatbed'));
   assert.ok(!trucksByYear(compatible,1915).some(t=>t.id==='flatbed-mack-ac'));assert.ok(trucksByYear(compatible,1916).some(t=>t.id==='flatbed-mack-ac'));
   const rows=analyseTruckService(compatible,{distanceKm:1,roadSpeedLimit:80});assert.equal(rows.length,20);assert.ok(rows.every(r=>Number.isFinite(r.costPerCargo)&&r.effectiveSpeedKmh<=80));
 });
@@ -128,7 +128,7 @@ test('Eleven liquid vehicles preserve tanker-specific data and only join compati
   for(const [id,year,cap,speed,cost,rate,length] of expected){const t=liquid.find(t=>t.id==='liquid-'+id);assert.equal(t.year,year);assert.equal(t.cargoCapacity,cap);assert.equal(t.maxSpeedKmh,speed);assert.equal(t.economy.annualMaintenance,cost);assert.equal(t.loadingUnloadingSpeedMultiplier,rate);assert.equal(t.lengthMetres,length);assert.equal(t.sourceCargoLabel,'Liquide');assert.match(t.sourceCapture,/^codex-clipboard-.+\.png$/);}
   assert.equal(liquid.find(t=>t.id==='liquid-peterbilt-359').powerCh,544);assert.equal(liquid.find(t=>t.id==='liquid-horse-barrels').propulsion,'horse');
   const compatible=trucksForCargo(catalogue.trucks,'liquid');assert.equal(compatible.length,23);assert.ok(compatible.every(t=>['general','liquid'].includes(t.freightSpecialization)));
-  for(const cargo of ['all','bulk','goods','flatbed'])assert.ok(!trucksForCargo(catalogue.trucks,cargo).some(t=>t.freightSpecialization==='liquid'));
+  for(const cargo of ['bulk','goods','flatbed'])assert.ok(!trucksForCargo(catalogue.trucks,cargo).some(t=>t.freightSpecialization==='liquid'));
   assert.ok(!trucksByYear(compatible,1906).some(t=>t.id==='liquid-horse-barrels'));assert.ok(trucksByYear(compatible,1907).some(t=>t.id==='liquid-horse-barrels'));
   const rows=analyseTruckService(compatible,{distanceKm:1,roadSpeedLimit:80,specializedTerminal:true,specializedWarehouse:true});assert.equal(rows.length,23);assert.ok(rows.every(r=>Number.isFinite(r.costPerCargo)&&r.handlingMultiplier===4));
 });
