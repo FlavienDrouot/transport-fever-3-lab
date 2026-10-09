@@ -61,7 +61,7 @@ function selectionLimits(ts) {
 }
 let speedView='speed';
 let economicStoryKey, currentEconomicStory;
-let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl,designGradientControl;
+let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl;
 let consistEditor,compositionAnalysis,lineGradientControl,raceGradientControl,baseTrains,trainSelector,roadSelector;
 let economicCategoryControl,roadCategoryControl;
 let selectedRoad=new Set(),knownCustom=new Set();
@@ -72,12 +72,12 @@ function roadTargets(){return {demandPerYear:roadFlow===null?null:roadFlow*(road
 let truckService = {distanceKm:1,fillRatio:1,loadedReturn:false,specializedTerminal:false,specializedWarehouse:false};
 let dataset, experiments, trains, selected, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2035, lineFill = 1, desiredFlow = null, maxHeadwaySeconds = null, frequencyMode = 'maximum', infrastructureSpeedKmh = 350, allowMultipleUnits = false, platformLengthMetres = null;
 let economicCategory='passengers',economicCargo='all';
-let railGradePercent=0,railRouteProfile=null;
+let railGradePercent=0,railRouteProfile=[{distanceKm:10,gradePercent:0,speedLimitKmh:350}];
 let railFreight={loadedReturn:false,stopA:{},stopB:{}};
 function serviceTargets(){return {gradePercent:railGradePercent,routeProfile:railRouteProfile,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh:railRouteProfile?null:infrastructureSpeedKmh,platformLengthMetres,...(economicCategory==='freight'?{freight:true,demandPerYear:desiredFlow,allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})};}
 function compositionSettings(){return {distanceKm:routeDistance,fillRatio:lineFill,gradePercent:railGradePercent,routeProfile:railRouteProfile,desiredFlow,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...railFreight};}
 function updateCompositionSettings(settings){
-  if(!railRouteProfile)routeDistance=settings.distanceKm;lineFill=settings.fillRatio;railGradePercent=settings.gradePercent;
+  lineFill=settings.fillRatio;railGradePercent=settings.gradePercent;
   desiredFlow=settings.desiredFlow;maxHeadwaySeconds=settings.maxHeadwaySeconds;frequencyMode=settings.frequencyMode;
   infrastructureSpeedKmh=settings.infrastructureSpeedKmh;platformLengthMetres=settings.platformLengthMetres;
   railFreight={loadedReturn:settings.loadedReturn,stopA:settings.stopA,stopB:settings.stopB};
@@ -92,21 +92,14 @@ function updateCompositionSettings(settings){
   $('enable-platform-limit').checked=platformLengthMetres!==null;$('platform-length').disabled=platformLengthMetres===null;
   if(platformLengthMetres!==null)syncNumberInput($('platform-length'),platformLengthMetres);
   $('line-fill').value=lineFill*100;
-  for(const id of ['race-infrastructure-speed','infrastructure-speed'])$(id).querySelector(`input[value="${infrastructureSpeedKmh}"]`).checked=true;
+  for(const id of ['race-infrastructure-speed','infrastructure-speed']){const preset=$(id).querySelector(`input[value="${infrastructureSpeedKmh}"]`);if(preset)preset.checked=true;}
   $('rail-loaded-return').checked=railFreight.loadedReturn;
   for(const [stop,options] of [['a',railFreight.stopA],['b',railFreight.stopB]]){
     $(`rail-terminal-${stop}`).checked=!!options.specializedTerminal;$(`rail-warehouse-${stop}`).checked=!!options.specializedWarehouse;
   }
   $('allow-multiple-units').disabled=desiredFlow===null||maxHeadwaySeconds===null||economicCategory==='freight';
   allowMultipleUnits=!$('allow-multiple-units').disabled&&$('allow-multiple-units').checked;
-  if(!railRouteProfile)profileControl?.setUniformDefaults(routeDistance,railGradePercent,infrastructureSpeedKmh);
-  syncDesignRouteControls();
   crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
-}
-function syncDesignRouteControls(){
-  if(!railRouteProfile){syncNumberInput($('design-route-distance'),routeDistance);$('design-route-distance-range').max=Math.max(30,routeDistance);$('design-route-distance-range').value=routeDistance;}
-  designGradientControl?.setValue(railGradePercent);
-  $('design-route-speed').querySelector(`input[value="${infrastructureSpeedKmh}"]`).checked=true;
 }
 function economicSelectionOptions(){return {freight:economicCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres,gradePercent:railGradePercent,routeProfile:railRouteProfile};}
 function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear && ($('economics').hidden||economicCandidates([t],economicSelectionOptions()).length)).map(t=>{const limited=railRouteProfile?t:withRailSpeedLimit(t,infrastructureSpeedKmh);return railRouteProfile?withRailProfile(limited,railRouteProfile):withRailGradient(limited,railGradePercent);}).filter(t=>t.model.canStart!==false);}
@@ -474,15 +467,16 @@ function syncAnalysisView() {
   }
   for(const pane of document.querySelectorAll('[data-reference-pane]'))pane.hidden=pane.dataset.referencePane!==dataView;
   document.querySelector(`#compare-domain input[value="${domain}"]`).checked=true;
-  const performance=document.querySelector('[data-analysis="race"]');performance.hidden=domain==='road';
+  document.querySelector('[data-analysis="race"]').hidden=false;
+  (view==='trucks'?$('road-compare-mode'):$('rail-compare-mode')).append($('compare-domain'));
   document.querySelector('[data-analysis="economics"]').href=domain==='road'?'#trucks':'#economics';
   if(view==='trucks')document.querySelector('[data-analysis="economics"]').setAttribute('aria-current','page');
   const action=$('workspace-action');action.hidden=space==='data';
-  action.href=space==='design'?(view==='route-profile'?'#race':'#compare'):view==='trucks'?'#configurator':'#route-profile';
-  action.textContent=space==='design'?(view==='route-profile'?'Compare performance ↗':'Compare results ↗'):view==='trucks'?'Build a tram ↗':'Edit route ↗';
+  action.href=space==='design'?'#compare':'#configurator';
+  action.textContent=space==='design'?'Compare results ↗':'Design a composition ↗';
   for(let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details'))disclosure.open=true;
   if(target&&['model','economic-method'].includes(target.id))target.querySelector('details').open=true;
-  syncAnalysisPanels(document,view);syncDesignRouteControls();renderCatalogue();
+  syncAnalysisPanels(document,view);renderCatalogue();
   const destination=view==='route-profile'?'profile-overview':view==='configurator'?'component-catalogue':view==='data'?dataView==='models'?'model':dataView==='checks'?'experimental-models':'source-catalogue':view==='race'?'speed-explorer':view==='trucks'?'truck-service':'line-results';
   document.querySelector('.skip').textContent='Skip to content';document.querySelector('.skip').href=`#${destination}`;
   if(view==='trucks')void ensureRoad();if(view==='configurator')void ensureConfigurator();if(view==='data')void ensureData();
@@ -521,7 +515,7 @@ function render() {
     const sources=roadDatasets(true);
     const selection={category:roadCategory,includeTrams,cargo:truckCargo,year:truckYear};
     const vehicles=selectRoadVehicles(sources,selection);
-    const options={...truckService,...roadTargets(),roadSpeedLimit:truckRoadSpeedLimit,passenger};
+    const options={...truckService,...roadTargets(),distanceKm:routeDistance,routeProfile:railRouteProfile,roadSpeedLimit:truckRoadSpeedLimit,passenger};
     renderTruckService(document,vehicles,options);
     clearTimeout(roadPhaseTimer);
     const phasePanel=$('road-phases');
@@ -733,9 +727,9 @@ async function init() {
   const validateRoad=()=>validateNumberInputs(['truck-distance','truck-speed-limit','road-desired-flow','road-desired-headway','road-gradient-input'].map($),$('road-input-error'));
   const updateTruckService=()=>{
     const useFlow=$('road-enable-flow').checked,useFrequency=$('road-enable-frequency').checked,speedEnabled=$('enable-truck-speed-limit').checked;
-    $('road-desired-flow').disabled=!useFlow;$('road-desired-headway').disabled=!useFrequency;$('road-frequency-mode').disabled=!useFrequency;$('truck-speed-limit').disabled=!speedEnabled;
+    $('road-desired-flow').disabled=!useFlow;$('road-desired-headway').disabled=!useFrequency;$('road-frequency-mode').disabled=!useFrequency;$('truck-speed-limit').disabled=true;
     if(!validateRoad())return;
-    const distanceKm=$('truck-distance').valueAsNumber,fillRatio=$('truck-utilization').valueAsNumber/100;
+    const distanceKm=routeDistance,fillRatio=$('truck-utilization').valueAsNumber/100;
     roadFlow=useFlow?$('road-desired-flow').valueAsNumber:null;
     roadHeadway=useFrequency?$('road-desired-headway').valueAsNumber*60:null;
     roadFrequencyMode=$('road-frequency-mode').querySelector('input:checked').value;
@@ -793,14 +787,10 @@ async function init() {
     $('frequency-mode').disabled=!frequencyEnabled;
     $('allow-multiple-units').disabled=!(frequencyEnabled&&flowEnabled)||economicCategory==='freight';
     if(!validateEconomics())return;
-    railGradePercent=$('line-gradient-input').valueAsNumber;raceGradientControl.setValue(railGradePercent);
-    if(!railRouteProfile)routeDistance=$('line-distance-input').valueAsNumber;lineFill=$('line-fill').valueAsNumber/100;
+    lineFill=$('line-fill').valueAsNumber/100;
     desiredFlow=$('enable-flow').checked?flow:null;
     maxHeadwaySeconds=$('enable-frequency').checked?interval*60:null;
     frequencyMode=document.querySelector('input[name="frequency-mode"]:checked').value;
-    infrastructureSpeedKmh=Number($('infrastructure-speed').querySelector('input:checked').value);
-    $('race-infrastructure-speed').querySelector(`input[value="${infrastructureSpeedKmh}"]`).checked=true;
-    if(!railRouteProfile)profileControl.setUniformDefaults(routeDistance,railGradePercent,infrastructureSpeedKmh);
     crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;
     allowMultipleUnits=frequencyEnabled&&flowEnabled&&$('allow-multiple-units').checked;
     platformLengthMetres=platformEnabled?length:null;
@@ -810,7 +800,7 @@ async function init() {
     render();
   };
   const updateGradient=grade=>{
-    railGradePercent=grade;lineGradientControl.setValue(grade);raceGradientControl.setValue(grade);if(!railRouteProfile)profileControl.setUniformDefaults(routeDistance,grade,infrastructureSpeedKmh);
+    railGradePercent=grade;lineGradientControl.setValue(grade);raceGradientControl.setValue(grade);if(railRouteProfile.length===1)profileControl.setUniformDefaults(routeDistance,grade,railRouteProfile[0].speedLimitKmh);
     crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
   };
   lineGradientControl=mountGradientControl(document,$('line-gradient'),{rail:true,noticeId:'economic-input-error',validate:validateEconomics,onChange:updateGradient});
@@ -818,35 +808,32 @@ async function init() {
   raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:updateGradient});
   profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:[{distanceKm:routeDistance,gradePercent:railGradePercent,speedLimitKmh:infrastructureSpeedKmh}],
-    statuses:[$('race-profile-status'),$('economic-profile-status')],modeControls:[$('race-route-model'),$('economic-route-model'),$('design-route-model')],visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),
-    onChange:state=>{railRouteProfile=state.segments;
-      $('design-uniform-route').hidden=state.active;
-      for(const node of [$('profile-horizontal-scale'),$('profile-editor-section'),$('profile-scale-note'),document.querySelector('.profile-preview')])node.hidden=!state.active;
-      $('distance-input').disabled=$('line-distance-input').disabled=$('route-distance').disabled=$('line-distance').disabled=state.active;
-      $('route-distance').closest('.horizon-control').hidden=$('line-distance').closest('.line-distance-control').hidden=state.active;
-      $('race-gradient').hidden=$('line-gradient').hidden=state.active;
-      $('race-infrastructure-speed').closest('.infrastructure-control').hidden=$('infrastructure-speed').closest('.infrastructure-control').hidden=state.active;
-      routeDistance=state.distanceKm;
-      $('distance-input').value=$('route-distance').value=routeDistance;
-      $('line-distance-input').value=$('line-distance').value=routeDistance;
-      syncDesignRouteControls();crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();}
+    statuses:[$('race-profile-status'),$('economic-profile-status'),$('road-profile-status')],visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),
+    onChange:state=>{
+      railRouteProfile=state.segments;routeDistance=state.distanceKm;
+      const multiple=state.segments.length>1,single=state.segments[0];
+      if(!multiple){railGradePercent=single.gradePercent;infrastructureSpeedKmh=single.speedLimitKmh;}
+      for(const id of ['distance-input','line-distance-input','route-distance','line-distance'])$(id).disabled=multiple;
+      $('route-distance').closest('.horizon-control').hidden=$('line-distance').closest('.line-distance-control').hidden=multiple;
+      $('race-gradient').hidden=$('line-gradient').hidden=multiple;
+      for(const id of ['race-infrastructure-speed','infrastructure-speed'])$(id).closest('.infrastructure-control').hidden=multiple||![100,160,350].includes(single.speedLimitKmh);
+      lineGradientControl.setValue(railGradePercent);raceGradientControl.setValue(railGradePercent);
+      for(const id of ['distance-input','line-distance-input','truck-distance'])syncNumberInput($(id),routeDistance);
+      $('route-distance').value=$('line-distance').value=routeDistance;
+      for(const id of ['race-infrastructure-speed','infrastructure-speed']){const preset=$(id).querySelector(`input[value="${infrastructureSpeedKmh}"]`);if(preset)preset.checked=true;}
+      truckService={...truckService,distanceKm:routeDistance};
+      // Road physical settings come from segments; retain only load/service controls here.
+      for(const node of [$('truck-distance').closest('.road-field'),$('road-gradient'),$('enable-truck-speed-limit').closest('.target-control')]){node.hidden=true;for(const input of node.querySelectorAll('input'))input.disabled=true;}
+      crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
+    }
   });
-  const validateDesignRoute=()=>validateNumberInputs([$('design-route-distance'),$('design-gradient-input')],$('design-route-error'));
-  const changeDesignRoute=()=>{
-    if(railRouteProfile||!validateDesignRoute())return;
-    routeDistance=$('design-route-distance').valueAsNumber;railGradePercent=$('design-gradient-input').valueAsNumber;
-    infrastructureSpeedKmh=Number($('design-route-speed').querySelector('input:checked').value);
-    updateCompositionSettings(compositionSettings());
-  };
-  designGradientControl=mountGradientControl(document,$('design-gradient'),{rail:true,noticeId:'design-route-error',validate:validateDesignRoute,onChange:changeDesignRoute});
-  mountDistanceControl({number:$('design-route-distance'),range:$('design-route-distance-range'),validate:validateDesignRoute,onChange:changeDesignRoute,event:'input'});
-  $('design-route-speed').addEventListener('change',changeDesignRoute);
   $('race-infrastructure-speed').addEventListener('change',()=>{
     const speed=$('race-infrastructure-speed').querySelector('input:checked').value;
     $('infrastructure-speed').querySelector(`input[value="${speed}"]`).checked=true;
-    infrastructureSpeedKmh=Number(speed);if(!railRouteProfile)profileControl.setUniformDefaults(routeDistance,railGradePercent,infrastructureSpeedKmh);crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
+    infrastructureSpeedKmh=Number(speed);if(railRouteProfile.length===1)profileControl.setUniformDefaults(routeDistance,railGradePercent,infrastructureSpeedKmh);crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
   });
-  for(const id of ['enable-flow','enable-frequency','frequency-mode','infrastructure-speed','allow-multiple-units','enable-platform-limit'])$(id).addEventListener('change',updateTargets);
+  for(const id of ['enable-flow','enable-frequency','frequency-mode','allow-multiple-units','enable-platform-limit'])$(id).addEventListener('change',updateTargets);
+  $('infrastructure-speed').addEventListener('change',()=>{if(railRouteProfile.length===1)profileControl.setUniformDefaults(routeDistance,railRouteProfile[0].gradePercent,Number($('infrastructure-speed').querySelector('input:checked').value));});
   for(const id of ['desired-flow','desired-headway','platform-length'])$(id).addEventListener('input',updateTargets);
   $('show-service-details').addEventListener('change',e=>{
     document.querySelector('.line-table').classList.toggle('show-details',e.target.checked);
@@ -874,8 +861,8 @@ async function init() {
   });
   $('service-options').addEventListener('toggle',updateStickyOffsets);
   $('line-fill').addEventListener('input',updateTargets);
-  mountDistanceControl({number:$('line-distance-input'),range:$('line-distance'),validate:validateEconomics,onChange:updateTargets,event:'input'});
-  mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:validateRace,onChange:distance=>{routeDistance=distance;profileControl.setUniformDefaults(distance,railGradePercent,infrastructureSpeedKmh);render();},event:'input'});
+  mountDistanceControl({number:$('line-distance-input'),range:$('line-distance'),validate:validateEconomics,onChange:distance=>profileControl.setUniformDefaults(distance,railRouteProfile[0].gradePercent,railRouteProfile[0].speedLimitKmh),event:'input'});
+  mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:validateRace,onChange:distance=>{routeDistance=distance;profileControl.setUniformDefaults(distance,railRouteProfile[0].gradePercent,railRouteProfile[0].speedLimitKmh);render();},event:'input'});
   for(const id of ['x-scale','y-scale','speed-x-scale','speed-y-scale','focus-distance','focus-time','crossover-orientation','emphasize-leaders','rank-distance-scale','economic-efficiency-scale','economic-focus-scale','economic-focus-y','economic-rank-scale']) $(id).addEventListener('change',()=>render());
   for (const kind of ['speed','race']) {
   const el = id => $(kind === 'speed' ? `speed-${id}` : id);

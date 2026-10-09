@@ -46,7 +46,7 @@ function numericalMotion(vehicle,grade,{seconds=null,distanceKm=null}={}) {
 }
 
 test('Signed grade follows independent force integration, caps and inverse timing',()=>{
-  for(const grade of [-9,-.1,.1,5,9]) {
+  for(const grade of [-20,-9,-.1,.1,5,9,20]) {
     const model=createModel(raw,units,{gradePercent:grade});
     for(const seconds of [10,50,300]) {
       const reference=numericalMotion(raw,grade,{seconds}),state=model.stateAt(seconds);
@@ -69,7 +69,7 @@ test('Near-zero gradients converge to the calibrated flat model; invalid inputs 
   for(const grade of [-1e-8,1e-8])for(const km of [.001,1,10])close(createModel(raw,units,{gradePercent:grade}).timeAt(km),train.model.timeAt(km));
   assert.deepEqual(createModel(raw,units,{gradePercent:0}).stateAt(300),train.model.stateAt(300));
   for(const grade of [NaN,Infinity,20.1])assert.throws(()=>createModel(raw,units,{gradePercent:grade}),RangeError);
-  assert.throws(()=>withRailGradient(train,9.1),RangeError);
+  assert.throws(()=>withRailGradient(train,20.1),RangeError);
   assert.throws(()=>analyseTruckService([raw],{distanceKm:1,gradePercent:-20.1}),RangeError);
 });
 

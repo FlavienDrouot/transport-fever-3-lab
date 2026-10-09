@@ -108,6 +108,6 @@ test('finite Race crossover roots cannot extrapolate beyond terminal B',()=>{
 });
 
 test('profile validation rejects missing, nonfinite and out-of-range segment values',()=>{
-  for(const bad of [[],[segment(0)],[segment(NaN)],[segment(1,9.1)],[segment(1,0,351)],Array.from({length:25},()=>segment(1))])
+  for(const bad of [[],[segment(0)],[segment(NaN)],[segment(1,20.1)],[segment(1,0,351)],Array.from({length:25},()=>segment(1))])
     assert.throws(()=>validateRouteProfile(bad),RangeError);
 });

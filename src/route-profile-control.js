@@ -39,23 +39,23 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
   return `<div class="profile-sketch-scroll"><svg class="profile-sketch" viewBox="0 0 ${width} 330" role="${selectable?'group':'img'}" aria-label="${description}">${bands}<line x1="${left}" x2="${right}" y1="228" y2="228" class="profile-baseline"/><polyline points="${points}" class="profile-terrain"/>${markers}${actions}<line x1="${left}" x2="${right}" y1="278" y2="278" class="profile-axis"/>${axis}<text x="${(left+right)/2}" y="322" text-anchor="middle">Distance from A (km)${scale==='linear'?' · linear':''}</text></svg></div>`;
 }
 
-/** The route editor owns the draft; Race and Economics choose how to use it. */
-export function mountRouteProfileControls(container,{initial,onChange,statuses=[],modeControls=[],visual,scaleControl,scaleNote,segmentList}) {
-  let active=false,segments=validateRouteProfile(initial),uniform={...initial[0]},profileEdited=false,scale='equal',selectedIndex=0;
+/** The route editor owns one shared ordered route for rail and road comparisons. */
+export function mountRouteProfileControls(container,{initial,onChange,statuses=[],visual,scaleControl,scaleNote,segmentList}) {
+  let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0;
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
     visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex});
     scaleNote.textContent=scale==='linear'?'Distance to scale · elevation exaggerated. Short segments can also be selected in the sidebar.':'Symbolic elevation · exaggerated scale.';
   };
   const syncMode=()=>{
-    for(const control of modeControls)control.querySelector(`input[value="${active?'profile':'uniform'}"]`).checked=true;
-    for(const status of statuses)status.innerHTML=`<strong>${active?`${segments.length} segment${segments.length===1?'':'s'} · ${format(routeProfileDistance(segments))} km`:profileEdited?'Uniform route · segments saved':'Uniform route'}</strong><a href="#route-profile">${active?'Edit route profile':profileEdited?'Edit saved segments':'Build a route profile'} ↗</a>`;
+    const total=routeProfileDistance(segments),single=segments.length===1?segments[0]:null;
+    for(const status of statuses)status.innerHTML=`<strong>A→B · ${format(total)} km</strong><span>${single?`${single.gradePercent>0?'+':''}${format(single.gradePercent)}% · ${format(single.speedLimitKmh)} km/h`: `${segments.length} segments · varying gradients and speed limits`}</span><a href="#route-profile">Edit route ↗</a>`;
   };
   const segmentEditor=(part,i,distances)=>`<fieldset class="profile-segment${selectedIndex===i?' is-selected':''}" data-index="${i}">
     <legend class="sr-only">Selected segment ${i+1}</legend>
     <div class="profile-segment-fields">
       <div class="profile-field"><label for="profile-length-${i}">Length <span>km</span></label><input id="profile-length-${i}" data-index="${i}" data-field="distanceKm" data-control="number" type="number" min="0.01" max="100" step="0.01" value="${format(part.distanceKm)}" required><input data-index="${i}" data-field="distanceKm" data-control="range" type="range" min="0.01" max="${Math.max(10,Math.ceil(part.distanceKm))}" step="0.01" value="${format(part.distanceKm)}" aria-label="Segment ${i+1} length slider"></div>
-      <div class="profile-field"><label for="profile-grade-${i}">Grade <span>%</span></label><input id="profile-grade-${i}" data-index="${i}" data-field="gradePercent" data-control="number" type="number" min="-9" max="9" step="0.1" value="${format(part.gradePercent)}" required><input data-index="${i}" data-field="gradePercent" data-control="range" type="range" min="-9" max="9" step="0.1" value="${format(part.gradePercent)}" aria-label="Segment ${i+1} grade slider"></div>
+      <div class="profile-field"><label for="profile-grade-${i}">Grade <span>%</span></label><input id="profile-grade-${i}" data-index="${i}" data-field="gradePercent" data-control="number" type="number" min="-20" max="20" step="0.1" value="${format(part.gradePercent)}" required><input data-index="${i}" data-field="gradePercent" data-control="range" type="range" min="-20" max="20" step="0.1" value="${format(part.gradePercent)}" aria-label="Segment ${i+1} grade slider"></div>
       <div class="profile-field"><label for="profile-speed-${i}">Speed limit <span>km/h</span></label><input id="profile-speed-${i}" data-index="${i}" data-field="speedLimitKmh" data-control="number" type="number" min="10" max="350" step="1" value="${format(part.speedLimitKmh)}" required><div class="profile-speed-presets" role="group" aria-label="Segment ${i+1} speed presets">${[100,160,350].map(speed=>`<button type="button" data-speed-preset="${speed}" data-index="${i}" aria-pressed="${part.speedLimitKmh===speed}">${speed}</button>`).join('')}</div></div>
     </div><p class="profile-edit-summary"><span class="profile-segment-number">${String(i+1).padStart(2,'0')}</span><span class="profile-segment-range">${segmentRange(distances,i)}</span></p></fieldset>`;
   const renderSegmentList=()=>{
@@ -74,7 +74,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     renderInspector();
     renderVisual();syncMode();
   };
-  const notify=()=>onChange({active,segments:active?segments:null,distanceKm:active?routeProfileDistance(segments):uniform.distanceKm});
+  const notify=()=>onChange({active:true,segments,distanceKm:routeProfileDistance(segments)});
   const refreshValues=()=>{
     renderVisual();syncMode();
     const error=container.querySelector('.profile-error');error.hidden=true;error.textContent='';
@@ -96,7 +96,6 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     for(const band of visual.querySelectorAll('.profile-band-group'))band.classList.toggle('is-selected',Number(band.dataset.segment)===index);
     for(const actions of visual.querySelectorAll('.profile-inline-actions')){const selected=Number(actions.dataset.actionsFor)===index;actions.classList.toggle('is-selected',selected);actions.setAttribute('aria-hidden',String(!selected));}
   };
-  for(const control of modeControls)control.addEventListener('change',event=>{if(!event.target.matches('input[type="radio"]'))return;active=event.target.value==='profile';syncMode();notify();});
   scaleControl.addEventListener('change',event=>{if(event.target.name==='profile-horizontal-scale'){scale=event.target.value;renderVisual();}});
   const selectFromPreview=event=>{const band=event.target.closest('[data-segment]');if(!band)return;const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}select(Number(band.dataset.segment));};
   visual.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button){performAction(button,visual);return;}selectFromPreview(event);});
@@ -113,7 +112,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     const next=segments.map(part=>({...part}));next[index][field]=event.target.valueAsNumber;
     try{
       const valid=validateRouteProfile(next);
-      segments=valid;profileEdited=true;active=true;
+      segments=valid;
       const row=container.querySelector(`.profile-segment[data-index="${index}"]`);
       const matching=row.querySelector(`[data-field="${field}"][data-control="${event.target.dataset.control==='range'?'number':'range'}"]`);
       if(matching){if(matching.type==='range')matching.max=Math.max(10,Math.ceil(valid[index].distanceKm));matching.value=format(valid[index][field]);}
@@ -136,7 +135,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
       else if(action==='remove')next.splice(index,1);
       else if(action==='up'||action==='down'){const other=index+(action==='up'?-1:1);[next[index],next[other]]=[next[other],next[index]];}
       const valid=validateRouteProfile(next);
-      segments=valid;profileEdited=true;active=true;selectedIndex=action==='add'?next.length-1:action==='insert-before'?index:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed(origin,action);
+      segments=valid;selectedIndex=action==='add'?next.length-1:action==='insert-before'?index:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed(origin,action);
     }catch(error){showError(error);}
   };
   container.addEventListener('click',event=>{
@@ -154,5 +153,6 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     const button=event.target.closest('button[data-action]');if(button)performAction(button,segmentList);
   });
   render();
-  return {get active(){return active;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){uniform={distanceKm,gradePercent,speedLimitKmh};if(!profileEdited){segments=[{...uniform,distanceKm:Math.max(.01,Math.min(100,distanceKm))}];render();}else if(!active)syncMode();}};
+  notify();
+  return {get active(){return true;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){if(segments.length!==1)return;segments=validateRouteProfile([{distanceKm,gradePercent,speedLimitKmh}]);render();notify();}};
 }

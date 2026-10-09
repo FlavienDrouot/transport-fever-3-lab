@@ -40,12 +40,12 @@ test('Infrastructure limits speed and lengthens a long journey without changing 
   const raw=data.trains.find(t=>t.id==='fuxing'), fast={...raw,model:createModel(raw,data.source)};
   const options={distanceKm:30,fillRatio:.7};
   const unrestricted=analyseService(fast,options);
-  for(const speed of [100,160,350]){
+  for(const speed of [10,90,100,160,350]){
     const r=analyseService(fast,{...options,infrastructureSpeedKmh:speed});
     assert.ok(r.peakSpeedKmh<=speed+1e-7);assert.ok(r.travelSeconds>=unrestricted.travelSeconds-1e-7);
   }
   assert.equal(fast.maxSpeedKmh,350);
-  assert.throws(()=>analyseService(fast,{...options,infrastructureSpeedKmh:120}),RangeError);
+  assert.throws(()=>analyseService(fast,{...options,infrastructureSpeedKmh:351}),RangeError);
 });
 test('A platform limit rejects one overlong unit but includes an exact fit',()=>{
   const options={distanceKm:10,platformLengthMetres:train.lengthMetres};

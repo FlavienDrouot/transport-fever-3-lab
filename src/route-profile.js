@@ -7,7 +7,7 @@ export function validateRouteProfile(segments) {
   const route = segments.map((part, index) => {
     const distanceKm=Number(part.distanceKm),gradePercent=Number(part.gradePercent),speedLimitKmh=Number(part.speedLimitKmh);
     if (!Number.isFinite(distanceKm) || distanceKm < .000001 || distanceKm > 100) throw new RangeError(`Segment ${index+1}: distance must be positive and at most 100 km`);
-    validateGradient(gradePercent,9);
+    validateGradient(gradePercent);
     if (!Number.isFinite(speedLimitKmh) || speedLimitKmh < 10 || speedLimitKmh > 350) throw new RangeError(`Segment ${index+1}: speed limit must be 10–350 km/h`);
     total+=distanceKm;
     return {distanceKm,gradePercent,speedLimitKmh};

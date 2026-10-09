@@ -57,7 +57,7 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
 /** Signed A→B grade; the return leg has the opposite gradient. */
 export function roundTripMotion(train,{gradePercent=0,routeProfile=null,...options}) {
   if(routeProfile)return routeRoundTrip(train,scaledRouteProfile(routeProfile,options.distanceKm),options);
-  validateGradient(gradePercent,9);
+  validateGradient(gradePercent);
   const outbound=travelBetweenStops(withRailGradient(train,gradePercent),options);
   const back=gradePercent?travelBetweenStops(withRailGradient(train,-gradePercent),options):outbound;
   return {travelSeconds:(outbound.travelSeconds+back.travelSeconds)/2,
@@ -125,7 +125,7 @@ function analyseSingleService(train, options, fleetCount = null) {
 /** Platform length is a hard limit; no short-platform loading penalty is modelled. */
 export function serviceEligible(train, {platformLengthMetres = null,gradePercent = 0,routeProfile = null} = {}) {
   if (platformLengthMetres !== null && (!Number.isFinite(platformLengthMetres) || platformLengthMetres <= 0)) throw new RangeError('Platform length must be positive or null');
-  validateGradient(gradePercent,9);
+  validateGradient(gradePercent);
   if(routeProfile){
     const route=validateRouteProfile(routeProfile);
     if(!canClimbRail(train,route[0].gradePercent)||!canClimbRail(train,-route.at(-1).gradePercent)||!routeRoundTrip(train,route,{distanceKm:route.reduce((sum,part)=>sum+part.distanceKm,0)}).eligible)return false;
@@ -138,7 +138,7 @@ export function serviceEligible(train, {platformLengthMetres = null,gradePercent
 
 export function analyseService(train, options) {
   const {infrastructureSpeedKmh = null, allowMultipleUnits = false, platformLengthMetres = null} = options;
-  if (infrastructureSpeedKmh !== null && ![100,160,350].includes(infrastructureSpeedKmh)) throw new RangeError('Infrastructure speed must be 100, 160 or 350 km/h');
+  if (infrastructureSpeedKmh !== null && (!Number.isFinite(infrastructureSpeedKmh)||infrastructureSpeedKmh<10||infrastructureSpeedKmh>350)) throw new RangeError('Infrastructure speed must be 10–350 km/h');
   if (!serviceEligible(train, options)) return {eligible:false, efficiency:0, maintenancePerJourney:null};
   const vehicle=infrastructureSpeedKmh===null?train:withRailSpeedLimit(train,infrastructureSpeedKmh);
   const resultFor = (units, fleetCount = null) => {
