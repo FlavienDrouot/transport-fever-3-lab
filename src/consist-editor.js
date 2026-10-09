@@ -68,7 +68,7 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
       $('composition-summary').innerHTML=`<dl class="consist-totals">${[
         ['Capacity',`${fmt(preview.passengerCapacity??preview.cargoCapacity)} ${draftContext.category==='passengers'?'passengers':'cargo units'}`],
         ['Length',`${fmt(preview.lengthMetres)} m`],['Maximum speed',`${fmt(preview.maxSpeedKmh)} km/h`],
-        ['Empty mass',`${fmt(preview.massTonnes)} t`],['Power',`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],['Traction',`${fmt(preview.tractionKgf)} kgf`],
+        ['Empty mass',`${fmt(preview.massTonnes)} t`],['Power',`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],['Traction',`${fmt(preview.tractionKgf*units.kgfNewtons,0)} N`],
         ['Handling',`${preview.handlingRate.toLocaleString('en-GB',{maximumFractionDigits:4})} ${draftContext.category==='passengers'?'passengers':'cargo units'}/s`],
         ['Purchase',`$${fmt(preview.economy.purchasePrice)}`],['Running costs',`$${fmt(preview.economy.annualMaintenance)}/year`]
       ].map(([key,value])=>`<div><dt>${key}</dt><dd>${value}</dd></div>`).join('')}</dl>`;

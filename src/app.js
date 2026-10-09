@@ -1,3 +1,6 @@
+import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,speedOrdinateMaximum} from './motion-chart.js';
+import {mountGradientControl} from './gradient-control.js';
+import {canClimb} from './gradient.js';
 import {createDataLoader} from './data-loader.js';
 import {mountControlHelp} from './control-help.js';
 import {validateNumberInputs,syncNumberInput,mountDistanceControl,mountYearControl} from './numeric-controls.js';
@@ -18,7 +21,7 @@ import {renderTruckService, selectRoadVehicles} from './trucks.js';
 import {renderDataView} from './data-view.js';
 import {curveLabels, trainLegend} from './chart-labels.js';
 import {economicStory,yearRankingStory} from './economic-crossovers.js';
-import {withRailSpeedLimit} from './rail-motion.js';
+import {withRailSpeedLimit,withRailGradient} from './rail-motion.js';
 import {renderEconomicCrossovers} from './economic-crossover-chart.js';
 import {renderEconomicChart} from './economic-chart.js';
 import {serviceEligible} from './line.js';
@@ -29,7 +32,7 @@ import {createScale} from './scales.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {crossoverStory, leaderCurveWindow, rankWindow} from './crossovers.js';
 import {formatTime} from './format.js';
-import {raceHorizon, rankingSettlesAt, suggestedDistanceLimit, speedHorizon} from './race.js';
+import {raceHorizon, suggestedDistanceLimit, speedHorizon, speedDistanceHorizon} from './race.js';
 const $ = id => document.getElementById(id);
 const loadData=createDataLoader(fetch,import.meta.url);
 let roadLoaded=false,roadLoading,configurationLoading,dataLoading,sourceMounted=false,updateRoadCategory;
@@ -38,14 +41,20 @@ const scaleMode = (axis, kind = 'race') => document.querySelector(`input[name="$
 const views = {
   distance: {title: 'Distance over time', x: 'Time since departure (m:ss)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading train.'},
   speed: {title: 'Speed over time', x: 'Time since departure (m:ss)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The curves show how each train accelerates to its top speed.'},
+  'speed-distance': {title:'Speed over distance',x:'Distance travelled (km)',y:'Speed (km/h)',unit:'km',xFloor:.1,yFloor:10,yUnit:'km/h',help:'The curves show how each train accelerates along the track.'},
   time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (m:ss)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the train that reaches the distance first.'}
 };
 const distanceLimits = new Map();
 function selectionLimits(ts) {
   const key = ts.map(t => t.id).sort().join('|');
-  if (!distanceLimits.has(key)) distanceLimits.set(key, {stable: rankingSettlesAt(ts), limit: suggestedDistanceLimit(ts)});
+  if (!distanceLimits.has(key)) {
+    if(!crossoverCache.has(key))crossoverCache.set(key,crossoverStory(ts));
+    const stable=crossoverCache.get(key).intervals.at(-1)?.start??0;
+    distanceLimits.set(key,{stable,limit:suggestedDistanceLimit(ts,stable)});
+  }
   return distanceLimits.get(key);
 }
+let speedView='speed';
 let economicStoryKey, currentEconomicStory;
 let consistEditor,baseTrains,trainSelector,roadSelector;
 let economicCategoryControl,roadCategoryControl;
@@ -57,13 +66,14 @@ function roadTargets(){return {demandPerYear:roadFlow===null?null:roadFlow*(road
 let truckService = {distanceKm:1,fillRatio:1,loadedReturn:false,specializedTerminal:false,specializedWarehouse:false};
 let dataset, experiments, trains, selected, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2035, lineFill = 1, desiredFlow = null, maxHeadwaySeconds = null, frequencyMode = 'maximum', infrastructureSpeedKmh = 350, allowMultipleUnits = false, platformLengthMetres = null;
 let economicCategory='passengers',economicCargo='all';
+let railGradePercent=0;
 let railFreight={loadedReturn:false,stopA:{},stopB:{}};
-function serviceTargets(){return {maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...(economicCategory==='freight'?{freight:true,demandPerYear:desiredFlow,allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})};}
-function economicSelectionOptions(){return {freight:economicCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres};}
-function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear && ($('economics').hidden||economicCandidates([t],economicSelectionOptions()).length)).map(t=>withRailSpeedLimit(t,infrastructureSpeedKmh));}
-function arrivalName(t, view) {return view === 'speed' ? t.name : `${t.name} · ${formatTime(t.model.timeAt(routeDistance))}`;}
+function serviceTargets(){return {gradePercent:railGradePercent,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...(economicCategory==='freight'?{freight:true,demandPerYear:desiredFlow,allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})};}
+function economicSelectionOptions(){return {freight:economicCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres,gradePercent:railGradePercent};}
+function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear && ($('economics').hidden||economicCandidates([t],economicSelectionOptions()).length)).map(t=>withRailGradient(withRailSpeedLimit(t,infrastructureSpeedKmh),railGradePercent)).filter(t=>t.model.canStart!==false);}
+function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.name} · ${formatTime(t.model.timeAt(routeDistance))}`;}
 function renderSelectionCount() {trainSelector.updateCount();}
-function value(t, x, view) {return view === 'time' ? t.model.timeAt(x) : t.model.stateAt(x)[view === 'speed' ? 'speedKmh' : 'distanceKm'];}
+const value=motionValue;
 function trainCandidates() {return $('economics').hidden?trains.filter(t=>t.year<=catalogueYear):economicCandidates(trains,economicSelectionOptions());}
 function visible() {return trainSelector.getVisible();}
 function renderCatalogue() {
@@ -123,6 +133,7 @@ function sample(t, xScale, yScale, view, horizon) {
   }
   if (start > end) return [];
   const xs = new Set([start, end]);
+  for(const point of motionTransitions(t,view))if(point.x>=start&&point.x<=end)xs.add(point.x);
   for (let i = 0; i <= 400; i++) {
     const x = xScale.mode === 'log' ? xScale.invert(i / 400) : i * horizon / 400;
     if (x >= start && x <= end) xs.add(x);
@@ -133,10 +144,10 @@ function sample(t, xScale, yScale, view, horizon) {
 }
 function tickLabel(n) {return fmt(n, n > 0 && n < 1 ? Math.min(4, Math.ceil(-Math.log10(n))) : n % 1 ? 1 : 0);}
 function chartHorizon(view, ts = active()) {
-  return view === 'time' ? routeDistance : view === 'speed' ? speedHorizon(ts) : Math.max(1, raceHorizon(ts, routeDistance).seconds);
+  return view === 'time' ? routeDistance : view === 'speed-distance'?speedDistanceHorizon(ts):view === 'speed' ? speedHorizon(ts) : Math.max(1, raceHorizon(ts, routeDistance).seconds);
 }
 function renderChart(kind, width) {
-  const view = kind === 'speed' ? 'speed' : raceView;
+  const view = kind === 'speed' ? speedView : raceView;
   const el = id => $(kind === 'speed' ? `speed-${id}` : id);
   const clipId = `${kind}-plot-clip`;
   const W = typeof width === 'number' ? width : Math.max(320, el('chart').clientWidth || 1000);
@@ -145,13 +156,15 @@ function renderChart(kind, width) {
   const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 220, T = 45 + labelSpace, B = 50;
   const horizon = chartHorizon(view, ts);
   el('chart-heading').textContent = spec.title;
-  const xName = view === 'time' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view === 'speed' ? 'Speed' : 'Distance';
+  const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
-  el('chart-help').textContent = spec.help;
+  el('chart-help').textContent = view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited trains approach an equilibrium speed. This view covers at least 99.9% of that limit; race and service timings retain full precision.':spec.help;
+  el('chart-help').textContent+=' Hover or focus a train to see transitions and coordinates.';
+  if(kind==='speed')document.querySelector('#race-links a[href="#speed-explorer"]').textContent=view==='speed'?'Speed / time':'Speed / distance';
   el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
-  const ymax = view === 'distance' ? routeDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
+  const ymax = view.startsWith('speed') ? speedOrdinateMaximum(ts,horizon,view) : view === 'distance' ? routeDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
   const xScale = createScale(scaleMode('x', kind), horizon, Math.min(spec.xFloor, horizon / 10));
   const yScale = createScale(scaleMode('y', kind), ymax, Math.min(spec.yFloor, ymax / 10));
   const notes = [];
@@ -173,7 +186,7 @@ function renderChart(kind, width) {
   for(const x of xScale.ticks) {
     const pos=sx(x);
     if(pos-lastX < 42) continue; lastX=pos;
-    content+=`<text x="${pos}" y="${H-B+23}" text-anchor="middle">${view !== 'time' ? formatTime(x) : tickLabel(x)}</text>`;
+    content+=`<text x="${pos}" y="${H-B+23}" text-anchor="middle">${view === 'time'||view==='speed-distance' ? tickLabel(x) : formatTime(x)}</text>`;
   }
   content+=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#ccd4cc"/><text x="${(W+L-R)/2}" y="${H-6}" text-anchor="middle">${spec.x}${xScale.mode==='log' ? ' · log scale' : ''}</text>`;
   if (view === 'distance' && Number.isFinite(sy(routeDistance))) {
@@ -203,12 +216,14 @@ function renderChart(kind, width) {
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);
     for(const {t,x,y,labelY} of labelled) content+=`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" data-train="${escape(t.id)}" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t, view))}</text>`;
   }
+  content+='<g class="motion-transition-overlay" pointer-events="none"></g>';
   el('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>${trainLegend(ts,W,highlighted)}`;
-  mountChartInteractions(el('chart'),{highlighted});
+  const overlay=el('chart').querySelector('.motion-transition-overlay');
+  mountChartInteractions(el('chart'),{highlighted,onHighlight:id=>{overlay.innerHTML=renderMotionTransitions(ts.find(t=>t.id===id),{view,sx,sy,left:L,right:W-R,top:T,bottom:H-B});overlay.parentNode.appendChild(overlay);}});
 }
 let raceYearKey,raceYearStory;
 function renderRaceYear(kind){
-  const ts=trains.filter(t=>selected.has(t.id)).map(t=>withRailSpeedLimit(t,infrastructureSpeedKmh));
+  const ts=trains.filter(t=>selected.has(t.id)).map(t=>withRailGradient(withRailSpeedLimit(t,infrastructureSpeedKmh),railGradePercent)).filter(t=>t.model.canStart!==false);
   const key=JSON.stringify([ts.map(t=>[t.id,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh]),routeDistance]);
   if(key!==raceYearKey){
     const valueAt=(id,x)=>{const train=ts.find(t=>t.id===id);return train.year<=x?train.model.timeAt(routeDistance):null;};
@@ -368,14 +383,14 @@ function renderLineAnalysis() {
   const best=rows[0]?.result.efficiency||0;
   const winners=rows.filter(({result})=>best>0&&Math.abs(result.efficiency/best-1)<1e-9);
   renderServiceSummary($('line-summary'),{names:winners.map(({t})=>t.name),cost:winners[0]?.result.maintenancePerUnit,unit,
-    emptyMessage:!rows.length?(selection.excluded.length?'No selected train fits the maximum length.':'No selected train is available in this year.'):`Utilization is zero: no ${freight?'cargo deliveries':'passenger journeys'} and no best service choice.`});
-  $('line-caption').textContent=`A–B–A at ${fmt(routeDistance)} km per leg · ${freight?(railFreight.loadedReturn?'loaded return · ':'empty return · '):''}normal-difficulty running costs`;
+    emptyMessage:!rows.length?(selection.excluded.length?'No selected train fits the length or gradient constraints.':'No selected train is available in this year.'):`Utilization is zero: no ${freight?'cargo deliveries':'passenger journeys'} and no best service choice.`});
+  $('line-caption').textContent=`A–B–A at ${fmt(routeDistance)} km per leg${railGradePercent?` · ${fmt(railGradePercent,1)}% A→B (theoretical)`:''} · ${freight?(railFreight.loadedReturn?'loaded return · ':'empty return · '):''}normal-difficulty running costs`;
   const headings=freight?[
     ['Rank'],['Train'],['Cost / cargo unit','$ · lower is better'],['Trains'],['Interval','m:ss'],['Delivered','units / year'],
-    ['Length','m / train'],['Capacity','units / train'],['Utilization','%'],['Fleet running cost','$ / year'],['Load / loaded leg','cargo units'],['Handling A / B','units / s'],['Travel / leg','m:ss'],['Stop A / B','m:ss'],['Round trip','m:ss']
+    ['Length','m / train'],['Capacity','units / train'],['Utilization','%'],['Fleet running cost','$ / year'],['Load / loaded leg','cargo units'],['Handling A / B','units / s'],[railGradePercent?'Travel A→B / B→A':'Travel / leg','m:ss'],['Stop A / B','m:ss'],['Round trip','m:ss']
   ]:[
     ['Rank'],['Train'],['Cost / passenger','$ · lower is better'],['Trains'],['Interval','m:ss'],['Rate','pax / year / direction'],
-    ['MU / train'],['Length','m / train'],['Capacity','seats / train'],['Utilization','%'],['Fleet running cost','$ / year'],['Load / leg','passengers'],['Handling','multiplier → pax / s'],['Travel / leg','m:ss'],['Stop / terminal','m:ss'],['Round trip','m:ss']
+    ['MU / train'],['Length','m / train'],['Capacity','seats / train'],['Utilization','%'],['Fleet running cost','$ / year'],['Load / leg','passengers'],['Handling','multiplier → pax / s'],[railGradePercent?'Travel A→B / B→A':'Travel / leg','m:ss'],['Stop / terminal','m:ss'],['Round trip','m:ss']
   ];
   $('line-readout').closest('table').querySelector('thead tr').innerHTML=headings.map(([label,units],i)=>`<th scope="col"${i>=6?' class="service-detail"':''}>${label}${units?`<span class="table-unit">${units}</span>`:''}</th>`).join('');
   let rank=0,prior;
@@ -385,13 +400,13 @@ function renderLineAnalysis() {
     prior=score;
     const cells=freight?[
       score===null?'—':fmt(score,2),r.trainCount,formatTime(r.headwaySeconds),fmt(r.deliveredPerYear,0),fmt(r.trainLengthMetres,1),r.capacityPerTrain,`${fmt(r.actualOccupancyRatio*100,1)}%`,fmt(r.fleetMaintenance,0),
-      fmt(r.cargoPerLeg),`${fmt(r.handlingRateA,2)} / ${fmt(r.handlingRateB,2)}`,formatTime(r.travelSeconds),`${formatTime(r.stationSecondsA)} / ${formatTime(r.stationSecondsB)}`,formatTime(r.roundTripSeconds)
+      fmt(r.cargoPerLeg),`${fmt(r.handlingRateA,2)} / ${fmt(r.handlingRateB,2)}`,railGradePercent?`${formatTime(r.outboundTravelSeconds)} / ${formatTime(r.returnTravelSeconds)}`:formatTime(r.travelSeconds),`${formatTime(r.stationSecondsA)} / ${formatTime(r.stationSecondsB)}`,formatTime(r.roundTripSeconds)
     ]:[
       score===null?'—':fmt(score,2),r.trainCount,formatTime(r.headwaySeconds),fmt(r.perDirectionJourneysPerYear,0),r.unitsPerTrain,fmt(r.trainLengthMetres,1),r.capacityPerTrain,`${fmt(r.actualOccupancyRatio*100,1)}%`,fmt(r.fleetMaintenance,0),fmt(r.passengers),
-      `${t.formationLoadingUnloadingSpeedMultiplier!=null?`${fmt(t.formationLoadingUnloadingSpeedMultiplier*r.unitsPerTrain)} total`:`${r.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)}`} → ${fmt(r.rate,2)}`,formatTime(r.travelSeconds),formatTime(r.stationSeconds),formatTime(r.roundTripSeconds)
+      `${t.formationLoadingUnloadingSpeedMultiplier!=null?`${fmt(t.formationLoadingUnloadingSpeedMultiplier*r.unitsPerTrain)} total`:`${r.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)}`} → ${fmt(r.rate,2)}`,railGradePercent?`${formatTime(r.outboundTravelSeconds)} / ${formatTime(r.returnTravelSeconds)}`:formatTime(r.travelSeconds),formatTime(r.stationSeconds),formatTime(r.roundTripSeconds)
     ];
     return `<tr data-train="${escape(t.id)}" class="${t.id===highlighted?'is-highlighted':''}"><td>${best?rank:'—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td>${cells.map((c,i)=>`<td${i===0?` title="${score===null?'':score.toFixed(6)}"`:""}${i>=4?' class="service-detail"':''}>${c}</td>`).join('')}</tr>`;
-  }).join('')+selection.excluded.map(t=>`<tr><td>—</td><td>${escape(t.name)}</td><td class="service-exclusion" colspan="${$('show-service-details').checked?headings.length-2:4}">Excluded: ${fmt(t.lengthMetres,1)} m exceeds the ${fmt(platformLengthMetres,1)} m length limit.</td></tr>`).join('');
+  }).join('')+selection.excluded.map(t=>`<tr><td>—</td><td>${escape(t.name)}</td><td class="service-exclusion" colspan="${$('show-service-details').checked?headings.length-2:4}">Excluded: ${railGradePercent&&!canClimb(t,Math.abs(railGradePercent))?'cannot climb this gradient.':`${fmt(t.lengthMetres,1)} m exceeds the ${fmt(platformLengthMetres,1)} m length limit.`}</td></tr>`).join('');
   updateTablePreview(document,'line-readout');
   return selection;
 }
@@ -495,7 +510,9 @@ function render() {
   renderCrossovers();
   renderCrossoverCurves();
   const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);
-  $('race-summary').textContent=ranking.length?`${ranking[0].t.name} arrives first at ${fmt(routeDistance)} km in ${formatTime(ranking[0].time)}${ranking.length>1?`; ${formatTime(ranking[1].time-ranking[0].time)} ahead of ${ranking[1].t.name}`:''}. Ideal standing start; braking is excluded.`:'Select at least one train to compare travel times.';
+  $('race-summary').textContent=ranking.length?`${ranking[0].t.name} arrives first at ${fmt(routeDistance)} km in ${formatTime(ranking[0].time)}${ranking.length>1?`; ${formatTime(ranking[1].time-ranking[0].time)} ahead of ${ranking[1].t.name}`:''}. Gradient A→B: ${fmt(railGradePercent,1)}% (theoretical); braking is excluded.`:'Select at least one train to compare travel times.';
+  const blocked=trains.filter(t=>selected.has(t.id)&&t.year<=catalogueYear&&railGradePercent>0&&!canClimb(t,railGradePercent));
+  if(blocked.length)$('race-summary').textContent+=` Cannot start on this gradient: ${blocked.map(t=>t.name).join(', ')}.`;
   $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmt(routeDistance)} km`;
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
@@ -597,7 +614,7 @@ async function init() {
   trainSelector=mountVehicleSelector($('train-selector'),{
     ids:{search:'train-search',sort:'train-sort',count:'selection-count',select:'select-visible',clear:'clear-visible',list:'trains',empty:'no-results'},
     getItems:trainCandidates,getSelected:()=>selected,
-    describe:t=>`${t.massTonnes} t · ${fmt(t.powerCh * dataset.source.horsepowerWatts / 1000)} kW · ${fmt(t.tractionKgf,0)} kgf`,
+    describe:t=>`${t.massTonnes} t · ${fmt(t.powerCh * dataset.source.horsepowerWatts / 1000)} kW · ${fmt(t.tractionKgf*dataset.source.kgfNewtons,0)} N`,
     onHighlight:id=>setChartHighlight(document,'rail',id),
     onChange:()=>{highlighted=undefined;render();},onEdit:editComposition
   });
@@ -629,7 +646,7 @@ async function init() {
     $('road-handling-group').hidden=passenger;
     $('truck-speed-limit').setAttribute('aria-label',includeTrams?'Infrastructure speed limit in kilometres per hour':'Road speed limit in kilometres per hour');
   };
-  const validateRoad=()=>validateNumberInputs(['truck-distance','truck-speed-limit','road-desired-flow','road-desired-headway'].map($),$('road-input-error'));
+  const validateRoad=()=>validateNumberInputs(['truck-distance','truck-speed-limit','road-desired-flow','road-desired-headway','road-gradient-input'].map($),$('road-input-error'));
   const updateTruckService=()=>{
     const useFlow=$('road-enable-flow').checked,useFrequency=$('road-enable-frequency').checked,speedEnabled=$('enable-truck-speed-limit').checked;
     $('road-desired-flow').disabled=!useFlow;$('road-desired-headway').disabled=!useFrequency;$('road-frequency-mode').disabled=!useFrequency;$('truck-speed-limit').disabled=!speedEnabled;
@@ -641,7 +658,7 @@ async function init() {
     truckRoadSpeedLimit=speedEnabled?$('truck-speed-limit').valueAsNumber:null;
     $('truck-distance-slider').value=Math.min(5,distanceKm);
     $('truck-utilization-value').textContent=`${Math.round(fillRatio*100)}%`;
-    truckService={distanceKm,fillRatio,loadedReturn:$('truck-loaded-return').checked,stopA:{specializedTerminal:$('truck-specialized-terminal').checked,specializedWarehouse:$('truck-specialized-warehouse').checked},stopB:{specializedTerminal:$('truck-specialized-terminal-b').checked,specializedWarehouse:$('truck-specialized-warehouse-b').checked}};
+    truckService={gradePercent:$('road-gradient-input').valueAsNumber,distanceKm,fillRatio,loadedReturn:$('truck-loaded-return').checked,stopA:{specializedTerminal:$('truck-specialized-terminal').checked,specializedWarehouse:$('truck-specialized-warehouse').checked},stopB:{specializedTerminal:$('truck-specialized-terminal-b').checked,specializedWarehouse:$('truck-specialized-warehouse-b').checked}};
     updateRoadCategory();render();
   };
   for(const id of ['road-enable-flow','road-enable-frequency','road-frequency-mode'])$(id).addEventListener('change',updateTruckService);
@@ -660,6 +677,7 @@ async function init() {
     truckCargo=document.querySelector('input[name="truck-cargo"]:checked').value;render();
   });
   const updateTruckYear=mountYearControl({range:$('truck-year'),output:$('truck-year-value'),previous:$('truck-year-previous'),next:$('truck-year-next'),onChange:year=>{truckYear=year;render();}});
+  mountGradientControl(document,$('road-gradient'),{noticeId:'road-input-error',validate:validateRoad,onChange:updateTruckService});
   mountDistanceControl({number:$('truck-distance'),range:$('truck-distance-slider'),validate:validateRoad,onChange:updateTruckService,event:'input'});
   for(const id of ['truck-utilization','truck-loaded-return','truck-specialized-terminal','truck-specialized-warehouse','truck-specialized-terminal-b','truck-specialized-warehouse-b'])$(id).addEventListener('input',updateTruckService);
   for(const id of ['road-phase-axis','road-cost-scale','road-rank-scale','race-phase-axis','economic-phase-axis'])$(id).addEventListener('change',render);
@@ -674,12 +692,13 @@ async function init() {
   $('explore-history').addEventListener('click',()=>{document.body.classList.add('history-exploration');selected=new Set(trains.map(t=>t.id));$('train-search').value='';setCatalogueYear(1900);});
   $('reset').addEventListener('click',()=>{document.body.classList.remove('history-exploration');selectAll(selected,trains);trainSelector.clearSearch();catalogueYear=Number($('catalogue-year').max);highlighted=undefined;renderCatalogue();render();});
   $('road-reset').addEventListener('click',()=>{selectAll(selectedRoad,Object.values(roadDatasets()).flat());roadSelector.clearSearch();$('truck-year').value=$('truck-year').max;updateTruckYear();});
+  $('speed-orientation').addEventListener('change',()=>{speedView=$('speed-orientation').querySelector('input:checked').value;render();});
   $('race-orientation').addEventListener('change',e=>{
     const previous=raceView;raceView=e.target.value;highlighted=undefined;
     if(previous!==raceView){const x=scaleMode('x'),y=scaleMode('y');document.querySelector(`input[name="x-scale"][value="${y}"]`).checked=true;document.querySelector(`input[name="y-scale"][value="${x}"]`).checked=true;}
     render();
   });
-  const validateEconomics=()=>validateNumberInputs(['line-distance-input','desired-flow','desired-headway','platform-length'].map($),$('economic-input-error'));
+  const validateEconomics=()=>validateNumberInputs(['line-distance-input','desired-flow','desired-headway','platform-length','line-gradient-input'].map($),$('economic-input-error'));
   const updateTargets=()=>{
     const flow=Number($('desired-flow').value), interval=Number($('desired-headway').value);
     const flowEnabled=$('enable-flow').checked, frequencyEnabled=$('enable-frequency').checked;
@@ -690,6 +709,7 @@ async function init() {
     $('frequency-mode').disabled=!frequencyEnabled;
     $('allow-multiple-units').disabled=!(frequencyEnabled&&flowEnabled)||economicCategory==='freight';
     if(!validateEconomics())return;
+    railGradePercent=$('line-gradient-input').valueAsNumber;raceGradientControl.setValue(railGradePercent);
     routeDistance=$('line-distance-input').valueAsNumber;lineFill=$('line-fill').valueAsNumber/100;
     desiredFlow=$('enable-flow').checked?flow:null;
     maxHeadwaySeconds=$('enable-frequency').checked?interval*60:null;
@@ -704,6 +724,13 @@ async function init() {
     $('desired-headway').disabled=maxHeadwaySeconds===null;
     render();
   };
+  const updateGradient=grade=>{
+    railGradePercent=grade;lineGradientControl.setValue(grade);raceGradientControl.setValue(grade);
+    crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
+  };
+  const lineGradientControl=mountGradientControl(document,$('line-gradient'),{rail:true,noticeId:'economic-input-error',validate:validateEconomics,onChange:updateGradient});
+  const validateRace=()=>validateNumberInputs([$('distance-input'),$('race-gradient-input')],$('race-input-error'));
+  const raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:updateGradient});
   $('race-infrastructure-speed').addEventListener('change',()=>{
     const speed=$('race-infrastructure-speed').querySelector('input:checked').value;
     $('infrastructure-speed').querySelector(`input[value="${speed}"]`).checked=true;
@@ -738,22 +765,22 @@ async function init() {
   $('service-options').addEventListener('toggle',updateStickyOffsets);
   $('line-fill').addEventListener('input',updateTargets);
   mountDistanceControl({number:$('line-distance-input'),range:$('line-distance'),validate:validateEconomics,onChange:updateTargets});
-  mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:()=>validateNumberInputs([$('distance-input')],$('race-input-error')),onChange:distance=>{routeDistance=distance;render();}});
+  mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:validateRace,onChange:distance=>{routeDistance=distance;render();}});
   for(const id of ['x-scale','y-scale','speed-x-scale','speed-y-scale','focus-distance','focus-time','crossover-orientation','emphasize-leaders','rank-distance-scale','economic-efficiency-scale','economic-focus-scale','economic-focus-y','economic-rank-scale']) $(id).addEventListener('change',()=>render());
   for (const kind of ['speed','race']) {
   const el = id => $(kind === 'speed' ? `speed-${id}` : id);
   el('svg').addEventListener('click',()=>{
-    const view = kind === 'speed' ? 'speed' : raceView, horizon = chartHorizon(view);
+    const view = kind === 'speed' ? speedView : raceView, horizon = chartHorizon(view);
     const prior=highlighted;highlighted=undefined;renderChart(kind,1400);const svg=el('chart').querySelector('svg').cloneNode(true);svg.querySelectorAll('.curve-hit').forEach(path=>path.remove());highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#56665d}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
-    const lines=[`Ideal model without resistance · Route distance: ${fmt(routeDistance)} km · Time horizon: ${fmt(view === 'speed' ? horizon : raceHorizon(active(), routeDistance).seconds)} s`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
+    const lines=[`Theoretical model · Gradient A→B: ${fmt(railGradePercent,1)}% · Route distance: ${fmt(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     const chartHeight=Number(svg.getAttribute('viewBox').split(' ')[3]);
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',chartHeight+30+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);
     download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${scaleMode('x',kind)}-${scaleMode('y',kind)}.svg`);
   });
-  el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? 'speed' : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active())for(let i=0;i<=300;i++){const x=i*horizon/300,time=view==='time'?t.model.timeAt(x):x,state=t.model.stateAt(time);rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
+  el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? speedView : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active())for(let i=0;i<=300;i++){const x=i*horizon/300,state=motionStateAtAbscissa(t,x,view),time=state.time;rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
   }
   const stickyObserver = new ResizeObserver(updateStickyOffsets);
   stickyObserver.observe(document.querySelector('.app-header'));

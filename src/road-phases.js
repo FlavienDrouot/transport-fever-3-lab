@@ -1,3 +1,4 @@
+import {roadGradientSpeeds} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles} from './trucks.js';
 import {rankingStory} from './economic-crossovers.js';
@@ -11,6 +12,7 @@ const fmt=n=>formatNumber(n,2);
 export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5}={}){
   if(!['distance','year','utilization'].includes(axis))throw new RangeError('Unsupported road phase axis');
   const rows=(options.passenger?analysePassengerRoadService:analyseTruckService)(vehicles,options);
+  vehicles=vehicles.filter(v=>rows.some(r=>r.truck.id===v.id));
   const coefficients=new Map(rows.map(row=>{
     const factor=row.truck.economy.annualMaintenance/(GAME_YEAR_SECONDS*row.deliveredPerCycle);
     return [row.truck.id,{row,transferFactor:(options.demandPerYear??0)/GAME_YEAR_SECONDS*(row.loadingSeconds+row.unloadingSeconds)/row.deliveredPerCycle,handling:factor*(row.loadingSeconds+row.unloadingSeconds),fixed:factor*(2*row.travelSeconds+2*row.terminalDelaySeconds),slope:factor*7200/row.effectiveSpeedKmh,intercept:factor*(row.loadingSeconds+row.unloadingSeconds+2*row.terminalDelaySeconds)}];
@@ -111,7 +113,8 @@ function phaseChart(container,vehicles,story,{axis,label,current,mode,rank,stepp
 let cacheKey,cached;
 export function renderRoadPhases(document,datasets,selection,options){
   const node=id=>document.getElementById(id),axis=node('road-phase-axis').querySelector('input:checked').value;
-  const vehicles=selectRoadVehicles(styleVehicleCatalogues(datasets),{...selection,year:axis==='year'?2035:selection.year});
+  let vehicles=selectRoadVehicles(styleVehicleCatalogues(datasets),{...selection,year:axis==='year'?2035:selection.year});
+  vehicles=vehicles.filter(v=>roadGradientSpeeds(v,options.gradePercent??0,options.roadSpeedLimit).eligible);
   const domain=axis==='year'?{start:1900,end:2035}:axis==='utilization'?{start:1,end:100}:{start:.01,end:Math.max(5,options.distanceKm)};
   const current=axis==='year'?selection.year:axis==='utilization'?options.fillRatio*100:options.distanceKm;
   const label=axis==='year'?'Game year':axis==='utilization'?'Utilization (%)':'One-way distance (km)';

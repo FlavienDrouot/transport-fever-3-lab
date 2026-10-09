@@ -1,4 +1,4 @@
-import {analyseService, GAME_YEAR_SECONDS, serviceEligible, travelBetweenStops} from './line.js';
+import {analyseService, GAME_YEAR_SECONDS, serviceEligible, roundTripMotion} from './line.js';
 import {withRailSpeedLimit} from './rail-motion.js';
 import {sizeFleet} from './service-fleet.js';
 
@@ -36,7 +36,7 @@ export function analyseFreightService(train, options) {
   const handlingRateB = handlingRate(multiplier, stopB, 'stopB');
   if (!serviceEligible(train, options)) return {eligible:false, efficiency:0, maintenancePerUnit:null};
   const vehicle = infrastructureSpeedKmh === null ? train : withRailSpeedLimit(train, infrastructureSpeedKmh);
-  const motion = travelBetweenStops(vehicle, {distanceKm,brakingDeceleration});
+  const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0});
   const returns = Number(loadedReturn);
   // A loads the outbound cargo and unloads the return; B performs the inverse.
   // Each configured operation has a 2 s pause, followed by 2 s before departure.
