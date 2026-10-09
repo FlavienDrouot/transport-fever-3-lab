@@ -10,7 +10,7 @@ An open-source, independent community project. Choose trains, adjust the route d
 
 The site has three spaces: **Compare**, **Design** and **Data & models**. In Compare, choose **Rail / Road** and **Performance / Service**: Rail offers travel-time comparisons and A–B–A service efficiency; Road currently offers Service only. Rail Performance and Service share the train selection and route. Design contains **Composition** for building trains and **Route** for editing the shared rail profile. Data & models groups **Catalogue**, **Models** and **Checks**, including detailed methods, inspiration and experimental evidence. Existing `#race`, `#economics`, `#trucks`, `#configurator` and `#route-profile` links still open the corresponding view.
 
-1. Choose trains in the right-hand picker, or open **Trains** on mobile. The list is sorted by introduction year, newest first. Search by name and use the year slider to explore vehicles introduced by that date.
+1. Launch **Avelia vs TGV** or **Avelia vs Fuxing** for a quick duel that keeps the current route, or choose trains in the right-hand picker (**Route & trains** on mobile). The list is sorted by introduction year, newest first. Search by name and use the year slider to explore vehicles introduced by that date.
 2. **Speed over time** shows acceleration and top speed.
 3. **Distance & time** compares progress or arrival time. Set a route distance and read the arrival ranking.
 4. **Crossovers** reveals where the best choice changes. The arrival curves emphasize winning segments; the rank chart also shows overtakes among the other trains.

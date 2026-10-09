@@ -99,7 +99,7 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
   function publish(change){
     let persisted=false;
     try {if(storage){storage.setItem(COMPOSITION_STORAGE_KEY,JSON.stringify({schemaVersion:1,compositions:[...saved.values()].map(compositionDefinition)}));persisted=true;}}catch{}
-    $('composition-message').textContent=change.removed?'Composition removed.':`Saved${persisted?' in this browser':''}. Available in ${change.item.carrier==='tram'?'Road (Include trams)':'Race and Economics'}.${persisted?'':' Browser storage is unavailable; keep this page open.'}`;
+    $('composition-message').textContent=change.removed?'Composition removed.':`Saved${persisted?' in this browser':''}. Available in ${change.item.carrier==='tram'?'Compare (Road · Include trams)':'Compare (Rail)'}.${persisted?'':' Browser storage is unavailable; keep this page open.'}`;
     drawSaved();onChange(change);
   }
   function newDraft(){draftContext={...context};editing=null;entries=[];$('composition-name').value=context.carrier==='rail'?'Custom train':'Custom tram';$('composition-message').textContent='';$('composition-save').textContent='Save composition';drawComposition();}
@@ -107,13 +107,18 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
     $('configuration-cargo-group').hidden=context.category!=='freight';$('configuration-year').value=context.year;$('configuration-year-value').textContent=context.year;
     drawCatalogue();
   }
+  function loadDraft(item,savedId=null){
+    context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,item.year??context.year)};
+    for(const key of ['carrier','category','cargo'])radio(`configuration-${key}`,context[key]);
+    $('configuration-year').value=context.year;$('configuration-year-value').textContent=context.year;
+    $('configuration-search').value='';radio('configuration-role','all');syncFilters();
+    draftContext={...context};editing=savedId;$('composition-name').value=item.draftName??item.name;
+    entries=item.components.map(c=>({...c}));$('composition-message').textContent='';drawComposition();$('composition-name').focus();
+    return true;
+  }
   function openComposition(id,duplicate=false){
     const original=saved.get(id);if(!original)return false;
-    const item=duplicate?duplicateDefinition(original):original;context={carrier:item.carrier,category:item.category,cargo:item.cargo??(item.freightSpecialization==='general'?'all':item.freightSpecialization??'all'),year:Math.max(context.year,original.year)};
-    for(const key of ['carrier','category','cargo'])radio(`configuration-${key}`,context[key]);
-    $('configuration-search').value='';radio('configuration-role','all');syncFilters();
-    draftContext={...context};editing=duplicate?null:item.id;$('composition-name').value=item.name;entries=item.components.map(c=>({...c}));drawComposition();$('composition-name').focus();
-    return true;
+    return loadDraft(duplicate?{...duplicateDefinition(original),year:original.year}:original,duplicate?null:id);
   }
   for(const id of ['configuration-carrier','configuration-category','configuration-cargo','configuration-year'])$(id).addEventListener('input',()=>{
     const next={carrier:readRadio('configuration-carrier'),category:readRadio('configuration-category'),cargo:readRadio('configuration-cargo'),year:$('configuration-year').valueAsNumber};
@@ -162,6 +167,7 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
   if(restored.skipped)$('composition-message').textContent='Some saved compositions could not be restored with the current catalogue.';
   return {
     edit:openComposition,
+    restoreDraft(item){return loadDraft(item,saved.has(item.sourceCompositionId)?item.sourceCompositionId:null);},
     getCompositions(){return [...saved.values()];},
     openContext(next){
       context={...next};

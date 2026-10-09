@@ -149,6 +149,7 @@ export function routeRoundTrip(train,segments,options={}) {
   const back=routeTrajectory(train,reverseRouteProfile(segments),{...options,brakeAtEnd:true});
   return {travelSeconds:(outbound.travelSeconds+back.travelSeconds)/2,
     outboundTravelSeconds:outbound.travelSeconds,returnTravelSeconds:back.travelSeconds,
+    outboundPeakSpeedKmh:outbound.maxSpeedKmh,returnPeakSpeedKmh:back.maxSpeedKmh,
     brakingSeconds:0,peakSpeedKmh:Math.max(outbound.maxSpeedKmh,back.maxSpeedKmh),eligible:!outbound.stalled&&!back.stalled};
 }
 

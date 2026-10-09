@@ -59,7 +59,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
     for(const id of ['composition-distance','composition-distance-range','composition-gradient-input','composition-gradient-range','composition-speed-limit'])$(id).disabled=!!profile;
     if(profile)for(const id of ['composition-distance','composition-gradient-input'])$(id).setAttribute('aria-invalid','false');
     const status=$('composition-route-profile-status');status.hidden=!profile;
-    status.innerHTML=profile?`Selected-route results use ${profile.length} segment${profile.length===1?'':'s'}, ${distance} km, with their own gradients and speed limits. <a href="#route-profile">Edit route profile ↗</a> The reference and curves below still use the saved uniform gradient and speed limit.`:'';
+    status.innerHTML=profile?`Selected-route results use ${profile.length} segment${profile.length===1?'':'s'}, ${Number(distance.toFixed(3))} km, with their own gradients and speed limits. <a href="#route-profile">Edit route profile ↗</a> Steady running and transient curves use the saved uniform gradient and speed limit.`:'';
     syncNumberInput($('composition-distance'),distance);gradient.setValue(settings.gradePercent);
     $('composition-distance-range').min=.1;$('composition-distance-range').max=Math.max(30,distance);$('composition-distance-range').value=distance;
     $('composition-speed-limit').querySelector(`input[value="${settings.infrastructureSpeedKmh}"]`).checked=true;

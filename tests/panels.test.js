@@ -40,16 +40,16 @@ test('Mobile drawers move the same controls and preserve state across viewport c
   mobile.matches=false;for(const handler of mobile.handlers)handler();
   assert.equal(node('road-sidebar').parent,node('road-sidebar-anchor'));assert.equal(node('road-sidebar').value,'preserved state');assert.equal(node('profile-sidebar').parent,node('profile-sidebar-anchor'));
 });
-test('Data is the last tab; route controls have one owner and labelled drawer',async()=>{
+test('Three workspaces keep contextual views; route controls have one owner and labelled drawer',async()=>{
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
-  assert.deepEqual([...html.matchAll(/data-analysis="([^"]+)"/g)].map(m=>m[1]),['race','economics','route-profile','trucks','configurator','data']);
+  assert.deepEqual([...html.matchAll(/data-space="([^"]+)"/g)].map(m=>m[1]),['compare','design','data']);
   const sidebar=html.match(/<aside id="road-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(sidebar);
   for(const id of ['truck-distance','truck-utilization','truck-year','truck-specialized-terminal','road-selector']){
     assert.ok(sidebar.includes(`id="${id}"`));assert.equal([...html.matchAll(new RegExp(`id="${id}"`,'g'))].length,1);
   }
   assert.ok(!sidebar.includes('id="road-category"'));
   const headers=[...html.matchAll(/<header class="analysis-overview">([\s\S]*?)<\/header>/g)].map(m=>m[1]);
-  assert.equal(headers.length,2);
+  assert.equal(headers.length,3);
   for(const id of ['economic-category','road-category'])assert.equal(headers.filter(header=>header.includes(`id="${id}"`)).length,1);
   const trains=html.match(/<aside id="catalogue"[\s\S]*?<\/aside>/)?.[0];assert.ok(trains.includes('id="line-capacity"'));assert.ok(trains.includes('id="route-distance"'));
   const profile=html.match(/<aside id="profile-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(profile?.includes('id="profile-segment-list"'));

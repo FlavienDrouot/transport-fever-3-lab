@@ -103,3 +103,12 @@ test('Configurator invitation selects the freight context and keeps an existing 
   nodes.get('composition-new').handlers.click();
   assert.equal(nodes.get('composition-context').textContent,'Rail · Passengers');
 });
+
+
+test('an unclimbable profile explains the route instead of a nonexistent platform limit',()=>{
+  const weak={...general,id:'weak',tractionKgf:1};
+  const routeProfile=[{distanceKm:1,gradePercent:9,speedLimitKmh:100}];
+  const selection=economicSelection([weak],new Set([weak.id]),{...options,routeProfile});
+  assert.equal(selection.empty,'gradient');
+  assert.match(economicEmptyContent(selection.empty,true,true),/href="#route-profile"/);
+});
