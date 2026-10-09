@@ -4,12 +4,24 @@ import {readFile} from 'node:fs/promises';
 import {createModel} from '../src/model.js';
 import {withRailGradient} from '../src/rail-motion.js';
 import {speedHorizon,speedDistanceHorizon} from '../src/race.js';
-import {motionStateAtAbscissa,motionValue,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum} from '../src/motion-chart.js';
+import {motionStateAtAbscissa,motionValue,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum,motionCurveEnd} from '../src/motion-chart.js';
+import {withRailProfile} from '../src/rail-motion.js';
 import {formatNumber,formatTime} from '../src/format.js';
 import {createScale} from '../src/scales.js';
 const data=JSON.parse(await readFile(new URL('../data/trains.json',import.meta.url)));
 const trains=data.trains.map(t=>({...t,color:'#147d64',model:createModel(t,data.source)}));
 const close=(a,b,tolerance=1e-7)=>assert.ok(Math.abs(a-b)<=tolerance*Math.max(1,Math.abs(b)),`${a} != ${b}`);
+
+test('finite time curves end at each train’s own arrival instead of drawing a flat tail',()=>{
+  const route=[{distanceKm:2,gradePercent:0,speedLimitKmh:160}];
+  const fast=withRailProfile(trains.find(t=>t.id==='avelia-liberty'),route);
+  const slow=withRailProfile(trains.find(t=>t.id==='draisine'),route);
+  const horizon=slow.model.timeAt(2);
+  assert.ok(fast.model.timeAt(2)<horizon);
+  for(const view of ['distance','speed'])close(motionCurveEnd(fast,view,horizon),fast.model.timeAt(2));
+  assert.equal(motionCurveEnd(fast,'speed-distance',horizon),horizon);
+  assert.equal(motionCurveEnd(trains[0],'distance',horizon),horizon);
+});
 
 test('Speed/distance follows physical distance inversion including gradients and export timing',()=>{
   for(const grade of [0,-9,9])for(const base of trains){

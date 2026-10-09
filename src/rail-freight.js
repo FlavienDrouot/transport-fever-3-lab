@@ -36,7 +36,8 @@ export function analyseFreightService(train, options) {
   const handlingRateB = handlingRate(multiplier, stopB, 'stopB');
   if (!serviceEligible(train, options)) return {eligible:false, efficiency:0, maintenancePerUnit:null};
   const vehicle = infrastructureSpeedKmh === null ? train : withRailSpeedLimit(train, infrastructureSpeedKmh);
-  const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0});
+  const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0,routeProfile:options.routeProfile??null});
+  if(motion.eligible===false)return {eligible:false,efficiency:0,maintenancePerUnit:null};
   const returns = Number(loadedReturn);
   // A loads the outbound cargo and unloads the return; B performs the inverse.
   // Each configured operation has a 2 s pause, followed by 2 s before departure.

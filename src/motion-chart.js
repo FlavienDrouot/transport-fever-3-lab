@@ -11,9 +11,15 @@ export function motionValue(train,x,view) {
   return view==='distance'?state.distanceKm:state.speedKmh;
 }
 
+/** A finite A→B profile has no trajectory after this train reaches B. */
+export function motionCurveEnd(train,view,horizon) {
+  if (!train.model.routeProfile || (view!=='distance' && view!=='speed')) return horizon;
+  return Math.min(horizon,train.model.timeAt(train.model.routeDistanceKm));
+}
+
 /** Keep the speed domain close to the speeds actually reached in this view. */
 export function speedOrdinateMaximum(trains,horizon,view) {
-  const maximum=Math.max(1,...trains.map(t=>motionValue(t,horizon,view)));
+  const maximum=Math.max(1,...trains.map(t=>t.model.routeProfile?Math.max(motionValue(t,horizon,view),t.model.effectiveMaxSpeedKmh):motionValue(t,horizon,view)));
   const step=10**Math.floor(Math.log10(maximum))/20;
   return Math.max(maximum,Math.ceil(maximum/step)*step);
 }
@@ -22,6 +28,13 @@ export function speedOrdinateMaximum(trains,horizon,view) {
 export function motionTransitions(train,view) {
   const model=train.model;
   if(model.canStart===false)return [];
+  if(model.routeProfile)return model.profileEvents.map(event=>{
+    const state=model.stateAt(event.time),horizontalDistance=view==='time'||view==='speed-distance';
+    return {...event,x:horizontalDistance?event.distanceKm:event.time,
+      y:view==='time'?event.time:view==='distance'?event.distanceKm:state.speedKmh,
+      xLabel:horizontalDistance?`d = ${formatNumber(event.distanceKm,3)} km`:`t = ${formatTime(event.time)}`,
+      yLabel:view==='time'?`t = ${formatTime(event.time)}`:view==='distance'?`d = ${formatNumber(event.distanceKm,3)} km`:`v = ${formatNumber(state.speedKmh,1)} km/h`};
+  });
   const traction=model.tractionEndSeconds,cap=model.speedCapSeconds;
   const hasPower=cap>traction+1e-9*Math.max(1,cap);
   const events=hasPower?[{time:traction,label:'Traction → power'}]:[];
@@ -40,6 +53,7 @@ export function motionTransitions(train,view) {
 export function renderModelTransitions(trains) {
   return trains.map(train=>{
     const model=train.model,end=motionTransitions(train,'speed').at(-1);
+    if(model.routeProfile){const first=model.profileEvents.find(event=>event.label==='Traction → power');return `<tr><td>${escape(train.name)}</td><td>${first?formatTime(first.time):'—'}</td><td>${first?formatNumber(first.distanceKm*1000,0):'—'}</td><td>${formatNumber(model.effectiveMaxSpeedKmh,1)}</td><td>${formatTime(model.speedCapSeconds)}</td><td>${formatNumber(model.routeDistanceKm,2)}</td></tr>`;}
     if(!end)return '';
     const maximum=model.effectiveMaxSpeedKmh??model.stateAt(model.speedCapSeconds).speedKmh;
     return `<tr><td>${escape(train.name)}</td><td>${formatTime(model.tractionEndSeconds)}</td><td>${formatNumber(model.stateAt(model.tractionEndSeconds).distanceKm*1000,0)}</td><td>${formatNumber(maximum,1)}</td><td>${formatTime(end.time)}</td><td>${formatNumber(model.stateAt(end.time).distanceKm,2)}</td></tr>`;

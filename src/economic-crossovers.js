@@ -13,7 +13,7 @@ const axisDefinitions = {
 export function economicStory(trains, distance, fill, targets = {}, {axis='distance',year=2035} = {}) {
   if(axis==='utilisation')axis='utilization';
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
-  const {start}=axisDefinitions[axis];
+  const start=axis==='distance'?Math.min(axisDefinitions.distance.start,distance/10):axisDefinitions[axis].start;
   const label=axis==='demand'&&targets.freight?`${UI_TERMS.rate} (${UI_TERMS.capacityUnit} / year)`:axisDefinitions[axis].label;
   const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
   const current={distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
@@ -35,9 +35,9 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
   const enabled=fill>0 || axis==='utilization';
   const story=axis==='year'?yearRankingStory(trains,valueAt,start,end,enabled):rankingStory(trains.map(t=>t.id),(id,x)=>{
     const cost=valueAt(id,x);return cost===null?null:1/cost;
-  },start,end,enabled);
+  },start,end,enabled,targets.routeProfile&&axis==='distance'?24:512);
   return {...story,axis,label,current,year,valueAt,discontinuous:axis==='year'||axis==='demand'||axis==='headway'||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null,
-    sampled:axis!=='year'&&(targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
+    sampled:axis!=='year'&&(targets.routeProfile||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
 }
 
 function ranksFor(ids,score,x) {
@@ -79,10 +79,10 @@ export function yearRankingStory(items,valueAt,start=1900,end=2035,enabled=true)
     ranksAt:x=>ranksFor(ids,score,x)};
 }
 
-export function rankingStory(ids, score, start, end, enabled = true) {
+export function rankingStory(ids, score, start, end, enabled = true, samples = 512) {
   if (!Number.isFinite(start) || !Number.isFinite(end) || start<=0 || end<=start) throw new RangeError('Invalid ranking domain');
   if (!ids.length || !enabled) return {start,end,roots:[],intervals:[],phases:[]};
-  const grid = [...new Set(Array.from({length:513},(_,i)=>[start+(end-start)*i/512,start*(end/start)**(i/512)]).flat())].sort((a,b)=>a-b);
+  const grid = [...new Set(Array.from({length:samples+1},(_,i)=>[start+(end-start)*i/samples,start*(end/start)**(i/samples)]).flat())].sort((a,b)=>a-b);
   const values = Object.fromEntries(ids.map(id=>[id,grid.map(x=>score(id,x))]));
   const delta = (a,b) => (a-b)/Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
   const roots=[];
