@@ -17,3 +17,18 @@ test('symbolic route sketch identifies each section and its relative rise and fa
   assert.ok(points[1][1]<points[0][1]);
   assert.ok(points[2][1]>points[1][1]);
 });
+
+test('linear route view positions boundaries in proportion to travelled distance',()=>{
+  const parts=[
+    {distanceKm:1,gradePercent:0,speedLimitKmh:100},
+    {distanceKm:3,gradePercent:4,speedLimitKmh:160},
+  ];
+  const equal=routeProfileSketch(parts);
+  const linear=routeProfileSketch(parts,{scale:'linear'});
+  const xValues=html=>html.match(/<polyline points="([^"]+)"/)[1].split(' ').map(pair=>Number(pair.split(',')[0]));
+  const [a,b,c]=xValues(equal),[d,e,f]=xValues(linear);
+  assert.equal((b-a)/(c-a),.5);
+  assert.equal((e-d)/(f-d),.25);
+  assert.match(linear,/Distance from A \(km\) · linear/);
+  assert.match(linear,/Horizontal distance is linear/);
+});

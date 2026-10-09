@@ -1,4 +1,4 @@
-import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum} from './motion-chart.js';
+import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum,motionCurveEnd} from './motion-chart.js';
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls} from './route-profile-control.js';
 import {canClimbRail} from './gradient.js';
@@ -112,10 +112,12 @@ function editComposition(id){
   location.hash='#composition-builder';syncAnalysisView();consistEditor.edit(id);
 }
 function sample(t, xScale, yScale, view, horizon) {
+  const curveEnd=motionCurveEnd(t,view,horizon);
   // Find where the curve enters the positive log domain, rather than inventing zero.
   let start = xScale.min;
+  if(start>curveEnd)return [];
   if (value(t, start, view) < yScale.min) {
-    let low = start, high = horizon;
+    let low = start, high = curveEnd;
     for (let i = 0; i < 50; i++) {
       const mid = (low + high) / 2;
       if (value(t, mid, view) < yScale.min) low = mid; else high = mid;
@@ -123,7 +125,7 @@ function sample(t, xScale, yScale, view, horizon) {
     start = high;
   }
   // Stop precisely at the displayed ceiling instead of flattening the curve there.
-  let end = horizon;
+  let end = curveEnd;
   if (value(t, end, view) > yScale.max) {
     let low = 0, high = end;
     for (let i = 0; i < 50; i++) {
@@ -212,10 +214,10 @@ function renderChart(kind, width) {
       content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(45 ${labelX} ${T-16})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t, view))}</text>`;
     }
   } else if(W>=700) {
-    const labelled = ts.map(t=>{const end=view==='distance'?Math.min(horizon,t.model.timeAt(ymax)):horizon;return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
+    const labelled = ts.map(t=>{const end=motionCurveEnd(t,view,horizon);return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);
-    for(const {t,x,y,labelY} of labelled) content+=`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" data-train="${escape(t.id)}" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t, view))}</text>`;
+    for(const {t,x,y,labelY} of labelled) content+=`${railRouteProfile&&view==='speed'?`<circle cx="${x}" cy="${y}" r="3" fill="${t.color}"/>`:`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/>`}<text class="end-label" data-train="${escape(t.id)}" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t, view))}</text>`;
   }
   content+='<g class="motion-transition-overlay" pointer-events="none"></g>';
   el('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>${trainLegend(ts,W,highlighted)}`;
@@ -746,7 +748,7 @@ async function init() {
   const raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:updateGradient});
   const profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:[{distanceKm:routeDistance,gradePercent:railGradePercent,speedLimitKmh:infrastructureSpeedKmh}],
-    statuses:[$('race-profile-status'),$('economic-profile-status')],visual:$('route-profile-visual'),
+    statuses:[$('race-profile-status'),$('economic-profile-status')],visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),
     onChange:state=>{railRouteProfile=state.segments;
       $('distance-input').disabled=$('line-distance-input').disabled=$('route-distance').disabled=$('line-distance').disabled=state.active;
       $('route-distance').closest('.horizon-control').hidden=$('line-distance').closest('.line-distance-control').hidden=state.active;
@@ -806,7 +808,7 @@ async function init() {
     svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);
     download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${scaleMode('x',kind)}-${scaleMode('y',kind)}.svg`);
   });
-  el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? speedView : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active())for(let i=0;i<=300;i++){const x=i*horizon/300,state=motionStateAtAbscissa(t,x,view),time=state.time;rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
+  el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? speedView : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active()){const end=motionCurveEnd(t,view,horizon);for(let i=0;i<=300;i++){const x=i*end/300,state=motionStateAtAbscissa(t,x,view),time=state.time;rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
   }
   const stickyObserver = new ResizeObserver(updateStickyOffsets);
   stickyObserver.observe(document.querySelector('.app-header'));
