@@ -178,7 +178,7 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 /* Route controls use the same desktop side-panel / mobile drawer pattern as trains. */
 .workspace.truck-view{grid-template-columns:minmax(0,1fr) 340px}
 .road-sidebar{top:var(--app-header-offset,0px);max-height:calc(100dvh - var(--app-header-offset,0px));overflow-y:auto;scrollbar-gutter:stable}
-.road-sidebar>.catalogue-heading{flex-shrink:0;margin-bottom:12px}
+.road-sidebar>.catalogue-heading{flex-shrink:0;margin-bottom:0}
 .road-sidebar .road-settings{display:flex;flex-direction:column;gap:14px;margin:0}
 .road-sidebar .road-settings .service-option-group{width:100%;height:auto;padding:10px 12px}
 .road-sidebar .consist-editor{padding:10px;margin-top:16px}
