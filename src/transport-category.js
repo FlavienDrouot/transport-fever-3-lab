@@ -7,3 +7,10 @@ export function mountTransportCategory(root, {value, onChange}) {
   root.addEventListener('change',()=>onChange(root.querySelector('input:checked').value));
   return {setValue};
 }
+
+/** Same cargo choices for Rail, Road and Composition; filtering stays with the owner. */
+export function mountFreightFilter(root,{name=root.id}={}){
+  root.innerHTML='<legend class="sr-only">Freight specialization</legend>'+[['all','All freight'],['bulk','Bulk'],['goods','Goods'],['flatbed','Flatbed'],['liquid','Liquid']].map(([value,label])=>`<label><input type="radio" name="${name}" value="${value}"${value==='all'?' checked':''}><span>${label}</span></label>`).join('');
+}
+
+export const speedPresets=domain=>domain==='road'?[50,80,120]:[100,160,350];

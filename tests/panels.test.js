@@ -44,7 +44,7 @@ test('Three workspaces keep contextual views; route controls have one owner and 
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
   assert.deepEqual([...html.matchAll(/data-space="([^"]+)"/g)].map(m=>m[1]),['compare','design','data']);
   const sidebar=html.match(/<aside id="road-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(sidebar);
-  for(const id of ['truck-distance','truck-utilization','truck-year','truck-specialized-terminal','road-selector']){
+  for(const id of ['road-service-settings','truck-year','road-selector']){
     assert.ok(sidebar.includes(`id="${id}"`));assert.equal([...html.matchAll(new RegExp(`id="${id}"`,'g'))].length,1);
   }
   assert.ok(!sidebar.includes('id="road-category"'));

@@ -162,9 +162,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 @media(max-width:700px){.truck-bar-row{grid-template-columns:minmax(90px,35%) minmax(0,1fr) 75px;gap:8px;font-size:12px;min-height:44px}.truck-bar-axis{margin-left:calc(35% + 8px);margin-right:83px}}
 
 /* Road inputs share the existing optional-service hierarchy. */
-.road-settings{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);gap:18px;margin:20px 0;align-items:start}.road-settings .service-option-group{height:100%;padding:12px 14px}.road-settings .target-control{font-size:12px;margin:16px 0}.road-field{display:flex;flex-direction:column;gap:7px;margin:18px 0;font-size:12px;min-width:0}.road-field>label{font-weight:550;display:flex;justify-content:space-between;gap:12px}.road-field input[type=range]{width:100%;min-width:0;accent-color:var(--green);margin:0}.road-field select{width:100%}.road-family-toggle{flex-wrap:wrap;font-size:12px}.road-family-toggle legend{font-size:12px;margin-bottom:6px}.road-family-toggle input:disabled+span{opacity:.45;cursor:default}.road-settings .truck-year-filter{margin:18px 0 0}.road-settings .year-stepper{margin-top:8px}.road-settings .info-disclosure{margin:18px 0 0}.road-settings .road-calibration{border-top:1px solid var(--line);padding-top:14px}.road-settings .road-family-toggle~.field-help{margin:7px 0;font-size:12px}.road-settings select:disabled{opacity:.65}.road-settings .target-control>div{row-gap:8px}
-@media(max-width:1150px){.road-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.road-handling{grid-column:1/-1}}
-@media(max-width:700px){.road-settings{grid-template-columns:minmax(0,1fr);gap:14px}.road-handling{grid-column:auto}.road-settings .service-option-group{height:auto}}
 
 .road-vehicle-kind{display:block;font-size:12px;color:var(--muted);font-weight:400}.truck-bar-row:has(.road-vehicle-kind){min-height:44px}
 
@@ -179,8 +176,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 .workspace.truck-view{grid-template-columns:minmax(0,1fr) 340px}
 .road-sidebar{top:var(--app-header-offset,0px);max-height:calc(100dvh - var(--app-header-offset,0px));overflow-y:auto;scrollbar-gutter:stable}
 .road-sidebar>.catalogue-heading{flex-shrink:0;margin-bottom:0}
-.road-sidebar .road-settings{display:flex;flex-direction:column;gap:14px;margin:0}
-.road-sidebar .road-settings .service-option-group{width:100%;height:auto;padding:10px 12px}
 .road-sidebar .consist-editor{padding:10px;margin-top:16px}
 .road-sidebar .consist-row{grid-template-columns:minmax(0,1fr) 70px;gap:8px}
 .road-sidebar .consist-row>button{grid-column:1/-1;justify-self:start}
@@ -198,10 +193,7 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 
 /* Compact route controls; detailed explanations remain in keyboard-accessible help. */
 .road-sidebar>.road-settings{flex-shrink:0}
-.road-sidebar .road-settings{gap:10px}
-.road-sidebar .road-settings .service-option-group{padding:8px 10px}
 .road-sidebar .road-settings .road-field{gap:5px;margin:10px 0}
-.road-sidebar .road-settings .target-control{margin:10px 0 0}
 .road-sidebar .road-settings .truck-year-filter{margin:10px 0 0}
 .road-sidebar .road-settings .year-stepper{margin-top:3px}
 .road-sidebar .road-settings .year-stepper input{margin:0}
@@ -212,9 +204,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 .road-sidebar .road-value-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .road-sidebar .road-value-row>label{font-weight:550}
 .road-sidebar .line-distance-entry input{width:70px}
-.road-sidebar .road-speed-control{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.road-sidebar .road-speed-control>div{margin:0;flex-wrap:nowrap}
-.road-sidebar .road-speed-control input[type=number]{width:60px}
 @media(pointer:coarse){.road-sidebar .road-inline-check,.road-sidebar .road-family-toggle label span{min-height:36px}}
 
 .road-sidebar .control-info{display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--muted);padding:2px;width:20px;min-width:20px;height:24px;font-size:14px;cursor:help}
@@ -225,7 +214,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 .catalogue .freight-filter>.control-info{flex:none}
 .road-sidebar .truck-year-filter{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:4px}
 .road-sidebar .truck-year-filter .year-stepper{grid-column:1/-1}
-.road-sidebar #road-return-control{display:flex;align-items:center;gap:4px}
 .road-sidebar .road-facility-row{gap:4px}
 .road-sidebar .road-tram-filter{gap:4px}
 
@@ -238,7 +226,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 /* Unified right panels and a catalogue/composition workspace. */
 @media(min-width:701px){.workspace,.workspace.truck-view{grid-template-columns:minmax(0,1fr) 340px}.workspace.data-view{grid-template-columns:minmax(0,1fr)}}
 .catalogue{gap:0}.catalogue .train-list{flex:none;max-height:none;overflow:visible}.catalogue #line-capacity{padding:0;margin:12px 0;border:0;position:static;box-shadow:none;max-height:none;overflow:visible;background:transparent}
-.train-route-settings h2{font-size:13px}.train-route-settings .service-basics,.train-route-settings .service-options-grid{display:flex;flex-direction:column;gap:10px;margin:10px 0}.train-route-settings .line-distance-control,.train-route-settings .utilization-control{width:100%;margin:0}.train-route-settings .service-option-group{padding:8px}.train-route-settings .service-options{margin:10px 0}.train-route-settings .control-help{font-size:12px;margin:4px 0}.train-route-settings .service-options summary span{display:block;font-size:12px;margin-top:4px}.train-route-settings .target-control{margin:10px 0}.train-route-settings #frequency-mode{flex-wrap:wrap}.train-route-settings input[type=range]{width:100%;accent-color:var(--green)}
 #train-race-settings{margin:12px 0 0;padding:10px}#train-race-settings .horizon-control{display:grid;grid-template-columns:minmax(0,1fr) 65px auto;gap:7px;margin:0}#train-race-settings .horizon-control label{grid-column:1/-1}#train-race-settings input[type=range]{grid-column:1/-1;width:100%}#train-race-settings input[type=number]{grid-column:2;width:65px}
 #road-selection-count{font-size:12px;color:var(--muted);margin:10px 0}.road-sidebar #road-vehicles{max-height:none;flex:none}button.control-info{border:0;background:transparent;color:var(--muted);cursor:help;padding:2px;font-size:14px}button.control-info:hover,button.control-info:focus-visible{background:transparent;color:var(--green)}
 .configuration-filters{display:flex;flex-direction:column;gap:14px;margin:12px 0}.configuration-filters .scale-toggle{flex-wrap:wrap;gap:0}.configuration-filters .scale-toggle>legend{float:none;width:100%;padding:0;margin:0 0 5px;font-size:12px}.configuration-filters .scale-toggle label span{padding:5px 7px;font-size:12px}.configuration-filters .search-label{margin:0}.configuration-filters .year-filter{margin:0}.configuration-sidebar h3{font-size:13px;margin:18px 0 6px}.consist-saved li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.consist-saved li>span{min-width:0}.saved-actions{display:flex;gap:4px}.saved-actions .saved-action{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;padding:3px}.saved-action svg{display:block;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}@media(pointer:coarse){.saved-actions .saved-action{width:36px;height:36px}}.consist-saved small,.component-table small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:3px}
@@ -248,7 +235,7 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 #configuration-drawer{position:fixed;inset:0 0 0 auto;margin:0;padding:0;width:min(90vw,360px);height:100dvh;max-height:none;max-width:none;border:0;background:var(--surface,#fff);color:inherit;box-shadow:-6px 0 30px #0002}#configuration-drawer::backdrop{background:#18251c66}
 @media(max-width:700px){.workspace,.workspace.truck-view{display:flex;flex-direction:column}.composition-builder{position:static;padding:12px}.component-table{max-height:45dvh}.composition-builder .consist-totals{grid-template-columns:repeat(2,minmax(0,1fr))}#configuration-drawer .catalogue{height:100%;max-height:none;padding:16px;border:0;position:static;overflow:auto}.app-header .analysis-nav{flex-wrap:wrap;justify-content:flex-start;gap:16px}.app-header .analysis-nav a{white-space:nowrap}#configuration-picker-toggle[hidden]{display:none!important}}
 @media(min-width:701px){#configurator{display:flex;flex-direction:column;min-height:700px;height:calc(100dvh - var(--app-header-offset) - 24px)}#component-catalogue{display:flex;flex-direction:column;flex:1;min-height:300px;margin-bottom:0}#component-catalogue .component-table{flex:1;min-height:220px;max-height:none}.composition-builder{position:static;flex-shrink:0;margin-top:14px;padding:12px}.composition-strip{max-height:175px}.composition-component{gap:5px;padding:8px}.composition-component strong{min-height:26px}.composition-builder .consist-totals{font-size:12px;gap:6px 16px;margin:8px 0}}
-.train-route-settings .service-basics>.utilization-control{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:4px}.train-route-settings .utilization-control label{grid-column:1}.train-route-settings .utilization-control output{grid-column:2;grid-row:1;min-height:0}.train-route-settings .utilization-control .control-info{grid-column:3;grid-row:1}.train-route-settings .utilization-control input[type=range]{grid-column:1/-1}#configuration-year{width:100%;accent-color:var(--green)}#configurator,#component-catalogue,#composition-builder{scroll-margin-top:calc(var(--app-header-offset) + 12px)}
+#configuration-year{width:100%;accent-color:var(--green)}#configurator,#component-catalogue,#composition-builder{scroll-margin-top:calc(var(--app-header-offset) + 12px)}
 .component-table tbody th{position:sticky;left:0;top:auto;z-index:1;background:var(--surface,#fff)}.component-table td:last-child{position:sticky;right:0;background:var(--surface,#fff);z-index:1}.component-table thead th:first-child{left:0;z-index:3}.component-table thead th:last-child{right:0;z-index:3}
 .composition-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin:8px 0}.composition-name-field{display:flex;align-items:center;gap:8px;flex:1;min-width:240px}.composition-name-field label{font-size:12px;white-space:nowrap}.composition-name-field input{min-width:0;flex:1}.composition-builder .composition-toolbar .consist-actions{margin:0;flex-wrap:wrap}.composition-builder #composition-name{margin:0}.composition-builder #composition-context{margin:0}.composition-builder #composition-message:empty{display:none}.composition-builder #composition-message{grid-column:1/-1}.component-controls{display:flex;align-items:center;gap:6px;margin-top:auto}.composition-component .component-controls input{width:48px}.component-controls .component-actions{flex:1;gap:4px}.component-controls .component-actions button{padding:4px 6px}@media(max-width:400px){.composition-name-field{min-width:0;flex-basis:100%}.composition-name-field label{white-space:normal}}
 @media(min-width:1280px){#composition-form{display:flex;flex-wrap:wrap;gap:8px 16px}.composition-toolbar{flex-basis:100%;margin:0}.composition-strip{flex:0 1 auto;width:max-content;max-width:45%;align-self:flex-start;min-width:0;margin:0}#composition-summary{flex:1 1 390px;min-width:0;margin-top:0}.composition-builder #composition-message{flex-basis:100%}.composition-builder .consist-totals{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px 16px;margin:0}.composition-builder .consist-totals dd{margin:2px 0 0}}
@@ -265,7 +252,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 @media(max-width:700px){.composition-route-grid{grid-template-columns:1fr}#composition-analysis-summary .consist-totals{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .catalogue #line-capacity{margin:0}
 .catalogue #train-race-settings{padding:0}
-.catalogue .road-settings{gap:0}
 .catalogue .vehicle-selector .search-label{display:block;margin:10px 0 3px}
 .catalogue .vehicle-selector .catalogue-tools{margin:10px 0;flex-wrap:wrap;gap:6px}
 .vehicle-selector .scale-toggle span{font-size:12px;padding:4px 8px}
@@ -276,8 +262,6 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 .vehicle-selector .train-row input{width:13px;height:13px}
 .catalogue .history-action{margin-top:0;font-size:12px}
 @media(pointer:coarse){.vehicle-selector .train-row{min-height:44px}.vehicle-selector .scale-toggle span{min-height:36px;display:flex;align-items:center}}
-.catalogue .road-settings{align-items:stretch}
-.catalogue .road-settings>.panel-group{width:100%}
 .truck-table table:not(.has-targets) .road-fleet-column{display:none}
 .truck-table .has-targets{min-width:1100px}
 
@@ -299,7 +283,7 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .load-status{font-size:13px;color:var(--muted);padding:12px 0}
 .control-help-text{display:block;flex-basis:100%;grid-column:1/-1;white-space:normal;font-size:13px;color:var(--muted);padding:8px 0;line-height:1.5}
-.road-sidebar #road-freight-filter,.road-sidebar .road-facility-row,.road-sidebar .road-tram-filter,.road-sidebar #road-return-control,.road-sidebar .road-speed-control{flex-wrap:wrap}
+.road-sidebar #road-freight-filter,.road-sidebar .road-facility-row,.road-sidebar .road-tram-filter,.road-sidebar #road-return-control{flex-wrap:wrap}
 .road-sidebar .road-family-toggle{flex-wrap:wrap;min-width:0}
 .compact-rows>li:nth-child(n+11){display:none}
 .train-legend [data-train]{padding:4px 0}
@@ -451,3 +435,31 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .catalogue .utilization-control{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:4px;margin:0}.catalogue .utilization-control label{grid-column:1}.catalogue .utilization-control output{grid-column:2;grid-row:1;font-size:12px}.catalogue .utilization-control input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--green)}
 .catalogue .panel-group .panel-group>summary{padding:8px 10px}.catalogue .panel-group .panel-group-body .year-filter{margin-top:0}
 .catalogue .road-family-toggle label span{font-size:12px;padding:5px 7px}.catalogue .freight-filter{flex-wrap:wrap}
+
+/* Route and Service are shared components: parent domain never changes geometry. */
+.catalogue .comparison-controls{font-size:12px;min-width:0;width:100%}
+.catalogue .comparison-controls .panel-group-body{padding:10px}
+.catalogue .comparison-controls .utilization-control{margin:0;gap:4px}
+.catalogue .comparison-controls .utilization-control .control-info{grid-column:3;grid-row:1}
+.catalogue .comparison-controls .control-info{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;min-width:20px;height:24px;padding:2px;font-size:14px}
+.catalogue .comparison-controls .target-control{font-size:12px;margin:10px 0}
+.catalogue .comparison-controls .target-control>div{row-gap:8px}
+.catalogue .comparison-controls .service-options-grid{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.catalogue .comparison-controls .service-option-group{width:100%;height:auto;padding:8px}
+.catalogue .comparison-controls .road-inline-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;min-height:28px;cursor:pointer}
+.catalogue .comparison-controls .road-inline-check input{margin:0;accent-color:var(--green)}
+.catalogue .comparison-controls .control-help{font-size:12px;margin:4px 0}
+.catalogue .comparison-controls .frequency-toggle{flex-wrap:wrap}
+.catalogue .comparison-controls .infrastructure-control{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 0}
+.catalogue .comparison-controls .infrastructure-control>span{flex-basis:100%}
+.catalogue .comparison-controls .comparison-speed-entry{display:flex;align-items:center;gap:4px}
+.catalogue .comparison-controls .comparison-speed-entry input{width:55px}
+.catalogue .comparison-controls .scale-toggle{font-size:12px}
+.catalogue .comparison-controls .scale-toggle span{padding:5px 7px}
+@media(pointer:coarse){.catalogue .comparison-controls .road-inline-check,.catalogue .comparison-controls .scale-toggle span{min-height:36px}}
+
+.catalogue .road-settings{display:flex;flex-direction:column;align-items:stretch;gap:0;margin:0;flex-shrink:0}
+
+.catalogue .freight-filter{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 0;font-size:12px}
+
+.catalogue .comparison-controls .handling-return{display:flex;align-items:center;flex-wrap:wrap;gap:4px}

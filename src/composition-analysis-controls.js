@@ -1,3 +1,4 @@
+import {speedPresets} from './transport-category.js';
 import {UI_TERMS} from './ui-terms.js';
 import {analyseComposition,renderCompositionSummary,renderCompositionSteadySummary,renderCompositionChart} from './composition-analysis.js';
 import {mountGradientControl} from './gradient-control.js';
@@ -14,7 +15,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
     <p id="composition-route-profile-status" class="control-help" hidden></p>
     <div class="composition-route-grid"><div id="composition-route-distance-control"><div class="road-value-row"><label for="composition-distance">One-way distance</label><div class="line-distance-entry"><input id="composition-distance" type="number" min="0" data-strict-positive="true" step="any" value="10" required aria-describedby="composition-analysis-input-error"><span>km</span></div></div><input id="composition-distance-range" type="range" min="0.1" max="30" step="0.1" value="10" aria-label="One-way route distance in kilometres"></div>
     <div id="composition-gradient"></div>
-    <div id="composition-route-speed-control"><fieldset id="composition-speed-limit" class="scale-toggle"><legend>Track speed limit</legend>${[100,160,350].map(speed=>`<label><input type="radio" name="composition-speed-limit" value="${speed}"${speed===350?' checked':''}><span>${speed}${speed===350?' km/h':''}</span></label>`).join('')}</fieldset></div>
+    <div id="composition-route-speed-control"><fieldset id="composition-speed-limit" class="scale-toggle"><legend>Track speed limit</legend>${speedPresets('rail').map(speed=>`<label><input type="radio" name="composition-speed-limit" value="${speed}"${speed===350?' checked':''}><span>${speed}${speed===350?' km/h':''}</span></label>`).join('')}</fieldset></div>
     <div><label for="composition-fill">${UI_TERMS.utilization} <output id="composition-fill-value">100%</output></label><input id="composition-fill" type="range" min="0" max="100" step="1" value="100" aria-describedby="composition-fill-help"><p class="control-help" id="composition-fill-help">Share of capacity used; a ceiling when a target rate is enabled.</p></div></div>
     <details class="service-options"><summary>Targets &amp; constraints</summary><div class="composition-route-grid">
     ${target('composition-flow',`Target ${UI_TERMS.rate.toLowerCase()}`,1000,`${UI_TERMS.capacityUnit}/year/direction`)}

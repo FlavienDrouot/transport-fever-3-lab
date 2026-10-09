@@ -1,3 +1,4 @@
+import {speedPresets} from './transport-category.js';
 import {validateRouteProfile,routeProfileDistance} from './route-profile.js';
 
 const format=value=>Number(value.toFixed(3));
@@ -40,7 +41,7 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
 }
 
 /** The route editor owns one shared ordered route for rail and road comparisons. */
-export function mountRouteProfileControls(container,{initial,onChange,statuses=[],visual,scaleControl,scaleNote,segmentList}) {
+export function mountRouteProfileControls(container,{initial,onChange,statuses=[],visual,scaleControl,scaleNote,segmentList,getSpeedPresets=()=>speedPresets('rail')}) {
   let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0;
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
@@ -56,7 +57,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     <div class="profile-segment-fields">
       <div class="profile-field"><label for="profile-length-${i}">Length <span>km</span></label><input id="profile-length-${i}" data-index="${i}" data-field="distanceKm" data-control="number" type="number" min="0.01" max="100" step="0.01" value="${format(part.distanceKm)}" required><input data-index="${i}" data-field="distanceKm" data-control="range" type="range" min="0.01" max="${Math.max(10,Math.ceil(part.distanceKm))}" step="0.01" value="${format(part.distanceKm)}" aria-label="Segment ${i+1} length slider"></div>
       <div class="profile-field"><label for="profile-grade-${i}">Grade <span>%</span></label><input id="profile-grade-${i}" data-index="${i}" data-field="gradePercent" data-control="number" type="number" min="-20" max="20" step="0.1" value="${format(part.gradePercent)}" required><input data-index="${i}" data-field="gradePercent" data-control="range" type="range" min="-20" max="20" step="0.1" value="${format(part.gradePercent)}" aria-label="Segment ${i+1} grade slider"></div>
-      <div class="profile-field"><label for="profile-speed-${i}">Speed limit <span>km/h</span></label><input id="profile-speed-${i}" data-index="${i}" data-field="speedLimitKmh" data-control="number" type="number" min="10" max="350" step="1" value="${format(part.speedLimitKmh)}" required><div class="profile-speed-presets" role="group" aria-label="Segment ${i+1} speed presets">${[100,160,350].map(speed=>`<button type="button" data-speed-preset="${speed}" data-index="${i}" aria-pressed="${part.speedLimitKmh===speed}">${speed}</button>`).join('')}</div></div>
+      <div class="profile-field"><label for="profile-speed-${i}">Speed limit <span>km/h</span></label><input id="profile-speed-${i}" data-index="${i}" data-field="speedLimitKmh" data-control="number" type="number" min="10" max="350" step="1" value="${format(part.speedLimitKmh)}" required><div class="profile-speed-presets" role="group" aria-label="Segment ${i+1} speed presets">${getSpeedPresets().map(speed=>`<button type="button" data-speed-preset="${speed}" data-index="${i}" aria-pressed="${part.speedLimitKmh===speed}">${speed}</button>`).join('')}</div></div>
     </div><p class="profile-edit-summary"><span class="profile-segment-number">${String(i+1).padStart(2,'0')}</span><span class="profile-segment-range">${segmentRange(distances,i)}</span></p></fieldset>`;
   const renderSegmentList=()=>{
     const {distances}=positions(segments);
@@ -158,5 +159,5 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
   }
   render();
   notify();
-  return {get active(){return true;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){if(segments.length!==1)return;segments=validateRouteProfile([{distanceKm,gradePercent,speedLimitKmh}]);render();notify();}};
+  return {refresh:render,get active(){return true;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){if(segments.length!==1)return;segments=validateRouteProfile([{distanceKm,gradePercent,speedLimitKmh}]);render();notify();}};
 }
