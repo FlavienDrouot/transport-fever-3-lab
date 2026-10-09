@@ -32,3 +32,11 @@ test('linear route view positions boundaries in proportion to travelled distance
   assert.match(linear,/Distance from A \(km\) · linear/);
   assert.match(linear,/Horizontal distance is linear/);
 });
+
+test('selected segments can be removed from the sketch unless they are the only segment',()=>{
+  const part={distanceKm:1,gradePercent:0,speedLimitKmh:100};
+  const single=routeProfileSketch([part],{selectedIndex:0});
+  const multiple=routeProfileSketch([part,part],{selectedIndex:0});
+  assert.doesNotMatch(single,/data-action="remove"/);
+  assert.match(multiple,/data-action="remove" data-index="0"[^>]+aria-label="Remove segment 1"/);
+});

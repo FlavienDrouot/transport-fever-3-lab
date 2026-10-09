@@ -340,8 +340,9 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-scale{display:flex;align-items:center;gap:0;margin:12px 0;font-size:12px}
 .profile-scale legend{float:left;margin-right:12px;color:var(--muted)}
 .profile-preview{min-width:0}
-.profile-inspector-panel{min-width:0;margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);scroll-margin-top:calc(var(--app-header-offset) + 12px)}
+.profile-inspector-panel{min-width:0;margin-top:6px;padding:10px 14px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);scroll-margin-top:calc(var(--app-header-offset) + 12px)}
 .profile-inspector-panel h2{font-size:15px}
+#profile-scale-note{margin-top:10px}
 .profile-notes{margin-top:14px}
 @media(min-width:701px){.route-profile-view .profile-sketch{min-width:0}}
 .profile-visual{border:1px solid var(--line);border-radius:8px;background:var(--tint,#f3f7f4);padding:8px}
@@ -372,7 +373,7 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-editor>p{font-size:12px;line-height:1.5;margin:8px 0}
 .profile-segment{min-width:0;border:1px solid var(--line);border-radius:7px;padding:7px 14px 12px;background:var(--surface,#fff)}
 .profile-segment.is-selected{border-color:var(--green);box-shadow:inset 3px 0 var(--green)}
-.profile-inspector-panel .profile-segment{margin:0 0 12px;padding:0;border:0;box-shadow:none;background:transparent}
+.profile-inspector-panel .profile-segment{margin:0;padding:0;border:0;box-shadow:none;background:transparent}
 .profile-sidebar>.chart-help{margin:8px 0 14px}
 .profile-list-total{margin:0 0 10px;font-size:12px;color:var(--muted)}
 .profile-list-total strong{color:inherit}
@@ -390,6 +391,7 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-segment legend{font-size:13px;font-weight:650;padding:0 5px}
 .profile-segment-number{display:inline-grid;place-items:center;min-width:28px;margin-right:8px;border-radius:4px;background:var(--tint,#edf4ef);color:var(--green);font-variant-numeric:tabular-nums}
 .profile-segment-range{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.profile-edit-summary{display:flex;align-items:center;margin:10px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:12px}
 .profile-segment-fields{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:16px;align-items:end}
 .profile-segment label{min-width:0;font-size:12px;color:var(--muted)}
 .profile-segment label span{opacity:.8}
@@ -399,9 +401,6 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-speed-presets{display:flex;gap:4px;margin-top:4px}
 .profile-speed-presets button{min-width:43px;padding:5px 6px;font-variant-numeric:tabular-nums}
 .profile-speed-presets button[aria-pressed=true]{border-color:var(--green);background:var(--tint,#edf4ef);color:var(--green);font-weight:650}
-.profile-editor-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-.profile-editor-actions button[data-action=insert]{margin-left:auto}
-.profile-editor-actions button[data-action=up],.profile-editor-actions button[data-action=down],.profile-editor-actions button[data-action=remove]{min-width:30px}
 .profile-error{color:#a63e32!important}
 .profile-destinations{display:flex;gap:20px;border-top:1px solid var(--line);padding:20px 0;margin-top:24px;font-size:13px}
 @media(max-width:800px){.profile-sketch{width:900px}.profile-segment-fields{grid-template-columns:repeat(3,minmax(0,1fr))}.route-model{flex-wrap:wrap}}
