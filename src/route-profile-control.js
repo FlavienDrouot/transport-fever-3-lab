@@ -33,7 +33,7 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
 }
 
 /** The route editor owns the draft; Race and Economics choose how to use it. */
-export function mountRouteProfileControls(container,{initial,onChange,statuses=[],modeControls=[],visual,scaleControl,scaleNote}) {
+export function mountRouteProfileControls(container,{initial,onChange,statuses=[],modeControls=[],visual,scaleControl,scaleNote,segmentList}) {
   let active=false,segments=validateRouteProfile(initial),uniform={...initial[0]},profileEdited=false,scale='equal',selectedIndex=0;
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
@@ -51,15 +51,21 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
       <div class="profile-field"><label for="profile-length-${i}">Length <span>km</span></label><input id="profile-length-${i}" data-index="${i}" data-field="distanceKm" data-control="number" type="number" min="0.01" max="100" step="0.01" value="${format(part.distanceKm)}" required><input data-index="${i}" data-field="distanceKm" data-control="range" type="range" min="0.01" max="${Math.max(10,Math.ceil(part.distanceKm))}" step="0.01" value="${format(part.distanceKm)}" aria-label="Segment ${i+1} length slider"></div>
       <div class="profile-field"><label for="profile-grade-${i}">Grade <span>%</span></label><input id="profile-grade-${i}" data-index="${i}" data-field="gradePercent" data-control="number" type="number" min="-9" max="9" step="0.1" value="${format(part.gradePercent)}" required><input data-index="${i}" data-field="gradePercent" data-control="range" type="range" min="-9" max="9" step="0.1" value="${format(part.gradePercent)}" aria-label="Segment ${i+1} grade slider"></div>
       <div class="profile-field"><label for="profile-speed-${i}">Speed limit <span>km/h</span></label><input id="profile-speed-${i}" data-index="${i}" data-field="speedLimitKmh" data-control="number" type="number" min="10" max="350" step="1" value="${format(part.speedLimitKmh)}" required><div class="profile-speed-presets" role="group" aria-label="Segment ${i+1} speed presets">${[100,160,350].map(speed=>`<button type="button" data-speed-preset="${speed}" data-index="${i}" aria-pressed="${part.speedLimitKmh===speed}">${speed}</button>`).join('')}</div></div>
-      <div class="profile-row-actions"><button type="button" data-action="up" data-index="${i}" ${i?'':'disabled'} aria-label="Move segment ${i+1} earlier" title="Move earlier">↑</button><button type="button" data-action="down" data-index="${i}" ${i<segments.length-1?'':'disabled'} aria-label="Move segment ${i+1} later" title="Move later">↓</button><button type="button" data-action="insert" data-index="${i}" ${segments.length>=24?'disabled':''} aria-label="Insert segment after ${i+1}" title="Insert after">+ after</button><button type="button" data-action="remove" data-index="${i}" ${segments.length>1?'':'disabled'} aria-label="Remove segment ${i+1}" title="Remove">×</button></div>
     </div></fieldset>`;
+  const renderSegmentList=()=>{
+    const {distances}=positions(segments);
+    segmentList.innerHTML=`<p class="profile-list-total"><strong>${format(routeProfileDistance(segments))} km</strong> total · ${segments.length} segment${segments.length===1?'':'s'}</p><ol class="profile-segment-list">${segments.map((part,i)=>`<li class="profile-segment-summary${selectedIndex===i?' is-selected':''}" data-list-index="${i}"><button type="button" class="profile-summary-select" data-select-segment="${i}" aria-pressed="${selectedIndex===i}" aria-label="Edit segment ${i+1}, ${format(distances[i])} to ${format(distances[i+1])} kilometres"><strong>${String(i+1).padStart(2,'0')} · ${format(part.distanceKm)} km</strong><span>${part.gradePercent>0?'+':''}${format(part.gradePercent)}% · ${format(part.speedLimitKmh)} km/h</span><small>${segmentRange(distances,i)}</small></button><div class="profile-summary-actions"><button type="button" data-action="up" data-index="${i}" ${i?'':'disabled'} aria-label="Move segment ${i+1} earlier" title="Move earlier">↑</button><button type="button" data-action="down" data-index="${i}" ${i<segments.length-1?'':'disabled'} aria-label="Move segment ${i+1} later" title="Move later">↓</button></div></li>`).join('')}</ol><div class="profile-list-actions"><button type="button" data-action="insert" data-index="${selectedIndex}" ${segments.length>=24?'disabled':''}>+ After selected</button><button type="button" data-action="add" ${segments.length>=24?'disabled':''}>Add at end</button><button type="button" data-action="remove" data-index="${selectedIndex}" ${segments.length>1?'':'disabled'} aria-label="Remove selected segment">Remove selected</button></div>`;
+  };
   const renderInspector=()=>{
     const {distances}=positions(segments);
     container.querySelector('.profile-inspector').innerHTML=segmentEditor(segments[selectedIndex],selectedIndex,distances);
-    for(const button of container.querySelectorAll('[data-select-segment]'))button.setAttribute('aria-pressed',String(Number(button.dataset.selectSegment)===selectedIndex));
+    for(const button of segmentList.querySelectorAll('[data-select-segment]'))button.setAttribute('aria-pressed',String(Number(button.dataset.selectSegment)===selectedIndex));
+    for(const row of segmentList.querySelectorAll('.profile-segment-summary'))row.classList.toggle('is-selected',Number(row.dataset.listIndex)===selectedIndex);
+    for(const button of segmentList.querySelectorAll('[data-action="insert"],[data-action="remove"]'))button.dataset.index=selectedIndex;
   };
   const render=()=>{
-    container.innerHTML=`<div class="profile-editor"><p class="profile-activation-note" ${active?'hidden':''}>Race and Economics currently use uniform route settings. Editing these segments activates this profile.</p><p>Ordered A→B · <strong data-profile-total>${format(routeProfileDistance(segments))} km</strong> total. B→A reverses their order and grades; there are no intermediate stops.</p><div class="profile-segment-nav" role="group" aria-label="Segments in route order">${segments.map((part,i)=>`<button type="button" data-select-segment="${i}" aria-pressed="${selectedIndex===i}" aria-label="Edit segment ${i+1}, ${format(part.distanceKm)} kilometres"><strong>${String(i+1).padStart(2,'0')}</strong><span class="profile-nav-length">${format(part.distanceKm)} km</span></button>`).join('')}</div><div class="profile-inspector"></div><button type="button" data-action="add" ${segments.length>=24?'disabled':''}>Add segment at end</button><p class="profile-error" role="status" hidden></p><p class="profile-help">Length sliders start at 0.01–10 km and expand when a longer length is entered. Numeric fields allow precise values. Grade effects, advance braking and speed limits are theoretical; the game has not been calibrated for a changing profile.</p></div>`;
+    container.innerHTML=`<div class="profile-editor"><p class="profile-activation-note" ${active?'hidden':''}>Race and Economics currently use uniform route settings. Editing these segments activates this profile.</p><p>Ordered A→B. B→A reverses segment order and grades; there are no intermediate stops.</p><div class="profile-inspector"></div><p class="profile-error" role="status" hidden></p><p class="profile-help">Length sliders start at 0.01–10 km and expand when a longer length is entered. Numeric fields allow precise values. Grade effects, advance braking and speed limits are theoretical; the game has not been calibrated for a changing profile.</p></div>`;
+    renderSegmentList();
     renderInspector();
     renderVisual();syncMode();
   };
@@ -67,17 +73,12 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
   const refreshValues=()=>{
     renderVisual();syncMode();
     const error=container.querySelector('.profile-error');error.hidden=true;error.textContent='';
-    container.querySelector('[data-profile-total]').textContent=`${format(routeProfileDistance(segments))} km`;
     const {distances}=positions(segments);
     for(const row of container.querySelectorAll('.profile-segment'))row.querySelector('.profile-segment-range').textContent=segmentRange(distances,Number(row.dataset.index));
-    for(const button of container.querySelectorAll('[data-select-segment]')){
-      const index=Number(button.dataset.selectSegment),length=format(segments[index].distanceKm);
-      button.setAttribute('aria-label',`Edit segment ${index+1}, ${length} kilometres`);
-      button.querySelector('.profile-nav-length').textContent=`${length} km`;
-    }
+    renderSegmentList();
     notify();
   };
-  const changed=()=>{selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify();};
+  const changed=()=>{selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify();segmentList.querySelector(`button[data-select-segment="${selectedIndex}"]`)?.focus();};
   const showError=(error,target)=>{const message=container.querySelector('.profile-error');message.textContent=error.message;message.hidden=false;if(target){target.setCustomValidity(error.message);target.reportValidity();target.setCustomValidity('');}};
   const select=index=>{
     if(index===selectedIndex)return;
@@ -114,8 +115,6 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
   container.addEventListener('input',updateField);
   container.addEventListener('change',updateField);
   container.addEventListener('click',event=>{
-    const selector=event.target.closest('button[data-select-segment]');
-    if(selector){const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}select(Number(selector.dataset.selectSegment));return;}
     const preset=event.target.closest('button[data-speed-preset]');
     if(preset){
       const input=container.querySelector(`.profile-segment[data-index="${preset.dataset.index}"] input[data-field="speedLimitKmh"]`);
@@ -123,6 +122,10 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
       updateField({target:input,type:'change'});
       return;
     }
+  });
+  segmentList.addEventListener('click',event=>{
+    const selector=event.target.closest('button[data-select-segment]');
+    if(selector){const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}select(Number(selector.dataset.selectSegment));selector.closest('dialog')?.close();return;}
     const button=event.target.closest('button[data-action]');if(!button)return;
     const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}
     const index=Number(button.dataset.index),action=button.dataset.action,draft=segments.map(part=>({...part}));
@@ -134,7 +137,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
       else if(action==='remove')next.splice(index,1);
       else if(action==='up'||action==='down'){const other=index+(action==='up'?-1:1);[next[index],next[other]]=[next[other],next[index]];}
       const valid=validateRouteProfile(next);
-      segments=valid;profileEdited=true;active=true;selectedIndex=action==='add'?next.length-1:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed();container.querySelector(`.profile-segment[data-index="${selectedIndex}"] input`)?.focus();
+      segments=valid;profileEdited=true;active=true;selectedIndex=action==='add'?next.length-1:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed();
     }catch(error){showError(error);}
   });
   render();
