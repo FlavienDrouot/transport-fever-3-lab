@@ -2,6 +2,9 @@ export const GRAVITY = 9.80665;
 export const MOTION_UNITS = {kgfNewtons:9.80665,horsepowerWatts:735.5};
 export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02});
 
+// Provisional road coefficients: initialized from rail, calibrated independently.
+export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingDeceleration:2.5});
+
 export function validateGradient(percent,maximum=20) {
   if(!Number.isFinite(percent)||Math.abs(percent)>maximum)throw new RangeError(`Gradient must be between -${maximum}% and ${maximum}%`);
   return percent;

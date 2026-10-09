@@ -6,7 +6,7 @@ import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {createScale} from './scales.js';
 const fmt = x => formatNumber(x,2);
 
-export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=`Running cost / ${UI_TERMS.capacityUnit} ($)`,ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true}) {
+export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=`Running cost / ${UI_TERMS.capacityUnit} ($)`,ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true,group='rail'}) {
   if(!story.phases.length) {container.textContent=trains.length?'Choose positive utilization to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}
   const valueAt=story.valueAt??((id,x)=>analyseLine(trains.find(t=>t.id===id),{distanceKm:x,fillRatio:fill,...targets}).maintenancePerUnit);
   const axisLabel=story.label??'One-way distance (km)';
@@ -63,7 +63,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   if(Number.isFinite(story.current)&&story.current>=story.start&&story.current<=story.end)overlay+=`<line x1="${sx(story.current)}" x2="${sx(story.current)}" y1="${T}" y2="${H-B}" stroke="currentColor" stroke-dasharray="6 4"><title>Current setting: ${formatX(story.current)}</title></line>`;
   overlay+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">${escape(axisLabel)} · ${escape(distanceMode)}</text>`;
   const endpointRanks=rank?(story.ranksAt?.(story.end)??story.intervals.at(-1).ranks):null;
-  renderPhaseDiagram(container,{trains,segments:paths,frame:svg,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title,highlighted,emphasize,
+  renderPhaseDiagram(container,{trains,segments:paths,frame:svg,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title,highlighted,emphasize,group,
     bands:story.phases.map(p=>({leaders:p.leaders,width:axis.position(p.end)-axis.position(p.start)})),
     endpoints:trains.map(t=>({t,y:(rank?endpointRanks[t.id]:valueAt(t.id,story.end))==null?NaN:sy(rank?endpointRanks[t.id]:valueAt(t.id,story.end)),winner:rank?endpointRanks[t.id]===1:finalRanks?finalRanks[t.id]===1:story.phases.at(-1).leaders.includes(t.id)}))});
 }

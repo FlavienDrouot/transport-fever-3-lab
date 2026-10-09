@@ -1,23 +1,24 @@
-export function syncAnalysisPanels(document,view){
+export function syncAnalysisPanels(document,view,{domain='rail'}={}){
   const $=id=>document.getElementById(id);
-  document.querySelector('.workspace').classList.toggle('truck-view',view==='trucks');
+  const roadView=view==='trucks'||view==='race'&&domain==='road';
+  document.querySelector('.workspace').classList.toggle('truck-view',roadView);
   document.querySelector('.workspace').classList.toggle('data-view',view==='data');
   document.querySelector('.workspace').classList.toggle('route-profile-view',view==='route-profile');
   document.querySelector('.workspace').classList.toggle('configurator-view',view==='configurator');
-  const trainView=view==='race'||view==='economics';
+  const trainView=view==='economics'||view==='race'&&!roadView;
   $('catalogue').hidden=!trainView;
   $('picker-toggle').hidden=!trainView;
-  $('road-sidebar').hidden=view!=='trucks';
-  $('road-picker-toggle').hidden=view!=='trucks';
+  $('road-sidebar').hidden=!roadView;
+  $('road-picker-toggle').hidden=!roadView;
   $('configuration-sidebar').hidden=view!=='configurator';
   $('configuration-picker-toggle').hidden=view!=='configurator';
   $('profile-sidebar').hidden=view!=='route-profile';
   $('profile-picker-toggle').hidden=view!=='route-profile';
   $('line-capacity').hidden=view!=='economics';
-  $('train-race-settings').hidden=!trainView&&view!=='trucks';
+  $('train-race-settings').hidden=!trainView&&!roadView;
   $('rail-service-note').hidden=view!=='economics';
   if(!trainView&&$('train-drawer').open)$('train-drawer').close();
-  if(view!=='trucks'&&$('road-drawer').open)$('road-drawer').close();
+  if(!roadView&&$('road-drawer').open)$('road-drawer').close();
   if(view!=='configurator'&&$('configuration-drawer').open)$('configuration-drawer').close();
   if(view!=='route-profile'&&$('profile-drawer').open)$('profile-drawer').close();
 }

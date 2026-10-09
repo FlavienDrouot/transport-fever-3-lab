@@ -48,7 +48,7 @@ test('Three workspaces keep contextual views; route controls have one owner and 
     assert.ok(sidebar.includes(`id="${id}"`));assert.equal([...html.matchAll(new RegExp(`id="${id}"`,'g'))].length,1);
   }
   assert.ok(!sidebar.includes('id="road-category"'));
-  const headers=[...html.matchAll(/<header class="analysis-overview">([\s\S]*?)<\/header>/g)].map(m=>m[1]);
+  const headers=[...html.matchAll(/<header(?: id="[^"]+")? class="analysis-overview">([\s\S]*?)<\/header>/g)].map(m=>m[1]);
   assert.equal(headers.length,3);
   for(const id of ['economic-category','road-category'])assert.equal(headers.filter(header=>header.includes(`id="${id}"`)).length,1);
   const trains=html.match(/<aside id="catalogue"[\s\S]*?<\/aside>/)?.[0];assert.ok(trains.includes('id="line-capacity"'));assert.ok(trains.includes('id="route-distance"'));
@@ -72,4 +72,12 @@ test('Both families group route settings and vehicles in native disclosures',asy
     assert.ok(panel.includes('class="panel-group'));
   }
   assert.ok(html.includes('id="road-selector"'));assert.ok(html.includes('id="train-selector"'));
+});
+
+test('Road Race uses the road picker and shared Route controls without service constraints',()=>{
+ const {node,document,classes}=fixture();
+ node('train-drawer').open=true;
+ syncAnalysisPanels(document,'race',{domain:'road'});
+ assert.ok(classes.has('truck-view'));assert.equal(node('catalogue').hidden,true);assert.equal(node('road-sidebar').hidden,false);assert.equal(node('road-picker-toggle').hidden,false);
+ assert.equal(node('train-race-settings').hidden,false);assert.equal(node('line-capacity').hidden,true);assert.equal(node('train-drawer').open,false);
 });

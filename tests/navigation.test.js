@@ -18,3 +18,12 @@ test('reference deep links select the right reference pane; support leaves conte
   assert.equal(resolveNavigation(state,{hash:'#checks'}).dataView,'checks');
   assert.equal(resolveNavigation(state,{hash:'#data'}).dataView,'catalogue');
 });
+
+test('Road Race remembers its domain across Design and Compare; legacy Race remains rail',()=>{
+ let state=resolveNavigation(initialNavigation(),{hash:'#road-race'});
+ assert.equal(state.view,'race');assert.equal(state.domain,'road');assert.equal(state.roadView,'race');
+ state=resolveNavigation(state,{hash:'#design'});state=resolveNavigation(state,{hash:'#compare'});
+ assert.equal(state.view,'race');assert.equal(state.domain,'road');
+ state=resolveNavigation(state,{hash:'#trucks'});assert.equal(state.roadView,'trucks');
+ state=resolveNavigation(state,{hash:'#race'});assert.equal(state.domain,'rail');
+});

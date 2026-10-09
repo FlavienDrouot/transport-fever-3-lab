@@ -26,20 +26,21 @@ export function routeProfileDistance(segments) {
 
 const trajectoryCache=new WeakMap();
 /** Calibrated tractive force plus theoretical gravity. Profile caps and terminal stop are anticipated. */
-export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=2.5}={}) {
+export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5}={}) {
   const route=validateRouteProfile(segments);
+  const motionConfig=train.model?.motionConfig??RAIL_MOTION;
   if(!Number.isFinite(brakingDeceleration)||brakingDeceleration<=0)throw new RangeError('Braking must be positive');
   const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration]);
   const identity=train.model??train;
   let cache=trajectoryCache.get(identity);
   if(!cache){cache=new Map();trajectoryCache.set(identity,cache);}
   if(cache.has(key))return cache.get(key);
-  const mass=train.massTonnes*1000,force=train.tractionKgf*MOTION_UNITS.kgfNewtons*RAIL_MOTION.tractionFactor,power=train.powerCh*MOTION_UNITS.horsepowerWatts;
+  const mass=train.massTonnes*1000,force=train.tractionKgf*MOTION_UNITS.kgfNewtons*motionConfig.tractionFactor,power=train.powerCh*MOTION_UNITS.horsepowerWatts;
   const vehicleCap=train.maxSpeedKmh/3.6;
   if(![mass,force,power,vehicleCap].every(n=>Number.isFinite(n)&&n>0))throw new RangeError('Invalid train motion parameters');
   let end=0;
   const sections=route.map(part=>{const start=end;end+=part.distanceKm*1000;return {start,end,gradePercent:part.gradePercent,cap:Math.min(vehicleCap,part.speedLimitKmh/3.6),gravity:gradientAcceleration(part.gradePercent)};});
-  const routeMetres=end,dt=RAIL_MOTION.stepSeconds;
+  const routeMetres=end,dt=motionConfig.stepSeconds;
   const speeds=[0],distances=[0],times=[0],events=[];
   let position=0,speed=0,time=0,index=0,stalled=false,brakingLast=false;
   // The minimum braking ability over the remaining path gives a conservative
@@ -62,7 +63,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   // Bounded by 100 km at 0.2 s; a stalled uphill train exits immediately.
   for(let steps=0;position<routeMetres-1e-7&&steps<2_000_000;steps++){
     const section=sections[index];
-    const resistance=RAIL_MOTION.frictionAcceleration+section.gravity;
+    const resistance=motionConfig.frictionAcceleration+section.gravity;
     const traction=Math.min(force,speed>0?power/speed:Infinity)/mass-resistance;
     const brake=braking[index],remaining=section.end-position;
     // Long near-equilibrium cruises need no millions of indistinguishable
