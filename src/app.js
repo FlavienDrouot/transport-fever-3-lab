@@ -102,14 +102,23 @@ function updateCompositionSettings(settings){
   crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();
 }
 function economicSelectionOptions(){return {freight:economicCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres,gradePercent:railGradePercent,routeProfile:railRouteProfile};}
-function active() {return trains.filter(t => selected.has(t.id) && t.year <= catalogueYear && ($('economics').hidden||economicCandidates([t],economicSelectionOptions()).length)).map(t=>{const limited=railRouteProfile?t:withRailSpeedLimit(t,infrastructureSpeedKmh);return railRouteProfile?withRailProfile(limited,railRouteProfile):withRailGradient(limited,railGradePercent);}).filter(t=>t.model.canStart!==false);}
+function speedUsesProfile(){return railRouteProfile?.some(part=>part.gradePercent!==railRouteProfile[0].gradePercent||part.speedLimitKmh!==railRouteProfile[0].speedLimitKmh);}
+function active(view='') {
+  const uniformSpeed=view.startsWith('speed')&&railRouteProfile&&!speedUsesProfile();
+  const profile=railRouteProfile&&!uniformSpeed;
+  const grade=uniformSpeed?railRouteProfile[0].gradePercent:railGradePercent;
+  const cap=uniformSpeed?railRouteProfile[0].speedLimitKmh:infrastructureSpeedKmh;
+  return trains.filter(t=>selected.has(t.id)&&t.year<=catalogueYear&&($('economics').hidden||economicCandidates([t],economicSelectionOptions()).length))
+    .map(t=>{const limited=profile?t:withRailSpeedLimit(t,cap);return profile?withRailProfile(limited,railRouteProfile):withRailGradient(limited,grade);})
+    .filter(t=>t.model.canStart!==false);
+}
 function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.name} · ${formatTime(t.model.timeAt(routeDistance))}`;}
 function renderSelectionCount() {trainSelector.updateCount();}
 const value=motionValue;
 function trainCandidates() {return $('economics').hidden?trains.filter(t=>t.year<=catalogueYear):economicCandidates(trains,economicSelectionOptions());}
 function visible() {return trainSelector.getVisible();}
 function renderCatalogue() {
-  $('train-count').textContent = trains.length;
+  $('train-count').textContent = trainCandidates().length;
   $('catalogue-year-value').textContent = catalogueYear;
   $('catalogue-year').value = catalogueYear;
   $('year-previous').disabled = catalogueYear <= 1900;
@@ -122,7 +131,7 @@ function roadDatasets(selectedOnly=false){
   return selectedOnly?Object.fromEntries(Object.entries(sources).map(([key,items])=>[key,items.filter(t=>selectedRoad.has(t.id))])):sources;
 }
 function roadCandidates(){return selectRoadVehicles(roadDatasets(),{category:roadCategory,includeTrams,cargo:truckCargo,year:truckYear});}
-function renderRoadCatalogue(){roadSelector.render();}
+function renderRoadCatalogue(){$('road-vehicle-count').textContent=roadCandidates().length;roadSelector.render();}
 function syncCustomCompositions(change={}){
   const custom=consistEditor.getCompositions();
   for(const id of knownCustom)if(!custom.some(t=>t.id===id)){selected.delete(id);selectedRoad.delete(id);}
@@ -177,22 +186,22 @@ function sample(t, xScale, yScale, view, horizon) {
   return [...xs].sort((a,b) => a-b).map(x => [x,value(t,x,view)]).filter(([x,y]) => Number.isFinite(xScale.position(x)) && Number.isFinite(yScale.position(y)));
 }
 function tickLabel(n) {return fmt(n, n > 0 && n < 1 ? Math.min(4, Math.ceil(-Math.log10(n))) : n % 1 ? 1 : 0);}
-function chartHorizon(view, ts = active()) {
-  return view === 'time' ? routeDistance : view === 'speed-distance'&&railRouteProfile?routeDistance:view === 'speed-distance'?speedDistanceHorizon(ts):view === 'speed' ? speedHorizon(ts) : Math.max(1, raceHorizon(ts, routeDistance).seconds);
+function chartHorizon(view, ts = active(view)) {
+  return view === 'time' ? routeDistance : view === 'speed-distance'&&ts.some(t=>t.model.routeProfile)?routeDistance:view === 'speed-distance'?speedDistanceHorizon(ts):view === 'speed' ? speedHorizon(ts) : Math.max(1, raceHorizon(ts, routeDistance).seconds);
 }
 function renderChart(kind, width) {
   const view = kind === 'speed' ? speedView : raceView;
   const el = id => $(kind === 'speed' ? `speed-${id}` : id);
   const clipId = `${kind}-plot-clip`;
   const W = typeof width === 'number' ? width : Math.max(320, el('chart').clientWidth || 1000);
-  const ts = active(), spec = views[view];
+  const ts = active(view), spec = views[view];
   const labelSpace = view === 'distance' ? Math.max(120, Math.ceil(Math.max(0,...trains.map(t=>arrivalName(t, view).length))*7/Math.sqrt(2))+24) : 0;
   const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 220, T = 45 + labelSpace, B = 50;
   const horizon = chartHorizon(view, ts);
   el('chart-heading').textContent = spec.title;
   const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
-  el('chart-help').textContent = railRouteProfile&&view.startsWith('speed')?'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.':view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited trains approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
+  el('chart-help').textContent = speedUsesProfile()&&view.startsWith('speed')?'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.':view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited trains approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
   el('chart-help').textContent+=' Hover or focus a train to see transitions and coordinates.';
   el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
@@ -247,7 +256,7 @@ function renderChart(kind, width) {
     const labelled = ts.map(t=>{const end=motionCurveEnd(t,view,horizon);return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
     for(let i=0;i<labelled.length;i++) labelled[i].labelY=Math.max(labelled[i].y,i ? labelled[i-1].labelY+20 : T+5);
     for(let i=labelled.length-1;i>=0;i--) labelled[i].labelY=Math.min(labelled[i].labelY,i===labelled.length-1?H-B-5:labelled[i+1].labelY-20);
-    for(const {t,x,y,labelY} of labelled) content+=`${railRouteProfile&&view==='speed'?`<circle cx="${x}" cy="${y}" r="3" fill="${t.color}"/>`:`<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/>`}<text class="end-label" data-train="${escape(t.id)}" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t, view))}</text>`;
+    for(const {t,x,y,labelY} of labelled) content+=`${ts.some(t=>t.model.routeProfile)&&view==='speed'?`<circle cx="${x}" cy="${y}" r="3" fill="${t.color}"/>`:``}<line x1="${x}" y1="${y}" x2="${W-R+12}" y2="${labelY}" stroke="${t.color}" opacity=".35"/><text class="end-label" data-train="${escape(t.id)}" x="${W-R+17}" y="${labelY+4}" style="fill:${t.color}" opacity="${!highlighted||highlighted===t.id?1:.25}">${escape(arrivalName(t, view))}</text>`;
   }
   content+='<g class="motion-transition-overlay" pointer-events="none"></g>';
   el('chart').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${spec.title}; X ${xScale.mode}, Y ${yScale.mode}">${content}</svg>${trainLegend(ts,W,highlighted)}`;
@@ -469,6 +478,8 @@ function syncAnalysisView() {
   document.querySelector(`#compare-domain input[value="${domain}"]`).checked=true;
   document.querySelector('[data-analysis="race"]').hidden=false;
   (view==='trucks'?$('road-compare-mode'):$('rail-compare-mode')).append($('compare-domain'));
+  (view==='trucks'?$('road-route-slot'):$('rail-route-slot')).append($('train-race-settings'));
+  $('road-service-settings').hidden=view!=='trucks';
   document.querySelector('[data-analysis="economics"]').href=domain==='road'?'#trucks':'#economics';
   if(view==='trucks')document.querySelector('[data-analysis="economics"]').setAttribute('aria-current','page');
   const action=$('workspace-action');action.hidden=space==='data';
@@ -588,11 +599,11 @@ function render() {
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
   const transitionPanel=$('transitions').closest('details'),transitionHeadings=transitionPanel.querySelectorAll('thead th');
-  transitionPanel.querySelector('.chart-help').textContent=railRouteProfile?'Maximum speed is the highest speed reached before B. Traction-to-power and braking/segment points appear on hover. Arrival is at B; no terminal stop is modelled in Race.':'Maximum speed is the vehicle/track cap or the lower equilibrium limit. Approach times and distances use the same milestones as the graph: the speed cap, or 99% of equilibrium. They are independent of route distance.';
-  transitionHeadings[3].textContent=railRouteProfile?'Highest speed reached (km/h)':'Maximum speed (km/h)';
-  transitionHeadings[4].textContent=railRouteProfile?'Arrival at B (m:ss)':'Approach time (m:ss)';
-  transitionHeadings[5].textContent=railRouteProfile?'Route length (km)':'Approach distance (km)';
-  $('transitions').innerHTML=renderModelTransitions(ts);
+  transitionPanel.querySelector('.chart-help').textContent=speedUsesProfile()?'Maximum speed is the highest speed reached before B. Traction-to-power and braking/segment points appear on hover. Arrival is at B; no terminal stop is modelled in Race.':'Maximum speed is the vehicle/track cap or the lower equilibrium limit. Approach times and distances use the same milestones as the graph: the speed cap, or 99% of equilibrium. They are independent of route distance.';
+  transitionHeadings[3].textContent=speedUsesProfile()?'Highest speed reached (km/h)':'Maximum speed (km/h)';
+  transitionHeadings[4].textContent=speedUsesProfile()?'Arrival at B (m:ss)':'Approach time (m:ss)';
+  transitionHeadings[5].textContent=speedUsesProfile()?'Route length (km)':'Approach distance (km)';
+  $('transitions').innerHTML=renderModelTransitions(active(speedView));
 }
 function download(content,type,filename) {
   const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('status').textContent=`Export ready: ${filename}`;
@@ -628,7 +639,7 @@ async function ensureRoad(){
       for(const t of [...truckDataset.trucks,...busDataset.buses,...tramDataset.trams,...tramDataset.freightTrams])selectedRoad.add(t.id);
       roadLoaded=true;document.querySelector('.road-settings').inert=false;$('road-load-status').hidden=true;
       for(const id of ['truck-service','truck-cost-chart','road-phases'])$(id).hidden=false;
-      roadSelector.render();if(!$('trucks').hidden)render();
+      renderRoadCatalogue();if(!$('trucks').hidden)render();
     }catch(error){$('road-load-status').textContent='Unable to load road data. Train comparisons remain available.';$('road-retry').hidden=false;console.error(error);}
     finally{roadLoading=null;}
   })();return roadLoading;
@@ -871,13 +882,13 @@ async function init() {
     const prior=highlighted;highlighted=undefined;renderChart(kind,1400);const svg=el('chart').querySelector('svg').cloneNode(true);svg.querySelectorAll('.curve-hit').forEach(path=>path.remove());highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#56665d}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
-    const lines=[`Theoretical model · Gradient A→B: ${fmt(railGradePercent,1)}% · Route distance: ${fmtKm(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
+    const lines=[`Theoretical model · Gradient A→B: ${fmt(railGradePercent,1)}% · Route distance: ${fmtKm(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active(view).map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     const chartHeight=Number(svg.getAttribute('viewBox').split(' ')[3]);
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',chartHeight+30+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);
     download(new XMLSerializer().serializeToString(svg),'image/svg+xml',`tf3-${view}-${scaleMode('x',kind)}-${scaleMode('y',kind)}.svg`);
   });
-  el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? speedView : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active()){const end=motionCurveEnd(t,view,horizon);for(let i=0;i<=300;i++){const x=i*end/300,state=motionStateAtAbscissa(t,x,view),time=state.time;rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
+  el('csv').addEventListener('click',()=>{const view = kind === 'speed' ? speedView : raceView, horizon = chartHorizon(view);const rows=[['train','time_s','distance_km','speed_kmh']];for(const t of active(view)){const end=motionCurveEnd(t,view,horizon);for(let i=0;i<=300;i++){const x=i*end/300,state=motionStateAtAbscissa(t,x,view),time=state.time;rows.push([t.name,time.toFixed(4),state.distanceKm.toFixed(6),state.speedKmh.toFixed(4)]);}}download(rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n'),'text/csv;charset=utf-8',`tf3-${view}.csv`);});
   }
   const stickyObserver = new ResizeObserver(updateStickyOffsets);
   stickyObserver.observe(document.querySelector('.app-header'));

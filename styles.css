@@ -348,7 +348,7 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .composition-frequency-target{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px}.composition-frequency-target>div{flex-basis:100%;margin-top:0}.composition-route-grid .composition-frequency-target>label,.composition-route-grid .composition-frequency-target .scale-toggle label{display:flex;margin:0}.composition-route-grid .composition-frequency-target .scale-toggle{flex-wrap:wrap}
 /* Rail profile preview and segment sidebar. The sketch is intentionally qualitative. */
 @media(min-width:701px){.workspace.route-profile-view{grid-template-columns:minmax(0,1fr) 340px}}
-#route-profile{max-width:1400px}
+#route-profile{width:100%;max-width:none}
 #route-profile .chart-panel{scroll-margin-top:calc(var(--app-header-offset) + 12px)}
 .profile-scale{display:flex;align-items:center;gap:0;margin:12px 0;font-size:12px}
 .profile-scale legend{float:left;margin-right:12px;color:var(--muted)}
@@ -444,3 +444,10 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 @media(max-width:700px){.app-header .analysis-nav{justify-content:space-between;flex-wrap:nowrap}.app-header .analysis-nav a{font-size:13px}.github-star>span:last-child{display:none}.workspace-nav{order:4;flex-basis:100%;padding:0;border:0;min-height:42px;justify-content:space-between}.workspace-tabs>a{min-height:42px}.workspace-action{font-size:11px}.analysis-view>.analysis-overview{margin-top:14px}}
 .quick-experiments{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:12px}.quick-experiments>span:first-child{color:var(--muted)}
 .method-link{font-size:13px;font-weight:400;text-decoration:none;vertical-align:middle;margin-left:5px}
+
+/* Comparison panels share the same widths, group spacing and service controls. */
+@media(min-width:701px){.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view){grid-template-columns:minmax(0,1fr) 300px}}
+@media(min-width:701px) and (max-width:1000px){.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view){grid-template-columns:minmax(0,1fr) 230px}}
+.catalogue .utilization-control{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:4px;margin:0}.catalogue .utilization-control label{grid-column:1}.catalogue .utilization-control output{grid-column:2;grid-row:1;font-size:12px}.catalogue .utilization-control input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--green)}
+.catalogue .panel-group .panel-group>summary{padding:8px 10px}.catalogue .panel-group .panel-group-body .year-filter{margin-top:0}
+.catalogue .road-family-toggle label span{font-size:12px;padding:5px 7px}.catalogue .freight-filter{flex-wrap:wrap}

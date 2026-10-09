@@ -8,10 +8,10 @@ const positions=parts=>{
 };
 
 /** Elevation is exaggerated; choose equal segment widths or a true linear distance axis. */
-export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,selectable=true}={}) {
+export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,selectable=true,availableWidth=900}={}) {
   const parts=validateRouteProfile(segments),total=routeProfileDistance(parts);
   if(scale!=='equal'&&scale!=='linear')throw new RangeError('Unknown profile scale');
-  const width=Math.max(900,parts.length*130),left=58,right=width-58,span=right-left;
+  const width=Math.max(900,availableWidth,parts.length*130),left=58,right=width-58,span=right-left;
   const {distances,heights}=positions(parts);
   const xs=distances.map((distance,i)=>left+span*(scale==='linear'?distance/total:i/parts.length));
   const min=Math.min(...heights),max=Math.max(...heights),range=max-min;
@@ -44,7 +44,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
   let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0;
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
-    visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex});
+    visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex,availableWidth:Math.max(0,visual.clientWidth-18)});
     scaleNote.textContent=scale==='linear'?'Distance to scale · elevation exaggerated. Short segments can also be selected in the sidebar.':'Symbolic elevation · exaggerated scale.';
   };
   const syncMode=()=>{
@@ -152,6 +152,10 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     if(selector){const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}select(Number(selector.dataset.selectSegment));selector.closest('dialog')?.close();return;}
     const button=event.target.closest('button[data-action]');if(button)performAction(button,segmentList);
   });
+  if(globalThis.ResizeObserver){
+    let priorWidth=0;
+    new ResizeObserver(()=>{const width=visual.clientWidth;if(width>0&&width!==priorWidth){priorWidth=width;renderVisual();}}).observe(visual);
+  }
   render();
   notify();
   return {get active(){return true;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){if(segments.length!==1)return;segments=validateRouteProfile([{distanceKm,gradePercent,speedLimitKmh}]);render();notify();}};

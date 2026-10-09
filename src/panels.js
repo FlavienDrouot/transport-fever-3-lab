@@ -14,7 +14,7 @@ export function syncAnalysisPanels(document,view){
   $('profile-sidebar').hidden=view!=='route-profile';
   $('profile-picker-toggle').hidden=view!=='route-profile';
   $('line-capacity').hidden=view!=='economics';
-  $('train-race-settings').hidden=view!=='race';
+  $('train-race-settings').hidden=!trainView&&view!=='trucks';
   $('rail-service-note').hidden=view!=='economics';
   if(!trainView&&$('train-drawer').open)$('train-drawer').close();
   if(view!=='trucks'&&$('road-drawer').open)$('road-drawer').close();
