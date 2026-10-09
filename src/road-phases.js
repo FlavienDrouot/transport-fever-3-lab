@@ -1,7 +1,6 @@
 import {UI_TERMS} from './ui-terms.js';
-import {roadGradientSpeeds} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
-import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles} from './trucks.js';
+import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles,roadRouteSpeeds} from './trucks.js';
 import {rankingStory} from './economic-crossovers.js';
 import {createPhaseScale,leadershipWeights} from './phase-scale.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
@@ -115,7 +114,7 @@ let cacheKey,cached;
 export function renderRoadPhases(document,datasets,selection,options){
   const node=id=>document.getElementById(id),axis=node('road-phase-axis').querySelector('input:checked').value;
   let vehicles=selectRoadVehicles(styleVehicleCatalogues(datasets),{...selection,year:axis==='year'?2035:selection.year});
-  vehicles=vehicles.filter(v=>roadGradientSpeeds(v,options.gradePercent??0,options.roadSpeedLimit).eligible);
+  vehicles=vehicles.filter(v=>roadRouteSpeeds(v,options).eligible);
   const domain=axis==='year'?{start:1900,end:2035}:axis==='utilization'?{start:1,end:100}:{start:.01,end:Math.max(5,options.distanceKm)};
   const current=axis==='year'?selection.year:axis==='utilization'?options.fillRatio*100:options.distanceKm;
   const label=axis==='year'?'Game year':axis==='utilization'?'Utilization (%)':'One-way distance (km)';
@@ -123,7 +122,7 @@ export function renderRoadPhases(document,datasets,selection,options){
   const phaseOptions={...options,...(axis==='distance'?{distanceKm:1}:axis==='utilization'?{fillRatio:1}:{})};
   const key=JSON.stringify([vehicles,phaseOptions,axis,domain]);
   if(key!==cacheKey){cached=roadPhaseStory(vehicles,phaseOptions,{axis,...domain});cacheKey=key;}
-  node('road-phase-help').textContent=`${label} varies over ${axis==='year'?String(domain.start):fmt(domain.start)}–${axis==='year'?String(domain.end):fmt(domain.end)}; other settings remain fixed. Dashed line: current setting. ${axis==='year'?'Vehicles enter at their introduction year; retirement dates are not applied.':''}`;
+  node('road-phase-help').textContent=`${label} varies over ${axis==='year'?String(domain.start):fmt(domain.start)}–${axis==='year'?String(domain.end):fmt(domain.end)}; other settings remain fixed. Dashed line: current setting. ${axis==='distance'&&options.routeProfile?'All segment lengths scale together; their gradients and speed limits remain fixed. ':''}${axis==='year'?'Vehicles enter at their introduction year; retirement dates are not applied.':''}`;
   phaseChart(node('road-cost-phases-chart'),vehicles,cached,{axis,label,current,mode:node('road-cost-scale').querySelector('input:checked').value,rank:false,stepped:options.demandPerYear!=null});
   phaseChart(node('road-rank-phases-chart'),vehicles,cached,{axis,label,current,mode:node('road-rank-scale').querySelector('input:checked').value,rank:true});
 }
