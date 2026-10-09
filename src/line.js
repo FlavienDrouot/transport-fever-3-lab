@@ -1,5 +1,6 @@
 import {sizeFleet} from './service-fleet.js';
-import {withRailSpeedLimit} from './rail-motion.js';
+import {canClimb,gradientAcceleration,validateGradient} from './gradient.js';
+import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
 // Default calendar: four simulation seconds per day, 365 days per year.
 export const GAME_YEAR_SECONDS = 4 * 365;
 
@@ -10,6 +11,9 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
   for (const [name,value] of Object.entries({distanceKm,brakingDeceleration})) {
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
   }
+  if(train.model.canStart===false)throw new RangeError('Vehicle cannot start on this gradient');
+  brakingDeceleration+=gradientAcceleration(train.model.gradePercent??0);
+  if(brakingDeceleration<=0)throw new RangeError('Vehicle cannot stop on this gradient');
   let cache=motionCache.get(train.model);
   if (!cache) {cache=new Map();motionCache.set(train.model,cache);}
   const motionKey=`${distanceKm}:${brakingDeceleration}`;
@@ -17,6 +21,18 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
   if (!motion) {
     // Find the braking start: acceleration distance plus stopping distance equals the leg.
     // This also handles short routes where the train cannot reach its top speed.
+    if(train.model.motionAtSpeed){
+      let low=0,high=train.model.effectiveMaxSpeedKmh;
+      for(let i=0;i<50;i++){
+        const speed=(low+high)/2,state=train.model.motionAtSpeed(speed);
+        if(state.distance+(speed/3.6)**2/(2*brakingDeceleration)<distanceKm*1000)low=speed;else high=speed;
+      }
+      const peakSpeedKmh=(low+high)/2,state=train.model.motionAtSpeed(peakSpeedKmh);
+      // If the cap is reached, include the remaining cruising distance.
+      const cruise=Math.max(0,distanceKm*1000-state.distance-(peakSpeedKmh/3.6)**2/(2*brakingDeceleration))/(peakSpeedKmh/3.6);
+      const brakingSeconds=peakSpeedKmh/3.6/brakingDeceleration;
+      motion={travelSeconds:state.time+cruise+brakingSeconds,brakingSeconds,peakSpeedKmh};
+    }else{
     let low = 0, high = train.model.timeAt(distanceKm);
     for (let i = 0; i < 70; i++) {
       const time = (low + high) / 2, state = train.model.stateAt(time);
@@ -30,14 +46,26 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
     const travelSeconds = brakingStartSeconds + brakingSeconds;
     if (!Number.isFinite(travelSeconds) || travelSeconds <= 0) throw new RangeError('Travel time must be positive and finite');
     motion={travelSeconds,brakingSeconds,peakSpeedKmh};
+    }
     if (cache.size>=2048) cache.clear();
     cache.set(motionKey,motion);
   }
   return {...motion};
 }
 
+/** Signed A→B grade; the return leg has the opposite gradient. */
+export function roundTripMotion(train,{gradePercent=0,...options}) {
+  validateGradient(gradePercent,9);
+  const outbound=travelBetweenStops(withRailGradient(train,gradePercent),options);
+  const back=gradePercent?travelBetweenStops(withRailGradient(train,-gradePercent),options):outbound;
+  return {travelSeconds:(outbound.travelSeconds+back.travelSeconds)/2,
+    outboundTravelSeconds:outbound.travelSeconds,returnTravelSeconds:back.travelSeconds,
+    brakingSeconds:(outbound.brakingSeconds+back.brakingSeconds)/2,
+    peakSpeedKmh:Math.max(outbound.peakSpeedKmh,back.peakSpeedKmh)};
+}
+
 // Passenger journeys count both directions; motion always uses the vehicle's empty mass.
-export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6}) {
+export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6, gradePercent = 0}) {
   const formationMultiplier=train.formationLoadingUnloadingSpeedMultiplier!==undefined?train.formationLoadingUnloadingSpeedMultiplier:train.loadingUnloadingSpeedMultiplier*train.carCount;
   for (const [name, value] of Object.entries({distanceKm, baseRate, brakingDeceleration, capacity: train.passengerCapacity, multiplier: formationMultiplier, maintenance: train.economy.annualMaintenance})) {
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
@@ -47,7 +75,7 @@ export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, bra
   if (!Number.isFinite(fillRatio) || fillRatio < 0 || fillRatio > 1) throw new RangeError('Fill ratio must be between zero and one');
   const passengers = train.passengerCapacity * fillRatio;
   const rate = baseRate * formationMultiplier;
-  const motion=travelBetweenStops(train,{distanceKm,brakingDeceleration});
+  const motion=roundTripMotion(train,{distanceKm,brakingDeceleration,gradePercent});
   const {travelSeconds,brakingSeconds,peakSpeedKmh}=motion;
   const loadingSeconds = passengers / rate;
   const stationSeconds = 2 * loadingSeconds + stationDelaySeconds; // Sequential unloading, then loading at each terminal.
@@ -55,7 +83,7 @@ export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, bra
   const journeysPerSecond = 2 * passengers / roundTripSeconds;
   const journeysPerHour = journeysPerSecond * 3600;
   const transportPerMaintenance = journeysPerHour / train.economy.annualMaintenance;
-  return {passengers, rate, travelSeconds, brakingSeconds, peakSpeedKmh, loadingSeconds, stationSeconds, roundTripSeconds,
+  return {...motion,passengers, rate, travelSeconds, brakingSeconds, peakSpeedKmh, loadingSeconds, stationSeconds, roundTripSeconds,
     journeysPerHour, transportPerMaintenance,
     maintenancePerJourney: journeysPerSecond > 0 ? train.economy.annualMaintenance / (journeysPerSecond * GAME_YEAR_SECONDS) : null,
     maintenancePerThroughput: journeysPerHour > 0 ? train.economy.annualMaintenance / journeysPerHour : null,
@@ -90,8 +118,10 @@ function analyseSingleService(train, options, fleetCount = null) {
 
 
 /** Platform length is a hard limit; no short-platform loading penalty is modelled. */
-export function serviceEligible(train, {platformLengthMetres = null} = {}) {
+export function serviceEligible(train, {platformLengthMetres = null,gradePercent = 0} = {}) {
   if (platformLengthMetres !== null && (!Number.isFinite(platformLengthMetres) || platformLengthMetres <= 0)) throw new RangeError('Platform length must be positive or null');
+  validateGradient(gradePercent,9);
+  if(gradePercent&&!canClimb(train,Math.abs(gradePercent)))return false;
   return platformLengthMetres === null || (Number.isFinite(train.lengthMetres) && train.lengthMetres <= platformLengthMetres + 1e-9);
 }
 

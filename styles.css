@@ -322,3 +322,14 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .vehicle-selector .train-edit{flex:none;width:26px;height:26px;padding:0;border:1px solid transparent;background:transparent;color:var(--muted);font-size:19px}
 .vehicle-selector .train-edit:hover,.vehicle-selector .train-edit:focus-visible{color:var(--green);border-color:var(--line);background:var(--tint,#f3f6f3)}
 @media(pointer:coarse){.vehicle-selector .train-edit{width:40px;height:40px}}
+/* One gradient control shared by both route panels. */
+.gradient-control{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;margin:10px 0}
+.gradient-control .road-value-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gradient-control label{font-weight:550}
+.gradient-control .line-distance-entry input{width:70px}
+.gradient-control input[type=range]{width:100%;min-width:0;margin:0;accent-color:var(--green)}
+.gradient-control .control-help-text{margin:2px 0}
+.chart .motion-transition-label text{fill:#27332e;font-size:11px}
+.motion-transition-label rect{fill:var(--surface,white)}
+[data-theme=dark] .chart .motion-transition-label text{fill:#dde8e1}
+[data-theme=dark] .motion-transition>circle,[data-theme=dark] .motion-transition>path{filter:brightness(1.7)}

@@ -94,6 +94,8 @@ test('Duplicating a saved train uses its derived introduction year and leaves fi
   assert.equal(year.value,original.year);assert.equal(output.textContent,original.year);
   assert.match(nodes.get('component-catalogue-body').innerHTML,/\+ Add/);
   assert.equal(nodes.get('composition-name').value,'Original · copy');
+  assert.match(nodes.get('composition-summary').innerHTML,new RegExp(`${Math.round(original.tractionKgf*units.source.kgfNewtons).toLocaleString('en-GB')} N`));
+  assert.doesNotMatch(nodes.get('composition-summary').innerHTML,/kgf/);
   nodes.get('composition-form').handlers.submit({preventDefault(){}});
   const items=editor.getCompositions();
   assert.equal(items.length,2);assert.equal(items[1].year,original.year);assert.notEqual(items[1].id,original.id);

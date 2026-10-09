@@ -18,8 +18,31 @@ export function rankingSettlesAt(trains) {
   return last;
 }
 
+// Models are immutable. Reuse roots across the distance limit and both phase
+// diagrams, without keeping replaced composition/gradient models alive.
+const crossingCache=new WeakMap();
+function cachedPair(a,b) {
+  const entry=crossingCache.get(a.model)?.get(b.model);
+  return entry&&entry.aSpeed===a.maxSpeedKmh&&entry.bSpeed===b.maxSpeedKmh&&
+    entry.aTime===a.model.timeAt&&entry.bTime===b.model.timeAt?entry.roots:null;
+}
+function rememberPair(a,b,roots) {
+  if(!crossingCache.has(a.model))crossingCache.set(a.model,new WeakMap());
+  crossingCache.get(a.model).set(b.model,{aSpeed:a.maxSpeedKmh,bSpeed:b.maxSpeedKmh,aTime:a.model.timeAt,bTime:b.model.timeAt,roots:[...roots]});
+}
+function dominates(a,b) {
+  const pa=a.model.motionParameters,pb=b.model.motionParameters;
+  // With equal grade, no slower cap and at least as much force per mass at
+  // every velocity, an initially equal position can never reverse order.
+  return pa&&pb&&pa.gravity===pb.gravity&&a.maxSpeedKmh>=b.maxSpeedKmh&&
+    pa.tractionAcceleration>=pb.tractionAcceleration&&pa.powerPerMass>=pb.powerPerMass;
+}
+
 /** Positive crossings between two arrival-time curves, including the steady-speed tail. */
 export function pairCrossings(a, b) {
+  const cached=cachedPair(a,b);
+  if(cached)return [...cached];
+  if(dominates(a,b)||dominates(b,a))return [];
   const crossings = [];
     const end = Math.max(a.model.speedCapKm, b.model.speedCapKm);
     const difference = x => a.model.timeAt(x) - b.model.timeAt(x);
@@ -47,14 +70,20 @@ export function pairCrossings(a, b) {
       const crossing = end - difference(end) / slope;
       if (crossing >= end) crossings.push(crossing);
     }
+  rememberPair(a,b,crossings);rememberPair(b,a,crossings);
   return crossings;
 }
 
-export function suggestedDistanceLimit(trains) {
-  return Math.min(30, Math.max(5, Math.ceil(rankingSettlesAt(trains) * 1.2 / 5) * 5));
+export function suggestedDistanceLimit(trains,settlesAt=rankingSettlesAt(trains)) {
+  return Math.min(30, Math.max(5, Math.ceil(settlesAt * 1.2 / 5) * 5));
 }
 
-/** End the acceleration view shortly after every selected train reaches its speed cap. */
+/** Show a practical approach to an asymptote; race/service calculations keep full precision. */
 export function speedHorizon(trains) {
-  return Math.max(1, ...trains.map(t => t.model.speedCapSeconds * 1.05));
+  return Math.max(1, ...trains.map(t => (t.model.speedViewSeconds??t.model.speedCapSeconds) * 1.05));
+}
+
+/** Distance view covers the same practical acceleration milestones as speed/time. */
+export function speedDistanceHorizon(trains) {
+  return Math.max(.1,...trains.map(t=>t.model.stateAt(t.model.speedViewSeconds??t.model.speedCapSeconds).distanceKm*1.05));
 }

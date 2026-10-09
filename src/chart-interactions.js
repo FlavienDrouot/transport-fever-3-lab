@@ -24,6 +24,7 @@ function applyHighlight(container, id) {
     if (label.classList.contains('end-label') || label.classList.contains('arrival-marker')) label.setAttribute('opacity', opacity);
     else label.style.opacity = opacity;
   }
+  config.onHighlight?.(id);
 }
 
 export function setChartHighlight(document, group, id) {
@@ -34,13 +35,13 @@ export function setChartHighlight(document, group, id) {
 }
 
 export function mountChartInteractions(container, {
-  group = 'rail', highlighted, selector = '.train-curve',
+  group = 'rail', highlighted, onHighlight, selector = '.train-curve',
   appearance = (segment, id) => ({opacity:id && segment.dataset.train !== id ? .16 : 1, width:segment.dataset.train === id ? 4 : 2}),
 } = {}) {
   if (!container.addEventListener || !container.ownerDocument) return;
   for (const label of container.querySelectorAll('.end-label,.train-legend [data-train],.phase-leaders [data-train]')) label.setAttribute('tabindex', '0');
   let binding = bindings.get(container);
-  const config = {group, selector, appearance};
+  const config = {group, selector, appearance, onHighlight};
   if (binding) binding.config = config;
   else {
     binding = {config};

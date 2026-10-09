@@ -1,5 +1,9 @@
-/** Exact integration of F = min(Fmax, P/v), with a speed cap; SI internally. */
-export function createModel(train, units) {
+import {createGradientModel} from './gradient-model.js';
+import {validateGradient} from './gradient.js';
+/** Exact flat-track integration; constant grades add the gravity component. */
+export function createModel(train, units, {gradePercent=0}={}) {
+  validateGradient(gradePercent);
+  if(gradePercent)return createGradientModel(train,units,gradePercent,(vehicle,u,grade)=>createModel(vehicle,u,{gradePercent:grade}));
   const m = train.massTonnes * 1000;
   const f = train.tractionKgf * units.kgfNewtons;
   const p = train.powerCh * units.horsepowerWatts;
@@ -34,5 +38,8 @@ export function createModel(train, units) {
     }
     return t2 + (x - x2) / vmax;
   }
-  return {withSpeedLimit: limit => createModel({...train, maxSpeedKmh: Math.min(train.maxSpeedKmh, limit)}, units), stateAt, timeAt, tractionEndSeconds: t1, speedCapSeconds: t2, speedCapKm: x2 / 1000};
+  return {gradePercent:0,canStart:true,effectiveMaxSpeedKmh:train.maxSpeedKmh,
+    motionParameters:{tractionAcceleration:a,powerPerMass:q,gravity:0},
+    withGradient:grade=>createModel(train,units,{gradePercent:grade}),
+    withSpeedLimit: limit => createModel({...train, maxSpeedKmh: Math.min(train.maxSpeedKmh, limit)}, units), stateAt, timeAt, tractionEndSeconds: t1, speedCapSeconds: t2, speedCapKm: x2 / 1000};
 }

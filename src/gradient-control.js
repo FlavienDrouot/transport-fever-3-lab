@@ -1,0 +1,14 @@
+import {mountDistanceControl,syncNumberInput} from './numeric-controls.js';
+import {mountControlHelp} from './control-help.js';
+
+/** Shared bounded route gradient control; zero preserves the flat-track model. */
+export function mountGradientControl(document,root,{rail=false,noticeId,validate,onChange}) {
+  const id=root.id,max=rail?9:20;
+  const help=`Theoretical gradient model, not calibrated against the game. Positive means uphill from A to B; the return is downhill. ${rail?'Race uses A→B only. Shared with Economics. Acceleration and service braking include gravity.':'Steady travel speed is limited by power uphill; acceleration and braking remain excluded.'} Empty vehicle mass is used; cargo weight is not added. Vehicles without enough traction to climb are excluded. Downhill speed stays capped by the vehicle and infrastructure limits.`;
+  root.classList.add('gradient-control');
+  root.innerHTML=`<div class="road-value-row"><label for="${id}-input">Gradient A→B <button class="control-info" type="button" aria-label="Help: Route gradient" aria-describedby="${id}-help" title="${help}">ⓘ</button></label><div class="line-distance-entry"><input required id="${id}-input" type="number" min="-${max}" max="${max}" step="0.1" value="0" aria-label="Route gradient A to B in percent" aria-describedby="${id}-help ${noticeId}"><span>%</span></div></div><input id="${id}-range" type="range" min="-${max}" max="${max}" step="0.1" value="0" aria-label="Route gradient A to B in percent"><p id="${id}-help" class="sr-only">${help}</p>`;
+  const number=document.getElementById(`${id}-input`),range=document.getElementById(`${id}-range`);
+  mountControlHelp(document,root);
+  mountDistanceControl({number,range,validate,event:'change',onChange:value=>{range.value=value;onChange(value);}});
+  return {setValue(value){syncNumberInput(number,value);range.value=value;}};
+}
