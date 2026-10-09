@@ -3,6 +3,7 @@ import {analyseComposition,renderCompositionSummary,renderCompositionSteadySumma
 import {mountGradientControl} from './gradient-control.js';
 import {mountDistanceControl,validateNumberInputs,syncNumberInput} from './numeric-controls.js';
 import {mountControlHelp} from './control-help.js';
+import {routeProfileDistance} from './route-profile.js';
 
 /** Live draft analysis shares route state with Race/Economics, but never publishes a recipe. */
 export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}) {
@@ -10,7 +11,8 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
   const target=(id,label,value,unit,min=1,step=1,afterLabel='')=>`<div class="target-control${id==='composition-headway'?' composition-frequency-target':''}"><label><input id="${id}-enabled" type="checkbox">${label}</label>${afterLabel}<div><input id="${id}" type="number" min="${min}" step="${step}" value="${value}" disabled required aria-label="${label}" aria-describedby="composition-analysis-input-error"><span${id==='composition-flow'?' id="composition-flow-unit"':''}>${unit}</span></div></div>`;
   root.innerHTML=`<div class="panel-group-body">
     <p id="composition-analysis-input-error" class="input-error" role="status" hidden></p>
-    <div class="composition-route-grid"><div><div class="road-value-row"><label for="composition-distance">One-way distance</label><div class="line-distance-entry"><input id="composition-distance" type="number" min="0.1" data-strict-positive="true" step="0.1" value="10" required aria-describedby="composition-analysis-input-error"><span>km</span></div></div><input id="composition-distance-range" type="range" min="0.1" max="30" step="0.1" value="10" aria-label="One-way route distance in kilometres"></div>
+    <p id="composition-route-profile-status" class="control-help" hidden></p>
+    <div class="composition-route-grid"><div><div class="road-value-row"><label for="composition-distance">One-way distance</label><div class="line-distance-entry"><input id="composition-distance" type="number" min="0" data-strict-positive="true" step="any" value="10" required aria-describedby="composition-analysis-input-error"><span>km</span></div></div><input id="composition-distance-range" type="range" min="0.1" max="30" step="0.1" value="10" aria-label="One-way route distance in kilometres"></div>
     <div id="composition-gradient"></div>
     <div><fieldset id="composition-speed-limit" class="scale-toggle"><legend>Track speed limit</legend>${[100,160,350].map(speed=>`<label><input type="radio" name="composition-speed-limit" value="${speed}"${speed===350?' checked':''}><span>${speed}${speed===350?' km/h':''}</span></label>`).join('')}</fieldset></div>
     <div><label for="composition-fill">${UI_TERMS.utilization} <output id="composition-fill-value">100%</output></label><input id="composition-fill" type="range" min="0" max="100" step="1" value="100" aria-describedby="composition-fill-help"><p class="control-help" id="composition-fill-help">Share of capacity used; a ceiling when a target rate is enabled.</p></div></div>
@@ -36,8 +38,8 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
     for(const id of ['flow','headway','platform'])$(`composition-${id}`).disabled=!$(`composition-${id}-enabled`).checked;
     $('composition-frequency-mode').disabled=$('composition-headway').disabled;
     if(!validate())return;
-    commit({distanceKm:$('composition-distance').valueAsNumber,gradePercent:$('composition-gradient-input').valueAsNumber,
-      infrastructureSpeedKmh:Number($('composition-speed-limit').querySelector('input:checked').value),fillRatio:$('composition-fill').valueAsNumber/100,
+    commit({...(!getSettings().routeProfile?{distanceKm:$('composition-distance').valueAsNumber,gradePercent:$('composition-gradient-input').valueAsNumber,
+      infrastructureSpeedKmh:Number($('composition-speed-limit').querySelector('input:checked').value)}:{}),fillRatio:$('composition-fill').valueAsNumber/100,
       desiredFlow:$('composition-flow').disabled?null:$('composition-flow').valueAsNumber,
       maxHeadwaySeconds:$('composition-headway').disabled?null:$('composition-headway').valueAsNumber*60,
       frequencyMode:$('composition-frequency-mode').querySelector('input:checked').value,platformLengthMetres:$('composition-platform').disabled?null:$('composition-platform').valueAsNumber,
@@ -53,8 +55,13 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
   for(const id of ['composition-speed-limit','composition-frequency-mode','composition-loaded-return',...['a','b'].flatMap(stop=>[`composition-terminal-${stop}`,`composition-warehouse-${stop}`])])$(id).addEventListener('change',updateSettings);
   $('composition-fill').addEventListener('input',updateSettings);
   function syncControls(settings){
-    syncNumberInput($('composition-distance'),settings.distanceKm);gradient.setValue(settings.gradePercent);
-    $('composition-distance-range').min=.1;$('composition-distance-range').max=Math.max(30,settings.distanceKm);$('composition-distance-range').value=settings.distanceKm;
+    const profile=settings.routeProfile,distance=profile?routeProfileDistance(profile):settings.distanceKm;
+    for(const id of ['composition-distance','composition-distance-range','composition-gradient-input','composition-gradient-range','composition-speed-limit'])$(id).disabled=!!profile;
+    if(profile)for(const id of ['composition-distance','composition-gradient-input'])$(id).setAttribute('aria-invalid','false');
+    const status=$('composition-route-profile-status');status.hidden=!profile;
+    status.innerHTML=profile?`Selected-route results use ${profile.length} segment${profile.length===1?'':'s'}, ${distance} km, with their own gradients and speed limits. <a href="#route-profile">Edit route profile ↗</a> The reference and curves below still use the saved uniform gradient and speed limit.`:'';
+    syncNumberInput($('composition-distance'),distance);gradient.setValue(settings.gradePercent);
+    $('composition-distance-range').min=.1;$('composition-distance-range').max=Math.max(30,distance);$('composition-distance-range').value=distance;
     $('composition-speed-limit').querySelector(`input[value="${settings.infrastructureSpeedKmh}"]`).checked=true;
     $('composition-fill').value=settings.fillRatio*100;$('composition-fill-value').textContent=`${Math.round(settings.fillRatio*100)}%`;
     for(const [id,value] of [['flow',settings.desiredFlow],['headway',settings.maxHeadwaySeconds===null?null:settings.maxHeadwaySeconds/60],['platform',settings.platformLengthMetres]]){
@@ -70,8 +77,6 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
   function render(){
     scheduled=false;if($('configurator').hidden)return;
     const settings=getSettings();
-    const roundedDistance=Math.max(.1,Math.round(settings.distanceKm*10)/10);
-    if(settings.distanceKm!==roundedDistance){onSettingsChange({...settings,distanceKm:roundedDistance});return;}
     syncControls(settings);
     const freight=draft?.category==='freight';$('composition-freight-options').hidden=!freight;
     $('composition-tram-notice').hidden=draft?.carrier!=='tram';
@@ -92,12 +97,12 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange}
     renderCompositionSummary($('composition-analysis-summary'),analysis);
     renderCompositionSteadySummary($('composition-steady-summary'),analysis);
     $('composition-steady-help').textContent=analysis.empty?'Add a powered vehicle and compatible capacity to see the steady-running reference.':
-      `Cruise-only reference using the selected slope, speed limit and ${Math.round(settings.fillRatio*100)}% utilization. Rate × distance measures transport output from one train per game year, at steady speed. Doubling the route length halves Rate, so their product stays constant. Passenger Rate is per direction; freight Rate counts all loaded legs. Cost per kilometre includes both directions. Acceleration, braking, terminal handling and rate/frequency targets are excluded; their effects appear below in the selected-route results.${freight&&!settings.loadedReturn?' Cost includes the empty return.':''}`;
+      `Cruise-only reference using the saved uniform slope, speed limit and ${Math.round(settings.fillRatio*100)}% utilization. Rate × distance measures transport output from one train per game year, at steady speed. Doubling the route length halves Rate, so their product stays constant. Passenger Rate is per direction; freight Rate counts all loaded legs. Cost per kilometre includes both directions. Acceleration, braking, terminal handling, route segments and rate/frequency targets are excluded; their effects appear below in the selected-route results.${freight&&!settings.loadedReturn?' Cost includes the empty return.':''}`;
     const help=`${settings.gradePercent?'Peak speeds A→B and B→A':'Peak speed'}, Rate × distance per train and cost per ${UI_TERMS.capacityUnit} per km versus total A–B–A length. Each quantity has its own ordinate scale. Peak speed includes final braking; with a slope, both directions share the speed scale. Handling at both stops is included. ${freight?'Deliveries count loaded legs.':'Passenger journeys count both legs.'}`;
     const maximum=analysis.normalizedMaximumDistance;
-    const beyond=!analysis.empty&&settings.distanceKm>maximum?' The selected route extends beyond this view; its full results remain in the summary.':'';
+    const beyond=!analysis.empty&&analysis.distance>maximum?' The selected route extends beyond this view; its full results remain in the summary.':'';
     $('composition-analysis-help').textContent=help+beyond+
-      ' The chart describes one train at the selected utilization, independently of Rate, Frequency and platform constraints. Those constraints apply only to Route & service results. Gradient, speed limit, utilization and freight handling settings remain shared. The distance window extends until Rate × distance is at least 99% of its limit and cost/km at most 1% above its limit. Distance starts at 10 m round trip; distance and cost use logarithmic scales. Cost / capacity / km divides unit cost by one-way distance. Output and cost approach the steady-running reference above.';
+      ' The chart describes one train at the selected utilization on a uniform route, independently of route segments, Rate, Frequency and platform constraints. Those constraints and route segments apply only to Route & service results. The saved uniform gradient and speed limit, utilization and freight handling settings define this reference. The distance window extends until Rate × distance is at least 99% of its limit and cost/km at most 1% above its limit. Distance starts at 10 m round trip; distance and cost use logarithmic scales. Cost / capacity / km divides unit cost by one-way distance. Output and cost approach the steady-running reference above.';
     renderCompositionChart($('composition-normalized-chart'),analysis,'normalized');
   }
   function schedule(){if(scheduled)return;scheduled=true;if(document.defaultView?.requestAnimationFrame)document.defaultView.requestAnimationFrame(render);else setTimeout(render,0);}

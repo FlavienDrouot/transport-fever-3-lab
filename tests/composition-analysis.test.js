@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {performance} from 'node:perf_hooks';
 import {buildConsist,railComponents} from '../src/consists.js';
-import {analyseComposition,compositionServiceOptions,compositionChartSeries,compositionDistanceHorizons,compositionChartScales,compositionCurveLayout} from '../src/composition-analysis.js';
+import {analyseComposition,compositionServiceOptions,compositionChartSeries,compositionDistanceHorizons,compositionChartScales,compositionCurveLayout,renderCompositionSummary} from '../src/composition-analysis.js';
+import {routeProfileDistance} from '../src/route-profile.js';
 import {motionTransitions} from '../src/motion-chart.js';
 import {gradientAcceleration} from '../src/gradient.js';
 import {analyseEconomicService} from '../src/rail-freight.js';
@@ -297,5 +298,40 @@ test('Steady and transient composition analysis is independent of fleet targets 
     const targeted=analyseComposition(train,{...settings,desiredFlow:3000,maxHeadwaySeconds:30});
     assert.ok(targeted.service.trainCount>reference.service.trainCount,'route service still sizes the fleet');
     assert.ok(targeted.service.actualOccupancyRatio<settings.fillRatio,'route service still adjusts utilization');
+  }
+});
+
+test('Profile service retains exact segment distance and caps while references stay uniform',()=>{
+  const routeProfile=[
+    {distanceKm:4.567,gradePercent:.4,speedLimitKmh:140},
+    {distanceKm:4.321,gradePercent:-.7,speedLimitKmh:110},
+  ];
+  const distanceKm=routeProfileDistance(routeProfile);
+  for(const category of ['passengers','freight']){
+    const train=draft(category),uniform={...settings,distanceKm,infrastructureSpeedKmh:100,fillRatio:.8};
+    const reference=analyseComposition(train,uniform);
+    const analysis=analyseComposition(train,{...uniform,distanceKm:10,routeProfile,desiredFlow:3000,maxHeadwaySeconds:30});
+    assert.equal(analysis.distance,distanceKm);
+    assert.equal(analysis.serviceOptions.distanceKm,distanceKm,'profile owns distance even if a caller supplies a stale uniform distance');
+    assert.equal(analysis.serviceOptions.infrastructureSpeedKmh,null,'segments own the service speed caps');
+    assert.equal(analysis.serviceOptions.routeProfile,routeProfile);
+    assert.deepEqual(analysis.service,analyseEconomicService(train,{
+      ...compositionServiceOptions(train,{...uniform,desiredFlow:3000,maxHeadwaySeconds:30}),
+      routeProfile,infrastructureSpeedKmh:null,
+    }));
+    assert.ok(analysis.service.peakSpeedKmh>100,'uniform infrastructure cap cannot override segment caps');
+    assert.ok(Number.isFinite(analysis.service.outboundPeakSpeedKmh));
+    assert.ok(Number.isFinite(analysis.service.returnPeakSpeedKmh));
+    assert.equal(analysis.service.peakSpeedKmh,Math.max(analysis.service.outboundPeakSpeedKmh,analysis.service.returnPeakSpeedKmh));
+    assert.notEqual(analysis.service.travelSeconds,reference.service.travelSeconds);
+    assert.equal(Object.hasOwn(analysis.options,'routeProfile'),false);
+    assert.equal(analysis.options.infrastructureSpeedKmh,100);
+    assert.deepEqual(analysis.steady,reference.steady);
+    assert.deepEqual(analysis.speedPoints,reference.speedPoints);
+    assert.equal(analysis.normalizedMaximumDistance,reference.normalizedMaximumDistance);
+    for(const view of ['combined','normalized'])assert.deepEqual(compositionChartSeries(analysis,view),compositionChartSeries(reference,view));
+    const root={innerHTML:''};renderCompositionSummary(root,analysis);
+    assert.match(root.innerHTML,/Peak service speed A→B \/ B→A/);
+    assert.doesNotMatch(root.innerHTML,/NaN|undefined/);
   }
 });

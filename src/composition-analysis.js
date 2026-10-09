@@ -9,11 +9,13 @@ import {escapeHtml as escape,formatNumber,formatTime} from './format.js';
 import {createScale} from './scales.js';
 import {speedDistanceHorizon} from './race.js';
 import {gradientAcceleration} from './gradient.js';
+import {routeProfileDistance} from './route-profile.js';
 
 /** Adapt shared route settings to the draft category, never automatically couple it. */
 export function compositionServiceOptions(train,settings) {
   const {desiredFlow=null,...options}=settings;
   return {...options,allowMultipleUnits:false,freight:train.category==='freight',
+    ...(settings.routeProfile?{distanceKm:routeProfileDistance(settings.routeProfile),infrastructureSpeedKmh:null}:{}),
     ...(train.category==='freight'?{demandPerYear:desiredFlow}:{demandPerDirection:desiredFlow})};
 }
 
@@ -74,10 +76,11 @@ export function renderCompositionSteadySummary(root,analysis) {
 /** Reuse the service engine for exact readouts and bounded distance samples. */
 export function analyseComposition(train,settings,{samples=81}={}) {
   if(!train?.serviceReady)return {empty:true,message:'Add a powered vehicle and compatible capacity to analyse your composition.'};
-  const serviceOptions=compositionServiceOptions(train,settings),distance=settings.distanceKm;
+  const serviceOptions=compositionServiceOptions(train,settings),distance=serviceOptions.distanceKm;
   // Composition curves describe one train at the chosen utilization. Fleet targets
   // and platform constraints apply only to the selected-route service summary.
-  const options={...serviceOptions,demandPerYear:null,demandPerDirection:null,
+  const {routeProfile,...uniformOptions}=serviceOptions;
+  const options={...uniformOptions,infrastructureSpeedKmh:settings.infrastructureSpeedKmh,demandPerYear:null,demandPerDirection:null,
     maxHeadwaySeconds:null,frequencyMode:'maximum',platformLengthMetres:null};
   const motionTrain={...withRailGradient(withRailSpeedLimit(train,settings.infrastructureSpeedKmh),settings.gradePercent),color:'#2385ad'};
   const {speedMaximumDistance,maximumDistance}=compositionDistanceHorizons(train,settings);
@@ -89,6 +92,7 @@ export function analyseComposition(train,settings,{samples=81}={}) {
   let service=null,message='';
   if(!serviceEligible(train,serviceOptions))message=settings.platformLengthMetres!==null&&train.lengthMetres>settings.platformLengthMetres?
     `Train length ${formatNumber(train.lengthMetres,1)} m exceeds the ${formatNumber(settings.platformLengthMetres,1)} m platform limit.`:
+    settings.routeProfile?'This composition cannot complete the configured route profile.':
     'This composition cannot start against resistance on the uphill leg of the round trip.';
   else {
     try{service=analyseEconomicService(train,serviceOptions);}catch(error){if(!(error instanceof RangeError))throw error;message=error.message;}
@@ -190,8 +194,11 @@ export function renderCompositionSummary(root,analysis) {
   if(!s){root.replaceChildren();return;}
   const freight=analysis.options.freight;
   const throughput=freight?s.deliveredPerYear:s.perDirectionJourneysPerYear;
+  const profile=!!analysis.serviceOptions.routeProfile;
   const rows=[['Travel A→B / B→A',`${formatTime(s.outboundTravelSeconds)} / ${formatTime(s.returnTravelSeconds)}`],
-    ['Peak service speed',`${formatNumber(s.peakSpeedKmh,1)} km/h`],['Round trip incl. handling',formatTime(s.roundTripSeconds)],
+    [profile?'Peak service speed A→B / B→A':'Peak service speed',profile?
+      `${formatNumber(s.outboundPeakSpeedKmh,1)} / ${formatNumber(s.returnPeakSpeedKmh,1)} km/h`:
+      `${formatNumber(s.peakSpeedKmh,1)} km/h`],['Round trip incl. handling',formatTime(s.roundTripSeconds)],
     ['Trains',`${s.trainCount} ${s.trainCount===1?'train':'trains'}`],[UI_TERMS.frequency,formatTime(s.headwaySeconds)],
     [UI_TERMS.rate,`${formatNumber(throughput,0)} ${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`],
     [UI_TERMS.utilization,`${formatNumber(s.actualOccupancyRatio*100,1)}%`],[UI_TERMS.runningCosts,`$${formatNumber(s.fleetMaintenance,0)}/year`],
