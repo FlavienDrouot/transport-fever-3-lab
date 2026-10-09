@@ -152,7 +152,7 @@ test('Time/cost horizon includes acceleration and braking for both route directi
   for(const grade of [1,-1]){
     const model=withRailGradient(withRailSpeedLimit(train,options.infrastructureSpeedKmh),grade).model;
     const state=model.stateAt(model.speedViewSeconds);
-    const required=state.distanceKm+(state.speedKmh/3.6)**2/(2*(2.5+gradientAcceleration(grade))*1000);
+    const required=state.distanceKm+(state.speedKmh/3.6)**2/(2*(2.5+gradientAcceleration(grade)*model.motionConfig.gravityFactor)*1000);
     assert.ok(horizons.maximumDistance>=required);
     assert.ok(horizons.maximumDistance>=horizons.speedMaximumDistance);
   }

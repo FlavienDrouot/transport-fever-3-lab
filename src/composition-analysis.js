@@ -28,7 +28,7 @@ export function compositionDistanceHorizons(train,settings) {
   const approachDistances=legs.filter(t=>t.model.canStart!==false).map(t=>{
     const state=t.model.stateAt(t.model.speedViewSeconds??t.model.speedCapSeconds);
     // A stop-to-stop service needs room both to accelerate and to brake.
-    const deceleration=braking+gradientAcceleration(t.model.gradePercent??0);
+    const deceleration=braking+gradientAcceleration(t.model.gradePercent??0)*(t.model.motionConfig?.gravityFactor??1);
     return state.distanceKm+(state.speedKmh/3.6)**2/(2*deceleration*1000);
   });
   return {speedMaximumDistance:outbound.model.canStart===false ? .1 : speedDistanceHorizon([outbound]),

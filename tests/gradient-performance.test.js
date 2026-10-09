@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {RAIL_MOTION} from '../src/gradient.js';
 import {createModel} from '../src/model.js';
 import {withRailGradient,withRailSpeedLimit} from '../src/rail-motion.js';
 import {pairCrossings,rankingSettlesAt,speedHorizon} from '../src/race.js';
@@ -50,19 +51,19 @@ test('Provably dominant and identical formations need no crossover search',()=>{
 });
 
 test('The speed plot ends near equilibrium without shortening the physical model',()=>{
-  const train=make('etr-450',1.4),model=train.model;
+  const train=make('etr-450',4),model=train.model;
   assert.equal(model.asymptoticSpeed,true);
   assert.ok(model.speedViewSeconds<model.speedCapSeconds/2);
   close(model.stateAt(model.speedViewSeconds).speedKmh,model.effectiveMaxSpeedKmh*.99);
   assert.equal(speedHorizon([train]),model.speedViewSeconds*1.05);
   for(const t of [model.speedViewSeconds,model.speedCapSeconds*.9,model.speedCapSeconds,model.speedCapSeconds*2])close(model.timeAt(model.stateAt(t).distanceKm),t,1e-5);
-  const limited=withRailGradient(withRailSpeedLimit(make('etr-450',0),100),1.4);
+  const limited=withRailGradient(withRailSpeedLimit(make('etr-450',0),100),4);
   assert.equal(limited.model.asymptoticSpeed,false);
   assert.equal(limited.model.speedViewSeconds,limited.model.speedCapSeconds);
 });
 
-test('Steep uphill comparisons keep their known roots and retain the full distant tail',()=>{
-  const ts=data.trains.map(t=>withRailGradient({...t,model:createModel(t,data.source)},3)).filter(t=>t.model.canStart);
+test('Unscaled gravity comparisons keep their known roots and retain the full distant tail',()=>{
+  const ts=data.trains.map(t=>withRailGradient({...t,model:createModel(t,data.source,{motion:{...RAIL_MOTION,gravityFactor:1}})},3)).filter(t=>t.model.canStart);
   const story=crossoverStory(ts);
   close(rankingSettlesAt(ts),220.67521605883263,1e-6);
   assert.deepEqual(story.phases.map(p=>p.leaders),[['metroliner'],['twindexx'],['avelia-liberty']]);

@@ -22,7 +22,7 @@ test('road coefficients are independent; flat motion agrees initially with rail 
  assert.ok(adjusted.stateAt(1).speedKmh<road.stateAt(1).speedKmh);
  assert.equal(adjusted.withGradient(2).withSpeedLimit(50).motionConfig.tractionFactor,1);
 });
-test('road service includes short-leg acceleration and braking without changing handling',()=>{
+test('road service includes short-leg acceleration without braking or changing handling',()=>{
  const options={distanceKm:.1,fillRatio:.8};
  const [steady]=analyseTruckService([man],options),[motion]=analyseTruckService([man],{...options,motion:true});
  assert.ok(motion.travelSeconds>steady.travelSeconds);
@@ -34,13 +34,13 @@ test('road service includes short-leg acceleration and braking without changing 
  const [passenger]=analysePassengerRoadService([bus],{...options,motion:true});
  close(passenger.deliveredPerCycle,32);close(passenger.travelSeconds,motion.travelSeconds);
 });
-test('road segment caps are anticipated; reversal swaps service legs and Race does not stop at B',()=>{
+test('road caps apply at boundaries without braking; reversal swaps service legs',()=>{
  const profile=[{distanceKm:.6,gradePercent:2,speedLimitKmh:80},{distanceKm:.4,gradePercent:-1,speedLimitKmh:30}];
  const a=roadRoundTripMotion(man,{distanceKm:1,routeProfile:profile});
  const b=roadRoundTripMotion(man,{distanceKm:1,routeProfile:reverseRouteProfile(profile)});
  assert.equal(a.eligible,true);close(a.travelSeconds,b.travelSeconds);close(a.outboundTravelSeconds,b.returnTravelSeconds);
  const race=withRailProfile(withRoadModel(man),profile).model;
- assert.ok(race.timeAt(1)<a.outboundTravelSeconds);assert.ok(race.stateAt(race.timeAt(1)).speedKmh>0);
+ close(race.timeAt(1),a.outboundTravelSeconds);assert.ok(race.stateAt(race.timeAt(1)).speedKmh>0);
  close(race.stateAt(race.timeAt(.6)).speedKmh,30);
  assert.equal(roadRoundTripMotion({...man,tractionKgf:100},{distanceKm:1,gradePercent:20}).eligible,false);
 });
@@ -59,29 +59,29 @@ test('corrected MAN 19.304 observations support the provisional flat-road accele
  assert.ok(model.speedCapSeconds<=10);
 });
 
-test('MAN natural-stop repeat sets road braking independently for uniform and segmented services',()=>{
- const measuredSpeed=80/3.6;
- const ticks=measuredSpeed/ROAD_MOTION.brakingDeceleration/ROAD_MOTION.stepSeconds;
- assert.ok(Math.abs(ticks-18)<.1);
- const short=roadRoundTripMotion(man,{distanceKm:.1});
- const profile=roadRoundTripMotion(man,{distanceKm:.1,routeProfile:[{distanceKm:.05,gradePercent:0,speedLimitKmh:80},{distanceKm:.05,gradePercent:0,speedLimitKmh:79.999}]});
- // The tiny cap difference selects the numerical profile path without materially
- // changing speed: both service paths must use the road braking coefficient.
- assert.ok(Math.abs(short.travelSeconds-profile.travelSeconds)<.02);
- const oldRoad=createModel(man,MOTION_UNITS,{motion:{...ROAD_MOTION,brakingDeceleration:2.5}});
- const train=createModel(man,MOTION_UNITS);
- // Default rail stop timing remains tied to 2.5 m/s².
- const railStop=travelBetweenStops({...man,model:train},{distanceKm:.1});
- const previousRoadStop=travelBetweenStops({...man,model:oldRoad},{distanceKm:.1});
- close(railStop.travelSeconds,previousRoadStop.travelSeconds);
- assert.ok(short.travelSeconds<railStop.travelSeconds);
+test('road braking is omitted for every vehicle in uniform and segmented service and Race',()=>{
+ for(const vehicle of trucks.filter(t=>['man-19304','faw-j6p'].includes(t.id))){
+  const model=withRoadModel(vehicle).model;
+  const distanceKm=.1,travelSeconds=model.timeAt(distanceKm);
+  const short=roadRoundTripMotion(vehicle,{distanceKm});
+  close(short.travelSeconds,travelSeconds);
+  close(short.peakSpeedKmh,model.stateAt(travelSeconds).speedKmh);
+  const profile=roadRoundTripMotion(vehicle,{distanceKm,routeProfile:[{distanceKm:.05,gradePercent:0,speedLimitKmh:350},{distanceKm:.05,gradePercent:0,speedLimitKmh:349.999}]});
+  assert.ok(Math.abs(short.travelSeconds-profile.travelSeconds)<.02);
+  const rail=createModel(vehicle,MOTION_UNITS);
+  assert.ok(travelBetweenStops({...vehicle,model:rail},{distanceKm}).travelSeconds>short.travelSeconds);
+ }
+ const profile=[{distanceKm:1,gradePercent:0,speedLimitKmh:80},{distanceKm:.2,gradePercent:0,speedLimitKmh:30}];
+ const race=withRailProfile(withRoadModel(man),profile).model;
+ assert.ok(race.stateAt(race.timeAt(.99)).speedKmh>79.9,'No advance braking');
+ assert.equal(race.profileEvents.some(e=>e.label==='Braking'),false);
 });
 
-test('displayed 10% MAN run fits road grade scaling in uniform and segmented motion; rail stays unscaled',()=>{
+test('MAN uphill runs share grade scaling across road, rail and segmented motion',()=>{
  const road=withRoadModel(man),model=road.model.withGradient(10);
  const checkpoints=[[1,15],[2,29],[5,51],[10,73],[12.4,80]];
- for(const [seconds,speed] of checkpoints)assert.ok(Math.abs(model.stateAt(seconds).speedKmh-speed)<.5);
- close(model.speedCapSeconds,12.4);
+ for(const [seconds,speed] of checkpoints)assert.ok(Math.abs(model.stateAt(seconds).speedKmh-speed)<.6);
+ assert.ok(Math.abs(model.speedCapSeconds-12.4)<=.2+1e-9);
  const route=[{distanceKm:.1,gradePercent:10,speedLimitKmh:80},{distanceKm:.9,gradePercent:10,speedLimitKmh:79.999}];
  const profile=withRailProfile(road,route).model;
  for(const [seconds] of checkpoints)assert.ok(Math.abs(profile.stateAt(seconds).speedKmh-model.stateAt(seconds).speedKmh)<.05);
@@ -90,5 +90,8 @@ test('displayed 10% MAN run fits road grade scaling in uniform and segmented mot
  assert.ok(Math.abs(uniform.outboundTravelSeconds-segmented.outboundTravelSeconds)<.02);
  assert.ok(Math.abs(uniform.returnTravelSeconds-segmented.returnTravelSeconds)<.02);
  const rail=createModel(man,MOTION_UNITS,{gradePercent:10});
- assert.ok(Math.abs(rail.stateAt(12.4).speedKmh-65.66114199040541)<1e-9);
+ assert.deepEqual(rail.stateAt(12.4),model.stateAt(12.4));
+ const steeper=road.model.withGradient(20);
+ for(const [seconds,speed] of [[1,14],[2,27],[5,48],[10,66],[16.4,80]])assert.ok(Math.abs(steeper.stateAt(seconds).speedKmh-speed)<.6);
+ assert.ok(Math.abs(steeper.speedCapSeconds-16.4)<=.2+1e-9);
 });

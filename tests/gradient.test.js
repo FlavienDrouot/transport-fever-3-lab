@@ -21,7 +21,7 @@ const close=(a,b,tolerance=1e-7)=>assert.ok(Math.abs(a-b)<=tolerance*Math.max(1,
 // and bulk constant-traction shortcut. Service termination is bounded to one step.
 function numericalMotion(vehicle,grade,{seconds=null,distanceKm=null}={}) {
   const mass=vehicle.massTonnes*1000,force=2*vehicle.tractionKgf*9.80665,power=vehicle.powerCh*735.5;
-  const gravity=9.80665*Math.sin(Math.atan(grade/100)),resistance=.02+gravity;
+  const gravity=.38*9.80665*Math.sin(Math.atan(grade/100)),resistance=.02+gravity;
   const terminal=resistance>0?power/mass/resistance:Infinity;
   const cap=Math.min(vehicle.maxSpeedKmh/3.6,terminal*(1-1e-8));
   let time=0,speed=0,distance=0;const dt=.2,brake=2.5+gravity;
@@ -61,7 +61,7 @@ test('Signed grade follows independent force integration, caps and inverse timin
   assert.ok(createModel(raw,units,{gradePercent:5}).timeAt(1)>train.model.timeAt(1));
   assert.ok(createModel(raw,units,{gradePercent:-5}).timeAt(1)<train.model.timeAt(1));
   const uphill=createModel(raw,units,{gradePercent:9});
-  const terminal=raw.powerCh*735.5/(raw.massTonnes*1000*(.02+9.80665*Math.sin(Math.atan(.09))))*3.6;
+  const terminal=raw.powerCh*735.5/(raw.massTonnes*1000*(.02+.38*9.80665*Math.sin(Math.atan(.09))))*3.6;
   close(uphill.stateAt(10000).speedKmh,terminal,2e-8);
 });
 
@@ -78,7 +78,7 @@ test('Short and cruising service legs include gravity during acceleration and br
     const vehicle=withRailGradient(train,grade),motion=travelBetweenStops(vehicle,{distanceKm});
     const reference=numericalMotion(raw,grade,{distanceKm});
     assert.ok(Math.abs(motion.travelSeconds-reference.travelSeconds)<1e-7);
-    close(motion.brakingSeconds,motion.peakSpeedKmh/3.6/(2.5+gradientAcceleration(grade)));
+    close(motion.brakingSeconds,motion.peakSpeedKmh/3.6/(2.5+.38*gradientAcceleration(grade)));
   }
   assert.throws(()=>travelBetweenStops(withRailGradient(train,-9),{distanceKm:1,brakingDeceleration:.1}),RangeError);
 });

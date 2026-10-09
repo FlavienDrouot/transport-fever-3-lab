@@ -1,11 +1,14 @@
 export const GRAVITY = 9.80665;
 export const MOTION_UNITS = {kgfNewtons:9.80665,horsepowerWatts:735.5};
-export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02});
+// Fitted to MAN runs at displayed 10% and 20% grades; shared with rail
+// provisionally at Flavien's request, pending rail slope measurements.
+export const GRADE_FORCE_FACTOR=.38;
+export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02,gravityFactor:GRADE_FORCE_FACTOR});
 
 // Road coefficients from initial MAN checks: flat acceleration follows rail,
-// natural stopping supports ~6.2 m/s², and displayed 10% grade suggests ~0.4 gravity.
-// Other grades and vehicles, including grade effects on braking, remain provisional.
-export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingDeceleration:6.2,gravityFactor:.4});
+// the displayed-grade factor is shared. Natural-stop checks do not establish
+// a common braking coefficient, so road braking is omitted.
+export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingEnabled:false});
 
 export function validateGradient(percent,maximum=20) {
   if(!Number.isFinite(percent)||Math.abs(percent)>maximum)throw new RangeError(`Gradient must be between -${maximum}% and ${maximum}%`);
@@ -31,7 +34,7 @@ export function canClimbRail(vehicle,percent) {
   validateGradient(percent);
   const mass=vehicle.massTonnes*1000,force=vehicle.tractionKgf*MOTION_UNITS.kgfNewtons*RAIL_MOTION.tractionFactor;
   return Number.isFinite(mass)&&mass>0&&Number.isFinite(force)&&
-    force>mass*(gradientAcceleration(percent)+RAIL_MOTION.frictionAcceleration);
+    force>mass*(gradientAcceleration(percent)*RAIL_MOTION.gravityFactor+RAIL_MOTION.frictionAcceleration);
 }
 
 /** Road retains its steady-speed assumption, with an uphill traction/power limit. */

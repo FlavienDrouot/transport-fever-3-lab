@@ -25,10 +25,11 @@ export function routeProfileDistance(segments) {
 }
 
 const trajectoryCache=new WeakMap();
-/** Calibrated tractive force plus theoretical gravity. Profile caps and terminal stop are anticipated. */
+/** Tractive motion with provisional gravity; configured braking anticipates caps and terminal stops. */
 export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5}={}) {
   const route=validateRouteProfile(segments);
   const motionConfig=train.model?.motionConfig??RAIL_MOTION;
+  const brakingEnabled=motionConfig.brakingEnabled!==false;
   if(!Number.isFinite(brakingDeceleration)||brakingDeceleration<=0)throw new RangeError('Braking must be positive');
   const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration]);
   const identity=train.model??train;
@@ -45,10 +46,10 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   let position=0,speed=0,time=0,index=0,stalled=false,brakingLast=false;
   // The minimum braking ability over the remaining path gives a conservative
   // envelope for every future lower cap, including the stop at B.
-  const targets=sections.slice(1).map((section,i)=>({distance:section.start,speed:section.cap,label:`Segment ${i+2}`}));
-  if(brakeAtEnd)targets.push({distance:routeMetres,speed:0,label:'Terminal B'});
+  const targets=brakingEnabled?sections.slice(1).map((section,i)=>({distance:section.start,speed:section.cap,label:`Segment ${i+2}`})):[];
+  if(brakingEnabled&&brakeAtEnd)targets.push({distance:routeMetres,speed:0,label:'Terminal B'});
   const braking=sections.map(section=>brakingDeceleration+section.gravity);
-  if(braking.some(value=>value<=0))throw new RangeError('Vehicle cannot brake on this gradient');
+  if(brakingEnabled&&braking.some(value=>value<=0))throw new RangeError('Vehicle cannot brake on this gradient');
   const envelope=(metres,partIndex)=>{
     let allowed=sections[partIndex].cap;
     for(const target of targets){
@@ -63,6 +64,9 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   // Bounded by 100 km at 0.2 s; a stalled uphill train exits immediately.
   for(let steps=0;position<routeMetres-1e-7&&steps<2_000_000;steps++){
     const section=sections[index];
+    // With uncalibrated braking omitted, lower road caps apply instantly at
+    // the boundary, adding neither anticipation nor a stopping-time estimate.
+    if(!brakingEnabled&&speed>section.cap){speed=section.cap;push(time,position,speed);}
     const resistance=motionConfig.frictionAcceleration+section.gravity;
     const traction=Math.min(force,speed>0?power/speed:Infinity)/mass-resistance;
     const brake=braking[index],remaining=section.end-position;
@@ -107,7 +111,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
     };
     const excess=state=>state.next-envelope(Math.min(routeMetres,position+state.travelled),index);
     let motion=stepState(dt),switchAt=dt;
-    if(excess(motion)>1e-8){
+    if(brakingEnabled&&excess(motion)>1e-8){
       let low=0,high=dt;
       for(let k=0;k<35;k++){
         const middle=(low+high)/2;
@@ -133,7 +137,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
     if(position>=section.end-1e-7&&index<sections.length-1){index++;events.push({time,distanceKm:position/1000,label:`Segment ${index+1}`});}
   }
   if(position<routeMetres-1e-7)stalled=true;
-  if(brakeAtEnd&&!stalled&&speed<.01){speed=0;speeds[speeds.length-1]=0;}
+  if(brakingEnabled&&brakeAtEnd&&!stalled&&speed<.01){speed=0;speeds[speeds.length-1]=0;}
   const find=(values,target)=>{let lo=0,hi=values.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(values[mid]<=target)lo=mid;else hi=mid;}return lo;};
   const interpolate=(values,target)=>{const i=find(values,target),fraction=values[i+1]===values[i]?0:(target-values[i])/(values[i+1]-values[i]);return {time:times[i]+(times[i+1]-times[i])*fraction,distanceKm:(distances[i]+(distances[i+1]-distances[i])*fraction)/1000,speedKmh:(speeds[i]+(speeds[i+1]-speeds[i])*fraction)*3.6};};
   events.sort((a,b)=>a.time-b.time);

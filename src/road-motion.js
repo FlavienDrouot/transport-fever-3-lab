@@ -1,7 +1,6 @@
 import {createModel} from './model.js';
 import {MOTION_UNITS,ROAD_MOTION,validateGradient} from './gradient.js';
 import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
-import {travelBetweenStops} from './line.js';
 import {routeRoundTrip,scaledRouteProfile,validateRouteProfile} from './route-profile.js';
 
 // Records are decorated anew by catalogue/category filters: cache by mechanical
@@ -22,22 +21,26 @@ export function withRoadModel(vehicle) {
   return result;
 }
 
-/** Provisional empty-mass motion; both terminals are at rest. */
+/** Empty-mass acceleration; braking is omitted and each leg starts from rest. */
 export function roadRoundTripMotion(vehicle,{distanceKm,gradePercent=0,roadSpeedLimit=null,routeProfile=null}={}) {
   let train=withRoadModel(vehicle);
   let route=routeProfile?validateRouteProfile(routeProfile):null;
   if(route){
     const first=route[0];
     if(route.some(part=>part.gradePercent!==first.gradePercent||part.speedLimitKmh!==first.speedLimitKmh))
-      return routeRoundTrip(train,scaledRouteProfile(route,distanceKm),{brakingDeceleration:ROAD_MOTION.brakingDeceleration});
+      return routeRoundTrip(train,scaledRouteProfile(route,distanceKm));
     gradePercent=first.gradePercent;roadSpeedLimit=first.speedLimitKmh;
   }
   validateGradient(gradePercent);
   if(roadSpeedLimit!=null)train=withRailSpeedLimit(train,roadSpeedLimit);
   const outward=withRailGradient(train,gradePercent),back=withRailGradient(train,-gradePercent);
   if(!outward.model.canStart||!back.model.canStart)return {eligible:false};
-  const options={distanceKm,brakingDeceleration:ROAD_MOTION.brakingDeceleration};
-  const a=travelBetweenStops(outward,options),b=gradePercent?travelBetweenStops(back,options):a;
+  if(!Number.isFinite(distanceKm)||distanceKm<=0)throw new RangeError('Distance must be positive and finite');
+  const leg=model=>{
+    const travelSeconds=model.timeAt(distanceKm);
+    return {travelSeconds,peakSpeedKmh:model.stateAt(travelSeconds).speedKmh};
+  };
+  const a=leg(outward.model),b=gradePercent?leg(back.model):a;
   return {eligible:true,travelSeconds:(a.travelSeconds+b.travelSeconds)/2,
     outboundTravelSeconds:a.travelSeconds,returnTravelSeconds:b.travelSeconds,
     outboundPeakSpeedKmh:a.peakSpeedKmh,returnPeakSpeedKmh:b.peakSpeedKmh,

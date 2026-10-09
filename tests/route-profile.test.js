@@ -79,8 +79,8 @@ test('equal total grade gain with different placement changes outbound travel ti
 
 test('a short steep ramp can be passed with momentum although the same uphill start fails',()=>{
   const weak={...raw,tractionKgf:2000,powerCh:2500};weak.model=createModel(weak,MOTION_UNITS);
-  const flying=[segment(2,-2),segment(.1,4),segment(2,-2)];
-  assert.equal(routeTrajectory(weak,[segment(.1,4)]).stalled,true);
+  const flying=[segment(2,-2),segment(.1,12),segment(2,-2)];
+  assert.equal(routeTrajectory(weak,[segment(.1,12)]).stalled,true);
   assert.equal(routeTrajectory(weak,flying).stalled,false);
   assert.equal(serviceEligible(weak,{routeProfile:flying}),true);
 });
