@@ -39,4 +39,5 @@ test('selected segments can be removed from the sketch unless they are the only 
   const multiple=routeProfileSketch([part,part],{selectedIndex:0});
   assert.doesNotMatch(single,/data-action="remove"/);
   assert.match(multiple,/data-action="remove" data-index="0"[^>]+aria-label="Remove segment 1"/);
+  assert.match(multiple,/class="profile-trash-icon"/);
 });

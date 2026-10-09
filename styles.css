@@ -359,8 +359,10 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-inline-action{cursor:pointer}
 .profile-inline-action rect{fill:var(--surface,#fff);stroke:var(--green);stroke-width:1.5}
 .profile-sketch .profile-inline-action text{fill:var(--green);font-size:18px;font-weight:700;pointer-events:none}
+.profile-trash-icon{fill:none;stroke:var(--green);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .profile-inline-action:hover rect,.profile-inline-action:focus-visible rect{fill:var(--green)}
 .profile-sketch .profile-inline-action:hover text,.profile-sketch .profile-inline-action:focus-visible text{fill:var(--surface,#fff)}
+.profile-inline-action:hover .profile-trash-icon,.profile-inline-action:focus-visible .profile-trash-icon{stroke:var(--surface,#fff)}
 .profile-inline-action:focus-visible{outline:none}
 .profile-sketch .profile-terrain{fill:none;stroke:var(--green);stroke-width:3;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
 .profile-sketch .profile-node{fill:var(--green);stroke:var(--surface,#fff);stroke-width:2;pointer-events:none}
