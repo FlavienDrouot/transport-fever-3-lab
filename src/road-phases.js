@@ -1,6 +1,7 @@
-import {roadGradientSpeeds} from './gradient.js';
+import {roadRoundTripMotion} from './road-motion.js';
+import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
-import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles} from './trucks.js';
+import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles,roadRouteSpeeds} from './trucks.js';
 import {rankingStory} from './economic-crossovers.js';
 import {createPhaseScale,leadershipWeights} from './phase-scale.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
@@ -15,23 +16,26 @@ export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5
   vehicles=vehicles.filter(v=>rows.some(r=>r.truck.id===v.id));
   const coefficients=new Map(rows.map(row=>{
     const factor=row.truck.economy.annualMaintenance/(GAME_YEAR_SECONDS*row.deliveredPerCycle);
-    return [row.truck.id,{row,transferFactor:(options.demandPerYear??0)/GAME_YEAR_SECONDS*(row.loadingSeconds+row.unloadingSeconds)/row.deliveredPerCycle,handling:factor*(row.loadingSeconds+row.unloadingSeconds),fixed:factor*(2*row.travelSeconds+2*row.terminalDelaySeconds),slope:factor*7200/row.effectiveSpeedKmh,intercept:factor*(row.loadingSeconds+row.unloadingSeconds+2*row.terminalDelaySeconds)}];
+    return [row.truck.id,{row,transferFactor:(options.demandPerYear??0)/GAME_YEAR_SECONDS*(row.loadingSeconds+row.unloadingSeconds)/row.deliveredPerCycle,handling:factor*(row.loadingSeconds+row.unloadingSeconds),fixed:factor*(2*row.travelSeconds+2*row.terminalDelaySeconds),factor}];
   }));
+  const travelAt=(row,x)=>options.motion?roadRoundTripMotion(row.truck,{...options,distanceKm:x}).travelSeconds:x/row.effectiveSpeedKmh*3600;
   const valueAt=(id,x)=>{
     const c=coefficients.get(id);if(!c)return null;
+    const travel=axis==='distance'?travelAt(c.row,x):c.row.travelSeconds;
+    if(!Number.isFinite(travel))return null;
     if(options.demandPerYear!=null){
       if(axis==='year'&&c.row.truck.year>x)return null;
       const scale=axis==='utilization'?x/100/(options.fillRatio??1):1;
-      const fixedSeconds=axis==='distance'?7200*x/c.row.effectiveSpeedKmh+2*c.row.terminalDelaySeconds:2*c.row.travelSeconds+2*c.row.terminalDelaySeconds;
+      const fixedSeconds=2*travel+2*c.row.terminalDelaySeconds;
       const minimumVehicles=c.transferFactor+options.demandPerYear/GAME_YEAR_SECONDS*fixedSeconds/(c.row.deliveredPerCycle*scale);
       const count=fixedRateFleetCount(fixedSeconds,c.transferFactor,minimumVehicles,options.maxHeadwaySeconds??null,options.frequencyMode);
       // A fixed rate is delivered exactly: fleet maintenance / annual delivery.
       return c.row.truck.economy.annualMaintenance*count/options.demandPerYear;
     }
     if(axis==='year')return c.row.truck.year<=x?c.row.costPerCargo:null;
-    return axis==='distance'?c.slope*x+c.intercept:c.handling+c.fixed*(options.fillRatio??1)/(x/100);
+    return axis==='distance'?c.factor*(2*travel+c.row.loadingSeconds+c.row.unloadingSeconds+2*c.row.terminalDelaySeconds):c.handling+c.fixed*(options.fillRatio??1)/(x/100);
   };
-  if(axis!=='year')return {...rankingStory(vehicles.map(v=>v.id),(id,x)=>-valueAt(id,x),start,end),valueAt};
+  if(axis!=='year')return {...rankingStory(vehicles.map(v=>v.id),(id,x)=>{const cost=valueAt(id,x);return cost===null?null:-cost;},start,end),valueAt};
   if(!Number.isInteger(start)||!Number.isInteger(end)||end<=start)throw new RangeError('Invalid year domain');
   const knots=[...new Set([start,...vehicles.map(v=>v.year).filter(y=>y>start&&y<end),end])].sort((a,b)=>a-b);
   const intervals=[],phases=[];
@@ -79,7 +83,7 @@ function phaseChart(container,vehicles,story,{axis,label,current,mode,rank,stepp
   const winningValues=story.phases.flatMap(p=>p.leaders.flatMap(id=>[story.valueAt(id,p.start),story.valueAt(id,p.end)]));
   const lo=0,hi=winningValueCeiling(winningValues);
   const sy=y=>pixel(T+(rank?(y-1)/Math.max(1,vehicles.length-1):(hi-y)/(hi-lo))*(H-T-B));
-  let svg=`<title>${rank?'Rank changes':'Running cost phases'}</title><desc>${escape(label)} varies; other settings remain fixed. Lower costs are better.</desc><text x="${L}" y="18">${rank?'Rank · first place at the top':'Running cost / transported unit ($)'}</text>`;
+  let svg=`<title>${rank?'Rank changes':'Running cost phases'}</title><desc>${escape(label)} varies; other settings remain fixed. Lower costs are better.</desc><text x="${L}" y="18">${rank?'Rank · first place at the top':`Running cost / ${UI_TERMS.capacityUnit} ($)`}</text>`;
   const ticks=rank?Array.from({length:vehicles.length},(_,i)=>i+1):Array.from({length:5},(_,i)=>lo+(hi-lo)*i/4);
   for(const tick of ticks)svg+=`<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#ccd4cc" opacity=".5" stroke-dasharray="2 5"/><text x="${L-8}" y="${sy(tick)+4}" text-anchor="end">${rank?tick:tick.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1})}</text>`;
   const xticks=mode==='linear'?Array.from({length:6},(_,i)=>story.start+(story.end-story.start)*i/5):knots;
@@ -114,7 +118,7 @@ let cacheKey,cached;
 export function renderRoadPhases(document,datasets,selection,options){
   const node=id=>document.getElementById(id),axis=node('road-phase-axis').querySelector('input:checked').value;
   let vehicles=selectRoadVehicles(styleVehicleCatalogues(datasets),{...selection,year:axis==='year'?2035:selection.year});
-  vehicles=vehicles.filter(v=>roadGradientSpeeds(v,options.gradePercent??0,options.roadSpeedLimit).eligible);
+  vehicles=vehicles.filter(v=>roadRouteSpeeds(v,options).eligible);
   const domain=axis==='year'?{start:1900,end:2035}:axis==='utilization'?{start:1,end:100}:{start:.01,end:Math.max(5,options.distanceKm)};
   const current=axis==='year'?selection.year:axis==='utilization'?options.fillRatio*100:options.distanceKm;
   const label=axis==='year'?'Game year':axis==='utilization'?'Utilization (%)':'One-way distance (km)';
@@ -122,7 +126,7 @@ export function renderRoadPhases(document,datasets,selection,options){
   const phaseOptions={...options,...(axis==='distance'?{distanceKm:1}:axis==='utilization'?{fillRatio:1}:{})};
   const key=JSON.stringify([vehicles,phaseOptions,axis,domain]);
   if(key!==cacheKey){cached=roadPhaseStory(vehicles,phaseOptions,{axis,...domain});cacheKey=key;}
-  node('road-phase-help').textContent=`${label} varies over ${axis==='year'?String(domain.start):fmt(domain.start)}–${axis==='year'?String(domain.end):fmt(domain.end)}; other settings remain fixed. Dashed line: current setting. ${axis==='year'?'Vehicles enter at their introduction year; retirement dates are not applied.':''}`;
+  node('road-phase-help').textContent=`${label} varies over ${axis==='year'?String(domain.start):fmt(domain.start)}–${axis==='year'?String(domain.end):fmt(domain.end)}; other settings remain fixed. Dashed line: current setting. ${axis==='distance'&&options.routeProfile?'All segment lengths scale together; their gradients and speed limits remain fixed. ':''}${axis==='year'?'Vehicles enter at their introduction year; retirement dates are not applied.':''}`;
   phaseChart(node('road-cost-phases-chart'),vehicles,cached,{axis,label,current,mode:node('road-cost-scale').querySelector('input:checked').value,rank:false,stepped:options.demandPerYear!=null});
   phaseChart(node('road-rank-phases-chart'),vehicles,cached,{axis,label,current,mode:node('road-rank-scale').querySelector('input:checked').value,rank:true});
 }

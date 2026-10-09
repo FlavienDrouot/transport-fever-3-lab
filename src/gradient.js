@@ -1,6 +1,14 @@
 export const GRAVITY = 9.80665;
 export const MOTION_UNITS = {kgfNewtons:9.80665,horsepowerWatts:735.5};
-export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02});
+// Fitted to MAN runs at displayed 10% and 20% grades; the requested
+// TGV 5% trace supports sharing it with Rail, within 2.36 km/h locally.
+export const GRADE_FORCE_FACTOR=.38;
+export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02,gravityFactor:GRADE_FORCE_FACTOR});
+
+// Road coefficients from initial MAN checks: flat acceleration follows rail,
+// the displayed-grade factor is shared. Natural-stop checks do not establish
+// a common braking coefficient, so road braking is omitted.
+export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingEnabled:false});
 
 export function validateGradient(percent,maximum=20) {
   if(!Number.isFinite(percent)||Math.abs(percent)>maximum)throw new RangeError(`Gradient must be between -${maximum}% and ${maximum}%`);
@@ -26,10 +34,10 @@ export function canClimbRail(vehicle,percent) {
   validateGradient(percent);
   const mass=vehicle.massTonnes*1000,force=vehicle.tractionKgf*MOTION_UNITS.kgfNewtons*RAIL_MOTION.tractionFactor;
   return Number.isFinite(mass)&&mass>0&&Number.isFinite(force)&&
-    force>mass*(gradientAcceleration(percent)+RAIL_MOTION.frictionAcceleration);
+    force>mass*(gradientAcceleration(percent)*RAIL_MOTION.gravityFactor+RAIL_MOTION.frictionAcceleration);
 }
 
-/** Road retains its steady-speed assumption, with an uphill traction/power limit. */
+/** Cruise-only reference for legacy callers; Road comparisons opt into incremental motion. */
 export function roadGradientSpeeds(vehicle,percent,speedLimit=null) {
   validateGradient(percent);
   const maximum=Math.min(vehicle.maxSpeedKmh,speedLimit??Infinity);

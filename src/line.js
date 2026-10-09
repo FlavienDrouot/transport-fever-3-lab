@@ -1,6 +1,7 @@
 import {sizeFleet} from './service-fleet.js';
 import {canClimbRail,gradientAcceleration,validateGradient} from './gradient.js';
 import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
+import {routeRoundTrip,scaledRouteProfile,validateRouteProfile} from './route-profile.js';
 // Default calendar: four simulation seconds per day, 365 days per year.
 export const GAME_YEAR_SECONDS = 4 * 365;
 
@@ -12,7 +13,7 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
   }
   if(train.model.canStart===false)throw new RangeError('Vehicle cannot start on this route');
-  brakingDeceleration+=gradientAcceleration(train.model.gradePercent??0);
+  brakingDeceleration+=gradientAcceleration(train.model.gradePercent??0)*(train.model.motionConfig?.gravityFactor??1);
   if(brakingDeceleration<=0)throw new RangeError('Vehicle cannot stop on this gradient');
   let cache=motionCache.get(train.model);
   if (!cache) {cache=new Map();motionCache.set(train.model,cache);}
@@ -54,18 +55,20 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
 }
 
 /** Signed A→B grade; the return leg has the opposite gradient. */
-export function roundTripMotion(train,{gradePercent=0,...options}) {
-  validateGradient(gradePercent,9);
+export function roundTripMotion(train,{gradePercent=0,routeProfile=null,...options}) {
+  if(routeProfile)return routeRoundTrip(train,scaledRouteProfile(routeProfile,options.distanceKm),options);
+  validateGradient(gradePercent);
   const outbound=travelBetweenStops(withRailGradient(train,gradePercent),options);
   const back=gradePercent?travelBetweenStops(withRailGradient(train,-gradePercent),options):outbound;
   return {travelSeconds:(outbound.travelSeconds+back.travelSeconds)/2,
     outboundTravelSeconds:outbound.travelSeconds,returnTravelSeconds:back.travelSeconds,
     brakingSeconds:(outbound.brakingSeconds+back.brakingSeconds)/2,
-    peakSpeedKmh:Math.max(outbound.peakSpeedKmh,back.peakSpeedKmh)};
+    peakSpeedKmh:Math.max(outbound.peakSpeedKmh,back.peakSpeedKmh),
+    outboundPeakSpeedKmh:outbound.peakSpeedKmh,returnPeakSpeedKmh:back.peakSpeedKmh};
 }
 
 // Passenger journeys count both directions; motion always uses the vehicle's empty mass.
-export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6, gradePercent = 0}) {
+export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6, gradePercent = 0, routeProfile = null}) {
   const formationMultiplier=train.formationLoadingUnloadingSpeedMultiplier!==undefined?train.formationLoadingUnloadingSpeedMultiplier:train.loadingUnloadingSpeedMultiplier*train.carCount;
   for (const [name, value] of Object.entries({distanceKm, baseRate, brakingDeceleration, capacity: train.passengerCapacity, multiplier: formationMultiplier, maintenance: train.economy.annualMaintenance})) {
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
@@ -75,8 +78,9 @@ export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, bra
   if (!Number.isFinite(fillRatio) || fillRatio < 0 || fillRatio > 1) throw new RangeError('Fill ratio must be between zero and one');
   const passengers = train.passengerCapacity * fillRatio;
   const rate = baseRate * formationMultiplier;
-  const motion=roundTripMotion(train,{distanceKm,brakingDeceleration,gradePercent});
+  const motion=roundTripMotion(train,{distanceKm,brakingDeceleration,gradePercent,routeProfile});
   const {travelSeconds,brakingSeconds,peakSpeedKmh}=motion;
+  if(motion.eligible===false)return {eligible:false,efficiency:0,maintenancePerJourney:null};
   const loadingSeconds = passengers / rate;
   const stationSeconds = 2 * loadingSeconds + stationDelaySeconds; // Sequential unloading, then loading at each terminal.
   const roundTripSeconds = 2 * travelSeconds + 2 * stationSeconds;
@@ -97,6 +101,7 @@ function analyseSingleService(train, options, fleetCount = null) {
     if(value!==null && (!Number.isFinite(value)||value<=0))throw new RangeError(`${name} must be positive or null`);
   if(!['maximum','closest'].includes(frequencyMode))throw new RangeError('Invalid frequency mode');
   const baseline=analyseLine(train,options);
+  if(baseline.eligible===false)return {eligible:false,efficiency:0,maintenancePerJourney:null};
   if(demandPerDirection!==null&&!baseline.passengers)throw new RangeError('A positive occupancy limit is required for passenger demand');
   const fleet=sizeFleet({cycleSeconds:baseline.roundTripSeconds,transferSeconds:4*baseline.loadingSeconds,unitsPerCycle:2*baseline.passengers||1,yearSeconds:GAME_YEAR_SECONDS},
     {demandPerYear:demandPerDirection===null?null:2*demandPerDirection,maxHeadwaySeconds,frequencyMode},fleetCount);
@@ -118,9 +123,14 @@ function analyseSingleService(train, options, fleetCount = null) {
 
 
 /** Platform length is a hard limit; no short-platform loading penalty is modelled. */
-export function serviceEligible(train, {platformLengthMetres = null,gradePercent = 0} = {}) {
+export function serviceEligible(train, {platformLengthMetres = null,gradePercent = 0,routeProfile = null} = {}) {
   if (platformLengthMetres !== null && (!Number.isFinite(platformLengthMetres) || platformLengthMetres <= 0)) throw new RangeError('Platform length must be positive or null');
-  validateGradient(gradePercent,9);
+  validateGradient(gradePercent);
+  if(routeProfile){
+    const route=validateRouteProfile(routeProfile);
+    if(!canClimbRail(train,route[0].gradePercent)||!canClimbRail(train,-route.at(-1).gradePercent)||!routeRoundTrip(train,route,{distanceKm:route.reduce((sum,part)=>sum+part.distanceKm,0)}).eligible)return false;
+    return platformLengthMetres === null || (Number.isFinite(train.lengthMetres) && train.lengthMetres <= platformLengthMetres + 1e-9);
+  }
   if(gradePercent&&!canClimbRail(train,Math.abs(gradePercent)))return false;
   if(!gradePercent&&train.model?.canStart===false)return false;
   return platformLengthMetres === null || (Number.isFinite(train.lengthMetres) && train.lengthMetres <= platformLengthMetres + 1e-9);
@@ -128,7 +138,7 @@ export function serviceEligible(train, {platformLengthMetres = null,gradePercent
 
 export function analyseService(train, options) {
   const {infrastructureSpeedKmh = null, allowMultipleUnits = false, platformLengthMetres = null} = options;
-  if (infrastructureSpeedKmh !== null && ![100,160,350].includes(infrastructureSpeedKmh)) throw new RangeError('Infrastructure speed must be 100, 160 or 350 km/h');
+  if (infrastructureSpeedKmh !== null && (!Number.isFinite(infrastructureSpeedKmh)||infrastructureSpeedKmh<10||infrastructureSpeedKmh>350)) throw new RangeError('Infrastructure speed must be 10–350 km/h');
   if (!serviceEligible(train, options)) return {eligible:false, efficiency:0, maintenancePerJourney:null};
   const vehicle=infrastructureSpeedKmh===null?train:withRailSpeedLimit(train,infrastructureSpeedKmh);
   const resultFor = (units, fleetCount = null) => {

@@ -1,3 +1,4 @@
+import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
@@ -5,11 +6,11 @@ import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {createScale} from './scales.js';
 const fmt = x => formatNumber(x,2);
 
-export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=targets.freight?'Running cost / cargo unit ($)':'Running cost / passenger ($)',ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true}) {
-  if(!story.phases.length) {container.textContent=trains.length?'Choose a positive occupancy to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}
+export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=`Running cost / ${UI_TERMS.capacityUnit} ($)`,ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true,group='rail'}) {
+  if(!story.phases.length) {container.textContent=trains.length?'Choose positive utilization to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}
   const valueAt=story.valueAt??((id,x)=>analyseLine(trains.find(t=>t.id===id),{distanceKm:x,fillRatio:fill,...targets}).maintenancePerUnit);
   const axisLabel=story.label??'One-way distance (km)';
-  const formatX=x=>story.axis==='year'?String(Math.floor(x)):fmt(x);
+  const formatX=x=>story.axis==='year'?String(Math.floor(x)):story.axis==='distance'?formatNumber(x,x<.01?4:x<.1?3:2):fmt(x);
   const rank=kind==='rank',W=Math.max(320,container.clientWidth||1000),H=rank?Math.max(330,trains.length*28+100):(W<700?460:620);
   const L=65,R=W>=700?220:20,T=40,B=55;
   const segments=rank?story.intervals:story.phases;
@@ -19,7 +20,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   // Evaluate each render from the supplied story: custom compositions may retain
   // their ID while their mechanical or economic specifications change.
   const samples=rank?[]:story.phases.map(phase=>{
-    const points=Array.from({length:101},(_,i)=>phase.start+(phase.end-phase.start)*i/100);
+    const points=Array.from({length:targets.routeProfile?21:101},(_,i)=>phase.start+(phase.end-phase.start)*i/(targets.routeProfile?20:100));
     if(story.axis==='year')for(let year=Math.ceil(phase.start);year<=phase.end;year++)points.push(year);
     return [...new Set(points)].sort((a,b)=>a-b).map(x=>({x,values:trains.map(train=>valueAt(train.id,x))}));
   });
@@ -62,7 +63,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   if(Number.isFinite(story.current)&&story.current>=story.start&&story.current<=story.end)overlay+=`<line x1="${sx(story.current)}" x2="${sx(story.current)}" y1="${T}" y2="${H-B}" stroke="currentColor" stroke-dasharray="6 4"><title>Current setting: ${formatX(story.current)}</title></line>`;
   overlay+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">${escape(axisLabel)} · ${escape(distanceMode)}</text>`;
   const endpointRanks=rank?(story.ranksAt?.(story.end)??story.intervals.at(-1).ranks):null;
-  renderPhaseDiagram(container,{trains,segments:paths,frame:svg,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title,highlighted,emphasize,
+  renderPhaseDiagram(container,{trains,segments:paths,frame:svg,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title,highlighted,emphasize,group,
     bands:story.phases.map(p=>({leaders:p.leaders,width:axis.position(p.end)-axis.position(p.start)})),
     endpoints:trains.map(t=>({t,y:(rank?endpointRanks[t.id]:valueAt(t.id,story.end))==null?NaN:sy(rank?endpointRanks[t.id]:valueAt(t.id,story.end)),winner:rank?endpointRanks[t.id]===1:finalRanks?finalRanks[t.id]===1:story.phases.at(-1).leaders.includes(t.id)}))});
 }

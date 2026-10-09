@@ -117,7 +117,7 @@ test('Infrastructure speed caps the shared motion without modifying source train
   const fast = {...raw,cargoCapacity:100,formationLoadingUnloadingSpeedMultiplier:8,model:createModel(raw,data.source)};
   const originalModel = fast.model, originalCost = fast.economy.annualMaintenance;
   const unrestricted = analyseFreightService(fast,{distanceKm:30});
-  for (const infrastructureSpeedKmh of [100,160,350]) {
+  for (const infrastructureSpeedKmh of [10,90,100,160,350]) {
     const capped = analyseFreightService(fast,{distanceKm:30,infrastructureSpeedKmh});
     assert.ok(capped.peakSpeedKmh<=infrastructureSpeedKmh+1e-7);
     assert.ok(capped.travelSeconds>=unrestricted.travelSeconds-1e-7);
@@ -140,7 +140,7 @@ test('Platform exclusions, zero fill and invalid parameters are explicit',()=>{
   assert.equal(analyseFreightService(train,{distanceKm:1,platformLengthMetres:60}).eligible,true);
   assert.deepEqual(analyseFreightService(train,{distanceKm:1,platformLengthMetres:59}),{eligible:false,efficiency:0,maintenancePerUnit:null});
   for (const extra of [{distanceKm:0},{distanceKm:NaN},{fillRatio:-.1},{fillRatio:1.1},{brakingDeceleration:0},
-    {platformLengthMetres:0},{infrastructureSpeedKmh:120},{demandPerYear:0},{demandPerYear:NaN},
+    {platformLengthMetres:0},{infrastructureSpeedKmh:351},{demandPerYear:0},{demandPerYear:NaN},
     {demandPerYear:100,fillRatio:0},{maxHeadwaySeconds:0},{frequencyMode:'exact'},
     {loadedReturn:'yes'},{stopA:null},{stopB:[]},{stopA:{specializedTerminal:1}},{stopB:{specializedWarehouse:'yes'}}]) {
     assert.throws(()=>analyseFreightService(train,{distanceKm:1,...extra}),RangeError);

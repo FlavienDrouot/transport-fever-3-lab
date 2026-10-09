@@ -48,6 +48,8 @@ test('Freight calculator rejects invalid assumptions and renders all vehicles wi
   const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   renderTruckService({getElementById:id=>nodes[id]},data.trucks,{distanceKm:10,loadedReturn:false,roadSpeedLimit:80});
   assert.match(nodes['road-service-caption'].textContent,/empty return/);assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,11);assert.doesNotMatch(nodes['truck-service-readout'].innerHTML,/NaN|Infinity/);
+  renderTruckService({getElementById:id=>nodes[id]},data.trucks,{distanceKm:10,motion:true,routeProfile:[{distanceKm:10,gradePercent:0,speedLimitKmh:80}]});
+  assert.match(nodes['road-service-caption'].textContent,/braking omitted/);
 });
 
 test('Truck year filtering includes introduction boundaries and preserves older vehicles',()=>{

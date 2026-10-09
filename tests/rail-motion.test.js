@@ -7,7 +7,7 @@ const units={kgfNewtons:9.80665,horsepowerWatts:735.5};
 const train={id:'fast',year:2025,massTonnes:200,powerCh:8000,tractionKgf:20000,maxSpeedKmh:300};train.model=createModel(train,units);
 test('Race speed cap changes travel time, preserves sources and reuses stable capped models',()=>{
   const capped=withRailSpeedLimit(train,100);assert.equal(capped.maxSpeedKmh,100);assert.ok(capped.model.timeAt(30)>train.model.timeAt(30));assert.equal(train.maxSpeedKmh,300);
-  assert.equal(withRailSpeedLimit(train,100),capped);assert.equal(withRailSpeedLimit(train,350),train);assert.throws(()=>withRailSpeedLimit(train,0));
+  assert.equal(withRailSpeedLimit(train,90).model.stateAt(10000).speedKmh,90);assert.equal(withRailSpeedLimit(train,100),capped);assert.equal(withRailSpeedLimit(train,350),train);assert.throws(()=>withRailSpeedLimit(train,0));
 });
 test('Year arrival rankings use capped travel times at the same route distance and exclude future compositions',()=>{
   const old={...train,id:'old',year:1900,maxSpeedKmh:80};old.model=createModel(old,units);

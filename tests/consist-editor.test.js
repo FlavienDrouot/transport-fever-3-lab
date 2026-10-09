@@ -102,4 +102,16 @@ test('Duplicating a saved train uses its derived introduction year and leaves fi
   assert.deepEqual(items[1].components,original.components);
   editor.openContext({carrier:'rail',category:'passengers',cargo:'all',year:1900});action('edit');
   assert.equal(year.value,original.year);assert.equal(output.textContent,original.year);
+  const snapshot={...original,id:'custom:preview:composition',sourceCompositionId:'custom:rail:unsaved',draftName:'Experiment',name:'Experiment · preview',components:original.components.map(c=>({...c,quantity:c.quantity*2}))};
+  editor.restoreDraft(snapshot);
+  assert.equal(nodes.get('composition-name').value,'Experiment');
+  assert.equal(editor.getCompositions().length,2,'restoring a comparison never saves');
+  nodes.get('composition-form').handlers.submit({preventDefault(){}});
+  assert.equal(editor.getCompositions().length,3);
+  assert.notEqual(editor.getCompositions().at(-1).id,snapshot.id,'ephemeral comparison identity is never persisted');
+  assert.deepEqual(editor.getCompositions().at(-1).components,snapshot.components);
+  editor.restoreDraft({...snapshot,sourceCompositionId:original.id});
+  nodes.get('composition-form').handlers.submit({preventDefault(){}});
+  assert.equal(editor.getCompositions().length,3,'saved source is updated instead of duplicated');
+  assert.deepEqual(editor.getCompositions().find(t=>t.id===original.id).components,snapshot.components);
 });

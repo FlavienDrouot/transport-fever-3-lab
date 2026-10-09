@@ -31,12 +31,13 @@ export function analyseFreightService(train, options) {
   }
   if (!['maximum','closest'].includes(frequencyMode)) throw new RangeError('Invalid frequency mode');
   if (demandPerYear !== null && fillRatio === 0) throw new RangeError('A positive occupancy limit is required for freight demand');
-  if (infrastructureSpeedKmh !== null && ![100,160,350].includes(infrastructureSpeedKmh)) throw new RangeError('Infrastructure speed must be 100, 160 or 350 km/h');
+  if (infrastructureSpeedKmh !== null && (!Number.isFinite(infrastructureSpeedKmh)||infrastructureSpeedKmh<10||infrastructureSpeedKmh>350)) throw new RangeError('Infrastructure speed must be 10–350 km/h');
   const handlingRateA = handlingRate(multiplier, stopA, 'stopA');
   const handlingRateB = handlingRate(multiplier, stopB, 'stopB');
   if (!serviceEligible(train, options)) return {eligible:false, efficiency:0, maintenancePerUnit:null};
   const vehicle = infrastructureSpeedKmh === null ? train : withRailSpeedLimit(train, infrastructureSpeedKmh);
-  const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0});
+  const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0,routeProfile:options.routeProfile??null});
+  if(motion.eligible===false)return {eligible:false,efficiency:0,maintenancePerUnit:null};
   const returns = Number(loadedReturn);
   // A loads the outbound cargo and unloads the return; B performs the inverse.
   // Each configured operation has a 2 s pause, followed by 2 s before departure.

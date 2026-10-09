@@ -47,3 +47,14 @@ test('Year buttons clamp to bounds and disable at the matching boundary',()=>{
   fire(previous,'click');assert.equal(output.textContent,1901);assert.equal(next.disabled,false);
   assert.deepEqual(years,[1901,1902,1902,1901]);
 });
+
+test('Positive distance controls accept sub-0.5 km values with no fixed step while rejecting zero',()=>{
+  const distance=input(.1,{min:0,step:'any'}),notice={};
+  distance.setAttribute('data-strict-positive','true');
+  for(const value of [.25,.01,.0005,1e-7]){
+    distance.value=value;assert.equal(validateNumberInputs([distance],notice),true);
+  }
+  for(const value of [0,-.01]){
+    distance.value=value;assert.equal(validateNumberInputs([distance],notice),false);assert.match(notice.textContent,/greater than zero/);
+  }
+});
