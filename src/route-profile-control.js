@@ -154,5 +154,5 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     const button=event.target.closest('button[data-action]');if(button)performAction(button,segmentList);
   });
   render();
-  return {get active(){return active;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){uniform={distanceKm,gradePercent,speedLimitKmh};if(!profileEdited){segments=[{...uniform}];render();}else if(!active)syncMode();}};
+  return {get active(){return active;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){uniform={distanceKm,gradePercent,speedLimitKmh};if(!profileEdited){segments=[{...uniform,distanceKm:Math.max(.01,Math.min(100,distanceKm))}];render();}else if(!active)syncMode();}};
 }
