@@ -368,11 +368,16 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-segment-fields{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr)) auto;gap:10px;align-items:end}
 .profile-segment label{min-width:0;font-size:12px;color:var(--muted)}
 .profile-segment label span{opacity:.8}
-.profile-segment input{display:block;box-sizing:border-box;width:100%;margin-top:4px;border:1px solid var(--line);border-radius:4px;padding:6px;background:var(--surface,#fff);color:inherit;font-variant-numeric:tabular-nums}
+.profile-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.profile-segment input[type=number]{display:block;box-sizing:border-box;width:100%;max-width:110px;border:1px solid var(--line);border-radius:4px;padding:6px;background:var(--surface,#fff);color:inherit;font-variant-numeric:tabular-nums}
+.profile-segment input[type=range]{display:block;width:100%;min-width:0;margin:4px 0 0;accent-color:var(--green)}
+.profile-speed-presets{display:flex;gap:4px;margin-top:4px}
+.profile-speed-presets button{min-width:43px;padding:5px 6px;font-variant-numeric:tabular-nums}
+.profile-speed-presets button[aria-pressed=true]{border-color:var(--green);background:var(--tint,#edf4ef);color:var(--green);font-weight:650}
 .profile-row-actions{display:flex;gap:5px;justify-content:flex-end;align-self:end;white-space:nowrap}
 .profile-row-actions button{min-width:32px}
 .profile-row-actions button[data-action=insert]{color:var(--green);font-weight:600}
 .profile-error{color:#a63e32!important}
 .profile-destinations{display:flex;gap:20px;border-top:1px solid var(--line);padding:20px 0;margin-top:24px;font-size:13px}
 @media(max-width:800px){.profile-sketch{width:900px}.profile-segment-fields{grid-template-columns:repeat(3,minmax(0,1fr))}.profile-row-actions{grid-column:1/-1}.route-model{flex-wrap:wrap}}
-@media(max-width:470px){.profile-segment-fields{grid-template-columns:1fr 1fr}.profile-segment-fields label:nth-child(3){grid-column:1/-1}}
+@media(max-width:470px){.profile-segment-fields{grid-template-columns:1fr 1fr}.profile-field:nth-child(3){grid-column:1/-1}}
