@@ -388,6 +388,10 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-summary-select small{white-space:nowrap}
 .profile-summary-actions{display:flex;gap:3px;flex:none;padding-right:3px}
 .profile-summary-actions button{min-width:26px;padding:3px 5px}
+.profile-summary-actions .profile-selected-action{display:none}
+.profile-segment-summary.is-selected .profile-summary-actions{display:grid;grid-template-columns:repeat(2,26px)}
+.profile-segment-summary.is-selected .profile-selected-action{display:grid;place-items:center}
+.profile-summary-actions svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .profile-list-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
 .profile-list-actions button{font-size:12px}
 .profile-segment legend{font-size:13px;font-weight:650;padding:0 5px}
