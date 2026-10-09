@@ -1,4 +1,4 @@
-import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions} from './motion-chart.js';
+import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,speedOrdinateMaximum} from './motion-chart.js';
 import {mountGradientControl} from './gradient-control.js';
 import {canClimb} from './gradient.js';
 import {createDataLoader} from './data-loader.js';
@@ -164,7 +164,7 @@ function renderChart(kind, width) {
   el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
-  const ymax = view === 'distance' ? routeDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
+  const ymax = view.startsWith('speed') ? speedOrdinateMaximum(ts,horizon,view) : view === 'distance' ? routeDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
   const xScale = createScale(scaleMode('x', kind), horizon, Math.min(spec.xFloor, horizon / 10));
   const yScale = createScale(scaleMode('y', kind), ymax, Math.min(spec.yFloor, ymax / 10));
   const notes = [];

@@ -11,6 +11,13 @@ export function motionValue(train,x,view) {
   return view==='distance'?state.distanceKm:state.speedKmh;
 }
 
+/** Keep the speed domain close to the speeds actually reached in this view. */
+export function speedOrdinateMaximum(trains,horizon,view) {
+  const maximum=Math.max(1,...trains.map(t=>motionValue(t,horizon,view)));
+  const step=10**Math.floor(Math.log10(maximum))/20;
+  return Math.max(maximum,Math.ceil(maximum/step)*step);
+}
+
 /** Actual phase changes; an asymptote gets a clearly labelled display milestone. */
 export function motionTransitions(train,view) {
   const model=train.model;
@@ -39,9 +46,15 @@ export function renderMotionTransitions(train,{view,sx,sy,left,right,top,bottom}
     if(!Number.isFinite(x)||!Number.isFinite(y)||x<left||x>right||y<top||y>bottom)return '';
     const width=Math.min(right-left-8,Math.max(...[point.label,point.xLabel,point.yLabel].map(s=>s.length))*6+16),height=54;
     const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
-    const candidates=[[x+10,y-height-10],[x+10,y+10],[x-width-10,y-height-10],[x-width-10,y+10]].map(([cx,cy])=>({x:clamp(cx,left+4,right-width-4),y:clamp(cy,top+4,bottom-height-4),w:width,h:height}));
+    const positions=[[x+10,y-height-10],[x+10,y+10],[x-width-10,y-height-10],[x-width-10,y+10]];
+    // Near a plot edge, clamping can make every preferred position collide.
+    // Also try stacking above/below placed labels, keeping both events visible.
+    for(const other of labels)for(const cx of [x+10,x-width-10])
+      positions.push([cx,other.y-height-8],[cx,other.y+other.h+8]);
+    const candidates=positions.map(([cx,cy])=>({x:clamp(cx,left+4,right-width-4),y:clamp(cy,top+4,bottom-height-4),w:width,h:height}));
     const box=candidates.find(c=>labels.every(other=>!overlap(c,other)))??candidates[0];labels.push(box);
+    const anchorX=clamp(x,box.x,box.x+width),anchorY=clamp(y,box.y,box.y+height);
     const title=`${train.name} — ${point.label}; ${point.xLabel}; ${point.yLabel}`;
-    return `<g class="motion-transition"><title>${escape(title)}</title><path d="M${left},${y} H${x} V${bottom}" fill="none" stroke="${train.color}" stroke-dasharray="3 4" opacity=".5"/><circle cx="${x}" cy="${y}" r="4.5" fill="${train.color}" stroke="white" stroke-width="1.5"/><g class="motion-transition-label"><rect x="${box.x}" y="${box.y}" width="${width}" height="${height}" rx="5" fill="white" stroke="${train.color}"/><text x="${box.x+8}" y="${box.y+15}" fill="#314439" font-size="11"><tspan font-weight="600">${escape(point.label)}</tspan><tspan x="${box.x+8}" dy="16">${escape(point.xLabel)}</tspan><tspan x="${box.x+8}" dy="15">${escape(point.yLabel)}</tspan></text></g></g>`;
+    return `<g class="motion-transition"><title>${escape(title)}</title><path d="M${left},${y} H${x} V${bottom}" fill="none" stroke="${train.color}" stroke-dasharray="3 4" opacity=".5"/><line x1="${x}" y1="${y}" x2="${anchorX}" y2="${anchorY}" stroke="${train.color}" opacity=".6"/><circle cx="${x}" cy="${y}" r="4.5" fill="${train.color}" stroke="white" stroke-width="1.5"/><g class="motion-transition-label"><rect x="${box.x}" y="${box.y}" width="${width}" height="${height}" rx="5" fill="white" stroke="${train.color}"/><text x="${box.x+8}" y="${box.y+15}" fill="#314439" font-size="11"><tspan font-weight="600">${escape(point.label)}</tspan><tspan x="${box.x+8}" dy="16">${escape(point.xLabel)}</tspan><tspan x="${box.x+8}" dy="15">${escape(point.yLabel)}</tspan></text></g></g>`;
   }).join('');
 }

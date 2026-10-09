@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createModel} from '../src/model.js';
 import {withRailGradient} from '../src/rail-motion.js';
-import {speedDistanceHorizon} from '../src/race.js';
-import {motionStateAtAbscissa,motionValue,motionTransitions,renderMotionTransitions} from '../src/motion-chart.js';
+import {speedHorizon,speedDistanceHorizon} from '../src/race.js';
+import {motionStateAtAbscissa,motionValue,motionTransitions,renderMotionTransitions,speedOrdinateMaximum} from '../src/motion-chart.js';
 import {createScale} from '../src/scales.js';
 const data=JSON.parse(await readFile(new URL('../data/trains.json',import.meta.url)));
 const trains=data.trains.map(t=>({...t,color:'#147d64',model:createModel(t,data.source)}));
@@ -73,4 +73,39 @@ test('Overlays show coordinates only in the visible domain and escape train name
   }
   const clipped={view:'speed',sx:()=>NaN,sy:()=>NaN,left:65,right:765,top:45,bottom:560};
   assert.equal(renderMotionTransitions(train,clipped),'');assert.equal(renderMotionTransitions(undefined,clipped),'');
+});
+
+test('Nearby transitions at plot edges retain separate bounded labels on narrow and wide charts',()=>{
+  const handcar=withRailGradient(trains.find(t=>t.id==='draisine'),8.3);
+  assert.equal(motionTransitions(handcar,'speed-distance').length,2);
+  for(const width of [240,900])for(const view of ['speed','speed-distance','distance','time']){
+    // Reproduce two almost coincident points at each corner and the centre.
+    for(const [fx,fy] of [[0,0],[0,1],[1,0],[1,1],[.5,.5]]){
+      const geometry={view,sx:()=>65+fx*width,sy:()=>45+fy*335,left:65,right:65+width,top:45,bottom:380};
+      const svg=renderMotionTransitions(handcar,geometry);
+      const boxes=[...svg.matchAll(/<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/g)]
+        .map(m=>m.slice(1).map(Number));
+      assert.equal(boxes.length,2);
+      for(const [x,y,w,h] of boxes){assert.ok(x>=geometry.left&&x+w<=geometry.right);assert.ok(y>=geometry.top&&y+h<=geometry.bottom);}
+      const [a,b]=boxes;
+      assert.ok(a[0]+a[2]<=b[0]||b[0]+b[2]<=a[0]||a[1]+a[3]<=b[1]||b[1]+b[3]<=a[1],`${view}: labels overlap`);
+    }
+  }
+});
+
+test('Speed ordinate domains contain reached speeds with at most 5% rounding headroom',()=>{
+  for(const grade of [-9,0,3,8.3,9]){
+    const ts=trains.map(t=>withRailGradient(t,grade)).filter(t=>t.model.canStart!==false);
+    for(const view of ['speed','speed-distance']){
+      const horizon=view==='speed'?speedHorizon(ts):speedDistanceHorizon(ts);
+      const maximum=Math.max(...ts.map(t=>motionValue(t,horizon,view)));
+      const bound=speedOrdinateMaximum(ts,horizon,view);
+      assert.ok(bound>=maximum);assert.ok(bound<=maximum*1.05);
+      for(const mode of ['linear','log'])assert.ok(Number.isFinite(createScale(mode,bound,Math.min(10,bound/10)).position(maximum)));
+    }
+  }
+  // Crossing a round-number boundary must not expand 100 km/h to 150.
+  const fake={model:{stateAt:()=>({speedKmh:100.01})}};
+  assert.equal(speedOrdinateMaximum([fake],1,'speed'),105);
+  assert.equal(speedOrdinateMaximum([],1,'speed'),1);
 });
