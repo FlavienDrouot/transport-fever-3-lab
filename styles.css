@@ -333,3 +333,17 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .motion-transition-label rect{fill:var(--surface,white)}
 [data-theme=dark] .chart .motion-transition-label text{fill:#dde8e1}
 [data-theme=dark] .motion-transition-markers circle,[data-theme=dark] .motion-transition>path{filter:brightness(1.7)}
+/* Compact rail profile editor; each row remains keyboard accessible. */
+.profile-builder {border-top:1px solid var(--border, #385047);margin-top:.75rem;padding-top:.6rem}
+.profile-builder>summary {cursor:pointer;font-weight:600}
+.profile-mode {display:flex;gap:.8rem;margin:.65rem 0}
+.profile-mode label {display:inline-flex;align-items:center;gap:.3rem}
+.profile-editor p {font-size:.78rem;line-height:1.45;margin:.4rem 0;color:var(--muted, #a8b8b0)}
+.profile-segments {display:grid;gap:.45rem;max-height:26rem;overflow:auto;margin:.6rem 0}
+.profile-segment {min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem;border:1px solid #385047;border-radius:5px;padding:.45rem}
+.profile-segment legend {font-size:.8rem;font-weight:600;padding:0 .25rem}
+.profile-segment label {min-width:0;font-size:.72rem}
+.profile-segment input {display:block;box-sizing:border-box;width:100%;margin-top:.2rem}
+.profile-row-actions {grid-column:1/-1;display:flex;gap:.35rem;justify-content:flex-end}
+.profile-row-actions button {min-width:2rem}
+.profile-error {color:#f2a294!important}

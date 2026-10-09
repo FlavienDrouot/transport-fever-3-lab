@@ -44,14 +44,17 @@ export function pairCrossings(a, b) {
   if(cached)return [...cached];
   if(dominates(a,b)||dominates(b,a))return [];
   const crossings = [];
-    const end = Math.max(a.model.speedCapKm, b.model.speedCapKm);
+    const finite=a.model.routeProfile||b.model.routeProfile;
+    const end = finite?Math.min(a.model.routeDistanceKm??Infinity,b.model.routeDistanceKm??Infinity):Math.max(a.model.speedCapKm, b.model.speedCapKm);
     const difference = x => a.model.timeAt(x) - b.model.timeAt(x);
     // Mix linear and logarithmic samples to resolve both early and late crossings.
     const points = new Set([end]);
-    for (let k = 0; k <= 2048; k++) {
-      points.add(end * (k + 1) / 2049);
-      points.add(end * 10 ** (-8 + 8 * k / 2048));
+    const samples=finite?256:2048;
+    for (let k = 0; k <= samples; k++) {
+      points.add(end * (k + 1) / (samples+1));
+      points.add(end * 10 ** (-8 + 8 * k / samples));
     }
+    if(finite)for(const event of [...(a.model.profileEvents??[]),...(b.model.profileEvents??[])])points.add(event.distanceKm);
     let previous, prior;
     for (const x of [...points].sort((x,y) => x-y)) {
       const current = difference(x);
@@ -66,7 +69,7 @@ export function pairCrossings(a, b) {
       if (current !== 0) {previous = x; prior = current;}
     }
     const slope = 3600 / a.maxSpeedKmh - 3600 / b.maxSpeedKmh;
-    if (slope !== 0) {
+    if (!finite && slope !== 0) {
       const crossing = end - difference(end) / slope;
       if (crossing >= end) crossings.push(crossing);
     }
@@ -80,7 +83,7 @@ export function suggestedDistanceLimit(trains,settlesAt=rankingSettlesAt(trains)
 
 /** Show a practical approach to an asymptote; race/service calculations keep full precision. */
 export function speedHorizon(trains) {
-  return Math.max(1, ...trains.map(t => (t.model.speedViewSeconds??t.model.speedCapSeconds) * 1.05));
+  return Math.max(1, ...trains.map(t => (t.model.speedViewSeconds??t.model.speedCapSeconds) * (t.model.routeProfile?1:1.05)));
 }
 
 /** Distance view covers the same practical acceleration milestones as speed/time. */

@@ -13,8 +13,9 @@ export function renderEconomicChart(container, {trains, distance, fill, mode, hi
   const key = JSON.stringify([trains.map(t=>[t.id,t.name,t.color,t.dash,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]), maxDistance, fill, targets]);
   if (key !== cachedKey) {
     cachedKey = key;
-    cachedSeries = trains.map(t => ({t, points: Array.from({length: 161}, (_,i) => {
-      const x = minDistance + (maxDistance - minDistance) * i / 160;
+    const samples=targets.routeProfile?40:160;
+    cachedSeries = trains.map(t => ({t, points: Array.from({length: samples+1}, (_,i) => {
+      const x = minDistance + (maxDistance - minDistance) * i / samples;
       return {x, ...analyseLine(t, {distanceKm:x, fillRatio:fill,...targets})};
     })}));
   }

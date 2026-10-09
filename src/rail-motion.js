@@ -1,3 +1,4 @@
+import {routeTrajectory} from './route-profile.js';
 import {validateGradient} from './gradient.js';
 const models=new WeakMap();
 const gradients=new WeakMap();
@@ -21,4 +22,21 @@ export function withRailSpeedLimit(train,limit) {
   const cache=models.get(train);
   if(!cache.has(limit))cache.set(limit,{...train,maxSpeedKmh:Math.min(limit,train.maxSpeedKmh),model:train.model.withSpeedLimit(limit)});
   return cache.get(limit);
+}
+
+const profileModels=new WeakMap();
+/** Finite A→B Race model. Arrival after B is intentionally undefined. */
+export function withRailProfile(train,segments) {
+  const key=JSON.stringify(segments);
+  let cache=profileModels.get(train);
+  if(!cache){cache=new Map();profileModels.set(train,cache);}
+  if(cache.has(key))return cache.get(key);
+  const motion=routeTrajectory(train,segments);
+  const model={canStart:!motion.stalled,routeProfile:true,routeDistanceKm:motion.routeDistanceKm,
+    effectiveMaxSpeedKmh:motion.maxSpeedKmh,tractionEndSeconds:0,speedCapSeconds:motion.travelSeconds,
+    speedViewSeconds:motion.travelSeconds,speedCapKm:motion.routeDistanceKm,profileEvents:motion.events,
+    stateAt:motion.stateAt,timeAt:motion.timeAt};
+  const result={...train,model,maxSpeedKmh:motion.maxSpeedKmh};
+  if(cache.size>=12)cache.clear();cache.set(key,result);
+  return result;
 }

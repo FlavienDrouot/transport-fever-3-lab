@@ -19,7 +19,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   // Evaluate each render from the supplied story: custom compositions may retain
   // their ID while their mechanical or economic specifications change.
   const samples=rank?[]:story.phases.map(phase=>{
-    const points=Array.from({length:101},(_,i)=>phase.start+(phase.end-phase.start)*i/100);
+    const points=Array.from({length:targets.routeProfile?21:101},(_,i)=>phase.start+(phase.end-phase.start)*i/(targets.routeProfile?20:100));
     if(story.axis==='year')for(let year=Math.ceil(phase.start);year<=phase.end;year++)points.push(year);
     return [...new Set(points)].sort((a,b)=>a-b).map(x=>({x,values:trains.map(train=>valueAt(train.id,x))}));
   });

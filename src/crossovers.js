@@ -11,8 +11,9 @@ export function crossoverStory(trains) {
   for (const root of roots.sort((a,b)=>a-b)) {
     if (root > 0 && root-boundaries.at(-1) > Math.max(1e-9, root*1e-9)) boundaries.push(root);
   }
-  const end = Math.max(1, boundaries.at(-1)*1.25);
-  boundaries.push(end);
+  const finite=trains.some(t=>t.model.routeProfile);
+  const end = finite?Math.min(...trains.map(t=>t.model.routeDistanceKm??Infinity)):Math.max(1, boundaries.at(-1)*1.25);
+  if(end>boundaries.at(-1)+1e-9)boundaries.push(end);
   const intervals = [], phases = [];
   for (let i=0; i<boundaries.length-1; i++) {
     const start = boundaries[i], stop = boundaries[i+1], distance = (start+stop)/2;
@@ -26,7 +27,7 @@ export function crossoverStory(trains) {
     else phases.push({start, end:stop, leaders});
   }
   // The final leaders stay ahead at all longer distances in this model.
-  phases.at(-1).unbounded = true;
+  if(!finite)phases.at(-1).unbounded = true;
   return {phases, intervals, end};
 }
 
@@ -35,7 +36,8 @@ export function leaderCurveWindow(trains, story = crossoverStory(trains)) {
   if (!story.phases.length) return {phases: [], end: 1};
   const phases=story.phases.map(p=>({...p})), last=phases.at(-1);
   const leaders=trains.filter(t=>last.leaders.includes(t.id));
-  const end=last.start>0 ? last.start*1.15 : Math.max(1,...leaders.map(t=>t.model.speedCapKm*1.05));
+  const finite=trains.some(t=>t.model.routeProfile);
+  const end=finite?story.end:last.start>0 ? last.start*1.15 : Math.max(1,...leaders.map(t=>t.model.speedCapKm*1.05));
   last.end=end;
   return {phases,end};
 }
