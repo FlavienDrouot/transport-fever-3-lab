@@ -422,8 +422,8 @@ function syncAnalysisView() {
   // Following a link to an explanation reveals it; normal chart visits stay compact.
   for (let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details')) disclosure.open=true;
   if (target && ['model','economic-method'].includes(target.id)) target.querySelector('details').open=true;
-  const view = target?.closest('#configurator, #configuration-sidebar') ? 'configurator' : target?.closest('#line-capacity') ? 'economics' : target?.closest('#train-race-settings') ? 'race' : target?.closest('#trucks, #road-sidebar') ? 'trucks' : target?.closest('#data') ? 'data' : target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
-  for (const name of ['race', 'economics', 'configurator', 'data', 'trucks']) {
+  const view = target?.closest('#route-profile') ? 'route-profile' : target?.closest('#configurator, #configuration-sidebar') ? 'configurator' : target?.closest('#line-capacity') ? 'economics' : target?.closest('#train-race-settings') ? 'race' : target?.closest('#trucks, #road-sidebar') ? 'trucks' : target?.closest('#data') ? 'data' : target?.closest('#economics') ? 'economics' : target?.closest('#race') ? 'race' : document.querySelector('[data-analysis][aria-current="page"]')?.dataset.analysis || 'race';
+  for (const name of ['race', 'economics', 'route-profile', 'configurator', 'data', 'trucks']) {
     $(name).hidden = name !== view;
     $(name === 'economics' ? 'economic-links' : `${name}-links`).hidden = name !== view;
     const link = document.querySelector(`[data-analysis="${name}"]`);
@@ -431,8 +431,8 @@ function syncAnalysisView() {
   }
   syncAnalysisPanels(document,view);
   renderCatalogue();
-  document.querySelector('.skip').textContent=view==='configurator'?'Skip to vehicle catalogue':view==='data'?'Skip to data catalogue':view==='trucks'?'Skip to vehicle ranking':'Skip to charts';
-  document.querySelector('.skip').href = view === 'configurator' ? '#component-catalogue' : view === 'race' ? '#speed-explorer' : view === 'data' ? '#source-catalogue' : view === 'trucks' ? '#truck-service' : '#line-capacity';
+  document.querySelector('.skip').textContent=view==='route-profile'?'Skip to route profile':view==='configurator'?'Skip to vehicle catalogue':view==='data'?'Skip to data catalogue':view==='trucks'?'Skip to vehicle ranking':'Skip to charts';
+  document.querySelector('.skip').href = view === 'route-profile' ? '#profile-overview' : view === 'configurator' ? '#component-catalogue' : view === 'race' ? '#speed-explorer' : view === 'data' ? '#source-catalogue' : view === 'trucks' ? '#truck-service' : '#line-capacity';
   if(view==='trucks')void ensureRoad();
   if(view==='configurator')void ensureConfigurator();
   if(view==='data')void ensureData();
@@ -442,6 +442,7 @@ function syncAnalysisView() {
 }
 let roadPhaseTimer,economicProfileTimer;
 function render() {
+  if (!$('route-profile').hidden)return;
   if (!$('configurator').hidden)return;
   if (!$('data').hidden){renderDataView(dataset,baseTrains,experiments??{experiments:[]});return;}
   if (!$('trucks').hidden) {
@@ -727,6 +728,7 @@ async function init() {
     frequencyMode=document.querySelector('input[name="frequency-mode"]:checked').value;
     infrastructureSpeedKmh=Number($('infrastructure-speed').querySelector('input:checked').value);
     $('race-infrastructure-speed').querySelector(`input[value="${infrastructureSpeedKmh}"]`).checked=true;
+    profileControl.setUniformDefaults(routeDistance,railGradePercent,infrastructureSpeedKmh);
     crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;
     allowMultipleUnits=frequencyEnabled&&flowEnabled&&$('allow-multiple-units').checked;
     platformLengthMetres=platformEnabled?length:null;
@@ -742,13 +744,17 @@ async function init() {
   const lineGradientControl=mountGradientControl(document,$('line-gradient'),{rail:true,noticeId:'economic-input-error',validate:validateEconomics,onChange:updateGradient});
   const validateRace=()=>validateNumberInputs([$('distance-input'),$('race-gradient-input')],$('race-input-error'));
   const raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:updateGradient});
-  const profileControl=mountRouteProfileControls([$('race-profile-control'),$('economic-profile-control')],{
+  const profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:[{distanceKm:routeDistance,gradePercent:railGradePercent,speedLimitKmh:infrastructureSpeedKmh}],
+    statuses:[$('race-profile-status'),$('economic-profile-status')],visual:$('route-profile-visual'),
     onChange:state=>{railRouteProfile=state.segments;
       $('distance-input').disabled=$('line-distance-input').disabled=$('route-distance').disabled=$('line-distance').disabled=state.active;
+      $('route-distance').closest('.horizon-control').hidden=$('line-distance').closest('.line-distance-control').hidden=state.active;
       $('race-gradient').hidden=$('line-gradient').hidden=state.active;
       $('race-infrastructure-speed').closest('.infrastructure-control').hidden=$('infrastructure-speed').closest('.infrastructure-control').hidden=state.active;
       routeDistance=state.distanceKm;
+      $('distance-input').value=$('route-distance').value=routeDistance;
+      $('line-distance-input').value=$('line-distance').value=routeDistance;
       crossoverCache.clear();distanceLimits.clear();raceYearKey=null;economicStoryKey=null;render();}
   });
   $('race-infrastructure-speed').addEventListener('change',()=>{

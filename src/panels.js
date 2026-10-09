@@ -2,6 +2,7 @@ export function syncAnalysisPanels(document,view){
   const $=id=>document.getElementById(id);
   document.querySelector('.workspace').classList.toggle('truck-view',view==='trucks');
   document.querySelector('.workspace').classList.toggle('data-view',view==='data');
+  document.querySelector('.workspace').classList.toggle('route-profile-view',view==='route-profile');
   document.querySelector('.workspace').classList.toggle('configurator-view',view==='configurator');
   const trainView=view==='race'||view==='economics';
   $('catalogue').hidden=!trainView;

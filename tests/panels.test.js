@@ -25,6 +25,7 @@ test('Side panels follow the analysis tab and close inactive dialogs',()=>{
   syncAnalysisPanels(document,'configurator');assert.equal(node('configuration-sidebar').hidden,false);assert.equal(node('catalogue').hidden,true);assert.equal(node('configuration-picker-toggle').hidden,false);
   node('configuration-drawer').open=true;syncAnalysisPanels(document,'race');assert.equal(node('configuration-drawer').open,false);assert.equal(node('line-capacity').hidden,true);syncAnalysisPanels(document,'economics');assert.equal(node('line-capacity').hidden,false);assert.equal(node('train-race-settings').hidden,true);
   node('train-drawer').open=true;syncAnalysisPanels(document,'trucks');assert.equal(node('train-drawer').open,false);
+  syncAnalysisPanels(document,'route-profile');assert.ok(classes.has('route-profile-view'));assert.equal(node('catalogue').hidden,true);assert.equal(node('picker-toggle').hidden,true);
 });
 test('Mobile drawers move the same controls and preserve state across viewport changes',()=>{
   const {node,document}=fixture();const mobile={matches:true,handlers:[],addEventListener(type,handler){this.handlers.push(handler);}};
@@ -38,7 +39,7 @@ test('Mobile drawers move the same controls and preserve state across viewport c
 });
 test('Data is the last tab; route controls have one owner and labelled drawer',async()=>{
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
-  assert.deepEqual([...html.matchAll(/data-analysis="([^"]+)"/g)].map(m=>m[1]),['race','economics','trucks','configurator','data']);
+  assert.deepEqual([...html.matchAll(/data-analysis="([^"]+)"/g)].map(m=>m[1]),['race','economics','route-profile','trucks','configurator','data']);
   const sidebar=html.match(/<aside id="road-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(sidebar);
   for(const id of ['truck-distance','truck-utilization','truck-year','truck-specialized-terminal','road-selector']){
     assert.ok(sidebar.includes(`id="${id}"`));assert.equal([...html.matchAll(new RegExp(`id="${id}"`,'g'))].length,1);

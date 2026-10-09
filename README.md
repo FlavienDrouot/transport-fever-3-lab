@@ -33,7 +33,7 @@ Download CSV data or SVG charts from the speed and distance/time sections. There
 
 ## What the comparisons mean
 
-The model uses each train's mass, tractive effort, power and maximum speed. Traction is displayed in newtons in the picker and Configurator; source captures retain kgf. The speed chart offers time or distance on its horizontal axis, with matching CSV/SVG exports. Hover or focus a train to see its phase-transition points and their coordinates. It assumes a standing start, with maximum traction followed by maximum power and a speed cap. The shared Race/Economics route control offers a uniform theoretical gradient from −9% to +9% (default 0%) or an ordered A→B profile of distance, gradient and track limit segments:
+The model uses each train's mass, tractive effort, power and maximum speed. Traction is displayed in newtons in the picker and Configurator; source captures retain kgf. The speed chart offers time or distance on its horizontal axis, with matching CSV/SVG exports. Hover or focus a train to see its phase-transition points and their coordinates. It assumes a standing start, with maximum traction followed by maximum power and a speed cap. The shared Race/Economics route control offers a uniform theoretical gradient from −9% to +9% (default 0%). The dedicated **Route profile** tab lets you switch to an ordered A→B profile of distance, gradient and track limit segments, with a symbolic elevation sketch. Its horizontal segment widths are equal and its elevation is exaggerated; it is not a surveyed terrain map:
 
 ```text
 a(v) = min(2 × Fmax, P / v) / m − 0.02 − g × sin(atan(grade / 100))

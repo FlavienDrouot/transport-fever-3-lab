@@ -333,17 +333,34 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .motion-transition-label rect{fill:var(--surface,white)}
 [data-theme=dark] .chart .motion-transition-label text{fill:#dde8e1}
 [data-theme=dark] .motion-transition-markers circle,[data-theme=dark] .motion-transition>path{filter:brightness(1.7)}
-/* Compact rail profile editor; each row remains keyboard accessible. */
-.profile-builder {border-top:1px solid var(--border, #385047);margin-top:.75rem;padding-top:.6rem}
-.profile-builder>summary {cursor:pointer;font-weight:600}
-.profile-mode {display:flex;gap:.8rem;margin:.65rem 0}
-.profile-mode label {display:inline-flex;align-items:center;gap:.3rem}
-.profile-editor p {font-size:.78rem;line-height:1.45;margin:.4rem 0;color:var(--muted, #a8b8b0)}
-.profile-segments {display:grid;gap:.45rem;max-height:26rem;overflow:auto;margin:.6rem 0}
-.profile-segment {min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem;border:1px solid #385047;border-radius:5px;padding:.45rem}
-.profile-segment legend {font-size:.8rem;font-weight:600;padding:0 .25rem}
-.profile-segment label {min-width:0;font-size:.72rem}
-.profile-segment input {display:block;box-sizing:border-box;width:100%;margin-top:.2rem}
-.profile-row-actions {grid-column:1/-1;display:flex;gap:.35rem;justify-content:flex-end}
-.profile-row-actions button {min-width:2rem}
-.profile-error {color:#f2a294!important}
+/* Full-width rail profile workspace. The sketch is intentionally qualitative. */
+@media(min-width:701px){.workspace.route-profile-view{grid-template-columns:minmax(0,1fr)}}
+#route-profile{max-width:1400px;margin:auto}
+#route-profile .chart-panel{scroll-margin-top:calc(var(--app-header-offset) + 12px)}
+.profile-intro{max-width:72ch;margin:12px 0 18px;color:var(--muted);font-size:14px}
+.profile-visual{border:1px solid var(--line);border-radius:8px;background:var(--tint,#f3f7f4);padding:8px}
+.profile-sketch-scroll{overflow-x:auto}
+.profile-sketch{display:block;width:100%;min-width:800px;height:auto}
+.profile-sketch text{font:12px Inter,ui-sans-serif,system-ui,sans-serif;fill:var(--muted)}
+.profile-sketch .profile-band{fill:transparent;stroke:var(--line)}
+.profile-sketch .profile-band.alternate{fill:var(--surface,#fff);fill-opacity:.45}
+.profile-sketch .profile-terrain{fill:none;stroke:var(--green);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.profile-sketch .profile-node{fill:var(--green);stroke:var(--surface,#fff);stroke-width:2}
+.profile-sketch .profile-baseline{stroke:var(--line);stroke-width:1;stroke-dasharray:4 4}
+.profile-sidebar-status{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:10px;margin-top:10px;font-size:12px}
+.profile-sidebar-status a{font-weight:600}
+.profile-mode{display:flex;align-items:center;gap:16px;border:0;padding:0;margin:12px 0 18px;font-size:14px}
+.profile-mode legend{float:left;margin-right:20px;font-weight:600}
+.profile-mode label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.profile-mode input{accent-color:var(--green)}
+.profile-editor>p,.profile-uniform-note{font-size:13px;line-height:1.5;color:var(--muted);margin:8px 0}
+.profile-segments{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:12px;margin:18px 0}
+.profile-segment{min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:1px solid var(--line);border-radius:7px;padding:12px;background:var(--surface,#fff)}
+.profile-segment legend{font-size:13px;font-weight:650;padding:0 5px}
+.profile-segment label{min-width:0;font-size:12px;color:var(--muted)}
+.profile-segment input{display:block;box-sizing:border-box;width:100%;margin-top:4px;border:1px solid var(--line);border-radius:4px;padding:5px;background:var(--surface,#fff);color:inherit;font-variant-numeric:tabular-nums}
+.profile-row-actions{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end}
+.profile-row-actions button{min-width:32px}
+.profile-error{color:#a63e32!important}
+.profile-destinations{display:flex;gap:20px;border-top:1px solid var(--line);padding:20px 0;margin-top:24px;font-size:13px}
+@media(max-width:700px){.profile-sketch{width:800px}.profile-segments{grid-template-columns:1fr}.profile-mode{flex-wrap:wrap}}
