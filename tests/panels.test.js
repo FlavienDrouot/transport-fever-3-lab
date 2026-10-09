@@ -50,8 +50,9 @@ test('Three workspaces keep contextual views; route controls have one owner and 
   assert.ok(!sidebar.includes('id="road-category"'));
   const headers=[...html.matchAll(/<header(?: id="[^"]+")? class="analysis-overview">([\s\S]*?)<\/header>/g)].map(m=>m[1]);
   assert.equal(headers.length,3);
-  for(const id of ['economic-category','road-category'])assert.equal(headers.filter(header=>header.includes(`id="${id}"`)).length,1);
-  const trains=html.match(/<aside id="catalogue"[\s\S]*?<\/aside>/)?.[0];assert.ok(trains.includes('id="line-capacity"'));assert.ok(trains.includes('id="route-distance"'));
+  for(const id of ['economic-category','road-category'])assert.ok(!html.includes(`id="${id}"`));
+  assert.equal([...html.matchAll(/id="comparison-category"/g)].length,1);
+  const trains=html.match(/<aside id="catalogue"[\s\S]*?<\/aside>/)?.[0];assert.ok(trains.includes('id="line-capacity"'));assert.ok(trains.includes('id="route-distance"'));assert.ok(trains.includes('id="comparison-category"'));
   const profile=html.match(/<aside id="profile-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(profile?.includes('id="profile-segment-list"'));
   assert.ok(html.includes('id="route-profile-control"'));assert.ok(html.indexOf('id="route-profile-visual"')<html.indexOf('id="route-profile-control"'));
   assert.match(html,/<dialog id="road-drawer" aria-labelledby="road-sidebar-heading">/);

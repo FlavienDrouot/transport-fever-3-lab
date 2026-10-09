@@ -463,3 +463,10 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .catalogue .freight-filter{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 0;font-size:12px}
 
 .catalogue .comparison-controls .handling-return{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+
+.catalogue #comparison-route-choice{margin-bottom:10px}
+
+.comparison-filter-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.comparison-filter-row .scale-toggle{margin:0;flex:none;font-size:12px}
+.comparison-filter-row .scale-toggle legend{font-size:12px;margin-bottom:4px}
+.comparison-filter-row .scale-toggle span{padding:5px 7px}

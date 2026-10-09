@@ -40,17 +40,19 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
   return `<div class="profile-sketch-scroll"><svg class="profile-sketch" viewBox="0 0 ${width} 330" role="${selectable?'group':'img'}" aria-label="${description}">${bands}<line x1="${left}" x2="${right}" y1="228" y2="228" class="profile-baseline"/><polyline points="${points}" class="profile-terrain"/>${markers}${actions}<line x1="${left}" x2="${right}" y1="278" y2="278" class="profile-axis"/>${axis}<text x="${(left+right)/2}" y="322" text-anchor="middle">Distance from A (km)${scale==='linear'?' · linear':''}</text></svg></div>`;
 }
 
-/** The route editor owns one shared ordered route for rail and road comparisons. */
-export function mountRouteProfileControls(container,{initial,onChange,statuses=[],visual,scaleControl,scaleNote,segmentList,getSpeedPresets=()=>speedPresets('rail')}) {
+/** A summary of the active route, independent of the saved editor preset. */
+export function renderRouteProfileStatus(status,segments){
+  const total=routeProfileDistance(segments),single=segments.length===1?segments[0]:null;
+  status.innerHTML=`<strong>A→B · ${format(total)} km</strong><span>${single?`${single.gradePercent>0?'+':''}${format(single.gradePercent)}% · ${format(single.speedLimitKmh)} km/h`: `${segments.length} segments · varying gradients and speed limits`}</span><a href="#route-profile">Edit route ↗</a>`;
+}
+
+/** The route editor owns the custom preset shared by rail and road comparisons. */
+export function mountRouteProfileControls(container,{initial,onChange,visual,scaleControl,scaleNote,segmentList,getSpeedPresets=()=>speedPresets('rail')}) {
   let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0;
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
     visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex,availableWidth:Math.max(0,visual.clientWidth-18)});
     scaleNote.textContent=scale==='linear'?'Distance to scale · elevation exaggerated. Short segments can also be selected in the sidebar.':'Symbolic elevation · exaggerated scale.';
-  };
-  const syncMode=()=>{
-    const total=routeProfileDistance(segments),single=segments.length===1?segments[0]:null;
-    for(const status of statuses)status.innerHTML=`<strong>A→B · ${format(total)} km</strong><span>${single?`${single.gradePercent>0?'+':''}${format(single.gradePercent)}% · ${format(single.speedLimitKmh)} km/h`: `${segments.length} segments · varying gradients and speed limits`}</span><a href="#route-profile">Edit route ↗</a>`;
   };
   const segmentEditor=(part,i,distances)=>`<fieldset class="profile-segment${selectedIndex===i?' is-selected':''}" data-index="${i}">
     <legend class="sr-only">Selected segment ${i+1}</legend>
@@ -73,11 +75,11 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     container.innerHTML='<div class="profile-editor"><div class="profile-inspector"></div><p class="profile-error" role="status" hidden></p></div>';
     renderSegmentList();
     renderInspector();
-    renderVisual();syncMode();
+    renderVisual();
   };
   const notify=()=>onChange({active:true,segments,distanceKm:routeProfileDistance(segments)});
   const refreshValues=()=>{
-    renderVisual();syncMode();
+    renderVisual();
     const error=container.querySelector('.profile-error');error.hidden=true;error.textContent='';
     const {distances}=positions(segments);
     for(const row of container.querySelectorAll('.profile-segment'))row.querySelector('.profile-segment-range').textContent=segmentRange(distances,Number(row.dataset.index));
@@ -158,6 +160,5 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     new ResizeObserver(()=>{const width=visual.clientWidth;if(width>0&&width!==priorWidth){priorWidth=width;renderVisual();}}).observe(visual);
   }
   render();
-  notify();
-  return {refresh:render,get active(){return true;},get segments(){return segments;},setUniformDefaults(distanceKm,gradePercent,speedLimitKmh){if(segments.length!==1)return;segments=validateRouteProfile([{distanceKm,gradePercent,speedLimitKmh}]);render();notify();}};
+  return {refresh:render,get segments(){return segments;}};
 }
