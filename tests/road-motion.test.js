@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {withRoadModel,roadRoundTripMotion} from '../src/road-motion.js';
 import {analyseRoadFleet,analyseTruckService,analysePassengerRoadService} from '../src/trucks.js';
+import {travelBetweenStops} from '../src/line.js';
 import {roadPhaseStory} from '../src/road-phases.js';
 import {withRailProfile} from '../src/rail-motion.js';
 import {reverseRouteProfile} from '../src/route-profile.js';
@@ -56,4 +57,22 @@ test('corrected MAN 19.304 observations support the provisional flat-road accele
  const model=withRoadModel(man).model;
  for(const [ticks,observed] of [[10,31],[20,48],[50,80]])assert.ok(Math.abs(model.stateAt(ticks*.2).speedKmh-observed)<=1.1);
  assert.ok(model.speedCapSeconds<=10);
+});
+
+test('MAN stopping-time bracket sets road braking independently for uniform and segmented services',()=>{
+ const measuredSpeed=80/3.6;
+ const ticks=measuredSpeed/ROAD_MOTION.brakingDeceleration/ROAD_MOTION.stepSeconds;
+ assert.ok(ticks>=11&&ticks<=12);
+ const short=roadRoundTripMotion(man,{distanceKm:.1});
+ const profile=roadRoundTripMotion(man,{distanceKm:.1,routeProfile:[{distanceKm:.05,gradePercent:0,speedLimitKmh:80},{distanceKm:.05,gradePercent:0,speedLimitKmh:79.999}]});
+ // The tiny cap difference selects the numerical profile path without materially
+ // changing speed: both service paths must use the road braking coefficient.
+ assert.ok(Math.abs(short.travelSeconds-profile.travelSeconds)<.02);
+ const oldRoad=createModel(man,MOTION_UNITS,{motion:{...ROAD_MOTION,brakingDeceleration:2.5}});
+ const train=createModel(man,MOTION_UNITS);
+ // Default rail stop timing remains tied to 2.5 m/s².
+ const railStop=travelBetweenStops({...man,model:train},{distanceKm:.1});
+ const previousRoadStop=travelBetweenStops({...man,model:oldRoad},{distanceKm:.1});
+ close(railStop.travelSeconds,previousRoadStop.travelSeconds);
+ assert.ok(short.travelSeconds<railStop.travelSeconds);
 });
