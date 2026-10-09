@@ -16,7 +16,7 @@ import {renderRoadPhases} from './road-phases.js';
 import {mountTablePreviews,updateTablePreview} from './table-preview.js';
 import {syncAnalysisPanels,mountPanelDrawers} from './panels.js';
 import {mountVehicleSelector,selectAll,selectResults} from './vehicle-selector.js';
-import {mountTransportCategory,mountFreightFilter,speedPresets} from './transport-category.js';
+import {mountTransportCategory,mountFreightFilter} from './transport-category.js';
 import {renderServiceSummary} from './service-summary.js';
 import {styleVehicleCatalogues} from './vehicle-styles.js';
 import {mountSourceCatalogue} from './source-catalogue.js';
@@ -838,7 +838,6 @@ async function init() {
   raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:grade=>updateSimpleRoute({gradePercent:grade})});
   profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:railRouteProfile,
-    getSpeedPresets:()=>speedPresets(navigation.domain),
     visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),
     onChange:state=>{routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
   });

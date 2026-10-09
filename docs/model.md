@@ -144,7 +144,7 @@ Frequency is an interval between vehicles, not departures per unit time. Passeng
 
 ### Infrastructure and coupled multiple units
 
-Rail economic motion uses the minimum of the vehicle maximum speed and each shared route segment’s speed limit before calculating acceleration and braking. Segment limits apply to Race speed/time, arrival and phase diagrams too. The Route editor offers Rail presets of 100/160/350 and Road presets of 50/80/120 km/h, plus a numeric 10–350 km/h limit. Catalogue source values remain unchanged. A single segment supplies the composition reference cap; multi-segment routes retain the last uniform reference.
+Rail economic motion uses the minimum of the vehicle maximum speed and each shared route segment’s speed limit before calculating acceleration and braking. Segment limits apply to Race speed/time, arrival and phase diagrams too. The Route editor always offers 30/50/60/80/100/120/160/350 km/h presets, independently of the comparison domain, plus a numeric 10–350 km/h limit. Simple route comparison controls retain their domain-specific suggestions. Catalogue source values remain unchanged. A single segment supplies the composition reference cap; multi-segment routes retain the last uniform reference.
 
 Coupling evaluates identical passenger units only when both rate and frequency targets are active. A formation of `k` units multiplies capacity, car count, loading/unloading rate, length and annual vehicle running costs by `k`. Mass, traction and power would scale by the same factor, so the acceleration model is unchanged. A single formation still incurs the same fixed terminal delay. Coupling limits and proportional performance remain assumptions; revisit them if a tested formation cannot couple or its handling differs.
 
