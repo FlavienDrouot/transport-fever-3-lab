@@ -748,7 +748,7 @@ async function init() {
   const raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:updateGradient});
   const profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:[{distanceKm:routeDistance,gradePercent:railGradePercent,speedLimitKmh:infrastructureSpeedKmh}],
-    statuses:[$('race-profile-status'),$('economic-profile-status')],visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),
+    statuses:[$('race-profile-status'),$('economic-profile-status')],modeControls:[$('race-route-model'),$('economic-route-model')],visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),
     onChange:state=>{railRouteProfile=state.segments;
       $('distance-input').disabled=$('line-distance-input').disabled=$('route-distance').disabled=$('line-distance').disabled=state.active;
       $('route-distance').closest('.horizon-control').hidden=$('line-distance').closest('.line-distance-control').hidden=state.active;
