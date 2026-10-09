@@ -1,3 +1,4 @@
+import {UI_TERMS} from './ui-terms.js';
 import {roadGradientSpeeds} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {analyseTruckService,analysePassengerRoadService,selectRoadVehicles} from './trucks.js';
@@ -79,7 +80,7 @@ function phaseChart(container,vehicles,story,{axis,label,current,mode,rank,stepp
   const winningValues=story.phases.flatMap(p=>p.leaders.flatMap(id=>[story.valueAt(id,p.start),story.valueAt(id,p.end)]));
   const lo=0,hi=winningValueCeiling(winningValues);
   const sy=y=>pixel(T+(rank?(y-1)/Math.max(1,vehicles.length-1):(hi-y)/(hi-lo))*(H-T-B));
-  let svg=`<title>${rank?'Rank changes':'Running cost phases'}</title><desc>${escape(label)} varies; other settings remain fixed. Lower costs are better.</desc><text x="${L}" y="18">${rank?'Rank · first place at the top':'Running cost / transported unit ($)'}</text>`;
+  let svg=`<title>${rank?'Rank changes':'Running cost phases'}</title><desc>${escape(label)} varies; other settings remain fixed. Lower costs are better.</desc><text x="${L}" y="18">${rank?'Rank · first place at the top':`Running cost / ${UI_TERMS.capacityUnit} ($)`}</text>`;
   const ticks=rank?Array.from({length:vehicles.length},(_,i)=>i+1):Array.from({length:5},(_,i)=>lo+(hi-lo)*i/4);
   for(const tick of ticks)svg+=`<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#ccd4cc" opacity=".5" stroke-dasharray="2 5"/><text x="${L-8}" y="${sy(tick)+4}" text-anchor="end">${rank?tick:tick.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1})}</text>`;
   const xticks=mode==='linear'?Array.from({length:6},(_,i)=>story.start+(story.end-story.start)*i/5):knots;

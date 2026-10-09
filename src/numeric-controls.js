@@ -2,12 +2,14 @@
 export function validateNumberInputs(inputs, notice) {
   const errors = [];
   for (const input of inputs) {
-    const valid = input.disabled || (Number.isFinite(input.valueAsNumber) && input.checkValidity());
+    const positive=input.getAttribute('data-strict-positive')==='true';
+    const valid = input.disabled || (Number.isFinite(input.valueAsNumber) && input.checkValidity() && (!positive || input.valueAsNumber>0));
     input.setAttribute('aria-invalid', String(!valid));
     if (valid) continue;
     const name = input.getAttribute('aria-label') || input.labels?.[0]?.textContent.trim() || 'Value';
     const validity = input.validity;
-    const reason = validity.rangeUnderflow ? `must be at least ${input.min}`
+    const reason = positive&&input.valueAsNumber<=0 ? 'must be greater than zero'
+      : validity.rangeUnderflow ? `must be at least ${input.min}`
       : validity.rangeOverflow ? `must be at most ${input.max}`
       : validity.stepMismatch ? `must use increments of ${input.step}` : 'must be a valid number';
     errors.push(`${name} ${reason}.`);

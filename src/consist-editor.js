@@ -1,3 +1,4 @@
+import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {buildConsist} from './consists.js';
 import {vehicleThumbnail} from './vehicle-thumbnails.js';
@@ -42,7 +43,7 @@ export function restoreCompositions(raw,catalogue,units){
 }
 
 /** The same builder serves rail and tram; storage contains definitions, never cached totals. */
-export function mountConsistEditor(document,{catalogue,units,onChange,storage=null,thumbnails=null}) {
+export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=()=>{},storage=null,thumbnails=null}) {
   const $=id=>document.getElementById(id);
   const saved=new Map();let entries=[],editing=null,preview=null;
   let context={carrier:'rail',category:'passengers',cargo:'all',year:2035};
@@ -57,29 +58,34 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
     const query=$('configuration-search').value.trim().toLowerCase(),role=readRadio('configuration-role');
     const choices=available().filter(item=>(role==='all'||item.role===role)&&`${item.name} ${item.sourceName??''} ${item.year}`.toLowerCase().includes(query)).sort((a,b)=>a.year-b.year||a.name.localeCompare(b.name));
     $('component-count').textContent=`${choices.length} vehicles · ${context.carrier==='rail'?'Rail':'Tram'} · ${context.category==='passengers'?'Passengers':context.cargo==='all'?'All freight':context.cargo}`;
-    $('component-catalogue-body').innerHTML=choices.map(item=>`<tr><th scope="row">${escape(item.name)}<small>${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':context.carrier==='rail'?'Multiple unit':'Powered tram'}</small></th><td class="component-thumbnail-cell">${vehicleThumbnail(item,thumbnails)}</td><td>${item.year}</td><td>${fmt(item.passengerCapacity??item.cargoCapacity)}</td><td>${fmt(item.maxSpeedKmh)}</td><td>${item.loadingUnloadingSpeedMultiplier==null?'—':`${fmt(item.loadingUnloadingSpeedMultiplier)}×`}</td><td>${fmt(item.lengthMetres)}</td><td>${item.powerCh==null?'—':fmt(item.powerCh*units.horsepowerWatts/1000)}</td><td>$${fmt(item.economy.annualMaintenance)}</td><td><button type="button" data-add="${escape(item.id)}" aria-label="Add ${escape(item.name)}">+ Add</button></td></tr>`).join('')||'<tr><td colspan="10">No vehicles match these filters.</td></tr>';
+    $('component-catalogue-body').innerHTML=choices.map(item=>`<tr><th scope="row">${escape(item.name)}<small>${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':context.carrier==='rail'?'Multiple unit':'Powered tram'}</small></th><td class="component-thumbnail-cell">${vehicleThumbnail(item,thumbnails,{headOnly:item.carrier==='rail'&&item.role==='powered-carriage'})}</td><td>${item.year}</td><td>${fmt(item.passengerCapacity??item.cargoCapacity)}</td><td>${fmt(item.maxSpeedKmh)}</td><td>${item.loadingUnloadingSpeedMultiplier==null?'—':`${fmt(item.loadingUnloadingSpeedMultiplier)}×`}</td><td>${fmt(item.lengthMetres)}</td><td>${item.powerCh==null?'—':fmt(item.powerCh*units.horsepowerWatts/1000)}</td><td>$${fmt(item.economy.annualMaintenance)}</td><td><button type="button" data-add="${escape(item.id)}" aria-label="Add ${escape(item.name)}">+ Add</button></td></tr>`).join('')||'<tr><td colspan="10">No vehicles match these filters.</td></tr>';
   }
   function updatePreview(){
     preview=null;$('composition-save').disabled=true;
-    if(!entries.length){$('composition-summary').textContent='Add vehicles from the catalogue to start your composition.';return;}
+    if(!entries.length){$('composition-summary').textContent='Add vehicles from the catalogue to start your composition.';onPreview(null);return;}
     try {
       preview=buildConsist({schemaVersion:1,id:editing??`custom:${draftContext.carrier}:${crypto.randomUUID()}`,name:$('composition-name').value,carrier:draftContext.carrier,category:draftContext.category,cargo:draftContext.cargo,components:entries},catalogue,units);
       if(!preview.serviceReady)throw new RangeError(`Missing data: ${preview.missing.join(', ')}`);
+      const massKg=preview.massTonnes*1000;
       $('composition-summary').innerHTML=`<dl class="consist-totals">${[
-        ['Capacity',`${fmt(preview.passengerCapacity??preview.cargoCapacity)} ${draftContext.category==='passengers'?'passengers':'cargo units'}`],
+        [UI_TERMS.capacity,`${fmt(preview.passengerCapacity??preview.cargoCapacity)} ${UI_TERMS.capacityUnit}`],
         ['Length',`${fmt(preview.lengthMetres)} m`],['Maximum speed',`${fmt(preview.maxSpeedKmh)} km/h`],
-        ['Empty mass',`${fmt(preview.massTonnes)} t`],['Power',`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],['Traction',`${fmt(preview.tractionKgf*units.kgfNewtons,0)} N`],
-        ['Handling',`${preview.handlingRate.toLocaleString('en-GB',{maximumFractionDigits:4})} ${draftContext.category==='passengers'?'passengers':'cargo units'}/s`],
-        ['Purchase',`$${fmt(preview.economy.purchasePrice)}`],['Running costs',`$${fmt(preview.economy.annualMaintenance)}/year`]
+        ['Empty mass',`${fmt(preview.massTonnes)} t`],['Power',`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],
+        ['Power / mass',`${fmt(preview.powerCh*units.horsepowerWatts/massKg)} W/kg`],
+        ['Traction',`${fmt(preview.tractionKgf*units.kgfNewtons,0)} N`],
+        ['Traction / mass',`${fmt(preview.tractionKgf*units.kgfNewtons/massKg)} N/kg`],
+        ['Handling',`${preview.handlingRate.toLocaleString('en-GB',{maximumFractionDigits:4})} ${UI_TERMS.capacityUnit}/s`],
+        ['Purchase',`$${fmt(preview.economy.purchasePrice)}`],[UI_TERMS.runningCosts,`$${fmt(preview.economy.annualMaintenance)}/year`]
       ].map(([key,value])=>`<div><dt>${key}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
       $('composition-save').disabled=false;
     }catch(error){$('composition-summary').textContent=error.message;preview=null;}
     $('composition-save').textContent=editing?'Update composition':'Save composition';
+    onPreview(preview);
   }
   function drawComposition(focusIndex=null){
     $('composition-components').innerHTML=entries.map((entry,i)=>{
       const item=catalogue.find(c=>c.id===entry.componentId);
-      return `<li data-row="${i}" class="composition-component"><span class="component-kind">${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':'Powered unit'}</span><strong>${escape(item.name)}</strong>${vehicleThumbnail(item,thumbnails)}<label>Quantity<input data-quantity type="number" min="1" max="1000" step="1" value="${entry.quantity}" required aria-label="Quantity of ${escape(item.name)}, component ${i+1}"></label><div class="component-actions"><button type="button" data-move="${i}" data-direction="-1" aria-label="Move component ${i+1} left"${i===0?' disabled':''}>←</button><button type="button" data-move="${i}" data-direction="1" aria-label="Move component ${i+1} right"${i===entries.length-1?' disabled':''}>→</button><button type="button" data-remove="${i}" aria-label="Remove component ${i+1}">×</button></div></li>`;
+      return `<li data-row="${i}" class="composition-component"><span class="component-kind">${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':'Powered unit'}</span><strong>${escape(item.name)}</strong>${vehicleThumbnail(item,thumbnails)}<div class="component-controls"><label><span class="sr-only">Quantity</span><input title="Quantity" data-quantity type="number" min="1" max="1000" step="1" value="${entry.quantity}" required aria-label="Quantity of ${escape(item.name)}, component ${i+1}"></label><div class="component-actions"><button type="button" data-move="${i}" data-direction="-1" aria-label="Move component ${i+1} left"${i===0?' disabled':''}>←</button><button type="button" data-move="${i}" data-direction="1" aria-label="Move component ${i+1} right"${i===entries.length-1?' disabled':''}>→</button><button type="button" data-remove="${i}" aria-label="Remove component ${i+1}">×</button></div></div></li>`;
     }).join('');
     $('composition-context').textContent=`${draftContext.carrier==='rail'?'Rail':'Tram'} · ${draftContext.category==='passengers'?'Passengers':draftContext.cargo==='all'?'Freight':draftContext.cargo}`;
     updatePreview();
@@ -119,7 +125,16 @@ export function mountConsistEditor(document,{catalogue,units,onChange,storage=nu
     const button=event.target.closest('[data-add]');if(!button)return;
     if(entries.length>=100){$('composition-message').textContent='Limit: 100 component rows. Use quantities for repeated vehicles.';return;}
     const item=catalogue.find(t=>t.id===button.dataset.add);
-    if(!canAddComponent(item,draftContext)){$('composition-message').textContent='This vehicle is incompatible with the current composition. Use New composition to build a different transport type.';return;}
+    // Empty drafts and capacity-free locomotives have no transport category yet.
+    // Keep existing vehicles and carrier; the catalogue supplies the first load type.
+    const hasOnlyEngines=entries.every(entry=>{
+      const component=catalogue.find(c=>c.id===entry.componentId);
+      return component?.role==='locomotive'&&!(component.passengerCapacity>0)&&!(component.cargoCapacity>0);
+    });
+    const nextContext=hasOnlyEngines?{...draftContext,category:context.category,cargo:context.cargo,
+      carrier:entries.length?draftContext.carrier:context.carrier}:draftContext;
+    if(!canAddComponent(item,nextContext)){$('composition-message').textContent='This vehicle is incompatible with the current composition. Use New composition to build a different transport type.';return;}
+    draftContext=nextContext;
     entries.push({componentId:button.dataset.add,quantity:1});$('composition-message').textContent='';drawComposition();
   });
   $('composition-components').addEventListener('input',()=>{

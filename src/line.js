@@ -61,7 +61,8 @@ export function roundTripMotion(train,{gradePercent=0,...options}) {
   return {travelSeconds:(outbound.travelSeconds+back.travelSeconds)/2,
     outboundTravelSeconds:outbound.travelSeconds,returnTravelSeconds:back.travelSeconds,
     brakingSeconds:(outbound.brakingSeconds+back.brakingSeconds)/2,
-    peakSpeedKmh:Math.max(outbound.peakSpeedKmh,back.peakSpeedKmh)};
+    peakSpeedKmh:Math.max(outbound.peakSpeedKmh,back.peakSpeedKmh),
+    outboundPeakSpeedKmh:outbound.peakSpeedKmh,returnPeakSpeedKmh:back.peakSpeedKmh};
 }
 
 // Passenger journeys count both directions; motion always uses the vehicle's empty mass.

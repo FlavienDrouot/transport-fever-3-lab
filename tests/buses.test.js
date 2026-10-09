@@ -24,10 +24,10 @@ test('Bus cycle counts passenger journeys in both directions and ignores freight
   assert.equal(bus.passengerCapacity,10);assert.equal(bus.cargoCapacity,undefined);
   assert.throws(()=>analyseBusService([{...bus,passengerCapacity:0}],options),RangeError);
 });
-test('Passenger rendering uses passenger vocabulary and filters chart and table consistently',()=>{
+test('Passenger rendering uses shared capacity notation and filters chart and table consistently',()=>{
   const nodes=Object.fromEntries(['truck-service-summary','truck-service-readout','truck-bars','road-service-caption'].map(id=>[id,{closest:()=>({classList:{toggle(){}}})}]));
   renderTruckService({getElementById:id=>nodes[id]},trucksByYear(data.buses,1913),{distanceKm:1,passenger:true});
-  assert.match(nodes['truck-service-summary'].innerHTML,/passenger journey/);assert.match(nodes['road-service-caption'].textContent,/equal utilization/);assert.doesNotMatch(nodes['truck-service-summary'].innerHTML,/cargo unit|empty return/);
+  assert.match(nodes['truck-service-summary'].innerHTML,/per capacity/);assert.match(nodes['road-service-caption'].textContent,/equal utilization/);assert.doesNotMatch(nodes['truck-service-summary'].innerHTML,/cargo unit|empty return/);
   assert.equal((nodes['truck-service-readout'].innerHTML.match(/<tr>/g)||[]).length,4);
   assert.equal((nodes['truck-bars'].innerHTML.match(/class="truck-bar-row/g)||[]).length,4);
   assert.doesNotMatch(nodes['truck-bars'].innerHTML,/NaN|Infinity|Mitsubishi/);

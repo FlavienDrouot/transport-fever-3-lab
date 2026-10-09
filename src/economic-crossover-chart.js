@@ -1,3 +1,4 @@
+import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
@@ -5,8 +6,8 @@ import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {createScale} from './scales.js';
 const fmt = x => formatNumber(x,2);
 
-export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=targets.freight?'Running cost / cargo unit ($)':'Running cost / passenger ($)',ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true}) {
-  if(!story.phases.length) {container.textContent=trains.length?'Choose a positive occupancy to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}
+export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=`Running cost / ${UI_TERMS.capacityUnit} ($)`,ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true}) {
+  if(!story.phases.length) {container.textContent=trains.length?'Choose positive utilization to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}
   const valueAt=story.valueAt??((id,x)=>analyseLine(trains.find(t=>t.id===id),{distanceKm:x,fillRatio:fill,...targets}).maintenancePerUnit);
   const axisLabel=story.label??'One-way distance (km)';
   const formatX=x=>story.axis==='year'?String(Math.floor(x)):fmt(x);

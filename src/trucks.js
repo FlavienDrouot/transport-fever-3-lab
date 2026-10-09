@@ -1,3 +1,4 @@
+import {UI_TERMS} from './ui-terms.js';
 import {roadGradientSpeeds,validateGradient} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {sizeFleet} from './service-fleet.js';
@@ -124,7 +125,7 @@ export function analyseRoadFleet(vehicles, options) {
 export function renderTruckService(document,trucks,options) {
   const passenger=options.passenger===true;
   const rows=analyseRoadFleet(trucks,options);
-  const unit=passenger?'passenger journey':'delivered cargo unit';
+  const unit=UI_TERMS.capacityUnit;
   document.getElementById('truck-service-readout').closest('table').classList.toggle('has-targets',options.demandPerYear!=null||options.maxHeadwaySeconds!=null);
   renderServiceSummary(document.getElementById('truck-service-summary'),{names:rows.filter(row=>row.rank===1).map(row=>row.truck.name),cost:rows[0]?.costPerCargo,unit,emptyMessage:trucks.length?'No selected vehicle can complete this gradient with the available mass, power and traction. Reduce the gradient or choose a stronger vehicle.':'No vehicles selected for this category and year. Choose vehicles or adjust the filters.'});
   document.getElementById('road-service-caption').textContent=`A–B–A · ${fmt(options.distanceKm,1)} km per leg${options.gradePercent?` · ${fmt(options.gradePercent,1)}% A→B (theoretical)`:''} · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'}${!passenger&&rows.length?` · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}`:''}. Travel and handling times in m:ss; handling totals cover the entire round trip.`;

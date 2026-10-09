@@ -56,13 +56,13 @@ test('All five Economics axes use freight deliveries, independent stops and the 
       if(axis==='headway')scenario.maxHeadwaySeconds=x*60;
       assert.equal(story.valueAt(train.id,x),axis==='year'&&train.year>x?null:analyseFreightService(train,scenario).maintenancePerUnit);
     }
-    if(axis==='demand')assert.equal(story.label,'Cargo units / year delivered');
+    if(axis==='demand')assert.equal(story.label,'Rate (capacity / year)');
     for(const kind of ['curves','rank'])for(const distanceMode of ['linear','focus']){
       const container={id:'freight-phase',clientWidth:900};
       renderEconomicCrossovers(container,{trains,story,fill:.75,targets,kind,distanceMode});
       assert.doesNotMatch(container.innerHTML,/NaN|Infinity|passenger/);
       assert.match(container.innerHTML,/curve-hit/);
-      if(kind==='curves')assert.match(container.innerHTML,/Running cost \/ cargo unit/);
+      if(kind==='curves')assert.match(container.innerHTML,/Running cost \/ capacity/);
     }
   }
   assert.deepEqual(targets,before);
@@ -75,7 +75,7 @@ test('Distance curve cache refreshes edited freight recipes under the same ID',(
   const render=train=>renderEconomicChart(container,{trains:[train],distance:8,fill:.75,mode:'linear',targets:{freight:true}});
   render(general);const before=container.innerHTML;
   render({...general,cargoCapacity:general.cargoCapacity*2});
-  assert.notEqual(container.innerHTML,before);assert.match(container.innerHTML,/delivered cargo unit/);
+  assert.notEqual(container.innerHTML,before);assert.match(container.innerHTML,/Running cost per capacity/);
   assert.doesNotMatch(container.innerHTML,/NaN|Infinity|passenger/);
 });
 

@@ -1,11 +1,12 @@
+import {UI_TERMS} from './ui-terms.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
 
 const axisDefinitions = {
   distance: {label:'One-way distance (km)', start:.1},
   year: {label:'Game year', start:1900},
-  utilization: {label:'Utilization (%)', start:1},
-  demand: {label:'Passengers / year / direction', start:1},
-  headway: {label:'Frequency interval (minutes)', start:.1},
+  utilization: {label:`${UI_TERMS.utilization} (%)`, start:1},
+  demand: {label:`${UI_TERMS.rate} (${UI_TERMS.capacityUnit} / year / direction)`, start:1},
+  headway: {label:`${UI_TERMS.frequency} (minutes)`, start:.1},
 };
 
 /** Vary one diagram parameter, keeping the scenario and its controls unchanged. */
@@ -13,7 +14,7 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
   if(axis==='utilisation')axis='utilization';
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
   const {start}=axisDefinitions[axis];
-  const label=axis==='demand'&&targets.freight?'Cargo units / year delivered':axisDefinitions[axis].label;
+  const label=axis==='demand'&&targets.freight?`${UI_TERMS.rate} (${UI_TERMS.capacityUnit} / year)`:axisDefinitions[axis].label;
   const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
   const current={distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
   const end={distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
