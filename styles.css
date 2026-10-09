@@ -365,8 +365,10 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-sketch .profile-node{fill:var(--green);stroke:var(--surface,#fff);stroke-width:2;pointer-events:none}
 .profile-sketch .profile-baseline{stroke:var(--line);stroke-width:1;stroke-dasharray:4 4}
 .profile-sketch .profile-axis,.profile-sketch .profile-axis-tick{stroke:var(--muted);stroke-width:1}
-.profile-sidebar-status{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:10px;margin-top:10px;font-size:12px}
-.profile-sidebar-status a{font-weight:600}
+.profile-sidebar-status{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:2px 8px;border-top:1px solid var(--line);padding-top:10px;margin-top:10px;font-size:12px}
+.profile-sidebar-status>strong{grid-column:1;grid-row:1}
+.profile-sidebar-status>span{grid-column:1/-1;grid-row:2}
+.profile-sidebar-status a{grid-column:2;grid-row:1;white-space:nowrap;font-weight:600}
 .route-model{align-items:center;flex-wrap:wrap;gap:0;margin:8px 0 12px;font-size:12px}
 .route-model legend{float:left;margin-right:8px;color:var(--muted)}
 .profile-editor>p{font-size:12px;line-height:1.5;margin:8px 0}

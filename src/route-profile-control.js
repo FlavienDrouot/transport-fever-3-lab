@@ -43,7 +43,7 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
 /** A summary of the active route, independent of the saved editor preset. */
 export function renderRouteProfileStatus(status,segments){
   const total=routeProfileDistance(segments),single=segments.length===1?segments[0]:null;
-  status.innerHTML=`<strong>A→B · ${format(total)} km</strong><span>${single?`${single.gradePercent>0?'+':''}${format(single.gradePercent)}% · ${format(single.speedLimitKmh)} km/h`: `${segments.length} segments · varying gradients and speed limits`}</span><a href="#route-profile">Edit route ↗</a>`;
+  status.innerHTML=`<strong>A→B · ${format(total)} km</strong><span>${single?`${single.gradePercent>0?'+':''}${format(single.gradePercent)}% · ${format(single.speedLimitKmh)} km/h`: `${segments.length} segments`}</span><a href="#route-profile">Edit route ↗</a>`;
 }
 
 /** The route editor owns the custom preset shared by rail and road comparisons. */

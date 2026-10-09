@@ -1,7 +1,7 @@
 export const GRAVITY = 9.80665;
 export const MOTION_UNITS = {kgfNewtons:9.80665,horsepowerWatts:735.5};
-// Fitted to MAN runs at displayed 10% and 20% grades; shared with rail
-// provisionally at Flavien's request, pending rail slope measurements.
+// Fitted to MAN runs at displayed 10% and 20% grades; the requested
+// TGV 5% trace supports sharing it with Rail, within 2.36 km/h locally.
 export const GRADE_FORCE_FACTOR=.38;
 export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02,gravityFactor:GRADE_FORCE_FACTOR});
 

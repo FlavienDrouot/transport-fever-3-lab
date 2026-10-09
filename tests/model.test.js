@@ -102,3 +102,13 @@ test('Independent 5 km race checkpoint matches both rounded speeds', async () =>
   // Visual separation also includes the 0.47 m initial nose offset of unknown sign.
   // Only speeds are validated until the positional reference is confirmed.
 });
+
+
+test('The requested TGV uphill trace locally supports the shared grade factor without refitting',async()=>{
+  const experiments=JSON.parse(await readFile(new URL('../data/experiments.json',import.meta.url)));
+  const record=experiments.experiments.find(e=>e.id==='rail-gradient').measurements[0];
+  const train=data.trains.find(t=>t.id===record.vehicleId);
+  const model=createModel(train,data.source,{gradePercent:record.displayedGradePercent});
+  // This is the documented tolerance for this reported trace, not a catalogue-wide accuracy claim.
+  record.increments.forEach((ticks,i)=>close(model.stateAt(ticks*.2).speedKmh,record.speedKmh[i],2.5));
+});
