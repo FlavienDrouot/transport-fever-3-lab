@@ -201,7 +201,6 @@ function renderChart(kind, width) {
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
   el('chart-help').textContent = railRouteProfile&&view.startsWith('speed')?'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.':view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited trains approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
   el('chart-help').textContent+=' Hover or focus a train to see transitions and coordinates.';
-  if(kind==='speed')document.querySelector('#race-links a[href="#speed-explorer"]').textContent=view==='speed'?'Speed / time':'Speed / distance';
   el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
@@ -406,7 +405,6 @@ function renderEconomicControls() {
   $('economic-distance-help').textContent=`Running cost per ${unit}. Lower is better; values do not depend on the selected competitors.`;
   $('economic-curves-help').textContent='Cheapest train emphasized in each phase; hover to compare.';
   $('economic-rank-help').textContent=`Ranking by running cost per ${unit}; first place at the top.`;
-  document.querySelector('#economic-links a[href="#economic-efficiency"]').textContent=`Running cost / ${UI_TERMS.capacityUnit}`;
 }
 function renderLineAnalysis() {
   renderEconomicControls();
@@ -546,7 +544,6 @@ function render() {
     const showEmpty=!!economic.empty&&!(economic.empty==='year'&&phaseAxis==='year'&&economicTrains.length);
     $('economic-empty').hidden=!showEmpty;
     $('economic-results').hidden=showEmpty;
-    for(const link of $('economic-links').querySelectorAll('a'))if(link.hash!=='#economic-method'&&link.hash!=='#support')link.hidden=showEmpty;
     if(showEmpty){
       $('economic-empty').innerHTML=economicEmptyContent(economic.empty,economicCategory==='freight',!!railRouteProfile);
       for(const id of ['economic-efficiency-chart','economic-crossover-curves-chart','economic-crossovers-chart'])$(id).replaceChildren();

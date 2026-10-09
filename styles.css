@@ -425,18 +425,23 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 @media(max-width:800px){.profile-sketch{width:900px}.profile-segment-fields{grid-template-columns:repeat(3,minmax(0,1fr))}.route-model{flex-wrap:wrap}}
 @media(max-width:470px){.profile-segment-fields{grid-template-columns:1fr 1fr}.profile-field:nth-child(3){grid-column:1/-1}}
 
-/* Three workspaces, with local views kept close to the experiment. */
-.workspace-nav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 0 10px;border-bottom:1px solid var(--line)}
-.workspace-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
-.workspace-tabs>a{font-size:13px;text-decoration:none;color:var(--muted);padding:6px 12px;border-radius:5px}
-.workspace-tabs>a[aria-current=page]{color:var(--green);background:#e6f3ee;font-weight:600}
-.workspace-tabs .scale-toggle{margin-left:12px}
-.workspace-action,.section-shortcuts a,.comparison-preview a{font-size:12px;text-decoration:none}
-.section-shortcuts{display:flex;flex-wrap:wrap;gap:16px;padding:10px 0 0}
+/* Primary spaces and their contextual views share the desktop header. */
+.app-header{gap:18px}
+.workspace-nav{display:flex;align-items:center;gap:18px;min-width:0;align-self:stretch;border-left:1px solid var(--line);padding-left:18px}
+.workspace-tabs{display:flex;align-items:center;gap:14px}
+.workspace-tabs>a{align-self:stretch;display:flex;align-items:center;font-size:12px;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.workspace-tabs>a[aria-current=page]{color:var(--green);font-weight:600;border-bottom-color:var(--green)}
+.workspace-tabs .scale-toggle{margin-left:4px}
+.workspace-action,.comparison-preview a{font-size:12px;text-decoration:none;white-space:nowrap}
+.workspace-action{color:var(--muted)}
 .comparison-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;background:#e6f3ee;padding:8px 12px;margin-top:10px;border-radius:5px}
-[data-theme=dark] .workspace-tabs>a[aria-current=page],[data-theme=dark] .comparison-preview{background:#203e32}
+[data-theme=dark] .comparison-preview{background:#203e32}
 #models,#checks,#data-catalogue{scroll-margin-top:calc(var(--app-header-offset) + 12px)}
-@media(min-width:701px){.app-header{height:60px;flex-wrap:nowrap}.app-header .analysis-nav{flex-basis:auto;flex-wrap:nowrap}.catalogue{top:var(--app-header-offset);height:calc(100dvh - var(--app-header-offset))}}
-@media(max-width:700px){.workspace-nav{padding-top:10px}.workspace-tabs>a{min-height:40px;display:flex;align-items:center}.app-header .analysis-nav{justify-content:space-between;flex-wrap:nowrap}.app-header .analysis-nav a{font-size:13px}.github-star>span:last-child{display:none}}
-#design-uniform-route{padding:16px 0;align-items:start}#design-uniform-route label{display:block;font-size:12px}#design-uniform-route input[type=number]{max-width:100px}#design-uniform-route input[type=range]{width:100%}#design-route-model{margin:14px 0 0}.section-shortcuts+.analysis-overview{margin-top:14px}
+.analysis-view>.analysis-overview{margin:18px 0 0}
+.analysis-view>.analysis-overview+.chart-panel{padding-top:14px}
+@media(min-width:701px){.app-header{height:auto;min-height:56px;flex-wrap:wrap;row-gap:0}.app-header .analysis-nav{flex-basis:auto;flex-wrap:nowrap}.workspace-nav{min-height:56px}.catalogue{top:var(--app-header-offset);height:calc(100dvh - var(--app-header-offset))}}
+@media(min-width:701px) and (max-width:1100px){.app-header{gap:14px}.workspace-nav{gap:12px;padding-left:14px}.workspace-tabs{gap:10px}.workspace-action{display:none}.github-star>span:last-child{display:none}}
+@media(max-width:700px){.app-header .analysis-nav{justify-content:space-between;flex-wrap:nowrap}.app-header .analysis-nav a{font-size:13px}.github-star>span:last-child{display:none}.workspace-nav{order:4;flex-basis:100%;padding:0;border:0;min-height:42px;justify-content:space-between}.workspace-tabs>a{min-height:42px}.workspace-action{font-size:11px}.analysis-view>.analysis-overview{margin-top:14px}}
+#design-uniform-route{padding:16px 0;align-items:start}#design-uniform-route label{display:block;font-size:12px}#design-uniform-route input[type=number]{max-width:100px}#design-uniform-route input[type=range]{width:100%}#design-route-model{margin:14px 0 0}
 .quick-experiments{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:12px}.quick-experiments>span:first-child{color:var(--muted)}
+.method-link{font-size:13px;font-weight:400;text-decoration:none;vertical-align:middle;margin-left:5px}
