@@ -25,7 +25,7 @@ Use the **moon / sun** navigation button to change the theme; your browser remem
 
 Methods, assumptions, chart reading guides and supplementary tables are folded by default in both views. Open their labelled sections for the full explanation or exact results.
 
-Hover a curve or focus a curve label, legend entry or vehicle in either picker to identify it across the page. Try linear and logarithmic axes, or **Phase focus** to give crossover intervals more room. The rank chart's **All crossovers** mode spaces each ranking change equally, ignoring crossings before 100 m. Non-uniform axes show real values at their ticks, but their visual spacing is deliberately stretched.
+Hover a curve or focus a curve label, legend entry or vehicle in either picker to identify it across the page. Try linear and logarithmic axes, or **Phase focus** to give crossover intervals more room. The rank chart's **All crossovers** mode spaces each ranking change equally, searching from 100 m or one tenth of the selected route on shorter routes. Non-uniform axes show real values at their ticks, but their visual spacing is deliberately stretched.
 
 Both analysis pickers use the same search, ordering, selection counter, buttons and vehicle rows. Search changes the list only; selection changes the comparisons. Invalid numeric settings show a message and retain the last valid calculation until corrected. Info buttons open help on click or keyboard activation. The mobile data catalogue uses expandable vehicle summaries with all fields available inside.
 

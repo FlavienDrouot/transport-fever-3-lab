@@ -5,6 +5,7 @@ import {createScale} from './scales.js';
 import {mountChartInteractions} from './chart-interactions.js';
 
 const fmt = n => formatNumber(n, 1);
+const fmtKm = n => formatNumber(n,n<.01?4:n<.1?3:n<1?2:1);
 // Hover changes presentation only; reuse service calculations until inputs change.
 let cachedKey, cachedSeries;
 export function renderEconomicChart(container, {trains, distance, fill, mode, highlighted, targets = {}}) {
@@ -32,8 +33,8 @@ export function renderEconomicChart(container, {trains, distance, fill, mode, hi
   const title = `Running cost per ${unit} · lower is better`;
   let svg = `<title>${title}</title><desc>A–B–A service with braking and terminal handling, at ${fmt(fill*100)}% utilization. ${targets.demandPerYear!=null||targets.demandPerDirection!=null?'A fixed rate sizes the fleet.':'Demand is assumed sufficient.'} ${mode} vertical scale.</desc><rect width="${W}" height="${H}" fill="white"/><text x="${L}" y="20">Running cost / ${freight?'cargo unit':'passenger'} ($)</text>`;
   for (const tick of scale.ticks) svg += `<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#e4e8e4" stroke-dasharray="2 5"/><text x="${L-10}" y="${sy(tick)+4}" text-anchor="end">${tick.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1})}</text>`;
-  for (let i=0;i<=5;i++) {const x=minDistance+(maxDistance-minDistance)*i/5;svg+=`<text x="${sx(x)}" y="${H-B+22}" text-anchor="middle">${fmt(x)}</text>`;}
-  svg += `<line x1="${sx(distance)}" x2="${sx(distance)}" y1="${T}" y2="${H-B}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${sx(distance)}" y="${T-8}" text-anchor="${distance>maxDistance*.8?'end':'start'}" style="fill:#8a5f2b">${fmt(distance)} km route</text>`;
+  for (let i=0;i<=5;i++) {const x=minDistance+(maxDistance-minDistance)*i/5;svg+=`<text x="${sx(x)}" y="${H-B+22}" text-anchor="middle">${fmtKm(x)}</text>`;}
+  svg += `<line x1="${sx(distance)}" x2="${sx(distance)}" y1="${T}" y2="${H-B}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${sx(distance)}" y="${T-8}" text-anchor="${distance>maxDistance*.8?'end':'start'}" style="fill:#8a5f2b">${fmtKm(distance)} km route</text>`;
   const ordered = [...series].sort((a,b)=>Number(a.t.id===highlighted)-Number(b.t.id===highlighted));
   for (const {t,points} of ordered) {
     let path='', penDown=false;

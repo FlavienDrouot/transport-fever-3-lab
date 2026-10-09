@@ -9,7 +9,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   if(!story.phases.length) {container.textContent=trains.length?'Choose a positive occupancy to compare economic crossovers.':'Select at least one train to display economic crossovers.';return;}
   const valueAt=story.valueAt??((id,x)=>analyseLine(trains.find(t=>t.id===id),{distanceKm:x,fillRatio:fill,...targets}).maintenancePerUnit);
   const axisLabel=story.label??'One-way distance (km)';
-  const formatX=x=>story.axis==='year'?String(Math.floor(x)):fmt(x);
+  const formatX=x=>story.axis==='year'?String(Math.floor(x)):story.axis==='distance'?formatNumber(x,x<.01?4:x<.1?3:2):fmt(x);
   const rank=kind==='rank',W=Math.max(320,container.clientWidth||1000),H=rank?Math.max(330,trains.length*28+100):(W<700?460:620);
   const L=65,R=W>=700?220:20,T=40,B=55;
   const segments=rank?story.intervals:story.phases;

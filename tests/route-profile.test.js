@@ -7,6 +7,8 @@ import {roundTripMotion,analyseService,serviceEligible} from '../src/line.js';
 import {analyseFreightService} from '../src/rail-freight.js';
 import {withRailProfile} from '../src/rail-motion.js';
 import {pairCrossings} from '../src/race.js';
+import {economicStory} from '../src/economic-crossovers.js';
+import {crossoverStory,rankWindow} from '../src/crossovers.js';
 
 const raw={id:'profile-test',name:'Profile test',year:2000,massTonnes:100,tractionKgf:20000,powerCh:1000,maxSpeedKmh:120,
   passengerCapacity:100,cargoCapacity:40,carCount:4,lengthMetres:80,loadingUnloadingSpeedMultiplier:3,
@@ -21,6 +23,25 @@ test('one uniform segment retains the calibrated Race and service timings',()=>{
     near(routeTrajectory(train,profile).travelSeconds,train.model.withGradient(grade).timeAt(10));
     near(routeRoundTrip(train,profile).travelSeconds,roundTripMotion(train,{distanceKm:10,gradePercent:grade}).travelSeconds);
   }
+});
+
+test('a 10 m route remains valid through Race, passenger and freight service, and economic phases',()=>{
+  const distanceKm=.01,profile=[segment(distanceKm)];
+  near(routeTrajectory(train,profile).travelSeconds,train.model.timeAt(distanceKm));
+  near(routeRoundTrip(train,profile).travelSeconds,roundTripMotion(train,{distanceKm}).travelSeconds);
+  assert.ok(Number.isFinite(analyseService(train,{distanceKm}).maintenancePerJourney));
+  assert.ok(Number.isFinite(analyseFreightService(train,{distanceKm}).maintenancePerUnit));
+  for(const routeProfile of [null,profile]){
+    const story=economicStory([train],distanceKm,1,{routeProfile});
+    assert.equal(story.start,.001);
+    assert.equal(story.end,distanceKm);
+    assert.equal(story.phases.length,1);
+    assert.ok(Number.isFinite(story.valueAt(train.id,story.start)));
+  }
+  const ranking=rankWindow(crossoverStory([withRailProfile(train,profile)]),distanceKm/10);
+  assert.equal(ranking.intervals.length,1);
+  assert.equal(ranking.intervals[0].start,.001);
+  assert.equal(ranking.intervals[0].end,distanceKm);
 });
 
 test('profile preserves speed and anticipates a lower segment limit',()=>{

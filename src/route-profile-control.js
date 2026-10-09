@@ -89,7 +89,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     if(segments[index][field]===event.target.valueAsNumber)return;
     const next=segments.map(part=>({...part}));next[index][field]=event.target.valueAsNumber;
     try{
-      const valid=validateRouteProfile(next);if(routeProfileDistance(valid)<.5)throw new RangeError('Route total must be at least 0.5 km');
+      const valid=validateRouteProfile(next);
       segments=valid;profileEdited=true;active=true;
       const row=container.querySelector(`.profile-segment[data-index="${index}"]`);
       const matching=row.querySelector(`[data-field="${field}"][data-control="${event.target.dataset.control==='range'?'number':'range'}"]`);
@@ -114,12 +114,12 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     const index=Number(button.dataset.index),action=button.dataset.action,draft=segments.map(part=>({...part}));
     for(const input of container.querySelectorAll('.profile-segment input[data-control="number"]'))draft[Number(input.dataset.index)][input.dataset.field]=input.valueAsNumber;
     try{
-      const next=validateRouteProfile(draft);if(routeProfileDistance(next)<.5)throw new RangeError('Route total must be at least 0.5 km');
+      const next=validateRouteProfile(draft);
       if(action==='add')next.push({...next.at(-1),distanceKm:1});
       else if(action==='insert')next.splice(index+1,0,{...next[index],distanceKm:1});
       else if(action==='remove')next.splice(index,1);
       else if(action==='up'||action==='down'){const other=index+(action==='up'?-1:1);[next[index],next[other]]=[next[other],next[index]];}
-      const valid=validateRouteProfile(next);if(routeProfileDistance(valid)<.5)throw new RangeError('Route total must be at least 0.5 km');
+      const valid=validateRouteProfile(next);
       segments=valid;profileEdited=true;active=true;selectedIndex=action==='add'?next.length-1:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed();container.querySelector(`.profile-segment[data-index="${selectedIndex}"] input`)?.focus();
     }catch(error){showError(error);}
   });

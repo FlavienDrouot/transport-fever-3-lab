@@ -12,7 +12,7 @@ const axisDefinitions = {
 export function economicStory(trains, distance, fill, targets = {}, {axis='distance',year=2035} = {}) {
   if(axis==='utilisation')axis='utilization';
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
-  const {start}=axisDefinitions[axis];
+  const start=axis==='distance'?Math.min(axisDefinitions.distance.start,distance/10):axisDefinitions[axis].start;
   const label=axis==='demand'&&targets.freight?'Cargo units / year delivered':axisDefinitions[axis].label;
   const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
   const current={distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];

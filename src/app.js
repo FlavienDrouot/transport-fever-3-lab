@@ -38,6 +38,7 @@ const $ = id => document.getElementById(id);
 const loadData=createDataLoader(fetch,import.meta.url);
 let roadLoaded=false,roadLoading,configurationLoading,dataLoading,sourceMounted=false,updateRoadCategory;
 const fmt = (n, digits = 1) => formatNumber(n,digits,true);
+const fmtKm = n => formatNumber(n,n<.01?4:n<.1?3:n<1?2:1);
 const scaleMode = (axis, kind = 'race') => document.querySelector(`input[name="${kind === 'speed' ? 'speed-' : ''}${axis}-scale"]:checked`).value;
 const views = {
   distance: {title: 'Distance over time', x: 'Time since departure (m:ss)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading train.'},
@@ -194,7 +195,7 @@ function renderChart(kind, width) {
   content+=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#ccd4cc"/><text x="${(W+L-R)/2}" y="${H-6}" text-anchor="middle">${spec.x}${xScale.mode==='log' ? ' · log scale' : ''}</text>`;
   if (view === 'distance' && Number.isFinite(sy(routeDistance))) {
     const y = sy(routeDistance);
-    content += `<line class="distance-target" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${L+8}" y="${y-7}" style="fill:#8a5f2b">${fmt(routeDistance)} km target</text>`;
+    content += `<line class="distance-target" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${L+8}" y="${y-7}" style="fill:#8a5f2b">${fmtKm(routeDistance)} km target</text>`;
   }
   for(const t of ts) {
     const d=sample(t,xScale,yScale,view,horizon).map(([x,y],i)=>`${i?'L':'M'}${sx(x).toFixed(2)},${sy(y).toFixed(2)}`).join(' ');
@@ -237,7 +238,7 @@ function renderRaceYear(kind){
     distanceMode:document.querySelector(`input[name="${kind==='rank'?'rank-distance-scale':'focus-distance'}"]:checked`).value,
     ordinateTitle:'Arrival time (m:ss)',ordinateFormat:formatTime,chartTitle:'Arrival time by introduction year',rankTitle:'Arrival ranking by introduction year',emphasize:$('emphasize-leaders').checked});
   $('crossover-curves-empty').hidden=$('crossover-empty').hidden=!!ts.length;
-  $('crossover-curves-help').textContent=`Arrival time over ${fmt(routeDistance)} km; vehicles enter at their introduction year. Track speed limit: ${infrastructureSpeedKmh} km/h.`;
+  $('crossover-curves-help').textContent=`Arrival time over ${fmtKm(routeDistance)} km; vehicles enter at their introduction year. Track speed limit: ${infrastructureSpeedKmh} km/h.`;
   $('crossover-readout').innerHTML=raceYearStory.phases.map(p=>`<tr><td>${Math.round(p.start)}–${Math.round(p.end)}</td><td>${p.leaders.map(id=>escape(ts.find(t=>t.id===id).name)).join(' / ')||'No available train'}</td><td>${p.leaders.length?formatTime(Math.min(...p.leaders.map(id=>raceYearStory.valueAt(id,p.start)))):'—'}</td></tr>`).join('');
 }
 const crossoverCache = new Map();
@@ -247,19 +248,20 @@ function renderCrossovers() {
   if(byYear){renderRaceYear('rank');return;}
   const ts = active(), key = ts.map(t=>t.id).sort().join('|');
   if (!crossoverCache.has(key)) crossoverCache.set(key, crossoverStory(ts));
-  const {phases, intervals, end} = rankWindow(crossoverCache.get(key));
+  const minimum=Math.min(.1,routeDistance/10);
+  const {phases, intervals, end} = rankWindow(crossoverCache.get(key),minimum);
   $('crossover-empty').hidden = !!ts.length;
-  $('crossover-readout').innerHTML = phases.map(p=>`<tr><td>${fmt(p.start,2)} – ${p.unbounded ? '∞' : fmt(p.end,2)}</td><td>${p.leaders.map(id=>escape(ts.find(t=>t.id===id).name)).join(' / ')}</td><td>${formatTime(Math.min(...ts.map(t=>t.model.timeAt(p.start))))}</td></tr>`).join('');
+  $('crossover-readout').innerHTML = phases.map(p=>`<tr><td>${fmtKm(p.start)} – ${p.unbounded ? '∞' : fmtKm(p.end)}</td><td>${p.leaders.map(id=>escape(ts.find(t=>t.id===id).name)).join(' / ')}</td><td>${formatTime(Math.min(...ts.map(t=>t.model.timeAt(p.start))))}</td></tr>`).join('');
   if (!ts.length) {$('crossover-chart').innerHTML='';return;}
   const W=Math.max(320,$('crossover-chart').clientWidth),L=65,R=W>=700?220:18,T=55,B=60;
   const H=Math.max(300,Math.min(650,ts.length*35+T+B));
   const mode=document.querySelector('input[name="rank-distance-scale"]:checked').value;
-  const minimum=.1, knots=[minimum,...intervals.map(p=>p.end)];
+  const knots=[minimum,...intervals.map(p=>p.end)];
   const phaseAxis=mode==='linear'?createPhaseScale([minimum,end]):createPhaseScale(knots,leadershipWeights(intervals.length));
-  $('rank-scale-note').textContent=mode==='linear'?'Distance uses a uniform linear scale. Crossovers below 100 m are omitted.':railRouteProfile?'From 100 m, crossovers are shown only up to terminal B.':'From 100 m, each crossover between any selected trains gets an equally spaced position. Real distances are shown at the ticks; the final stable tail is compressed.';
+  $('rank-scale-note').textContent=mode==='linear'?`Distance uses a uniform linear scale. Crossovers below ${fmtKm(minimum)} km are omitted.`:railRouteProfile?`From ${fmtKm(minimum)} km, crossovers are shown only up to terminal B.`:`From ${fmtKm(minimum)} km, each crossover between any selected trains gets an equally spaced position. Real distances are shown at the ticks; the final stable tail is compressed.`;
   const sx=distance=>L+phaseAxis.position(distance)*(W-L-R);
   const sy=rank=>T+(rank-1)*(H-T-B)/Math.max(1,ts.length-1);
-  let content=`<title>Rank crossovers</title><desc>Arrival ranking by distance. Axis: ${mode}. Rank crossovers from 100 metres are included, even when the leading train stays the same. ${railRouteProfile?'The route ends at B.':'The final ranking holds at longer distances.'}</desc><text x="${L}" y="20">Arrival rank · first place at the top</text>`;
+  let content=`<title>Rank crossovers</title><desc>Arrival ranking by distance. Axis: ${mode}. Rank crossovers from ${fmtKm(minimum)} kilometres are included, even when the leading train stays the same. ${railRouteProfile?'The route ends at B.':'The final ranking holds at longer distances.'}</desc><text x="${L}" y="20">Arrival rank · first place at the top</text>`;
   phases.forEach((p,i)=>{
     const x=sx(p.start);
     content+=`<line x1="${x}" x2="${x}" y1="${T-15}" y2="${H-B+10}" stroke="#ccd4cc" stroke-dasharray="3 5"/>`;
@@ -267,13 +269,13 @@ function renderCrossovers() {
   // Mark every change of ranking, even when it does not change the leader.
   const roots=knots.slice(1,-1), labelGap=W<700?75:65;
   let lastLabel=L;
-  content+=`<text x="${L}" y="${H-B+30}" text-anchor="start">0.10 km</text>`;
+  content+=`<text x="${L}" y="${H-B+30}" text-anchor="start">${fmtKm(minimum)} km</text>`;
   roots.forEach((distance,i)=>{
-    const x=sx(distance),label=fmt(distance,2)+' km';
+    const x=sx(distance),label=fmtKm(distance)+' km';
     content+=`<line class="rank-crossover" data-distance="${distance}" x1="${x}" x2="${x}" y1="${T-15}" y2="${H-B+10}" stroke="#b9c7bf" stroke-dasharray="2 5"><title>Crossover at ${label}</title></line><circle class="rank-crossover-tick" data-distance="${distance}" cx="${x}" cy="${H-B+10}" r="2.5" fill="#758079"><title>${label}</title></circle>`;
     if(x-lastLabel>=labelGap && W-R-x>=100){content+=`<text x="${x}" y="${H-B+30}" text-anchor="middle">${label}</text>`;lastLabel=x;}
   });
-  content+=`<text x="${W-R}" y="${H-B+30}" text-anchor="end">${railRouteProfile?`${fmt(routeDistance,2)} km · B`:'Further → ∞'}</text>`;
+  content+=`<text x="${W-R}" y="${H-B+30}" text-anchor="end">${railRouteProfile?`${fmtKm(routeDistance)} km · B`:'Further → ∞'}</text>`;
   for(let rank=1;rank<=ts.length;rank++)content+=`<line x1="${L}" x2="${W-R}" y1="${sy(rank)}" y2="${sy(rank)}" stroke="#e5e9e4" stroke-dasharray="2 5"/><text x="${L-12}" y="${sy(rank)+4}" text-anchor="end">${rank}</text>`;
   renderPhaseDiagram($('crossover-chart'),{trains:ts,segments:rankPhaseSegments(ts,phases,intervals,sx,sy),frame:content,width:W,height:H,left:L,right:R,top:T,bottom:B,title:`Arrival ranking by distance; ${mode}`,highlighted,
     bands:phases.map(p=>({leaders:p.leaders,width:phaseAxis.position(p.end)-phaseAxis.position(p.start)})),
@@ -300,7 +302,7 @@ function renderCrossoverCurves() {
   const xKnots=inverted?times:distances,yKnots=inverted?distances:times;
   const xMode=inverted?timeMode:distanceMode,yMode=inverted?distanceMode:timeMode;
   const xLabel=inverted?'Time (m:ss)':'Distance (km)',yLabel=inverted?'Distance (km)':'Arrival time (m:ss)';
-  const xFormat=inverted?formatTime:d=>fmt(d,2),yFormat=inverted?d=>fmt(d,2):formatTime;
+  const xFormat=inverted?formatTime:fmtKm,yFormat=inverted?fmtKm:formatTime;
   const W=Math.max(320,$('crossover-curves-chart').clientWidth),H=W<700?620:820,L=65,R=W>=700?220:18,T=45,B=65;
   const sx=x=>L+xAxis.position(x)*(W-L-R),sy=y=>H-B-yAxis.position(y)/1.12*(H-T-B);
   const value=(t,x)=>inverted?t.model.stateAt(x).distanceKm:t.model.timeAt(x);
@@ -337,7 +339,7 @@ function renderCrossoverCurves() {
     segments.push({t,p,d,winner:p.leaders.includes(t.id)});
   }
   let overlay='';
-  phases.slice(1).forEach((p,i)=>{const x=inverted?times[i+1]:p.start,y=inverted?p.start:times[i+1];overlay+=`<circle cx="${sx(x)}" cy="${sy(y)}" r="4" fill="white" stroke="#27332e"><title>Leader changes at ${fmt(p.start,2)} km · ${formatTime(times[i+1])}</title></circle>`;});
+  phases.slice(1).forEach((p,i)=>{const x=inverted?times[i+1]:p.start,y=inverted?p.start:times[i+1];overlay+=`<circle cx="${sx(x)}" cy="${sy(y)}" r="4" fill="white" stroke="#27332e"><title>Leader changes at ${fmtKm(p.start)} km · ${formatTime(times[i+1])}</title></circle>`;});
   overlay+=`<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">${xLabel} · ${xMode==='focus'?'phase focus':'linear'}</text>`;
   renderPhaseDiagram($('crossover-curves-chart'),{trains:ts,segments,frame:content,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title:`${inverted?'Distance over time':'Time over distance'} around crossovers; distance ${distanceMode}, time ${timeMode}`,highlighted,emphasize,
     bands:phases.map(p=>{const [start,stop]=bounds(p);return {leaders:p.leaders,width:xAxis.position(stop)-xAxis.position(start)};}),
@@ -375,7 +377,7 @@ function renderLineAnalysis() {
   $('line-distance').max = Math.max(30, Math.ceil(routeDistance));
   $('line-distance').value = routeDistance;
   if($('economic-input-error').hidden)syncNumberInput($('line-distance-input'),routeDistance);
-  $('line-distance').setAttribute('aria-valuetext', `${fmt(routeDistance)} kilometres`);
+  $('line-distance').setAttribute('aria-valuetext', `${fmtKm(routeDistance)} kilometres`);
   $('occupancy-label').textContent=desiredFlow===null?'Utilization':'Utilization limit';
   $('utilization-help').textContent=freight?(desiredFlow===null?'Share of cargo capacity used on each loaded leg.':'Maximum cargo utilization when sizing the fleet.'):(desiredFlow===null?'Share of seats occupied on each trip.':'Maximum seat utilization when sizing the fleet.');
   $('utilization-info').title=$('utilization-help').textContent;
@@ -387,7 +389,7 @@ function renderLineAnalysis() {
   const winners=rows.filter(({result})=>best>0&&Math.abs(result.efficiency/best-1)<1e-9);
   renderServiceSummary($('line-summary'),{names:winners.map(({t})=>t.name),cost:winners[0]?.result.maintenancePerUnit,unit,
     emptyMessage:!rows.length?(selection.excluded.length?'No selected train fits the length or gradient constraints.':'No selected train is available in this year.'):`Utilization is zero: no ${freight?'cargo deliveries':'passenger journeys'} and no best service choice.`});
-  $('line-caption').textContent=`A–B–A at ${fmt(routeDistance)} km per leg${railRouteProfile?' · segment profile (theoretical)':railGradePercent?` · ${fmt(railGradePercent,1)}% A→B (theoretical)`:''} · ${freight?(railFreight.loadedReturn?'loaded return · ':'empty return · '):''}normal-difficulty running costs`;
+  $('line-caption').textContent=`A–B–A at ${fmtKm(routeDistance)} km per leg${railRouteProfile?' · segment profile (theoretical)':railGradePercent?` · ${fmt(railGradePercent,1)}% A→B (theoretical)`:''} · ${freight?(railFreight.loadedReturn?'loaded return · ':'empty return · '):''}normal-difficulty running costs`;
   const headings=freight?[
     ['Rank'],['Train'],['Cost / cargo unit','$ · lower is better'],['Trains'],['Interval','m:ss'],['Delivered','units / year'],
     ['Length','m / train'],['Capacity','units / train'],['Utilization','%'],['Fleet running cost','$ / year'],['Load / loaded leg','cargo units'],['Handling A / B','units / s'],[railGradePercent||railRouteProfile?'Travel A→B / B→A':'Travel / leg','m:ss'],['Stop A / B','m:ss'],['Round trip','m:ss']
@@ -489,12 +491,13 @@ function render() {
     const key=JSON.stringify([economicTrains.map(t=>[t.id,t.name,t.color,t.dash,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]),routeDistance,lineFill,serviceTargets(),phaseAxis,catalogueYear]);
     if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(economicTrains,routeDistance,lineFill,serviceTargets(),{axis:phaseAxis,year:catalogueYear});}
     $('economic-rank-scale').querySelector(':scope > span').textContent=currentEconomicStory.label;
-    $('economic-phase-help').textContent=`${currentEconomicStory.label} varies over ${phaseAxis==='year'?currentEconomicStory.start:fmt(currentEconomicStory.start,2)}–${phaseAxis==='year'?currentEconomicStory.end:fmt(currentEconomicStory.end,2)}; other settings remain fixed. Dashed line: current setting when applicable. ${phaseAxis==='demand'||phaseAxis==='headway'?'This target applies to these diagrams even if its service checkbox is off. ':''}Utilization is a ceiling when a rate target applies; demand is assumed, not predicted.`;
+    const phaseValue=value=>phaseAxis==='year'?value:phaseAxis==='distance'?fmtKm(value):fmt(value,2);
+    $('economic-phase-help').textContent=`${currentEconomicStory.label} varies over ${phaseValue(currentEconomicStory.start)}–${phaseValue(currentEconomicStory.end)}; other settings remain fixed. Dashed line: current setting when applicable. ${phaseAxis==='demand'||phaseAxis==='headway'?'This target applies to these diagrams even if its service checkbox is off. ':''}Utilization is a ceiling when a rate target applies; demand is assumed, not predicted.`;
     $('economic-phase-info').title=$('economic-phase-help').textContent;
     renderEconomicCrossovers($('economic-crossover-curves-chart'),{trains:economicTrains,story:currentEconomicStory,fill:lineFill,targets:serviceTargets(),kind:'curves',ordinateTitle:`Running cost / ${economicCategory==='freight'?'cargo unit':'passenger'} ($)`,highlighted,distanceMode:document.querySelector('input[name="economic-focus-scale"]:checked').value,verticalMode:document.querySelector('input[name="economic-focus-y"]:checked').value});
     renderEconomicCrossovers($('economic-crossovers-chart'),{trains:economicTrains,story:currentEconomicStory,fill:lineFill,targets:serviceTargets(),kind:'rank',highlighted,distanceMode:document.querySelector('input[name="economic-rank-scale"]:checked').value});
     $('economic-phases').closest('table').querySelector('th').textContent=currentEconomicStory.label;
-    $('economic-phases').innerHTML=currentEconomicStory.phases.map(p=>`<tr><td>${phaseAxis==='year'?Math.round(p.start):fmt(p.start,2)} – ${phaseAxis==='year'?Math.round(p.end):fmt(p.end,2)}</td><td>${p.leaders.map(id=>escape(economicTrains.find(t=>t.id===id).name)).join(' / ')||'No available train'}</td></tr>`).join('');
+    $('economic-phases').innerHTML=currentEconomicStory.phases.map(p=>`<tr><td>${phaseValue(p.start)} – ${phaseValue(p.end)}</td><td>${p.leaders.map(id=>escape(economicTrains.find(t=>t.id===id).name)).join(' / ')||'No available train'}</td></tr>`).join('');
     $('economic-results').removeAttribute('aria-busy');
     };
     if(railRouteProfile){$('economic-results').setAttribute('aria-busy','true');economicProfileTimer=setTimeout(()=>{if(!$('economics').hidden)drawEconomicCharts();},150);}else drawEconomicCharts();
@@ -511,7 +514,7 @@ function render() {
   $('route-distance').value = Math.min(routeDistance, limit);
   syncNumberInput($('distance-input'),routeDistance);
   if($('economic-input-error').hidden)syncNumberInput($('line-distance-input'),routeDistance);
-  $('route-distance').setAttribute('aria-valuetext', `${fmt(Math.min(routeDistance, limit))} kilometres; use the number field for longer routes`);
+  $('route-distance').setAttribute('aria-valuetext', `${fmtKm(Math.min(routeDistance, limit))} kilometres; use the number field for longer routes`);
   $('distance-note').textContent = railRouteProfile?'Route distance is the sum of the configured segments.':ts.length > 1 ? `Arrival order settles at approximately ${fmt(stable, 2)} km. Slider up to ${limit} km; enter a larger distance in the field.` : `Slider up to ${limit} km; enter a larger distance in the field.`;
   for (const row of $('trains').querySelectorAll('[data-train]')) row.classList.toggle('is-highlighted',row.dataset.train===highlighted);
   renderChart('speed');
@@ -519,10 +522,10 @@ function render() {
   renderCrossovers();
   renderCrossoverCurves();
   const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);
-  $('race-summary').textContent=ranking.length?`${ranking[0].t.name} arrives first at ${fmt(routeDistance)} km in ${formatTime(ranking[0].time)}${ranking.length>1?`; ${formatTime(ranking[1].time-ranking[0].time)} ahead of ${ranking[1].t.name}`:''}. ${railRouteProfile?'Segment grades and speed-limit braking are theoretical; no stop at B in Race.':`Gradient A→B: ${fmt(railGradePercent,1)}% (theoretical); braking is excluded.`}`:'Select at least one train to compare travel times.';
+  $('race-summary').textContent=ranking.length?`${ranking[0].t.name} arrives first at ${fmtKm(routeDistance)} km in ${formatTime(ranking[0].time)}${ranking.length>1?`; ${formatTime(ranking[1].time-ranking[0].time)} ahead of ${ranking[1].t.name}`:''}. ${railRouteProfile?'Segment grades and speed-limit braking are theoretical; no stop at B in Race.':`Gradient A→B: ${fmt(railGradePercent,1)}% (theoretical); braking is excluded.`}`:'Select at least one train to compare travel times.';
   const blocked=trains.filter(t=>selected.has(t.id)&&t.year<=catalogueYear&&!(railRouteProfile?withRailProfile(t,railRouteProfile).model.canStart:canClimbRail(t,railGradePercent)));
   if(blocked.length)$('race-summary').textContent+=` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>t.name).join(', ')}.`;
-  $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmt(routeDistance)} km`;
+  $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmtKm(routeDistance)} km`;
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
   const transitionPanel=$('transitions').closest('details'),transitionHeadings=transitionPanel.querySelectorAll('thead th');
@@ -792,8 +795,8 @@ async function init() {
   });
   $('service-options').addEventListener('toggle',updateStickyOffsets);
   $('line-fill').addEventListener('input',updateTargets);
-  mountDistanceControl({number:$('line-distance-input'),range:$('line-distance'),validate:validateEconomics,onChange:updateTargets});
-  mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:validateRace,onChange:distance=>{routeDistance=distance;profileControl.setUniformDefaults(distance,railGradePercent,infrastructureSpeedKmh);render();}});
+  mountDistanceControl({number:$('line-distance-input'),range:$('line-distance'),validate:validateEconomics,onChange:updateTargets,event:'input'});
+  mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:validateRace,onChange:distance=>{routeDistance=distance;profileControl.setUniformDefaults(distance,railGradePercent,infrastructureSpeedKmh);render();},event:'input'});
   for(const id of ['x-scale','y-scale','speed-x-scale','speed-y-scale','focus-distance','focus-time','crossover-orientation','emphasize-leaders','rank-distance-scale','economic-efficiency-scale','economic-focus-scale','economic-focus-y','economic-rank-scale']) $(id).addEventListener('change',()=>render());
   for (const kind of ['speed','race']) {
   const el = id => $(kind === 'speed' ? `speed-${id}` : id);
@@ -802,7 +805,7 @@ async function init() {
     const prior=highlighted;highlighted=undefined;renderChart(kind,1400);const svg=el('chart').querySelector('svg').cloneNode(true);svg.querySelectorAll('.curve-hit').forEach(path=>path.remove());highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#56665d}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
-    const lines=[`Theoretical model · Gradient A→B: ${fmt(railGradePercent,1)}% · Route distance: ${fmt(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
+    const lines=[`Theoretical model · Gradient A→B: ${fmt(railGradePercent,1)}% · Route distance: ${fmtKm(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active().map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     const chartHeight=Number(svg.getAttribute('viewBox').split(' ')[3]);
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',chartHeight+30+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);
