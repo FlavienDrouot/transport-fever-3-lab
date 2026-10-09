@@ -13,7 +13,7 @@
     "departureVideoSeconds": 32,
     "horsepowerWatts": 735.5,
     "kgfNewtons": 9.80665,
-    "limitations": "Rounded manual measurements; marker positions are uncertain. The 15 km point is approximate. An ideal model on level track without resistance, braking or stops; it does not establish the game’s actual physics.",
+    "limitations": "Historical video timings are approximate; marker positions and the 15 km point are uncertain. Current rail acceleration is calibrated against direct increment measurements retained in experiments.json, including constant resistance. Slopes, other formations and speed-cap behavior still require independent validation.",
     "catalogueCoverage": "The original 16 list-capture names and the additional Avelia Liberty detailed card cover the installed standard multiple units and railcars identified by Flavien. Locomotives, individual wagons, campaign-specific vehicles and other game builds remain outside this coverage.",
     "economicDifficulty": "normal",
     "economicDifficultyScaling": "Other difficulties change costs by multiplication or division according to Flavien; coefficients are not yet verified.",

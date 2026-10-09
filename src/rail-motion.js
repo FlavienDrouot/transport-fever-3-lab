@@ -3,11 +3,12 @@ const models=new WeakMap();
 const gradients=new WeakMap();
 export function withRailGradient(train,gradePercent=0) {
   validateGradient(gradePercent,9);
-  if(!gradePercent)return train;
+  if(!gradePercent&&(train.model.gradePercent??0)===0&&(train.model.effectiveMaxSpeedKmh==null||train.model.effectiveMaxSpeedKmh===train.maxSpeedKmh))return train;
   if(!gradients.has(train))gradients.set(train,new Map());
   const cache=gradients.get(train);
   if(!cache.has(gradePercent)){
-    const model=train.model.withGradient(gradePercent);
+    const model=train.model.gradePercent===gradePercent?train.model:train.model.withGradient(gradePercent);
+    if(cache.size>=8)cache.delete(cache.keys().next().value);
     cache.set(gradePercent,{...train,model,maxSpeedKmh:model.effectiveMaxSpeedKmh});
   }
   return cache.get(gradePercent);

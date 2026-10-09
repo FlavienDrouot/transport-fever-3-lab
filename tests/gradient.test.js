@@ -17,16 +17,28 @@ const raw={id:'test',name:'Test',year:2000,massTonnes:100,tractionKgf:20000,powe
 const train={...raw,model:createModel(raw,units)};
 const close=(a,b,tolerance=1e-7)=>assert.ok(Math.abs(a-b)<=tolerance*Math.max(1,Math.abs(b)),`${a} != ${b}`);
 
-// Independent RK4 integration in time, without the logarithmic model primitives.
+// Unoptimized step-by-step reference, independent of the model's compact table
+// and bulk constant-traction shortcut. Service termination is bounded to one step.
 function numericalMotion(vehicle,grade,{seconds=null,distanceKm=null}={}) {
-  const mass=vehicle.massTonnes*1000,force=vehicle.tractionKgf*9.80665,power=vehicle.powerCh*735.5;
-  const cap=vehicle.maxSpeedKmh/3.6,gravity=9.80665*Math.sin(Math.atan(grade/100));
-  const acceleration=v=>v>=cap?0:(Math.min(force,v>0?power/v:Infinity)/mass-gravity);
-  let time=0,speed=0,distance=0;const dt=.01,brake=2.5+gravity;
+  const mass=vehicle.massTonnes*1000,force=2*vehicle.tractionKgf*9.80665,power=vehicle.powerCh*735.5;
+  const gravity=9.80665*Math.sin(Math.atan(grade/100)),resistance=.02+gravity;
+  const terminal=resistance>0?power/mass/resistance:Infinity;
+  const cap=Math.min(vehicle.maxSpeedKmh/3.6,terminal*(1-1e-8));
+  let time=0,speed=0,distance=0;const dt=.2,brake=2.5+gravity;
   while(seconds!==null?time<seconds-1e-9:distance+speed*speed/(2*brake)<distanceKm*1000) {
     const h=seconds===null?dt:Math.min(dt,seconds-time);
-    const k1=acceleration(speed),v2=speed+h*k1/2,k2=acceleration(v2),v3=speed+h*k2/2,k3=acceleration(v3),v4=speed+h*k3,k4=acceleration(v4);
-    const next=Math.min(cap,speed+h*(k1+2*k2+2*k3+k4)/6);
+    const acceleration=Math.min(force,speed>0?power/speed:Infinity)/mass-resistance;
+    const next=Math.min(cap,speed+h*acceleration);
+    if(distanceKm!==null&&distance+h*(speed+next)/2+next*next/(2*brake)>=distanceKm*1000){
+      let low=0,high=h;
+      for(let k=0;k<50;k++){
+        const s=(low+high)/2,v=speed+(next-speed)*s/h;
+        const x=distance+speed*s+(next-speed)*s*s/(2*h);
+        if(x+v*v/(2*brake)<distanceKm*1000)low=s;else high=s;
+      }
+      const s=(low+high)/2,v=speed+(next-speed)*s/h;
+      return {travelSeconds:time+s+v/brake};
+    }
     distance+=h*(speed+next)/2;speed=next;time+=h;
     assert.ok(time<10000,'numerical reference must terminate');
   }
@@ -49,11 +61,11 @@ test('Signed grade follows independent force integration, caps and inverse timin
   assert.ok(createModel(raw,units,{gradePercent:5}).timeAt(1)>train.model.timeAt(1));
   assert.ok(createModel(raw,units,{gradePercent:-5}).timeAt(1)<train.model.timeAt(1));
   const uphill=createModel(raw,units,{gradePercent:9});
-  const terminal=raw.powerCh*735.5/(raw.massTonnes*1000*9.80665*Math.sin(Math.atan(.09)))*3.6;
+  const terminal=raw.powerCh*735.5/(raw.massTonnes*1000*(.02+9.80665*Math.sin(Math.atan(.09))))*3.6;
   close(uphill.stateAt(10000).speedKmh,terminal,2e-8);
 });
 
-test('Near-zero gradients converge to the exact flat model; invalid inputs are rejected',()=>{
+test('Near-zero gradients converge to the calibrated flat model; invalid inputs are rejected',()=>{
   for(const grade of [-1e-8,1e-8])for(const km of [.001,1,10])close(createModel(raw,units,{gradePercent:grade}).timeAt(km),train.model.timeAt(km));
   assert.deepEqual(createModel(raw,units,{gradePercent:0}).stateAt(300),train.model.stateAt(300));
   for(const grade of [NaN,Infinity,20.1])assert.throws(()=>createModel(raw,units,{gradePercent:grade}),RangeError);
@@ -65,7 +77,7 @@ test('Short and cruising service legs include gravity during acceleration and br
   for(const grade of [-9,5])for(const distanceKm of [.01,1,20]) {
     const vehicle=withRailGradient(train,grade),motion=travelBetweenStops(vehicle,{distanceKm});
     const reference=numericalMotion(raw,grade,{distanceKm});
-    assert.ok(Math.abs(motion.travelSeconds-reference.travelSeconds)<.025);
+    assert.ok(Math.abs(motion.travelSeconds-reference.travelSeconds)<1e-7);
     close(motion.brakingSeconds,motion.peakSpeedKmh/3.6/(2.5+gradientAcceleration(grade)));
   }
   assert.throws(()=>travelBetweenStops(withRailGradient(train,-9),{distanceKm:1,brakingDeceleration:.1}),RangeError);

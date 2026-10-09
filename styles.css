@@ -332,4 +332,4 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .chart .motion-transition-label text{fill:#27332e;font-size:11px}
 .motion-transition-label rect{fill:var(--surface,white)}
 [data-theme=dark] .chart .motion-transition-label text{fill:#dde8e1}
-[data-theme=dark] .motion-transition>circle,[data-theme=dark] .motion-transition>path{filter:brightness(1.7)}
+[data-theme=dark] .motion-transition-markers circle,[data-theme=dark] .motion-transition>path{filter:brightness(1.7)}

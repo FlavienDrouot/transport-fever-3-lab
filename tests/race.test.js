@@ -30,8 +30,8 @@ test('An empty selection has no limiting train; invalid distances are refused', 
 test('Suggested distance covers the last crossing of the current catalogue', async () => {
  const {rankingSettlesAt, suggestedDistanceLimit} = await import('../src/race.js');
  const stable = rankingSettlesAt(trains);
- assert.ok(Math.abs(stable - 7.4324513528586795) < 1e-7);
- assert.equal(suggestedDistanceLimit(trains), 10);
+ assert.ok(Math.abs(stable - 8.382481025772588) < 1e-7);
+ assert.equal(suggestedDistanceLimit(trains), 15);
  assert.equal(suggestedDistanceLimit([]), 5);
  const expected = ['fuxing','tgv','twindexx','metroliner'];
  for (const distance of [stable + .001, 10, 30, 1000]) {
