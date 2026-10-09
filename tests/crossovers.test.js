@@ -12,12 +12,15 @@ test('Three leaders change at their actual distances; non-leading crossings do n
   assert.equal(story.phases.at(-1).unbounded,true);
   for(const interval of story.intervals){const d=(interval.start+interval.end)/2;const expected=[...ts].sort((a,b)=>a.model.timeAt(d)-b.model.timeAt(d));expected.forEach((t,i)=>assert.equal(interval.ranks[t.id],i+1));}
 });
-test('The supplied Metroliner / Twindexx / Fuxing example has two leadership phases',async()=>{
+test('The supplied Metroliner / Twindexx / Fuxing example has three leadership phases after acceleration calibration',async()=>{
   const data=JSON.parse(await readFile(new URL('../data/trains.json',import.meta.url)));
   const ts=data.trains.filter(t=>['metroliner','twindexx','fuxing'].includes(t.id)).map(t=>({...t,model:createModel(t,data.source)}));
   const story=crossoverStory(ts);
-  assert.deepEqual(story.phases.map(p=>p.leaders),[['metroliner'],['fuxing']]);
-  assert.ok(Math.abs(story.phases[0].end-5.688589047861759)<1e-8);
+  assert.deepEqual(story.phases.map(p=>p.leaders),[['metroliner'],['twindexx'],['fuxing']]);
+  for(const phase of story.phases.slice(0,-1)){
+    const before=[...ts].sort((a,b)=>a.model.timeAt(phase.end-1e-4)-b.model.timeAt(phase.end-1e-4))[0];
+    assert.equal(before.id,phase.leaders[0]);
+  }
   for(const distance of [10,100,10000])assert.equal([...ts].sort((a,b)=>a.model.timeAt(distance)-b.model.timeAt(distance))[0].id,'fuxing');
 });
 test('Empty, single and tied trains have meaningful phases without spurious leader changes',()=>{

@@ -1,5 +1,6 @@
 export const GRAVITY = 9.80665;
 export const MOTION_UNITS = {kgfNewtons:9.80665,horsepowerWatts:735.5};
+export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02});
 
 export function validateGradient(percent,maximum=20) {
   if(!Number.isFinite(percent)||Math.abs(percent)>maximum)throw new RangeError(`Gradient must be between -${maximum}% and ${maximum}%`);
@@ -18,6 +19,14 @@ export function canClimb(vehicle,percent) {
   if(percent<=0)return true;
   const mass=vehicle.massTonnes*1000,force=vehicle.tractionKgf*MOTION_UNITS.kgfNewtons;
   return Number.isFinite(mass)&&mass>0&&Number.isFinite(force)&&force>mass*gradientAcceleration(percent);
+}
+
+/** Rail uses the observed effective traction and constant friction, also at 0%. */
+export function canClimbRail(vehicle,percent) {
+  validateGradient(percent);
+  const mass=vehicle.massTonnes*1000,force=vehicle.tractionKgf*MOTION_UNITS.kgfNewtons*RAIL_MOTION.tractionFactor;
+  return Number.isFinite(mass)&&mass>0&&Number.isFinite(force)&&
+    force>mass*(gradientAcceleration(percent)+RAIL_MOTION.frictionAcceleration);
 }
 
 /** Road retains its steady-speed assumption, with an uphill traction/power limit. */

@@ -1,5 +1,5 @@
 import {sizeFleet} from './service-fleet.js';
-import {canClimb,gradientAcceleration,validateGradient} from './gradient.js';
+import {canClimbRail,gradientAcceleration,validateGradient} from './gradient.js';
 import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
 // Default calendar: four simulation seconds per day, 365 days per year.
 export const GAME_YEAR_SECONDS = 4 * 365;
@@ -11,7 +11,7 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
   for (const [name,value] of Object.entries({distanceKm,brakingDeceleration})) {
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
   }
-  if(train.model.canStart===false)throw new RangeError('Vehicle cannot start on this gradient');
+  if(train.model.canStart===false)throw new RangeError('Vehicle cannot start on this route');
   brakingDeceleration+=gradientAcceleration(train.model.gradePercent??0);
   if(brakingDeceleration<=0)throw new RangeError('Vehicle cannot stop on this gradient');
   let cache=motionCache.get(train.model);
@@ -121,7 +121,8 @@ function analyseSingleService(train, options, fleetCount = null) {
 export function serviceEligible(train, {platformLengthMetres = null,gradePercent = 0} = {}) {
   if (platformLengthMetres !== null && (!Number.isFinite(platformLengthMetres) || platformLengthMetres <= 0)) throw new RangeError('Platform length must be positive or null');
   validateGradient(gradePercent,9);
-  if(gradePercent&&!canClimb(train,Math.abs(gradePercent)))return false;
+  if(gradePercent&&!canClimbRail(train,Math.abs(gradePercent)))return false;
+  if(!gradePercent&&train.model?.canStart===false)return false;
   return platformLengthMetres === null || (Number.isFinite(train.lengthMetres) && train.lengthMetres <= platformLengthMetres + 1e-9);
 }
 

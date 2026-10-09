@@ -1,6 +1,6 @@
-import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,speedOrdinateMaximum} from './motion-chart.js';
+import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum} from './motion-chart.js';
 import {mountGradientControl} from './gradient-control.js';
-import {canClimb} from './gradient.js';
+import {canClimbRail} from './gradient.js';
 import {createDataLoader} from './data-loader.js';
 import {mountControlHelp} from './control-help.js';
 import {validateNumberInputs,syncNumberInput,mountDistanceControl,mountYearControl} from './numeric-controls.js';
@@ -158,7 +158,7 @@ function renderChart(kind, width) {
   el('chart-heading').textContent = spec.title;
   const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
-  el('chart-help').textContent = view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited trains approach an equilibrium speed. This view covers at least 99.9% of that limit; race and service timings retain full precision.':spec.help;
+  el('chart-help').textContent = view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited trains approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
   el('chart-help').textContent+=' Hover or focus a train to see transitions and coordinates.';
   if(kind==='speed')document.querySelector('#race-links a[href="#speed-explorer"]').textContent=view==='speed'?'Speed / time':'Speed / distance';
   el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
@@ -406,7 +406,7 @@ function renderLineAnalysis() {
       `${t.formationLoadingUnloadingSpeedMultiplier!=null?`${fmt(t.formationLoadingUnloadingSpeedMultiplier*r.unitsPerTrain)} total`:`${r.carCount} × ${fmt(t.loadingUnloadingSpeedMultiplier)}`} → ${fmt(r.rate,2)}`,railGradePercent?`${formatTime(r.outboundTravelSeconds)} / ${formatTime(r.returnTravelSeconds)}`:formatTime(r.travelSeconds),formatTime(r.stationSeconds),formatTime(r.roundTripSeconds)
     ];
     return `<tr data-train="${escape(t.id)}" class="${t.id===highlighted?'is-highlighted':''}"><td>${best?rank:'—'}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td>${cells.map((c,i)=>`<td${i===0?` title="${score===null?'':score.toFixed(6)}"`:""}${i>=4?' class="service-detail"':''}>${c}</td>`).join('')}</tr>`;
-  }).join('')+selection.excluded.map(t=>`<tr><td>—</td><td>${escape(t.name)}</td><td class="service-exclusion" colspan="${$('show-service-details').checked?headings.length-2:4}">Excluded: ${railGradePercent&&!canClimb(t,Math.abs(railGradePercent))?'cannot climb this gradient.':`${fmt(t.lengthMetres,1)} m exceeds the ${fmt(platformLengthMetres,1)} m length limit.`}</td></tr>`).join('');
+  }).join('')+selection.excluded.map(t=>`<tr><td>—</td><td>${escape(t.name)}</td><td class="service-exclusion" colspan="${$('show-service-details').checked?headings.length-2:4}">Excluded: ${!canClimbRail(t,Math.abs(railGradePercent))?'cannot overcome resistance on this route.':`${fmt(t.lengthMetres,1)} m exceeds the ${fmt(platformLengthMetres,1)} m length limit.`}</td></tr>`).join('');
   updateTablePreview(document,'line-readout');
   return selection;
 }
@@ -511,12 +511,12 @@ function render() {
   renderCrossoverCurves();
   const ranking=ts.map(t=>({t,time:t.model.timeAt(routeDistance)})).sort((a,b)=>a.time-b.time);
   $('race-summary').textContent=ranking.length?`${ranking[0].t.name} arrives first at ${fmt(routeDistance)} km in ${formatTime(ranking[0].time)}${ranking.length>1?`; ${formatTime(ranking[1].time-ranking[0].time)} ahead of ${ranking[1].t.name}`:''}. Gradient A→B: ${fmt(railGradePercent,1)}% (theoretical); braking is excluded.`:'Select at least one train to compare travel times.';
-  const blocked=trains.filter(t=>selected.has(t.id)&&t.year<=catalogueYear&&railGradePercent>0&&!canClimb(t,railGradePercent));
-  if(blocked.length)$('race-summary').textContent+=` Cannot start on this gradient: ${blocked.map(t=>t.name).join(', ')}.`;
+  const blocked=trains.filter(t=>selected.has(t.id)&&t.year<=catalogueYear&&!canClimbRail(t,railGradePercent));
+  if(blocked.length)$('race-summary').textContent+=` Cannot overcome resistance on this route: ${blocked.map(t=>t.name).join(', ')}.`;
   $('ranking-caption').textContent=`Theoretical arrival ranking at ${fmt(routeDistance)} km`;
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
-  $('transitions').innerHTML=ts.map(t=>`<tr><td>${escape(t.name)}</td><td>${formatTime(t.model.tractionEndSeconds)}</td><td>${fmt(t.model.stateAt(t.model.tractionEndSeconds).distanceKm*1000,0)}</td><td>${formatTime(t.model.speedCapSeconds)}</td><td>${fmt(t.model.speedCapKm,2)}</td></tr>`).join('');
+  $('transitions').innerHTML=renderModelTransitions(ts);
 }
 function download(content,type,filename) {
   const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('status').textContent=`Export ready: ${filename}`;
