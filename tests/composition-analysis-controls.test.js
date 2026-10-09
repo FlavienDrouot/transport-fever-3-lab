@@ -64,3 +64,17 @@ test('Changing utilization with a profile preserves segment distance and saved u
   ui.render();
   assert.equal(ui.changes.length,1,'refresh remains read-only');
 });
+
+
+test('A simple shared segment remains editable in draft analysis, including a non-preset speed',()=>{
+  const routeProfile=[{distanceKm:.037,gradePercent:.4,speedLimitKmh:90}];
+  const ui=fixture({...settings,infrastructureSpeedKmh:90,routeProfile,routeMode:'simple'});
+  ui.render();
+  for(const id of ['composition-distance','composition-gradient-input','composition-speed-input'])assert.equal(ui.get(id).disabled,false);
+  assert.equal(ui.get('composition-route-distance-control').hidden,false);
+  assert.equal(Number(ui.get('composition-speed-input').value),90);
+  ui.get('composition-distance').value='3.141';ui.get('composition-distance').dispatch('change');
+  assert.equal(ui.settings().distanceKm,3.141);
+  ui.get('composition-speed-input').value='75';ui.get('composition-speed-input').dispatch('input');
+  assert.equal(ui.settings().infrastructureSpeedKmh,75);
+});

@@ -14,3 +14,12 @@ export function createRouteSelection(initial) {
     updateCustom(parts){custom=validateRouteProfile(parts);mode='custom';}
   };
 }
+
+/** The same route switch can be mounted in comparisons and draft analysis. */
+export function mountRouteChoice(root,{value,onChange}) {
+  root.innerHTML=`<legend class="sr-only">Route selection</legend>${[['simple','Simple'],['custom','Custom route']].map(([mode,label])=>`<label><input type="radio" name="${root.id}" value="${mode}"><span>${label}</span></label>`).join('')}`;
+  const setValue=mode=>{root.querySelector(`input[value="${mode}"]`).checked=true;};
+  setValue(value);
+  root.addEventListener('change',()=>onChange(root.querySelector('input:checked').value));
+  return {setValue};
+}

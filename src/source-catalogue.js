@@ -1,3 +1,4 @@
+import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {validateNumberInputs} from './numeric-controls.js';
 import {isCampaignResource} from './catalogue-reconciliation.js';
@@ -28,7 +29,7 @@ export function sourceRows(vehicles) {
       ['Empty mass (t)',fmt(d.massTonnes??(v.emptyMass.value==null?null:v.emptyMass.value/1000))],
       ['Power (kW)',fmt(power)],['Length (m)',fmt(d.lengthMetres??v.length.value)],['Capacity',fmt(capacity)],
       ['Purchase ($)',fmt(d.purchasePrice??cost(v.purchasePrice,v.derivedCosts?.purchase_price))],
-      ['Maintenance ($/year)',fmt(d.annualMaintenance??cost(v.annualMaintenance,v.derivedCosts?.annual_maintenance))],
+      [`${UI_TERMS.runningCosts} ($/year)`,fmt(d.annualMaintenance??cost(v.annualMaintenance,v.derivedCosts?.annual_maintenance))],
     ];
     const name=escape(sourceName(v));
     const mobile=`<details class="source-mobile-details"><summary>${name}<small>${escape(fields[2][1])} · ${escape(fields[3][1])} km/h · capacity ${escape(fields[7][1])}</small></summary><dl>${fields.map(([label,value])=>`<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl></details>`;

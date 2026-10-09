@@ -26,7 +26,7 @@ export function mountServiceControls(document,domain){
   </fieldset>`;
   document.getElementById(ids.root).innerHTML=`<details class="panel-group" open><summary id="${ids.heading}">Service</summary><div class="panel-group-body">
     <div class="utilization-control"><label for="${ids.fill}" id="${ids.label}">${UI_TERMS.utilization}</label>${info('Share of capacity used on each loaded leg.',road?'road-utilization-help':'utilization-help').replace('class="control-info"',`id="${road?'road-utilization-info':'utilization-info'}" class="control-info"`)}<output id="${ids.output}" for="${ids.fill}">100%</output><input id="${ids.fill}" type="range" min="1" max="100" step="1" value="100"><p id="${road?'road-utilization-help':'utilization-help'}" class="sr-only">Share of capacity used on each loaded leg.</p></div>
-    <details id="${ids.handling}" class="panel-group" hidden><summary>Freight handling</summary><div class="panel-group-body">
+    <details id="${ids.handling}" class="panel-group" hidden><summary>Freight handling &amp; facilities</summary><div class="panel-group-body">
       ${info('Category handling factors and fixed terminal pauses are included automatically.',ids.help)}<span id="${ids.help}" class="sr-only">Category handling factors and fixed terminal pauses are included automatically.</span>
       <div id="${ids.return}" class="target-control handling-return">${check(ids.loaded,'Loaded return')}${info('Off: deliver at B and return empty. On: carry equal loads in both directions.')}</div>
       <div id="${ids.facilities}" class="road-stop-grid">${stop('A',ids.terminalA,ids.warehouseA)}${stop('B',ids.terminalB,ids.warehouseB)}</div>

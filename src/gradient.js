@@ -37,7 +37,7 @@ export function canClimbRail(vehicle,percent) {
     force>mass*(gradientAcceleration(percent)*RAIL_MOTION.gravityFactor+RAIL_MOTION.frictionAcceleration);
 }
 
-/** Road retains its steady-speed assumption, with an uphill traction/power limit. */
+/** Cruise-only reference for legacy callers; Road comparisons opt into incremental motion. */
 export function roadGradientSpeeds(vehicle,percent,speedLimit=null) {
   validateGradient(percent);
   const maximum=Math.min(vehicle.maxSpeedKmh,speedLimit??Infinity);

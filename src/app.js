@@ -4,7 +4,7 @@ import {UI_TERMS} from './ui-terms.js';
 import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum,motionCurveEnd} from './motion-chart.js';
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profile-control.js';
-import {createRouteSelection} from './route-selection.js';
+import {createRouteSelection,mountRouteChoice} from './route-selection.js';
 import {canClimbRail} from './gradient.js';
 import {createDataLoader} from './data-loader.js';
 import {mountControlHelp} from './control-help.js';
@@ -102,7 +102,7 @@ function syncRouteSelection({restore=false}={}){
 }
 function updateSimpleRoute(part){if(routeSelection.mode!=='simple')return;routeSelection.updateSimple(part);syncRouteSelection();}
 function serviceTargets(){return {gradePercent:railGradePercent,routeProfile:railRouteProfile,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh:railRouteProfile?null:infrastructureSpeedKmh,platformLengthMetres,...(comparisonCategory==='freight'?{freight:true,demandPerYear:desiredFlow,allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})};}
-function compositionSettings(){return {distanceKm:routeDistance,fillRatio:lineFill,gradePercent:railGradePercent,routeProfile:railRouteProfile,desiredFlow,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...railFreight};}
+function compositionSettings(){return {distanceKm:routeDistance,fillRatio:lineFill,gradePercent:railGradePercent,routeProfile:railRouteProfile,routeMode:routeSelection.mode,desiredFlow,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...railFreight};}
 function updateCompositionSettings(settings){
   lineFill=settings.fillRatio;railGradePercent=settings.gradePercent;
   desiredFlow=settings.desiredFlow;maxHeadwaySeconds=settings.maxHeadwaySeconds;frequencyMode=settings.frequencyMode;
@@ -126,7 +126,8 @@ function updateCompositionSettings(settings){
   }
   $('allow-multiple-units').disabled=desiredFlow===null||maxHeadwaySeconds===null||comparisonCategory==='freight';
   allowMultipleUnits=!$('allow-multiple-units').disabled&&$('allow-multiple-units').checked;
-  crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();
+  if(routeSelection.mode==='simple'){routeSelection.updateSimple({distanceKm:settings.distanceKm,gradePercent:settings.gradePercent,speedLimitKmh:settings.infrastructureSpeedKmh});syncRouteSelection({restore:true});}
+  else {crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();}
 }
 function economicSelectionOptions(){return {freight:comparisonCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres,gradePercent:railGradePercent,routeProfile:railRouteProfile};}
 function speedUsesProfile(){return railRouteProfile?.some(part=>part.gradePercent!==railRouteProfile[0].gradePercent||part.speedLimitKmh!==railRouteProfile[0].speedLimitKmh);}
@@ -228,9 +229,12 @@ function renderChart(kind, width) {
   el('chart-heading').textContent = spec.title;
   const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
-  el('chart-help').textContent = speedUsesProfile()&&view.startsWith('speed')?(navigation.domain==='road'?'Speed responds to segment grades; lower limits apply instantly. Road braking is omitted.':'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.'):view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited vehicles approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
+  el('chart-help').textContent = speedUsesProfile()&&view.startsWith('speed')?(navigation.domain==='road'?'Speed follows the route to B; lower limits apply instantly. Road braking is omitted.':'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.'):view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited vehicles approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
+  if(view.startsWith('speed')&&!speedUsesProfile())el('chart-help').textContent+=' This acceleration window is independent of route length.';
   el('chart-help').textContent+=' Hover or focus a vehicle to see transitions and coordinates.';
-  el('empty').hidden = !!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
+  const missingFreight=navigation.domain==='rail'&&comparisonCategory==='freight'&&!trainCandidates(Infinity).length;
+  el('empty').innerHTML=missingFreight?'No freight train yet. <a href="#configurator" data-economic-configure>Compose your freight train ↗</a>':'Select at least one vehicle to display the curves.';
+  el('empty').hidden = !!ts.length; el('chart').hidden=!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
   const ymax = view.startsWith('speed') ? speedOrdinateMaximum(ts,horizon,view) : view === 'distance' ? routeDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
@@ -426,7 +430,7 @@ function renderEconomicControls() {
   $('service-targets-description').previousElementSibling.title=freight?'Optional: size a fleet for the total delivered cargo per year, or an interval between trains.':'Optional: choose a passenger rate per direction or interval target to size a fleet.';
   $('economic-metric-help').textContent=`Running cost per ${unit} — lower is better.`;
   $('economic-cost-formula').textContent=freight?'Cost per capacity = fleet running costs / capacity transported per game year. Empty return trips still incur running costs.':'Cost per capacity = fleet running costs / capacity transported per game year. Each boarding counts once: A→B and B→A are separate journeys.';
-  $('economic-calendar-help').textContent=freight?'Calendar: 4 real seconds per game day; 365 days = 1,460 real seconds per game year. A target rate counts all cargo delivered, including both directions when loaded return is enabled.':'Calendar: 4 real seconds per game day; 365 days = 1,460 real seconds per game year. Per-direction throughput is half the total A–B–A throughput.';
+  $('economic-calendar-help').textContent=freight?'Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. A target rate counts all cargo delivered, including both directions when loaded return is enabled.':'Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. Per-direction throughput is half the total A–B–A throughput.';
   $('economic-passenger-revenue').hidden=freight;
   $('economic-passenger-assumptions').hidden=freight;
   $('economic-freight-assumptions').hidden=!freight;
@@ -680,7 +684,7 @@ async function ensureConfigurator(){
       const [tram,components,thumbnails]=await Promise.all([loadData('trams'),Promise.all(componentFiles.map(loadData)),loadData('vehicle-thumbnails').catch(error=>{console.error(error);return null;})]);
       tramDataset=tram;
       let compositionStorage;try{compositionStorage=window.localStorage;}catch{}
-      compositionAnalysis=mountCompositionAnalysis(document,{getSettings:compositionSettings,onSettingsChange:updateCompositionSettings});
+      compositionAnalysis=mountCompositionAnalysis(document,{getSettings:compositionSettings,onSettingsChange:updateCompositionSettings,onRouteModeChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});
       consistEditor=mountConsistEditor(document,{catalogue:[...tramComponents({locomotives:components[0].locomotives,passengerWagons:components[1].wagons,freightWagons:components[2].wagons,passengerTrams:tramDataset.trams,freightTrams:tramDataset.freightTrams}),...railComponents({locomotives:components[3].locomotives,passengerWagons:components[4].wagons,freightWagons:components[5].wagons,multipleUnits:dataset.trains})],units:dataset.source,storage:compositionStorage,thumbnails,onPreview:preview=>{liveComposition=preview;$('composition-compare').disabled=!preview;compositionAnalysis.setDraft(preview);},onChange:change=>{
         if(change.item?.carrier==='tram'){
           setComparisonCategory(change.item.category);truckCargo=change.item.freightSpecialization==='general'?'all':change.item.freightSpecialization??'all';includeTrams=true;truckYear=Math.max(truckYear,change.item.year);
@@ -838,7 +842,7 @@ async function init() {
     visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),
     onChange:state=>{routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
   });
-  $('comparison-route-choice').addEventListener('change',event=>{routeSelection.select(event.target.value);syncRouteSelection({restore:true});});
+  mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});
   $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');syncRouteSelection({restore:true});});
   syncRouteSelection();
   $('route-speed-input').addEventListener('input',()=>{if(validateRace())updateSimpleRoute({speedLimitKmh:$('route-speed-input').valueAsNumber});});
@@ -867,7 +871,7 @@ async function init() {
     if(event.target.closest('#economic-empty-select')){selectResults(selected,economicCandidates(trains,economicSelectionOptions()),true);renderCatalogue();render();}
   });
   document.addEventListener('click',async event=>{
-    if(event.target.closest('[data-economic-configure]')&&!$('economics').hidden){
+    if(event.target.closest('[data-economic-configure]')){
       const context={carrier:'rail',category:comparisonCategory,cargo:economicCargo,year:catalogueYear};
       await ensureConfigurator();
       consistEditor?.openContext(context);
@@ -884,7 +888,8 @@ async function init() {
     const prior=highlighted;highlighted=undefined;renderChart(kind,1400);const svg=el('chart').querySelector('svg').cloneNode(true);svg.querySelectorAll('.curve-hit').forEach(path=>path.remove());highlighted=prior;render();
     const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent='text{font-family:system-ui,sans-serif;font-size:12px;fill:#56665d}.end-label{font-weight:600}';svg.prepend(style);
     // Wrap the legend so exports remain usable with a large selection.
-    const lines=[`Theoretical model · Gradient A→B: ${fmt(railGradePercent,1)}% · Route distance: ${fmtKm(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active(view).map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
+    const routeLabel=speedUsesProfile()?`${railRouteProfile.length} segments · varying grades and limits`:`Gradient A→B: ${fmt(railRouteProfile[0].gradePercent,1)}%`;
+    const lines=[`Modelled motion · ${routeLabel} · Route distance: ${fmtKm(routeDistance)} km · Horizontal axis: ${views[view].x} · Up to ${fmt(horizon,2)} ${views[view].unit}`,...active(view).map(t=>`${t.name} (${t.maxSpeedKmh} km/h)`)]
     const chartHeight=Number(svg.getAttribute('viewBox').split(' ')[3]);
     lines.forEach((line,i)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',65);text.setAttribute('y',chartHeight+30+i*18);text.textContent=line;svg.append(text);});
     svg.setAttribute('viewBox',`0 0 1400 ${chartHeight+40+lines.length*18}`);
@@ -903,6 +908,7 @@ async function init() {
   $('experiment-retry').addEventListener('click',()=>void ensureData());
   $('quick-races').addEventListener('click',event=>{
     const button=event.target.closest('[data-duel]');if(!button)return;
+    setComparisonCategory('passengers');
     selected=new Set(['avelia-liberty',button.dataset.duel]);highlighted=undefined;
     catalogueYear=Math.max(catalogueYear,...trains.filter(t=>selected.has(t.id)).map(t=>t.year));
     trainSelector.clearSearch();renderCatalogue();render();

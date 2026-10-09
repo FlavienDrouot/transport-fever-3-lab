@@ -15,7 +15,7 @@ export const ROAD_OPERATION_DELAY_SECONDS = 2; // Before each active transfer op
 
 const fmt = formatNumber;
 
-/** Directional mean speeds; opt into provisional acceleration and terminal braking. */
+/** Directional mean speeds; opt into provisional acceleration with Road braking omitted. */
 export function roadRouteSpeeds(vehicle,{roadSpeedLimit=null,gradePercent=0,routeProfile=null,motion=false,distanceKm=routeProfile?.reduce((n,p)=>n+p.distanceKm,0)??1}={}) {
   if(motion){
     const travel=roadRoundTripMotion(vehicle,{distanceKm,roadSpeedLimit,gradePercent,routeProfile});
@@ -106,7 +106,7 @@ function analyseRoadService(trucks, {distanceKm, fillRatio = 1, loadedReturn = f
     if (!Number.isFinite(multiplier)||multiplier<=0) throw new RangeError('Handling multiplier must be positive and finite');
     const cargoPerLeg=row.truck.cargoCapacity*fillRatio;
     const deliveredPerCycle=cargoPerLeg*(loadedReturn?2:1);
-    // Mean leg speeds already include the optional acceleration/braking model.
+    // Mean leg speeds include provisional acceleration when enabled; Road braking is omitted.
     // Handling remains independent of travel; profiles scale to this distance.
     const travelSeconds=distanceKm/row.effectiveSpeedKmh*3600;
     const outboundTravelSeconds=distanceKm/row.outboundSpeedKmh*3600,returnTravelSeconds=distanceKm/row.returnSpeedKmh*3600;
@@ -158,7 +158,7 @@ export function renderTruckService(document,trucks,options) {
   const unit=UI_TERMS.capacityUnit;
   document.getElementById('truck-service-readout').closest('table').classList.toggle('has-targets',options.demandPerYear!=null||options.maxHeadwaySeconds!=null);
   renderServiceSummary(document.getElementById('truck-service-summary'),{names:rows.filter(row=>row.rank===1).map(row=>row.truck.name),cost:rows[0]?.costPerCargo,unit,emptyMessage:trucks.length?`No selected vehicle can complete this ${profile?'route':'gradient'} with the available mass, power and traction. Reduce the gradient or choose a stronger vehicle.`:'No vehicles selected for this category and year. Choose vehicles or adjust the filters.'});
-  document.getElementById('road-service-caption').textContent=`A–B–A · ${fmt(options.distanceKm,profile?3:1)} km per leg${profile?` · ${profile.length} segment${profile.length===1?'':'s'} (${options.motion?'provisional acceleration and braking':'theoretical steady speeds'})`:options.gradePercent?` · ${fmt(options.gradePercent,1)}% A→B (theoretical)`:''} · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'}${!passenger&&rows.length?` · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}`:''}. ${options.motion?'Road motion uses provisional rail-based coefficients; empty mass in both directions. ':''}Travel and handling times in m:ss; handling totals cover the entire round trip.`;
+  document.getElementById('road-service-caption').textContent=`A–B–A · ${fmt(options.distanceKm,profile?3:1)} km per leg${profile?` · ${profile.length} segment${profile.length===1?'':'s'} (${options.motion?'provisional acceleration; braking omitted':'theoretical steady speeds'})`:options.gradePercent?` · ${fmt(options.gradePercent,1)}% A→B (theoretical)`:''} · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'}${!passenger&&rows.length?` · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}`:''}. ${options.motion?'Road motion uses provisional rail-based coefficients; empty mass in both directions. ':''}Travel and handling times in m:ss; handling totals cover the entire round trip.`;
   if(document.getElementById('road-gradient-exclusions'))document.getElementById('road-gradient-exclusions').textContent=`Excluded on this ${profile?'route':'gradient'} (cannot climb or missing mechanical data): `+trucks.filter(t=>!rows.some(r=>r.truck.id===t.id)).map(t=>t.name).join(', ');
   if(document.getElementById('road-gradient-exclusions'))document.getElementById('road-gradient-exclusions').hidden=rows.length===trucks.length;
   if(document.getElementById('road-travel-column'))document.getElementById('road-travel-column').textContent=directional?'Travel A→B / B→A':'Travel / leg';
