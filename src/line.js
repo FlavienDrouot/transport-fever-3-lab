@@ -13,7 +13,7 @@ export function travelBetweenStops(train, {distanceKm, brakingDeceleration = 2.5
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
   }
   if(train.model.canStart===false)throw new RangeError('Vehicle cannot start on this route');
-  brakingDeceleration+=gradientAcceleration(train.model.gradePercent??0);
+  brakingDeceleration+=gradientAcceleration(train.model.gradePercent??0)*(train.model.motionConfig?.gravityFactor??1);
   if(brakingDeceleration<=0)throw new RangeError('Vehicle cannot stop on this gradient');
   let cache=motionCache.get(train.model);
   if (!cache) {cache=new Map();motionCache.set(train.model,cache);}

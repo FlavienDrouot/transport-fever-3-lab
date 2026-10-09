@@ -59,10 +59,10 @@ test('corrected MAN 19.304 observations support the provisional flat-road accele
  assert.ok(model.speedCapSeconds<=10);
 });
 
-test('MAN stopping-time bracket sets road braking independently for uniform and segmented services',()=>{
+test('MAN natural-stop repeat sets road braking independently for uniform and segmented services',()=>{
  const measuredSpeed=80/3.6;
  const ticks=measuredSpeed/ROAD_MOTION.brakingDeceleration/ROAD_MOTION.stepSeconds;
- assert.ok(ticks>=11&&ticks<=12);
+ assert.ok(Math.abs(ticks-18)<.1);
  const short=roadRoundTripMotion(man,{distanceKm:.1});
  const profile=roadRoundTripMotion(man,{distanceKm:.1,routeProfile:[{distanceKm:.05,gradePercent:0,speedLimitKmh:80},{distanceKm:.05,gradePercent:0,speedLimitKmh:79.999}]});
  // The tiny cap difference selects the numerical profile path without materially
@@ -75,4 +75,20 @@ test('MAN stopping-time bracket sets road braking independently for uniform and 
  const previousRoadStop=travelBetweenStops({...man,model:oldRoad},{distanceKm:.1});
  close(railStop.travelSeconds,previousRoadStop.travelSeconds);
  assert.ok(short.travelSeconds<railStop.travelSeconds);
+});
+
+test('displayed 10% MAN run fits road grade scaling in uniform and segmented motion; rail stays unscaled',()=>{
+ const road=withRoadModel(man),model=road.model.withGradient(10);
+ const checkpoints=[[1,15],[2,29],[5,51],[10,73],[12.4,80]];
+ for(const [seconds,speed] of checkpoints)assert.ok(Math.abs(model.stateAt(seconds).speedKmh-speed)<.5);
+ close(model.speedCapSeconds,12.4);
+ const route=[{distanceKm:.1,gradePercent:10,speedLimitKmh:80},{distanceKm:.9,gradePercent:10,speedLimitKmh:79.999}];
+ const profile=withRailProfile(road,route).model;
+ for(const [seconds] of checkpoints)assert.ok(Math.abs(profile.stateAt(seconds).speedKmh-model.stateAt(seconds).speedKmh)<.05);
+ const uniform=roadRoundTripMotion(man,{distanceKm:1,gradePercent:10});
+ const segmented=roadRoundTripMotion(man,{distanceKm:1,routeProfile:route});
+ assert.ok(Math.abs(uniform.outboundTravelSeconds-segmented.outboundTravelSeconds)<.02);
+ assert.ok(Math.abs(uniform.returnTravelSeconds-segmented.returnTravelSeconds)<.02);
+ const rail=createModel(man,MOTION_UNITS,{gradePercent:10});
+ assert.ok(Math.abs(rail.stateAt(12.4).speedKmh-65.66114199040541)<1e-9);
 });

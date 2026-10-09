@@ -39,7 +39,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   const vehicleCap=train.maxSpeedKmh/3.6;
   if(![mass,force,power,vehicleCap].every(n=>Number.isFinite(n)&&n>0))throw new RangeError('Invalid train motion parameters');
   let end=0;
-  const sections=route.map(part=>{const start=end;end+=part.distanceKm*1000;return {start,end,gradePercent:part.gradePercent,cap:Math.min(vehicleCap,part.speedLimitKmh/3.6),gravity:gradientAcceleration(part.gradePercent)};});
+  const sections=route.map(part=>{const start=end;end+=part.distanceKm*1000;return {start,end,gradePercent:part.gradePercent,cap:Math.min(vehicleCap,part.speedLimitKmh/3.6),gravity:gradientAcceleration(part.gradePercent)*(motionConfig.gravityFactor??1)};});
   const routeMetres=end,dt=motionConfig.stepSeconds;
   const speeds=[0],distances=[0],times=[0],events=[];
   let position=0,speed=0,time=0,index=0,stalled=false,brakingLast=false;

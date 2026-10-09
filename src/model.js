@@ -4,11 +4,11 @@ import {gradientAcceleration,validateGradient,RAIL_MOTION} from './gradient.js';
 export function createModel(train,units,{gradePercent=0,motion=RAIL_MOTION}={}) {
   validateGradient(gradePercent);
   motion=Object.freeze({...motion});
-  if(!Number.isFinite(motion.stepSeconds)||motion.stepSeconds<=0||!Number.isFinite(motion.tractionFactor)||motion.tractionFactor<=0||!Number.isFinite(motion.frictionAcceleration)||motion.frictionAcceleration<0)throw new RangeError('Invalid motion coefficients');
+  if(!Number.isFinite(motion.stepSeconds)||motion.stepSeconds<=0||!Number.isFinite(motion.tractionFactor)||motion.tractionFactor<=0||!Number.isFinite(motion.frictionAcceleration)||motion.frictionAcceleration<0||!Number.isFinite(motion.gravityFactor??1)||(motion.gravityFactor??1)<0)throw new RangeError('Invalid motion coefficients');
   const m=train.massTonnes*1000,f=train.tractionKgf*units.kgfNewtons*motion.tractionFactor;
   const p=train.powerCh*units.horsepowerWatts,nominal=train.maxSpeedKmh/3.6;
   if(![m,f,p,nominal].every(n=>Number.isFinite(n)&&n>0))throw new RangeError('Invalid physical parameters');
-  const h=motion.stepSeconds,b=motion.frictionAcceleration+gradientAcceleration(gradePercent);
+  const h=motion.stepSeconds,b=motion.frictionAcceleration+gradientAcceleration(gradePercent)*(motion.gravityFactor??1);
   const a=f/m-b,q=p/m;
   const valid=n=>{if(!Number.isFinite(n)||n<0)throw new RangeError('Invalid time or distance');};
   const common={gradePercent,motionConfig:motion,withGradient:grade=>createModel(train,units,{gradePercent:grade,motion}),

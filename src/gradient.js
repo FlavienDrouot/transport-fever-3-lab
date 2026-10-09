@@ -2,9 +2,10 @@ export const GRAVITY = 9.80665;
 export const MOTION_UNITS = {kgfNewtons:9.80665,horsepowerWatts:735.5};
 export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,frictionAcceleration:.02});
 
-// Road acceleration initially follows rail; MAN braking supports ~10 m/s².
-// Extending this braking value to other road vehicles remains provisional.
-export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingDeceleration:10});
+// Road coefficients from initial MAN checks: flat acceleration follows rail,
+// natural stopping supports ~6.2 m/s², and displayed 10% grade suggests ~0.4 gravity.
+// Other grades and vehicles, including grade effects on braking, remain provisional.
+export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingDeceleration:6.2,gravityFactor:.4});
 
 export function validateGradient(percent,maximum=20) {
   if(!Number.isFinite(percent)||Math.abs(percent)>maximum)throw new RangeError(`Gradient must be between -${maximum}% and ${maximum}%`);
