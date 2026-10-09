@@ -140,12 +140,10 @@
         <div class="panel-top"><h2 id="profile-heading">Rail route profile</h2><p class="chart-help">Shape one A→B route for both Race and Economics.</p></div>
         <p class="profile-intro">Use a single grade and speed limit, or build an ordered profile of gradients and track limits. A→B starts at A; return services travel the same segments in reverse, with the grades reversed.</p>
         <fieldset id="profile-horizontal-scale" class="scale-toggle profile-scale"><legend>Horizontal scale</legend><label><input type="radio" name="profile-horizontal-scale" value="equal" checked><span>Equal segments</span></label><label><input type="radio" name="profile-horizontal-scale" value="linear"><span>Distance · linear</span></label></fieldset>
-        <div id="route-profile-visual" class="profile-visual"></div>
-        <p id="profile-scale-note" class="chart-help">Every segment has equal visual width; elevation is exaggerated. Select a segment in the diagram or the list to edit it.</p>
-      </section>
-      <section id="profile-editor-section" class="chart-panel" aria-labelledby="profile-editor-heading">
-        <div class="panel-top"><h2 id="profile-editor-heading">Build the route</h2><p class="chart-help">Changes apply to both rail analyses immediately.</p></div>
-        <div id="route-profile-control"></div>
+        <div class="profile-workspace">
+          <div class="profile-preview"><div id="route-profile-visual" class="profile-visual"></div><p id="profile-scale-note" class="chart-help">Every segment has equal visual width; elevation is exaggerated. Select a segment in the diagram to edit it.</p></div>
+          <section id="profile-editor-section" class="profile-inspector-panel" aria-labelledby="profile-editor-heading"><h2 id="profile-editor-heading">Build the route</h2><p class="chart-help">Choose a segment in the preview, then edit it here. Changes apply to both rail analyses immediately.</p><div id="route-profile-control"></div></section>
+        </div>
         <div class="profile-destinations"><a href="#race">View Race ↗</a><a href="#economics">View Economics ↗</a></div>
       </section>
     </div>

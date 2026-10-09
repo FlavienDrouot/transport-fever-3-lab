@@ -38,7 +38,7 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
     visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex});
-    scaleNote.textContent=scale==='linear'?'Distance from A is linear; short segments may be too narrow for labels. Elevation is exaggerated. Select a segment in the diagram or the list to edit it.':'Every segment has equal visual width; elevation is exaggerated. Select a segment in the diagram or the list to edit it.';
+    scaleNote.textContent=scale==='linear'?'Distance from A is linear; short segments may be too narrow to select in the preview. Use the numbered buttons if needed. Elevation is exaggerated.':'Every segment has equal visual width; elevation is exaggerated. Select a segment in the preview to edit it.';
   };
   const syncMode=()=>{
     for(const control of modeControls)control.querySelector(`input[value="${active?'profile':'uniform'}"]`).checked=true;
@@ -53,9 +53,14 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
       <div class="profile-field"><label for="profile-speed-${i}">Speed limit <span>km/h</span></label><input id="profile-speed-${i}" data-index="${i}" data-field="speedLimitKmh" data-control="number" type="number" min="10" max="350" step="1" value="${format(part.speedLimitKmh)}" required><div class="profile-speed-presets" role="group" aria-label="Segment ${i+1} speed presets">${[100,160,350].map(speed=>`<button type="button" data-speed-preset="${speed}" data-index="${i}" aria-pressed="${part.speedLimitKmh===speed}">${speed}</button>`).join('')}</div></div>
       <div class="profile-row-actions"><button type="button" data-action="up" data-index="${i}" ${i?'':'disabled'} aria-label="Move segment ${i+1} earlier" title="Move earlier">↑</button><button type="button" data-action="down" data-index="${i}" ${i<segments.length-1?'':'disabled'} aria-label="Move segment ${i+1} later" title="Move later">↓</button><button type="button" data-action="insert" data-index="${i}" ${segments.length>=24?'disabled':''} aria-label="Insert segment after ${i+1}" title="Insert after">+ after</button><button type="button" data-action="remove" data-index="${i}" ${segments.length>1?'':'disabled'} aria-label="Remove segment ${i+1}" title="Remove">×</button></div>
     </div></fieldset>`;
-  const render=()=>{
+  const renderInspector=()=>{
     const {distances}=positions(segments);
-    container.innerHTML=`<div class="profile-editor"><p class="profile-activation-note" ${active?'hidden':''}>Race and Economics currently use uniform route settings. Editing these segments activates this profile.</p><p>Ordered A→B · <strong data-profile-total>${format(routeProfileDistance(segments))} km</strong> total. Select a segment in the diagram or below. B→A reverses their order and grades; there are no intermediate stops.</p><div class="profile-segments">${segments.map((part,i)=>segmentEditor(part,i,distances)).join('')}</div><button type="button" data-action="add" ${segments.length>=24?'disabled':''}>Add segment at end</button><p class="profile-error" role="status" hidden></p><p class="profile-help">Length sliders start at 0.01–10 km and expand when a longer length is entered. Numeric fields allow precise values. Grade effects, advance braking and speed limits are theoretical; the game has not been calibrated for a changing profile.</p></div>`;
+    container.querySelector('.profile-inspector').innerHTML=segmentEditor(segments[selectedIndex],selectedIndex,distances);
+    for(const button of container.querySelectorAll('[data-select-segment]'))button.setAttribute('aria-pressed',String(Number(button.dataset.selectSegment)===selectedIndex));
+  };
+  const render=()=>{
+    container.innerHTML=`<div class="profile-editor"><p class="profile-activation-note" ${active?'hidden':''}>Race and Economics currently use uniform route settings. Editing these segments activates this profile.</p><p>Ordered A→B · <strong data-profile-total>${format(routeProfileDistance(segments))} km</strong> total. B→A reverses their order and grades; there are no intermediate stops.</p><div class="profile-segment-nav" role="group" aria-label="Segments in route order">${segments.map((part,i)=>`<button type="button" data-select-segment="${i}" aria-pressed="${selectedIndex===i}" aria-label="Edit segment ${i+1}, ${format(part.distanceKm)} kilometres"><strong>${String(i+1).padStart(2,'0')}</strong><span class="profile-nav-length">${format(part.distanceKm)} km</span></button>`).join('')}</div><div class="profile-inspector"></div><button type="button" data-action="add" ${segments.length>=24?'disabled':''}>Add segment at end</button><p class="profile-error" role="status" hidden></p><p class="profile-help">Length sliders start at 0.01–10 km and expand when a longer length is entered. Numeric fields allow precise values. Grade effects, advance braking and speed limits are theoretical; the game has not been calibrated for a changing profile.</p></div>`;
+    renderInspector();
     renderVisual();syncMode();
   };
   const notify=()=>onChange({active,segments:active?segments:null,distanceKm:active?routeProfileDistance(segments):uniform.distanceKm});
@@ -65,19 +70,26 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
     container.querySelector('[data-profile-total]').textContent=`${format(routeProfileDistance(segments))} km`;
     const {distances}=positions(segments);
     for(const row of container.querySelectorAll('.profile-segment'))row.querySelector('.profile-segment-range').textContent=segmentRange(distances,Number(row.dataset.index));
+    for(const button of container.querySelectorAll('[data-select-segment]')){
+      const index=Number(button.dataset.selectSegment),length=format(segments[index].distanceKm);
+      button.setAttribute('aria-label',`Edit segment ${index+1}, ${length} kilometres`);
+      button.querySelector('.profile-nav-length').textContent=`${length} km`;
+    }
     notify();
   };
   const changed=()=>{selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify();};
   const showError=(error,target)=>{const message=container.querySelector('.profile-error');message.textContent=error.message;message.hidden=false;if(target){target.setCustomValidity(error.message);target.reportValidity();target.setCustomValidity('');}};
   const select=index=>{
+    if(index===selectedIndex)return;
     selectedIndex=index;
-    for(const row of container.querySelectorAll('.profile-segment'))row.classList.toggle('is-selected',Number(row.dataset.index)===index);
+    renderInspector();
     for(const band of visual.querySelectorAll('.profile-band-group'))band.classList.toggle('is-selected',Number(band.dataset.segment)===index);
   };
   for(const control of modeControls)control.addEventListener('change',event=>{if(!event.target.matches('input[type="radio"]'))return;active=event.target.value==='profile';syncMode();notify();});
   scaleControl.addEventListener('change',event=>{if(event.target.name==='profile-horizontal-scale'){scale=event.target.value;renderVisual();}});
-  visual.addEventListener('click',event=>{const band=event.target.closest('[data-segment]');if(!band)return;const index=Number(band.dataset.segment);select(index);container.querySelector(`.profile-segment[data-index="${index}"] input`)?.focus();});
-  visual.addEventListener('keydown',event=>{if(event.key!=='Enter'&&event.key!==' ')return;const band=event.target.closest('[data-segment]');if(!band)return;event.preventDefault();const index=Number(band.dataset.segment);select(index);container.querySelector(`.profile-segment[data-index="${index}"] input`)?.focus();});
+  const selectFromPreview=event=>{const band=event.target.closest('[data-segment]');if(!band)return;const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}select(Number(band.dataset.segment));};
+  visual.addEventListener('click',selectFromPreview);
+  visual.addEventListener('keydown',event=>{if((event.key!=='Enter'&&event.key!==' ')||!event.target.closest('[data-segment]'))return;event.preventDefault();selectFromPreview(event);});
   container.addEventListener('focusin',event=>{const row=event.target.closest('.profile-segment');if(row)select(Number(row.dataset.index));});
   const updateField=event=>{
     const field=event.target.dataset.field,index=Number(event.target.dataset.index);
@@ -102,6 +114,8 @@ export function mountRouteProfileControls(container,{initial,onChange,statuses=[
   container.addEventListener('input',updateField);
   container.addEventListener('change',updateField);
   container.addEventListener('click',event=>{
+    const selector=event.target.closest('button[data-select-segment]');
+    if(selector){const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');if(invalid){invalid.reportValidity();return;}select(Number(selector.dataset.selectSegment));return;}
     const preset=event.target.closest('button[data-speed-preset]');
     if(preset){
       const input=container.querySelector(`.profile-segment[data-index="${preset.dataset.index}"] input[data-field="speedLimitKmh"]`);

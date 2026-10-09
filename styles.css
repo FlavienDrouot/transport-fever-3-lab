@@ -340,6 +340,12 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-intro{max-width:72ch;margin:12px 0 18px;color:var(--muted);font-size:14px}
 .profile-scale{display:flex;align-items:center;gap:0;margin:12px 0;font-size:12px}
 .profile-scale legend{float:left;margin-right:12px;color:var(--muted)}
+.profile-workspace{align-items:start}
+.profile-preview{min-width:0}
+.profile-inspector-panel{min-width:0;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);scroll-margin-top:calc(var(--app-header-offset) + 12px)}
+.profile-inspector-panel h2{font-size:15px}
+.profile-inspector-panel>.chart-help{margin:4px 0 12px}
+@media(min-width:1200px){.profile-workspace{display:grid;grid-template-columns:minmax(0,1fr) 355px;gap:18px}.profile-workspace .profile-sketch{min-width:0}.profile-inspector-panel{margin-top:0}.profile-inspector-panel .profile-segment-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-inspector-panel .profile-field:nth-child(3),.profile-inspector-panel .profile-row-actions{grid-column:1/-1}}
 .profile-visual{border:1px solid var(--line);border-radius:8px;background:var(--tint,#f3f7f4);padding:8px}
 .profile-sketch-scroll{overflow-x:auto}
 .profile-sketch{display:block;width:100%;min-width:900px;height:auto}
@@ -359,9 +365,14 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .route-model legend{float:left;margin-right:8px;color:var(--muted)}
 .profile-editor>p{font-size:13px;line-height:1.5;color:var(--muted);margin:8px 0}
 .profile-editor .profile-activation-note{border-left:3px solid var(--green);padding:7px 10px;background:var(--tint,#edf4ef);color:inherit}
-.profile-segments{display:flex;flex-direction:column;gap:8px;margin:18px 0;max-width:1100px}
 .profile-segment{min-width:0;border:1px solid var(--line);border-radius:7px;padding:7px 14px 12px;background:var(--surface,#fff)}
 .profile-segment.is-selected{border-color:var(--green);box-shadow:inset 3px 0 var(--green)}
+.profile-inspector-panel .profile-segment{margin:0 0 12px;padding:0;border:0;box-shadow:none;background:transparent}
+.profile-segment-nav{display:flex;flex-wrap:wrap;gap:5px;margin:14px 0}
+.profile-segment-nav button{display:flex;flex-direction:column;align-items:flex-start;min-width:62px;padding:5px 8px;font-variant-numeric:tabular-nums}
+.profile-segment-nav button strong{font-size:12px}
+.profile-segment-nav button span{font-size:11px;color:var(--muted)}
+.profile-segment-nav button[aria-pressed=true]{border-color:var(--green);background:var(--tint,#edf4ef);color:var(--green)}
 .profile-segment legend{font-size:13px;font-weight:650;padding:0 5px}
 .profile-segment-number{display:inline-grid;place-items:center;min-width:28px;margin-right:8px;border-radius:4px;background:var(--tint,#edf4ef);color:var(--green);font-variant-numeric:tabular-nums}
 .profile-segment-range{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
