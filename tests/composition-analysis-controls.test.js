@@ -16,7 +16,7 @@ function fixture(initial){
         dispatch(name){handlers[name]?.({currentTarget:this});},
         getAttribute(name){return attributes.get(name)??null;},
         setAttribute(name,value){attributes.set(name,String(value));},
-        checkValidity(){return true;},querySelectorAll(){return [];},
+        checkValidity(){return true;},setCustomValidity(){},querySelectorAll(){return [];},
         querySelector(selector){
           const value=selector.match(/value="([^"]+)"/)?.[1];
           if(value){if(!radios.has(value))radios.set(value,{value,checked:false});return radios.get(value);}
@@ -26,7 +26,7 @@ function fixture(initial){
     }
     return elements.get(id);
   };
-  const document={getElementById:get,defaultView:{requestAnimationFrame(callback){frame=callback;}}};
+  const document={getElementById:get,addEventListener(){},defaultView:{requestAnimationFrame(callback){frame=callback;}}};
   const controls=mountCompositionAnalysis(document,{getSettings:()=>settings,onSettingsChange(next){settings=next;changes.push(next);}});
   return {get,changes,settings:()=>settings,render(){controls.refresh();frame();}};
 }
