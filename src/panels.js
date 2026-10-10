@@ -5,6 +5,7 @@ export function syncAnalysisPanels(document,view,{domain='rail'}={}){
   document.querySelector('.workspace').classList.toggle('data-view',view==='data');
   document.querySelector('.workspace').classList.toggle('route-profile-view',view==='route-profile');
   document.querySelector('.workspace').classList.toggle('configurator-view',view==='configurator');
+  document.querySelector('.workspace').classList.toggle('optimizer-view',view==='optimizer');
   const trainView=view==='economics'||view==='race'&&!roadView;
   $('catalogue').hidden=!trainView;
   $('picker-toggle').hidden=!trainView;
@@ -13,9 +14,10 @@ export function syncAnalysisPanels(document,view,{domain='rail'}={}){
   $('configuration-sidebar').hidden=view!=='configurator';
   $('configuration-picker-toggle').hidden=view!=='configurator';
   $('profile-sidebar').hidden=view!=='route-profile';
+  if($('optimizer-sidebar'))$('optimizer-sidebar').hidden=view!=='optimizer';
   $('profile-picker-toggle').hidden=view!=='route-profile';
   $('line-capacity').hidden=view!=='economics';
-  $('train-race-settings').hidden=!trainView&&!roadView;
+  $('train-race-settings').hidden=!trainView&&!roadView&&view!=='optimizer';
   $('rail-service-note').hidden=view!=='economics';
   if(!trainView&&$('train-drawer').open)$('train-drawer').close();
   if(!roadView&&$('road-drawer').open)$('road-drawer').close();

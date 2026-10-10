@@ -1,5 +1,7 @@
+import {durationInputs,durationSeconds,syncDurationInputs,enableDurationInputs,bindDurationInputs} from './duration-controls.js';
 import {speedPresets} from './transport-category.js';
 import {UI_TERMS} from './ui-terms.js';
+import {ROAD_TRAVEL_TIME_WARNING} from './road-limitations.js';
 import {analyseComposition,renderCompositionSummary,renderCompositionSteadySummary,renderCompositionChart} from './composition-analysis.js';
 import {mountGradientControl} from './gradient-control.js';
 import {mountDistanceControl,validateNumberInputs,syncNumberInput} from './numeric-controls.js';
@@ -9,6 +11,7 @@ import {routeProfileDistance} from './route-profile.js';
 
 /** Live draft analysis shares route state with Race/Economics, but never publishes a recipe. */
 export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,onRouteModeChange}) {
+  bindDurationInputs(document);
   const $=id=>document.getElementById(id),root=$('composition-analysis-controls');
   const target=(id,label,value,unit,min=1,step=1,afterLabel='')=>`<div class="target-control${id==='composition-headway'?' composition-frequency-target':''}"><label><input id="${id}-enabled" type="checkbox">${label}</label>${afterLabel}<div><input id="${id}" type="number" min="${min}" step="${step}" value="${value}" disabled required aria-label="${label}" aria-describedby="composition-analysis-input-error"><span${id==='composition-flow'?' id="composition-flow-unit"':''}>${unit}</span></div></div>`;
   root.innerHTML=`<div class="panel-group-body">
@@ -21,8 +24,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     <div><label for="composition-fill">${UI_TERMS.utilization} <output id="composition-fill-value">100%</output></label><input id="composition-fill" type="range" min="0" max="100" step="1" value="100" aria-describedby="composition-fill-help"><p class="control-help" id="composition-fill-help">Share of capacity used; a ceiling when a target rate is enabled.</p></div></div>
     <details class="service-options"><summary>Targets &amp; constraints</summary><div class="composition-route-grid">
     ${target('composition-flow',`Target ${UI_TERMS.rate.toLowerCase()}`,1000,`${UI_TERMS.capacityUnit}/year/direction`)}
-    ${target('composition-headway',`Target ${UI_TERMS.frequency.toLowerCase()}`,5,'min between trains',.1,.1,
-      `<fieldset id="composition-frequency-mode" class="scale-toggle frequency-toggle" disabled><legend class="sr-only">Frequency policy</legend><label><input type="radio" name="composition-frequency-mode" value="maximum" checked><span>At most</span></label><label><input type="radio" name="composition-frequency-mode" value="closest"><span>Closest to target</span></label></fieldset>`)}
+    <div class="target-control composition-frequency-target"><label><input id="composition-headway-enabled" type="checkbox">Target frequency</label><fieldset id="composition-frequency-mode" class="scale-toggle frequency-toggle" disabled><legend class="sr-only">Frequency policy</legend><label><input type="radio" name="composition-frequency-mode" value="maximum" checked><span>At most</span></label><label><input type="radio" name="composition-frequency-mode" value="closest"><span>Closest to target</span></label></fieldset><div>${durationInputs({id:'composition-headway',label:'Target frequency',value:300,disabled:true,describedBy:'composition-analysis-input-error'})}<span>between trains</span></div></div>
     ${target('composition-platform','Maximum train length',320,'m of platform')}
     </div></details>
     <details id="composition-freight-options" class="service-options" hidden><summary>Freight handling &amp; facilities</summary><div class="composition-route-grid">
@@ -30,11 +32,12 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     ${['a','b'].map(stop=>`<fieldset class="service-option-group"><legend>Stop ${stop.toUpperCase()}</legend><label><input id="composition-terminal-${stop}" type="checkbox">Terminal ×2</label><label><input id="composition-warehouse-${stop}" type="checkbox">Warehouse ×2</label></fieldset>`).join('')}
     </div></details>
     <details class="composition-help"><summary>Route assumptions</summary><p class="control-help">The route is shared with Race and Service. Running cost includes fleet maintenance; purchase cost, infrastructure, revenue and congestion are excluded. The return reverses the slope. Cargo mass is not added.</p></details>
-    <p id="composition-tram-notice" class="control-help" hidden>Tram motion here uses the theoretical rail acceleration model, which has not been calibrated for trams. Road comparisons use provisional acceleration and omit braking. These draft curves include the rail braking approximation.</p>
+    <p id="composition-tram-notice" class="control-help" hidden>Tram motion here uses the theoretical rail acceleration model, which has not been calibrated for trams. Road comparisons omit braking. These draft tram curves use the rail braking rate.</p>
+    <p id="composition-road-warning" class="scale-note" hidden>${ROAD_TRAVEL_TIME_WARNING}</p>
     </div>`;
   let draft=null,analysis=null,key=null,scheduled=false;
-  const inputs=['composition-distance','composition-gradient-input','composition-flow','composition-headway','composition-platform','composition-speed-input'];
-  const validate=()=>validateNumberInputs(inputs.map($),$('composition-analysis-input-error'));
+  const inputs=['composition-distance','composition-gradient-input','composition-flow','composition-headway','composition-headway-seconds','composition-platform','composition-speed-input'];
+  const validate=()=>{enableDurationInputs($('composition-headway'),$('composition-headway-seconds'),$('composition-headway-enabled').checked);return validateNumberInputs(inputs.map($),$('composition-analysis-input-error'));};
   const routeChoice=mountRouteChoice($('composition-route-choice'),{value:getSettings().routeMode||'simple',onChange:mode=>{for(const id of ['composition-distance','composition-gradient-input','composition-speed-input'])$(id).setAttribute('aria-invalid','false');onRouteModeChange?.(mode);}});
   const gradient=mountGradientControl(document,$('composition-gradient'),{rail:true,noticeId:'composition-analysis-input-error',validate,onChange:gradePercent=>commit({gradePercent})});
   function commit(patch){if(validate())onSettingsChange({...getSettings(),...patch});}
@@ -45,7 +48,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     commit({...((!getSettings().routeProfile||getSettings().routeMode==='simple')?{distanceKm:$('composition-distance').valueAsNumber,gradePercent:$('composition-gradient-input').valueAsNumber,
       infrastructureSpeedKmh:$('composition-speed-input').valueAsNumber}:{}),fillRatio:$('composition-fill').valueAsNumber/100,
       desiredFlow:$('composition-flow').disabled?null:$('composition-flow').valueAsNumber,
-      maxHeadwaySeconds:$('composition-headway').disabled?null:$('composition-headway').valueAsNumber*60,
+      maxHeadwaySeconds:$('composition-headway').disabled?null:durationSeconds($('composition-headway'),$('composition-headway-seconds')),
       frequencyMode:$('composition-frequency-mode').querySelector('input:checked').value,platformLengthMetres:$('composition-platform').disabled?null:$('composition-platform').valueAsNumber,
       loadedReturn:$('composition-loaded-return').checked,
       stopA:{specializedTerminal:$('composition-terminal-a').checked,specializedWarehouse:$('composition-warehouse-a').checked},
@@ -57,6 +60,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     $(`composition-${id}`).addEventListener('input',updateSettings);
   }
   for(const id of ['composition-frequency-mode','composition-loaded-return',...['a','b'].flatMap(stop=>[`composition-terminal-${stop}`,`composition-warehouse-${stop}`])])$(id).addEventListener('change',updateSettings);
+  $('composition-headway-seconds').addEventListener('input',updateSettings);
   $('composition-speed-input').addEventListener('input',updateSettings);
   $('composition-speed-limit').addEventListener('change',()=>{syncNumberInput($('composition-speed-input'),Number($('composition-speed-limit').querySelector('input:checked').value));updateSettings();});
   $('composition-fill').addEventListener('input',updateSettings);
@@ -76,9 +80,9 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     syncNumberInput($('composition-speed-input'),settings.infrastructureSpeedKmh);
     for(const preset of $('composition-speed-limit').querySelectorAll('input'))preset.checked=Number(preset.value)===settings.infrastructureSpeedKmh;
     $('composition-fill').value=settings.fillRatio*100;$('composition-fill-value').textContent=`${Math.round(settings.fillRatio*100)}%`;
-    for(const [id,value] of [['flow',settings.desiredFlow],['headway',settings.maxHeadwaySeconds===null?null:settings.maxHeadwaySeconds/60],['platform',settings.platformLengthMetres]]){
+    for(const [id,value] of [['flow',settings.desiredFlow],['headway',settings.maxHeadwaySeconds],['platform',settings.platformLengthMetres]]){
       $(`composition-${id}-enabled`).checked=value!==null;$(`composition-${id}`).disabled=value===null;
-      if(value!==null)syncNumberInput($(`composition-${id}`),value);
+      if(value!==null){if(id==='headway')syncDurationInputs($('composition-headway'),$('composition-headway-seconds'),value);else syncNumberInput($(`composition-${id}`),value);}
     }
     $('composition-frequency-mode').querySelector(`input[value="${settings.frequencyMode}"]`).checked=true;$('composition-frequency-mode').disabled=settings.maxHeadwaySeconds===null;
     $('composition-loaded-return').checked=settings.loadedReturn;
@@ -93,9 +97,10 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     syncControls(settings);
     const freight=draft?.category==='freight';$('composition-freight-options').hidden=!freight;
     $('composition-tram-notice').hidden=draft?.carrier!=='tram';
+    $('composition-road-warning').hidden=draft?.carrier!=='tram';
     $('composition-flow-unit').textContent=`${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`;
     $('composition-flow').setAttribute('aria-label',`Target rate in ${UI_TERMS.capacityUnit} per game year${freight?'':' per direction'}`);
-    $('composition-headway').setAttribute('aria-label','Target frequency in minutes between trains');
+    $('composition-headway').setAttribute('aria-label','Target frequency · min');
     $('composition-platform').setAttribute('aria-label','Maximum train length in metres');
     // Draft IDs and names change independently of physical/economic data.
     const next=JSON.stringify([draft&&[draft.category,draft.carrier,draft.components,draft.massTonnes,draft.powerCh,draft.tractionKgf,draft.maxSpeedKmh,draft.lengthMetres,draft.passengerCapacity,draft.cargoCapacity,draft.carCount,draft.formationLoadingUnloadingSpeedMultiplier,draft.economy],settings]);

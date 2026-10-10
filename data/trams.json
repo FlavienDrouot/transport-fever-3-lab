@@ -3,7 +3,14 @@
   "source": {
     "date": "2026-10-08",
     "method": "Nineteen passenger and eight freight detailed cards, supplemented by a condensed in-game capture of two newer passenger trams and one freight tram, matched to extracted model metadata. Observed and source-backed fields are recorded separately. Images are not redistributed.",
-    "limitations": "Covers all installed non-campaign powered trams (1890–2030); separate datasets supply tram locomotives and wagons. Values combine in-game captures, matched source metadata and the verified maintenance formula. Handling rates, terminal delays and coupling compatibility remain unmeasured for the recent additions."
+    "limitations": "Covers all installed non-campaign powered trams (1890–2030); separate datasets supply tram locomotives and wagons. Values combine in-game captures, matched source metadata and the verified maintenance formula. Handling rates and terminal delays remain unmeasured for the recent additions; tram coupling is confirmed by Flavien.",
+    "lightRailCompatibility": {
+      "method": "Exhaustive in-game purchase-menu list marked Métro léger, supplied and confirmed by Flavien on 2026-10-10. Seven passenger and two freight complete trams; no tram locomotive or wagon is compatible.",
+      "captures": [
+        "import-codex-01a11aaf-18e3-7530-83cc-4e768249b93a-378f5a4f-ac84-4884-9e1d-e6bdbddfe1f5.png",
+        "import-codex-01a11aaf-18e3-7530-83cc-4e768249b93a-cd5009eb-49e3-4200-b8c4-7fea723e63fc.png"
+      ]
+    }
   },
   "trams": [
     {
@@ -26,7 +33,8 @@
       "noise": "Très bon",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-9441853e-81db-49c4-b0d1-ae54923b12cb.png"
+      "sourceCapture": "codex-clipboard-9441853e-81db-49c4-b0d1-ae54923b12cb.png",
+      "lightRailCompatible": false
     },
     {
       "id": "aeg",
@@ -48,7 +56,8 @@
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Très bon",
-      "sourceCapture": "codex-clipboard-5dc2980a-cf65-4ef1-85af-5d5d6dea9010.png"
+      "sourceCapture": "codex-clipboard-5dc2980a-cf65-4ef1-85af-5d5d6dea9010.png",
+      "lightRailCompatible": false
     },
     {
       "id": "nuremberg-f",
@@ -70,7 +79,8 @@
       "noise": "Très bon",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-850b3576-0432-4074-ac2e-eeb9d0193551.png"
+      "sourceCapture": "codex-clipboard-850b3576-0432-4074-ac2e-eeb9d0193551.png",
+      "lightRailCompatible": false
     },
     {
       "id": "gotha-t1",
@@ -92,7 +102,8 @@
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Médiocre",
-      "sourceCapture": "codex-clipboard-cfa5cf4a-cf3c-4ef8-9569-2aafa7f16a6b.png"
+      "sourceCapture": "codex-clipboard-cfa5cf4a-cf3c-4ef8-9569-2aafa7f16a6b.png",
+      "lightRailCompatible": false
     },
     {
       "id": "milano-4000",
@@ -114,7 +125,8 @@
       "noise": "Très bon",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-afdd746b-926b-4422-9324-2174a3ba7d36.png"
+      "sourceCapture": "codex-clipboard-afdd746b-926b-4422-9324-2174a3ba7d36.png",
+      "lightRailCompatible": false
     },
     {
       "id": "pittsburgh-pcc1643",
@@ -136,7 +148,8 @@
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Médiocre",
-      "sourceCapture": "codex-clipboard-d24ef223-9db1-4fae-9ae7-9e90755ad878.png"
+      "sourceCapture": "codex-clipboard-d24ef223-9db1-4fae-9ae7-9e90755ad878.png",
+      "lightRailCompatible": false
     },
     {
       "id": "duewag",
@@ -158,7 +171,8 @@
       "noise": "Bon",
       "pollution": "Médiocre",
       "comfort": "Très bon",
-      "sourceCapture": "codex-clipboard-b6c2655f-30c0-414c-82ae-d62c80b93d60.png"
+      "sourceCapture": "codex-clipboard-b6c2655f-30c0-414c-82ae-d62c80b93d60.png",
+      "lightRailCompatible": false
     },
     {
       "id": "zurich-mirage",
@@ -180,7 +194,8 @@
       "noise": "Très bon",
       "pollution": "Bon",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-21e2e97b-c2dd-4900-b34f-686d1b1af7b7.png"
+      "sourceCapture": "codex-clipboard-21e2e97b-c2dd-4900-b34f-686d1b1af7b7.png",
+      "lightRailCompatible": false
     },
     {
       "id": "tatra-t4",
@@ -202,7 +217,8 @@
       "noise": "Médiocre",
       "pollution": "Bon",
       "comfort": "Très insuffisant",
-      "sourceCapture": "codex-clipboard-486d02e1-084d-40c4-90b4-ac0caba58c10.png"
+      "sourceCapture": "codex-clipboard-486d02e1-084d-40c4-90b4-ac0caba58c10.png",
+      "lightRailCompatible": false
     },
     {
       "id": "duewag-n8c",
@@ -224,7 +240,8 @@
       "noise": "Bon",
       "pollution": "Insuffisant",
       "comfort": "Bon",
-      "sourceCapture": "codex-clipboard-68408eb5-ae84-4497-9813-147427d21012.png"
+      "sourceCapture": "codex-clipboard-68408eb5-ae84-4497-9813-147427d21012.png",
+      "lightRailCompatible": true
     },
     {
       "id": "toronto-clrv",
@@ -246,7 +263,8 @@
       "noise": "Médiocre",
       "pollution": "Très bon",
       "comfort": "Médiocre",
-      "sourceCapture": "codex-clipboard-3225fb23-3901-4093-b2ff-e4725d2b0311.png"
+      "sourceCapture": "codex-clipboard-3225fb23-3901-4093-b2ff-e4725d2b0311.png",
+      "lightRailCompatible": false
     },
     {
       "id": "hong-kong",
@@ -268,7 +286,8 @@
       "noise": "Très bon",
       "pollution": "Très bon",
       "comfort": "Bon",
-      "sourceCapture": "codex-clipboard-89e68d34-27f6-4c22-8192-78921af25a1b.png"
+      "sourceCapture": "codex-clipboard-89e68d34-27f6-4c22-8192-78921af25a1b.png",
+      "lightRailCompatible": false
     },
     {
       "id": "st-petersburg-lvs86",
@@ -290,7 +309,8 @@
       "noise": "Médiocre",
       "pollution": "Médiocre",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-05594661-7f54-4c5f-a265-def48f3a2204.png"
+      "sourceCapture": "codex-clipboard-05594661-7f54-4c5f-a265-def48f3a2204.png",
+      "lightRailCompatible": false
     },
     {
       "id": "toyama-8000",
@@ -312,7 +332,8 @@
       "noise": "Bon",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-a7e29391-3052-41c5-ab38-2145b4a53e71.png"
+      "sourceCapture": "codex-clipboard-a7e29391-3052-41c5-ab38-2145b4a53e71.png",
+      "lightRailCompatible": true
     },
     {
       "id": "bombardier-k4000",
@@ -334,7 +355,8 @@
       "noise": "Insuffisant",
       "pollution": "Très bon",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-981de9c9-6b18-4371-a942-c2c7ccd33b1c.png"
+      "sourceCapture": "codex-clipboard-981de9c9-6b18-4371-a942-c2c7ccd33b1c.png",
+      "lightRailCompatible": true
     },
     {
       "id": "skoda-10t",
@@ -356,7 +378,8 @@
       "noise": "Insuffisant",
       "pollution": "Bon",
       "comfort": "Bon",
-      "sourceCapture": "codex-clipboard-83d0293a-3422-4f2d-a8ff-9dd66c4ee25d.png"
+      "sourceCapture": "codex-clipboard-83d0293a-3422-4f2d-a8ff-9dd66c4ee25d.png",
+      "lightRailCompatible": true
     },
     {
       "id": "changchun-3000",
@@ -378,7 +401,8 @@
       "noise": "Bon",
       "pollution": "Médiocre",
       "comfort": "Insuffisant",
-      "sourceCapture": "codex-clipboard-5c776803-e44a-45d9-b606-234b779b5b1f.png"
+      "sourceCapture": "codex-clipboard-5c776803-e44a-45d9-b606-234b779b5b1f.png",
+      "lightRailCompatible": true
     },
     {
       "id": "moscow-vityaz-m",
@@ -400,7 +424,8 @@
       "noise": "Insuffisant",
       "pollution": "Bon",
       "comfort": "Médiocre",
-      "sourceCapture": "codex-clipboard-044749dc-7705-46d8-a98f-ceaa164125b4.png"
+      "sourceCapture": "codex-clipboard-044749dc-7705-46d8-a98f-ceaa164125b4.png",
+      "lightRailCompatible": false
     },
     {
       "id": "caf-urbos-3",
@@ -422,7 +447,8 @@
       "noise": "Très insuffisant",
       "pollution": "Bon",
       "comfort": "Médiocre",
-      "sourceCapture": "codex-clipboard-4fe29e34-82a8-4b8f-868e-ff4bf83034a5.png"
+      "sourceCapture": "codex-clipboard-4fe29e34-82a8-4b8f-868e-ff4bf83034a5.png",
+      "lightRailCompatible": true
     },
     {
       "id": "stadler-citylink",
@@ -472,7 +498,8 @@
         ],
         "limitations": "Length is the source bounding-box extent, not a detailed-card observation. Annual maintenance is computed by the extracted normal-scale rule; purchase price agrees exactly with this capture. Section count and actual coupling compatibility are not observed."
       },
-      "comfort": "Très bon"
+      "comfort": "Très bon",
+      "lightRailCompatible": true
     },
     {
       "id": "stadler-tina",
@@ -522,7 +549,8 @@
         ],
         "limitations": "Length is the source bounding-box extent, not a detailed-card observation. Annual maintenance is computed by the extracted normal-scale rule; purchase price agrees exactly with this capture. Section count and actual coupling compatibility are not observed."
       },
-      "comfort": "Médiocre"
+      "comfort": "Médiocre",
+      "lightRailCompatible": false
     }
   ],
   "freightTrams": [
@@ -548,7 +576,8 @@
       "cargoTypes": "all freight",
       "freightSpecialization": "general",
       "sourceCargoLabel": "Tout fret",
-      "sourceCapture": "codex-clipboard-319f5b5f-a2a1-4cad-bced-81e17a9b0a7a.png"
+      "sourceCapture": "codex-clipboard-319f5b5f-a2a1-4cad-bced-81e17a9b0a7a.png",
+      "lightRailCompatible": false
     },
     {
       "id": "sydney-24s",
@@ -572,7 +601,8 @@
       "cargoTypes": "all freight",
       "freightSpecialization": "general",
       "sourceCargoLabel": "Tout fret",
-      "sourceCapture": "codex-clipboard-542671dc-7039-4a41-9887-39b4e21506a1.png"
+      "sourceCapture": "codex-clipboard-542671dc-7039-4a41-9887-39b4e21506a1.png",
+      "lightRailCompatible": false
     },
     {
       "id": "russian-x",
@@ -596,7 +626,8 @@
       "cargoTypes": "all freight",
       "freightSpecialization": "general",
       "sourceCargoLabel": "Tout fret",
-      "sourceCapture": "codex-clipboard-fdd72187-3bd7-4596-9146-a75af3004016.png"
+      "sourceCapture": "codex-clipboard-fdd72187-3bd7-4596-9146-a75af3004016.png",
+      "lightRailCompatible": false
     },
     {
       "id": "tatra-t4-tanker",
@@ -620,7 +651,8 @@
       "cargoTypes": "liquid freight",
       "freightSpecialization": "liquid",
       "sourceCargoLabel": "Liquide",
-      "sourceCapture": "codex-clipboard-817dc55e-a8d9-4d44-93a2-869d3eb95d40.png"
+      "sourceCapture": "codex-clipboard-817dc55e-a8d9-4d44-93a2-869d3eb95d40.png",
+      "lightRailCompatible": false
     },
     {
       "id": "tatra-t4-tipper",
@@ -644,7 +676,8 @@
       "cargoTypes": "bulk freight",
       "freightSpecialization": "bulk",
       "sourceCargoLabel": "Vrac",
-      "sourceCapture": "codex-clipboard-b25bd96f-6f9d-4ebc-89bc-47febc6fe7bc.png"
+      "sourceCapture": "codex-clipboard-b25bd96f-6f9d-4ebc-89bc-47febc6fe7bc.png",
+      "lightRailCompatible": false
     },
     {
       "id": "tatra-t4-flatbed",
@@ -668,7 +701,8 @@
       "cargoTypes": "flatbed freight",
       "freightSpecialization": "flatbed",
       "sourceCargoLabel": "Plateau",
-      "sourceCapture": "codex-clipboard-8fa0dd94-c573-4039-aadb-624cb4a30353.png"
+      "sourceCapture": "codex-clipboard-8fa0dd94-c573-4039-aadb-624cb4a30353.png",
+      "lightRailCompatible": false
     },
     {
       "id": "tatra-t4-box",
@@ -692,7 +726,8 @@
       "cargoTypes": "goods freight",
       "freightSpecialization": "goods",
       "sourceCargoLabel": "Marchandises",
-      "sourceCapture": "codex-clipboard-5c7af178-b575-4282-ad64-0d1f95db21be.png"
+      "sourceCapture": "codex-clipboard-5c7af178-b575-4282-ad64-0d1f95db21be.png",
+      "lightRailCompatible": false
     },
     {
       "id": "dresden-cargotram",
@@ -717,7 +752,8 @@
       "freightSpecialization": "general",
       "sourceCargoLabel": "Tout fret",
       "sourceCapture": "codex-clipboard-8fc1750f-991b-43b5-95e4-9609ee48dc48.png",
-      "carCount": 5
+      "carCount": 5,
+      "lightRailCompatible": true
     },
     {
       "id": "articulated-freight-tram",
@@ -767,7 +803,8 @@
         "limitations": "Length is the source bounding-box extent, not a detailed-card observation. Annual maintenance is computed by the extracted normal-scale rule; purchase price agrees exactly with this capture. Section count and actual coupling compatibility are not observed."
       },
       "cargoTypes": "all freight",
-      "freightSpecialization": "general"
+      "freightSpecialization": "general",
+      "lightRailCompatible": true
     }
   ]
 }

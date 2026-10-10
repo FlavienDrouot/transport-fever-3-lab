@@ -9,11 +9,41 @@ export function validateRouteProfile(segments) {
     if (!Number.isFinite(distanceKm) || distanceKm < .000001 || distanceKm > 100) throw new RangeError(`Segment ${index+1}: distance must be positive and at most 100 km`);
     validateGradient(gradePercent);
     if (!Number.isFinite(speedLimitKmh) || speedLimitKmh < 10 || speedLimitKmh > 350) throw new RangeError(`Segment ${index+1}: speed limit must be 10–350 km/h`);
+    const roadSpeedLimitKmh=part.roadSpeedLimitKmh==null?null:Number(part.roadSpeedLimitKmh);
+    if(roadSpeedLimitKmh!==null&&(!Number.isFinite(roadSpeedLimitKmh)||roadSpeedLimitKmh<10||roadSpeedLimitKmh>350))throw new RangeError(`Segment ${index+1}: Road speed limit must be 10–350 km/h`);
+    const metadata={};
+    if(part.tramInfrastructure!=null){
+      if(!['auto','road','dedicated'].includes(part.tramInfrastructure))throw new RangeError(`Segment ${index+1}: choose Road or dedicated tram tracks`);
+      metadata.tramInfrastructure=part.tramInfrastructure;
+    }
+    if(part.railTracks!=null){
+      if(part.railTracks!==2)throw new RangeError(`Segment ${index+1}: Rail tracks must be automatic or fixed at 2`);
+      metadata.railTracks=part.railTracks;
+    }
+    for(const key of ['railSpeedConstraintKmh','roadSpeedConstraintKmh'])if(part[key]!=null){
+      const value=Number(part[key]);
+      if(!Number.isFinite(value)||value<10||value>350)throw new RangeError(`Segment ${index+1}: speed constraint must be 10–350 km/h`);
+      metadata[key]=value;
+    }
+    if(part.roadLanes!=null){
+      if(![2,4].includes(part.roadLanes))throw new RangeError(`Segment ${index+1}: Road must have 2 or 4 lanes`);
+      metadata.roadLanes=part.roadLanes;
+    }
+    if(part.roadCity!=null){
+      if(typeof part.roadCity!=='boolean')throw new RangeError(`Segment ${index+1}: choose a valid city constraint`);
+      metadata.roadCity=part.roadCity;
+    }
     total+=distanceKm;
-    return {distanceKm,gradePercent,speedLimitKmh};
+    return {distanceKm,gradePercent,speedLimitKmh,...(roadSpeedLimitKmh===null?{}:{roadSpeedLimitKmh}),...metadata};
   });
   if(total>100)throw new RangeError('Route distance must not exceed 100 km');
   return route;
+}
+
+/** Legacy profiles retain their shared cap; new routes store a separate Road cap. */
+export function routeProfileForDomain(segments,domain='rail') {
+  if(!['rail','road'].includes(domain))throw new RangeError('Unknown route domain');
+  return validateRouteProfile(segments).map(part=>({...part,speedLimitKmh:domain==='road'?(part.roadSpeedLimitKmh??part.speedLimitKmh):part.speedLimitKmh}));
 }
 
 export function reverseRouteProfile(segments) {
@@ -25,10 +55,10 @@ export function routeProfileDistance(segments) {
 }
 
 const trajectoryCache=new WeakMap();
-/** Tractive motion with provisional gravity; configured braking anticipates caps and terminal stops. */
+/** Tractive motion with calibrated gravity; configured braking anticipates caps and terminal stops. */
 export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5}={}) {
-  const route=validateRouteProfile(segments);
   const motionConfig=train.model?.motionConfig??RAIL_MOTION;
+  const route=routeProfileForDomain(segments,motionConfig.transportDomain??'rail');
   const brakingEnabled=motionConfig.brakingEnabled!==false;
   if(!Number.isFinite(brakingDeceleration)||brakingDeceleration<=0)throw new RangeError('Braking must be positive');
   const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration]);

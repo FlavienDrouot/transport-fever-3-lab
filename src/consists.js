@@ -33,6 +33,11 @@ export function railComponents({locomotives, passengerWagons, freightWagons, mul
   ];
 }
 
+/** Confirmed light-rail trams are whole powered units, with their captured handling counted once. */
+export function lightRailComponents(vehicles) {
+  return poweredVehicleComponents(vehicles.filter(item=>item.lightRailCompatible===true),{carrier:'rail',catalogue:'light-rail'});
+}
+
 /** Build one complete formation. Missing mechanical/economic values stay unknown. */
 export function buildConsist(definition, catalogue, units) {
   if(definition?.schemaVersion!==1)throw new RangeError('Unsupported consist schema');
@@ -49,6 +54,8 @@ export function buildConsist(definition, catalogue, units) {
     index.set(item.id,item);
   }
   const missing=new Set(),components=[];
+  const chosen=definition.components.map(entry=>index.get(entry.componentId)).filter(Boolean);
+  if(chosen.some(item=>item.lightRailCompatible===true)&&chosen.some(item=>item.lightRailCompatible!==true))throw new RangeError('Light-rail trams can only be coupled with other compatible light-rail trams.');
   const positive=(item,key)=>{
     const value=item[key];
     if(value==null){missing.add(`${item.id}:${key}`);return null;}
@@ -112,15 +119,16 @@ export function buildConsist(definition, catalogue, units) {
   const train={
     id:definition.id,name:definition.name.trim(),category:definition.category,carrier:definition.carrier,
     isCustomConsist:true,automaticCouplingAllowed:false,components,year,carCount,
+    ...(chosen.every(item=>item.lightRailCompatible===true)?{lightRailCompatible:true,vehicleType:'Tram'}:{}),
     massTonnes:sum.massTonnes,lengthMetres:sum.lengthMetres,powerCh:sum.powerCh,tractionKgf:sum.tractionKgf,maxSpeedKmh,
     [freight?'cargoCapacity':'passengerCapacity']:sum.capacity,
     formationLoadingUnloadingSpeedMultiplier:sum.multiplier,
     handlingRate:sum.multiplier===null?null:sum.multiplier*(freight?FREIGHT_LOAD_SPEED_FACTOR:PASSENGER_LOAD_SPEED_FACTOR),
     economy:{purchasePrice:sum.purchasePrice,annualMaintenance:sum.annualMaintenance},
     propulsion:[...propulsion],missing:[...missing],
-    assumptions:['Coupling compatibility is not verified.','Locomotives without capacity fields contribute no transport capacity or handling rate.'],
+    assumptions:['Locomotives without capacity fields contribute no transport capacity or handling rate.'],
   };
-  if(freight){train.freightSpecialization=cargo==='all'?'general':cargo;train.assumptions.push('Same-cargo aggregate handling; mixed commodities and payload effects are not validated.');}
+  if(freight){train.freightSpecialization=cargo==='all'?'general':cargo;train.assumptions.push('Same-cargo aggregate handling; mixed commodities are not modelled.');}
   train.model=[train.massTonnes,train.powerCh,train.tractionKgf,train.maxSpeedKmh].every(n=>Number.isFinite(n)&&n>0)?createModel(train,units):null;
   train.serviceReady=Boolean(train.model)&&sum.capacity>0&&sum.multiplier>0&&sum.annualMaintenance>0;
   return train;

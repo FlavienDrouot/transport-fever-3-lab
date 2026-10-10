@@ -1,7 +1,7 @@
 import {createModel} from './model.js';
 import {MOTION_UNITS,ROAD_MOTION,validateGradient} from './gradient.js';
 import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
-import {routeRoundTrip,scaledRouteProfile,validateRouteProfile} from './route-profile.js';
+import {routeRoundTrip,scaledRouteProfile,routeProfileForDomain} from './route-profile.js';
 
 // Records are decorated anew by catalogue/category filters: cache by mechanical
 // inputs, independently of capacity, annual maintenance and passenger/freight type.
@@ -24,7 +24,7 @@ export function withRoadModel(vehicle) {
 /** Empty-mass acceleration; braking is omitted and each leg starts from rest. */
 export function roadRoundTripMotion(vehicle,{distanceKm,gradePercent=0,roadSpeedLimit=null,routeProfile=null}={}) {
   let train=withRoadModel(vehicle);
-  let route=routeProfile?validateRouteProfile(routeProfile):null;
+  let route=routeProfile?routeProfileForDomain(routeProfile,'road'):null;
   if(route){
     const first=route[0];
     if(route.some(part=>part.gradePercent!==first.gradePercent||part.speedLimitKmh!==first.speedLimitKmh))

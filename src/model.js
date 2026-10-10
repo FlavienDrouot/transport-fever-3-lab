@@ -1,6 +1,6 @@
 import {gradientAcceleration,validateGradient,RAIL_MOTION} from './gradient.js';
 
-/** Rail increments by default; independently configurable for provisional road motion. */
+/** Rail increments by default; independently configurable for road motion. */
 export function createModel(train,units,{gradePercent=0,motion=RAIL_MOTION}={}) {
   validateGradient(gradePercent);
   motion=Object.freeze({...motion});

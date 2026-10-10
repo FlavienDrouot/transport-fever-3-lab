@@ -8,7 +8,7 @@ export const RAIL_MOTION = Object.freeze({stepSeconds:.2,tractionFactor:2,fricti
 // Road coefficients from initial MAN checks: flat acceleration follows rail,
 // the displayed-grade factor is shared. Natural-stop checks do not establish
 // a common braking coefficient, so road braking is omitted.
-export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,brakingEnabled:false});
+export const ROAD_MOTION = Object.freeze({...RAIL_MOTION,transportDomain:'road',brakingEnabled:false});
 
 export function validateGradient(percent,maximum=20) {
   if(!Number.isFinite(percent)||Math.abs(percent)>maximum)throw new RangeError(`Gradient must be between -${maximum}% and ${maximum}%`);

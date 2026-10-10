@@ -5,7 +5,7 @@ import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
 import {motionTransitions,renderMotionTransitions} from './motion-chart.js';
 import {mountChartInteractions} from './chart-interactions.js';
 import {mountControlHelp} from './control-help.js';
-import {escapeHtml as escape,formatNumber,formatTime} from './format.js';
+import {escapeHtml as escape,formatNumber,formatTime,formatDuration} from './format.js';
 import {createScale} from './scales.js';
 import {speedDistanceHorizon} from './race.js';
 import {gradientAcceleration} from './gradient.js';
@@ -199,7 +199,7 @@ export function renderCompositionSummary(root,analysis) {
     [profile?'Peak service speed A→B / B→A':'Peak service speed',profile?
       `${formatNumber(s.outboundPeakSpeedKmh,1)} / ${formatNumber(s.returnPeakSpeedKmh,1)} km/h`:
       `${formatNumber(s.peakSpeedKmh,1)} km/h`],['Round trip incl. handling',formatTime(s.roundTripSeconds)],
-    ['Trains',`${s.trainCount} ${s.trainCount===1?'train':'trains'}`],[UI_TERMS.frequency,formatTime(s.headwaySeconds)],
+    ['Trains',`${s.trainCount} ${s.trainCount===1?'train':'trains'}`],[UI_TERMS.frequency,formatDuration(s.headwaySeconds)],
     [UI_TERMS.rate,`${formatNumber(throughput,0)} ${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`],
     [UI_TERMS.utilization,`${formatNumber(s.actualOccupancyRatio*100,1)}%`],[UI_TERMS.runningCosts,`$${formatNumber(s.fleetMaintenance,0)}/year`],
     [`Cost / ${UI_TERMS.capacityUnit}`,s.maintenancePerUnit===null?'—':`$${formatNumber(s.maintenancePerUnit,2)}`]];

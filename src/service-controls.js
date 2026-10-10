@@ -1,8 +1,10 @@
+import {durationInputs,bindDurationInputs} from './duration-controls.js';
 import {UI_TERMS} from './ui-terms.js';
 import {speedPresets} from './transport-category.js';
 
 /** One Service form for both domains; IDs adapt to the existing calculators. */
 export function mountServiceControls(document,domain){
+  bindDurationInputs(document);
   const road=domain==='road';
   const ids=road?{
     root:'road-service-settings',heading:'road-service-heading',error:'road-input-error',
@@ -19,7 +21,6 @@ export function mountServiceControls(document,domain){
   };
   const info=(text,id)=>`<button class="control-info" type="button" title="${text}" aria-label="Help: ${text}"${id?` aria-describedby="${id}"`:''}>ⓘ</button>`;
   const check=(id,label)=>`<label class="road-inline-check"><input id="${id}" type="checkbox"> ${label}</label>`;
-  const stop=(label,terminal,warehouse)=>`<fieldset class="road-stop"><legend>Stop ${label}</legend>${check(terminal,'Terminal ×2')}${info('Doubles handling at this stop.')}${check(warehouse,'Warehouse ×2')}${info('Doubles handling at this stop; combined bonuses give ×4.')}</fieldset>`;
   const constraints=road?'':`<fieldset class="service-option-group"><legend>Train constraints</legend>
     <div id="economic-coupling-control" class="target-control">${info('Automatic coupling joins identical complete trainsets; custom compositions retain their chosen vehicles.')}<span id="composition-description" class="sr-only">One MU is one complete trainset. Coupling joins identical sets.</span><label><input id="allow-multiple-units" type="checkbox" aria-describedby="coupling-help" disabled> Couple identical units</label><p id="coupling-help" class="control-help field-help">Requires both a target rate and a target frequency. Nearest frequency first, then lowest cost.</p></div>
     <div class="target-control"><label><input id="enable-platform-limit" type="checkbox"> Maximum train length</label><div><input required id="platform-length" type="number" min="1" step="1" value="320" disabled aria-label="Maximum train length in metres" aria-describedby="${ids.error}"><span id="economic-length-unit">m of platform</span></div></div>
@@ -29,20 +30,30 @@ export function mountServiceControls(document,domain){
     <details id="${ids.handling}" class="panel-group" hidden><summary>Freight handling &amp; facilities</summary><div class="panel-group-body">
       ${info('Category handling factors and fixed terminal pauses are included automatically.',ids.help)}<span id="${ids.help}" class="sr-only">Category handling factors and fixed terminal pauses are included automatically.</span>
       <div id="${ids.return}" class="target-control handling-return">${check(ids.loaded,'Loaded return')}${info('Off: deliver at B and return empty. On: carry equal loads in both directions.')}</div>
-      <div id="${ids.facilities}" class="road-stop-grid">${stop('A',ids.terminalA,ids.warehouseA)}${stop('B',ids.terminalB,ids.warehouseB)}</div>
+      <div id="${ids.facilities}" class="road-stop-grid">${renderFreightFacilities(ids)}</div>
     </div></details>
     <details id="${ids.options}" class="panel-group"><summary>Targets &amp; constraints</summary><div class="panel-group-body"><p id="${ids.summary}" class="chart-help">No targets</p><div class="service-options-grid">
       <fieldset class="service-option-group"><legend>Service targets</legend>${info('Optional: size a fleet for a transport rate or frequency target.',road?'road-targets-description':'service-targets-description')}<span id="${road?'road-targets-description':'service-targets-description'}" class="sr-only">Optional: size a fleet for the service you want.</span>
         <div class="target-control"><label><input id="${ids.flow}" type="checkbox"> Target rate</label><div><input required id="${ids.rate}" type="number" min="1" step="1" value="1000" disabled aria-label="Target transport rate" aria-describedby="${ids.error}"><span id="${ids.unit}">${UI_TERMS.capacityUnit}/year</span></div></div>
-        <div class="target-control"><label><input id="${ids.frequency}" type="checkbox"> Target frequency</label><div><input required id="${ids.headway}" type="number" min="0.1" step="0.1" value="5" disabled aria-label="Target frequency in minutes between vehicles" aria-describedby="${ids.error}"><span>min between vehicles</span><fieldset id="${ids.policy}" class="scale-toggle frequency-toggle" disabled><legend class="sr-only">Frequency policy</legend><label><input type="radio" name="${ids.policy}" value="maximum" checked><span>At most</span></label><label><input type="radio" name="${ids.policy}" value="closest"><span>Closest to target</span></label></fieldset></div></div>
+        <div class="target-control"><label><input id="${ids.frequency}" type="checkbox"> Target frequency</label><div>${durationInputs({id:ids.headway,label:'Target frequency',value:300,disabled:true,describedBy:ids.error})}<span>between vehicles</span><fieldset id="${ids.policy}" class="scale-toggle frequency-toggle" disabled><legend class="sr-only">Frequency policy</legend><label><input type="radio" name="${ids.policy}" value="maximum" checked><span>At most</span></label><label><input type="radio" name="${ids.policy}" value="closest"><span>Closest to target</span></label></fieldset></div></div>
       </fieldset>${constraints}
     </div><p class="chart-help">Whole vehicles, evenly spaced. Traffic and station queues are excluded.</p></div></details>
   </div></details>`;
 }
 
-/** Changing domain changes suggestions, never the shared route's actual limit. */
-export function syncRouteSpeedControls(document,{domain,speed,multiple=false}){
-  const root=document.getElementById('race-infrastructure-speed'),presets=speedPresets(domain);
+/** Comparisons edit their own mode's cap; Optimizer exposes both caps. */
+export function syncRouteSpeedControls(document,{domain,speed,roadSpeed=speed,multiple=false}){
+  const root=document.getElementById('race-infrastructure-speed'),presets=speedPresets(domain==='all'?'rail':domain);
+  const label=document.getElementById('route-speed-label');
+  if(label)label.textContent=`${domain==='road'?'Road':'Rail'} speed limit`;
+  const roadControl=document.getElementById('route-road-speed-control');
+  if(roadControl){
+    roadControl.hidden=domain!=='all'||multiple;
+    for(const input of roadControl.querySelectorAll('input'))input.disabled=roadControl.hidden;
+    const roadNumber=document.getElementById('route-road-speed-input');
+    if(document.activeElement!==roadNumber)roadNumber.value=roadSpeed;
+    for(const input of roadControl.querySelectorAll('input[type=radio]'))input.checked=Number(input.value)===roadSpeed;
+  }
   if(root.dataset.domain!==domain){
     root.innerHTML='<legend class="sr-only">Route speed presets</legend>'+presets.map((value,i)=>`<label><input type="radio" name="race-infrastructure-speed" value="${value}"><span>${value}${i===presets.length-1?' km/h':''}</span></label>`).join('');
     root.dataset.domain=domain;
@@ -51,4 +62,14 @@ export function syncRouteSpeedControls(document,{domain,speed,multiple=false}){
   root.closest('.infrastructure-control').hidden=multiple;
   const number=document.getElementById('route-speed-input');
   if(document.activeElement!==number)number.value=speed;
+}
+
+/** Shared endpoint facility fields for Service and Optimizer. */
+export function renderFreightFacilityFlags({terminal,warehouse,terminalChecked=false,warehouseChecked=false}){
+  return `<label class="road-inline-check"><input id="${terminal}" type="checkbox"${terminalChecked?' checked':''}> Terminal ×2</label><label class="road-inline-check"><input id="${warehouse}" type="checkbox"${warehouseChecked?' checked':''}> Warehouse ×2</label>`;
+}
+
+export function renderFreightFacilities({terminalA,warehouseA,terminalB,warehouseB}){
+  const stop=(label,terminal,warehouse)=>`<fieldset class="road-stop"><legend>Stop ${label}</legend>${renderFreightFacilityFlags({terminal,warehouse})}</fieldset>`;
+  return `${stop('A',terminalA,warehouseA)}${stop('B',terminalB,warehouseB)}<p class="chart-help">Each specialized facility doubles handling at its stop; combined bonuses give ×4.</p>`;
 }

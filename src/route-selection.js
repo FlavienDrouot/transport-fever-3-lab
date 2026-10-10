@@ -10,7 +10,14 @@ export function createRouteSelection(initial) {
       if(!['simple','custom'].includes(next))throw new RangeError('Unknown route selection');
       mode=next;
     },
-    updateSimple(part){simple=validateRouteProfile([{...simple[0],...part}]);},
+    updateSimple(part){
+      const next={...simple[0],...part};
+      for(const [field,constraint] of [['speedLimitKmh','railSpeedConstraintKmh'],['roadSpeedLimitKmh','roadSpeedConstraintKmh']])
+        if(Object.hasOwn(part,field)&&part[field]!==simple[0][field]&&!Object.hasOwn(part,constraint)){
+          delete next[constraint];if(field==='roadSpeedLimitKmh'&&!Object.hasOwn(part,'roadCity'))delete next.roadCity;
+        }
+      simple=validateRouteProfile([next]);
+    },
     updateCustom(parts){custom=validateRouteProfile(parts);mode='custom';}
   };
 }

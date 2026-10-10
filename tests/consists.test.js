@@ -87,7 +87,7 @@ test('Stored tram components get unique namespaced IDs and produce a theoretical
   assert.equal(components.length,26);assert.equal(new Set(components.map(x=>x.id)).size,26);
   const consist=buildConsist({schemaVersion:1,id:'custom:tram-test',name:'Tram test',carrier:'tram',category:'passengers',components:[{componentId:'tram:locomotive:swiss-ge22',quantity:1},{componentId:'tram:passenger-wagon:open-wagon',quantity:2}]},components,units);
   assert.equal(consist.passengerCapacity,12);assert.equal(consist.handlingRate,8);assert.equal(consist.massTonnes,22);assert.equal(consist.lengthMetres,21.3);assert.equal(consist.maxSpeedKmh,25);
-  assert.ok(consist.assumptions.some(x=>x.includes('not verified')));assert.deepEqual(input,before);
+  assert.ok(!consist.assumptions.some(x=>x.includes('Tram coupling compatibility is not verified')));assert.deepEqual(input,before);
 });
 
 

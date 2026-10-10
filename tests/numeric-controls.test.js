@@ -58,3 +58,19 @@ test('Positive distance controls accept sub-0.5 km values with no fixed step whi
     distance.value=value;assert.equal(validateNumberInputs([distance],notice),false);assert.match(notice.textContent,/greater than zero/);
   }
 });
+
+
+test('Live distance updates preserve decimal entry while focused and still synchronize external changes',()=>{
+  const number=input(10,{step:'any'}),range=input(10,{step:'any'}),notice={};let calculated=10;
+  number.ownerDocument={activeElement:number};
+  mountDistanceControl({number,range,event:'input',validate:()=>validateNumberInputs([number],notice),onChange:value=>{
+    calculated=value;syncNumberInput(number,value);range.value=value;
+  }});
+  for(const text of ['1','17','17.','17.5','17.50']){
+    number.value=text;fire(number,'input');
+    assert.equal(number.value,text,'model refresh must not rewrite an active edit');
+    assert.equal(calculated,Number(text));assert.equal(range.value,Number(text));assert.equal(notice.hidden,true);
+  }
+  number.ownerDocument.activeElement=null;syncNumberInput(number,18.5);assert.equal(number.value,18.5);
+  range.value=19.5;fire(range,'input');assert.equal(number.value,19.5);assert.equal(calculated,19.5);
+});

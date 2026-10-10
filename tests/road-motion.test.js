@@ -95,3 +95,28 @@ test('MAN uphill runs share grade scaling across road, rail and segmented motion
  for(const [seconds,speed] of [[1,14],[2,27],[5,48],[10,66],[16.4,80]])assert.ok(Math.abs(steeper.stateAt(seconds).speedKmh-speed)<.6);
  assert.ok(Math.abs(steeper.speedCapSeconds-16.4)<=.2+1e-9);
 });
+
+
+test('independent Rail and Road limits apply to uniform service, segmented service and Road Race',()=>{
+  const profile=[{distanceKm:2,gradePercent:0,speedLimitKmh:10,roadSpeedLimitKmh:50}];
+  const otherRail=profile.map(p=>({...p,speedLimitKmh:350}));
+  const otherRoad=profile.map(p=>({...p,roadSpeedLimitKmh:30}));
+  const motion=routeProfile=>roadRoundTripMotion(man,{distanceKm:2,routeProfile});
+  close(motion(profile).travelSeconds,motion(otherRail).travelSeconds);
+  assert.ok(motion(otherRoad).travelSeconds>motion(profile).travelSeconds);
+  close(motion(profile).travelSeconds,roadRoundTripMotion(man,{distanceKm:2,roadSpeedLimit:50}).travelSeconds);
+  const mixed=[{distanceKm:1,gradePercent:1,speedLimitKmh:10,roadSpeedLimitKmh:50},{distanceKm:1,gradePercent:0,speedLimitKmh:120,roadSpeedLimitKmh:30}];
+  const legacy=mixed.map(({roadSpeedLimitKmh,...p})=>({...p,speedLimitKmh:roadSpeedLimitKmh}));
+  close(motion(mixed).travelSeconds,motion(legacy).travelSeconds);
+  close(withRailProfile(withRoadModel(man),mixed).model.timeAt(2),withRailProfile(withRoadModel(man),legacy).model.timeAt(2));
+  assert.ok(withRailProfile(withRoadModel(man),profile).maxSpeedKmh<=50.00001);
+  const rail={...man,model:createModel(man,MOTION_UNITS)};
+  close(withRailProfile(rail,profile).model.timeAt(2),withRailProfile(rail,otherRoad).model.timeAt(2));
+  assert.ok(withRailProfile(rail,otherRail).model.timeAt(2)<withRailProfile(rail,profile).model.timeAt(2));
+  for(const motion of [false,true]){
+    const service=routeProfile=>analyseTruckService([man],{distanceKm:2,fillRatio:1,routeProfile,motion})[0];
+    close(service(profile).travelSeconds,service(otherRail).travelSeconds);
+    assert.ok(service(otherRoad).travelSeconds>service(profile).travelSeconds);
+  }
+  assert.throws(()=>roadRoundTripMotion(man,{distanceKm:2,routeProfile:[{...profile[0],roadSpeedLimitKmh:0}]}));
+});

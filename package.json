@@ -11,6 +11,7 @@
   "scripts": {
     "test": "node --test",
     "build": "node scripts/build.mjs",
+    "cache:optimizer": "node scripts/optimizer-cache.mjs",
     "dev": "python3 -m http.server 4173 --bind 127.0.0.1",
     "dev:remote": "node scripts/dev-tailnet.mjs"
   }
