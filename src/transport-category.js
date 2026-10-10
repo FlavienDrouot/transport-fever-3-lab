@@ -13,4 +13,5 @@ export function mountFreightFilter(root,{name=root.id}={}){
   root.innerHTML='<legend class="sr-only">Freight specialization</legend>'+[['all','All freight'],['bulk','Bulk'],['goods','Goods'],['flatbed','Flatbed'],['liquid','Liquid']].map(([value,label])=>`<label><input type="radio" name="${name}" value="${value}"${value==='all'?' checked':''}><span>${label}</span></label>`).join('');
 }
 
-export const speedPresets=domain=>domain==='road'?[50,80,120]:[100,160,350];
+export const ROUTE_SPEED_PRESETS=Object.freeze([30,50,60,80,100,120,160,350]);
+export const speedPresets=domain=>domain==='all'?ROUTE_SPEED_PRESETS:domain==='road'?[50,80,120]:[100,160,350];

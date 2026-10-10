@@ -19,7 +19,6 @@ export function mountServiceControls(document,domain){
   };
   const info=(text,id)=>`<button class="control-info" type="button" title="${text}" aria-label="Help: ${text}"${id?` aria-describedby="${id}"`:''}>ⓘ</button>`;
   const check=(id,label)=>`<label class="road-inline-check"><input id="${id}" type="checkbox"> ${label}</label>`;
-  const stop=(label,terminal,warehouse)=>`<fieldset class="road-stop"><legend>Stop ${label}</legend>${check(terminal,'Terminal ×2')}${info('Doubles handling at this stop.')}${check(warehouse,'Warehouse ×2')}${info('Doubles handling at this stop; combined bonuses give ×4.')}</fieldset>`;
   const constraints=road?'':`<fieldset class="service-option-group"><legend>Train constraints</legend>
     <div id="economic-coupling-control" class="target-control">${info('Automatic coupling joins identical complete trainsets; custom compositions retain their chosen vehicles.')}<span id="composition-description" class="sr-only">One MU is one complete trainset. Coupling joins identical sets.</span><label><input id="allow-multiple-units" type="checkbox" aria-describedby="coupling-help" disabled> Couple identical units</label><p id="coupling-help" class="control-help field-help">Requires both a target rate and a target frequency. Nearest frequency first, then lowest cost.</p></div>
     <div class="target-control"><label><input id="enable-platform-limit" type="checkbox"> Maximum train length</label><div><input required id="platform-length" type="number" min="1" step="1" value="320" disabled aria-label="Maximum train length in metres" aria-describedby="${ids.error}"><span id="economic-length-unit">m of platform</span></div></div>
@@ -29,7 +28,7 @@ export function mountServiceControls(document,domain){
     <details id="${ids.handling}" class="panel-group" hidden><summary>Freight handling &amp; facilities</summary><div class="panel-group-body">
       ${info('Category handling factors and fixed terminal pauses are included automatically.',ids.help)}<span id="${ids.help}" class="sr-only">Category handling factors and fixed terminal pauses are included automatically.</span>
       <div id="${ids.return}" class="target-control handling-return">${check(ids.loaded,'Loaded return')}${info('Off: deliver at B and return empty. On: carry equal loads in both directions.')}</div>
-      <div id="${ids.facilities}" class="road-stop-grid">${stop('A',ids.terminalA,ids.warehouseA)}${stop('B',ids.terminalB,ids.warehouseB)}</div>
+      <div id="${ids.facilities}" class="road-stop-grid">${renderFreightFacilities(ids)}</div>
     </div></details>
     <details id="${ids.options}" class="panel-group"><summary>Targets &amp; constraints</summary><div class="panel-group-body"><p id="${ids.summary}" class="chart-help">No targets</p><div class="service-options-grid">
       <fieldset class="service-option-group"><legend>Service targets</legend>${info('Optional: size a fleet for a transport rate or frequency target.',road?'road-targets-description':'service-targets-description')}<span id="${road?'road-targets-description':'service-targets-description'}" class="sr-only">Optional: size a fleet for the service you want.</span>
@@ -51,4 +50,10 @@ export function syncRouteSpeedControls(document,{domain,speed,multiple=false}){
   root.closest('.infrastructure-control').hidden=multiple;
   const number=document.getElementById('route-speed-input');
   if(document.activeElement!==number)number.value=speed;
+}
+
+/** Shared endpoint facility fields for Service and Optimizer. */
+export function renderFreightFacilities({terminalA,warehouseA,terminalB,warehouseB}){
+  const stop=(label,terminal,warehouse)=>`<fieldset class="road-stop"><legend>Stop ${label}</legend><label class="road-inline-check"><input id="${terminal}" type="checkbox"> Terminal ×2</label><label class="road-inline-check"><input id="${warehouse}" type="checkbox"> Warehouse ×2</label></fieldset>`;
+  return `${stop('A',terminalA,warehouseA)}${stop('B',terminalB,warehouseB)}<p class="chart-help">Each specialized facility doubles handling at its stop; combined bonuses give ×4.</p>`;
 }

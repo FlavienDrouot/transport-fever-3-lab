@@ -1,4 +1,4 @@
-export const ANALYSIS_VIEWS=['race','economics','trucks','configurator','route-profile','data'];
+export const ANALYSIS_VIEWS=['race','economics','trucks','configurator','route-profile','optimizer','data'];
 export const initialNavigation=()=>({space:'compare',view:'race',railView:'race',roadView:'trucks',designView:'configurator',dataView:'catalogue',domain:'rail'});
 
 /** Keep existing chart hashes while remembering the last workspace within each space. */

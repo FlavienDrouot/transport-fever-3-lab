@@ -27,3 +27,10 @@ test('Road Race remembers its domain across Design and Compare; legacy Race rema
  state=resolveNavigation(state,{hash:'#trucks'});assert.equal(state.roadView,'trucks');
  state=resolveNavigation(state,{hash:'#race'});assert.equal(state.domain,'rail');
 });
+
+test('Design remembers Optimizer without changing comparison domain',()=>{
+  let state=resolveNavigation(initialNavigation(),{hash:'#trucks'});
+  state=resolveNavigation(state,{hash:'#optimizer'});assert.equal(state.space,'design');assert.equal(state.domain,'road');
+  state=resolveNavigation(state,{hash:'#compare'});assert.equal(state.view,'trucks');
+  state=resolveNavigation(state,{hash:'#design'});assert.equal(state.view,'optimizer');
+});

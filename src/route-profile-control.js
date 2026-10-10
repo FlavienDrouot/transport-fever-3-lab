@@ -1,6 +1,6 @@
 import {validateRouteProfile,routeProfileDistance} from './route-profile.js';
 
-const SPEED_PRESETS=[30,50,60,80,100,120,160,350];
+import {ROUTE_SPEED_PRESETS as SPEED_PRESETS} from './transport-category.js';
 const format=value=>Number(value.toFixed(3));
 const positions=parts=>{
   const distances=[0],heights=[0];

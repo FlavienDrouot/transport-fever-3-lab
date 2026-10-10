@@ -431,39 +431,39 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .method-link{font-size:13px;font-weight:400;text-decoration:none;vertical-align:middle;margin-left:5px}
 
 /* Comparison panels share the same widths, group spacing and service controls. */
-@media(min-width:701px){.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view){grid-template-columns:minmax(0,1fr) 300px}}
-@media(min-width:701px) and (max-width:1000px){.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view){grid-template-columns:minmax(0,1fr) 230px}}
+@media(min-width:701px){.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view):not(.optimizer-view){grid-template-columns:minmax(0,1fr) 300px}}
+@media(min-width:701px) and (max-width:1000px){.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view):not(.optimizer-view){grid-template-columns:minmax(0,1fr) 230px}}
 .catalogue .utilization-control{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:4px;margin:0}.catalogue .utilization-control label{grid-column:1}.catalogue .utilization-control output{grid-column:2;grid-row:1;font-size:12px}.catalogue .utilization-control input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--green)}
 .catalogue .panel-group .panel-group>summary{padding:8px 6px}.catalogue .panel-group .panel-group-body .year-filter{margin-top:0}
 .catalogue .road-family-toggle label span{font-size:12px;padding:5px 7px}.catalogue .freight-filter{flex-wrap:wrap}
 
 /* Route and Service are shared components: parent domain never changes geometry. */
-.catalogue .comparison-controls{font-size:12px;min-width:0;width:100%}
-.catalogue .comparison-controls .panel-group-body{padding:10px 6px}
-.catalogue .comparison-controls .utilization-control{margin:0;gap:4px}
-.catalogue .comparison-controls .utilization-control .control-info{grid-column:3;grid-row:1}
-.catalogue .comparison-controls .control-info{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;min-width:20px;height:24px;padding:2px;font-size:14px}
-.catalogue .comparison-controls .target-control{font-size:12px;margin:10px 0}
-.catalogue .comparison-controls .target-control>div{row-gap:8px}
-.catalogue .comparison-controls .service-options-grid{display:flex;flex-direction:column;gap:10px;margin:10px 0}
-.catalogue .comparison-controls .service-option-group{width:100%;height:auto;padding:8px}
-.catalogue .comparison-controls .road-inline-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;min-height:28px;cursor:pointer}
-.catalogue .comparison-controls .road-inline-check input{margin:0;accent-color:var(--green)}
-.catalogue .comparison-controls .control-help{font-size:12px;margin:4px 0}
-.catalogue .comparison-controls .frequency-toggle{flex-wrap:wrap}
-.catalogue .comparison-controls .infrastructure-control{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 0}
-.catalogue .comparison-controls .infrastructure-control>span{flex-basis:100%}
-.catalogue .comparison-controls .comparison-speed-entry{display:flex;align-items:center;gap:4px}
-.catalogue .comparison-controls .comparison-speed-entry input{width:55px}
-.catalogue .comparison-controls .scale-toggle{font-size:12px}
-.catalogue .comparison-controls .scale-toggle span{padding:5px 7px}
-@media(pointer:coarse){.catalogue .comparison-controls .road-inline-check,.catalogue .comparison-controls .scale-toggle span{min-height:36px}}
+.comparison-controls{font-size:12px;min-width:0;width:100%}
+.comparison-controls .panel-group-body{padding:10px 6px}
+.comparison-controls .utilization-control{margin:0;gap:4px}
+.comparison-controls .utilization-control .control-info{grid-column:3;grid-row:1}
+.comparison-controls .control-info{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;min-width:20px;height:24px;padding:2px;font-size:14px}
+.comparison-controls .target-control{font-size:12px;margin:10px 0}
+.comparison-controls .target-control>div{row-gap:8px}
+.comparison-controls .service-options-grid{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.comparison-controls .service-option-group{width:100%;height:auto;padding:8px}
+.comparison-controls .road-inline-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;min-height:28px;cursor:pointer}
+.comparison-controls .road-inline-check input{margin:0;accent-color:var(--green)}
+.comparison-controls .control-help{font-size:12px;margin:4px 0}
+.comparison-controls .frequency-toggle{flex-wrap:wrap}
+.comparison-controls .infrastructure-control{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 0}
+.comparison-controls .infrastructure-control>span{flex-basis:100%}
+.comparison-controls .comparison-speed-entry{display:flex;align-items:center;gap:4px}
+.comparison-controls .comparison-speed-entry input{width:55px}
+.comparison-controls .scale-toggle{font-size:12px}
+.comparison-controls .scale-toggle span{padding:5px 7px}
+@media(pointer:coarse){.comparison-controls .road-inline-check,.comparison-controls .scale-toggle span{min-height:36px}}
 
 .catalogue .road-settings{display:flex;flex-direction:column;align-items:stretch;gap:0;margin:0;flex-shrink:0}
 
 .catalogue .freight-filter{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 0;font-size:12px}
 
-.catalogue .comparison-controls .handling-return{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.comparison-controls .handling-return{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
 
 .catalogue #comparison-route-choice{margin-bottom:10px}
 
@@ -474,9 +474,24 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 
 /* Give the comparison controls more width without compressing their vertical spacing. */
 @media(min-width:701px){
-  main:has(>.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view)){padding-right:8px}
+  main:has(>.workspace:not(.data-view):not(.configurator-view):not(.route-profile-view):not(.optimizer-view)){padding-right:8px}
   :is(#catalogue,#road-sidebar){padding-left:8px}
 }
 @media(max-width:700px){
   #train-drawer .catalogue,#road-drawer .road-sidebar{padding-left:8px;padding-right:8px}
 }
+
+.workspace.optimizer-view{display:block}
+.optimizer-setup{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:20px;margin-top:18px;align-items:start}
+.optimizer-setup .panel-group{margin:0 0 12px}.optimizer-setup h3,.optimizer-results h3{font-size:16px;margin:0 0 12px}
+.optimizer-setup .scale-toggle{margin:8px 0;flex-wrap:wrap}.optimizer-setup .panel-group-body{padding:12px}
+.optimizer-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0}
+.optimizer-field{display:flex;flex-direction:column;gap:6px;font-size:12px}.optimizer-field>span{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.optimizer-field input[type=number]{width:95px;max-width:100%;padding:5px;border:1px solid var(--line);border-radius:4px;background:transparent}
+.optimizer-actions{display:flex;gap:8px;margin-top:16px}.optimizer-primary{background:var(--green);color:white;border-color:var(--green)}.optimizer-primary:hover{filter:brightness(1.1);background:var(--green)}
+.optimizer-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:20px}
+.optimizer-proposal{border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:12px}.optimizer-proposal-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px}.optimizer-proposal h4{margin:0;flex:1;font-size:14px;overflow-wrap:anywhere}.optimizer-proposal-top strong{color:var(--green);font-size:15px}.optimizer-rank{color:var(--muted);font-size:12px}
+.optimizer-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:12px;margin:14px 0}.optimizer-metrics dt{color:var(--muted)}.optimizer-metrics dd{margin:2px 0 0;font-weight:600}.optimizer-no-results{font-size:13px;color:var(--muted);padding:14px;border:1px solid var(--line);border-radius:6px}
+@media(max-width:700px){.optimizer-setup,.optimizer-results{grid-template-columns:minmax(0,1fr);gap:12px}.optimizer-fields{grid-template-columns:minmax(0,1fr)}.optimizer-setup .panel-group-body{padding:10px}}
+
+.road-stop-grid>.chart-help{grid-column:1/-1}

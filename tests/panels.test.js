@@ -82,3 +82,10 @@ test('Road Race uses the road picker and shared Route controls without service c
  assert.ok(classes.has('truck-view'));assert.equal(node('catalogue').hidden,true);assert.equal(node('road-sidebar').hidden,false);assert.equal(node('road-picker-toggle').hidden,false);
  assert.equal(node('train-race-settings').hidden,false);assert.equal(node('line-capacity').hidden,true);assert.equal(node('train-drawer').open,false);
 });
+
+test('Optimizer reuses Route while hiding every catalogue sidebar',()=>{
+  const {node,document,classes}=fixture();syncAnalysisPanels(document,'optimizer');
+  assert.ok(classes.has('optimizer-view'));assert.equal(node('train-race-settings').hidden,false);
+  for(const id of ['catalogue','road-sidebar','configuration-sidebar','profile-sidebar','line-capacity'])assert.equal(node(id).hidden,true);
+  syncAnalysisPanels(document,'race');assert.ok(!classes.has('optimizer-view'));
+});
