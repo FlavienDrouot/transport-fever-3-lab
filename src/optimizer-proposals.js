@@ -65,23 +65,29 @@ export function renderOptimizerProposals(answer,domain){
   }).join('');
   const count=groups.reduce((sum,group)=>sum+group.wagons.reduce((n,wagon)=>n+wagon.variants.length,0),0);
   const visible=Math.min(VISIBLE_POWERED_MODELS,groups.length),more=Math.min(VISIBLE_POWERED_MODELS,groups.length-visible);
-  return `<div data-selected-${domain}>${renderSelectedOptimizerProposal(answer,{domain,group:'0',wagon:'0',result:'0'})}</div><section class="optimizer-variants" aria-labelledby="optimizer-${prefix}variants-heading" data-visible-models="${visible}"><h4 id="optimizer-${prefix}variants-heading">Compare ${domain==='rail'?'train':answer.request.includeTrams?'Road + Tram':'Road'} configurations · ${fmt(count,0)} variants</h4><p class="chart-help">Click a row to expand its variants, or select it if there are no variants. Select always displays that row's configuration above. Ordered by total Running costs.</p><div class="optimizer-variants-content"><div class="optimizer-variants-scroll" tabindex="0" role="region" aria-label="${domain==='rail'?'Train':'Road + Tram'} configuration comparison"><table id="optimizer-${prefix}variants-table" class="optimizer-variants-table"><colgroup><col class="optimizer-configuration-column"><col class="optimizer-length-column"><col class="optimizer-fleet-column"><col class="optimizer-capacity-column"><col class="optimizer-frequency-column"><col class="optimizer-leg-column"><col class="optimizer-cost-column"><col class="optimizer-select-column"></colgroup><thead><tr>${['Configuration','Length (m)',domain==='rail'?'Fleet (trains)':'Fleet (vehicles)',T.capacity,T.frequency,'Leg time A→B / B→A',`${T.runningCosts}/year`,'Selection'].map((label,i)=>`<th scope="col"${i===6?' class="optimizer-cost-cell"':i===7?' class="optimizer-select-cell"':''}>${label}</th>`).join('')}</tr></thead>${rows}</table></div><div class="optimizer-variants-more"><span data-model-count role="status">Showing ${visible} of ${groups.length} models</span><button type="button" data-more-proposals aria-controls="optimizer-${prefix}variants-table"${more?'':' hidden'}>Show ${more} more</button></div></div></section>`;
+  return `<div data-selected-${domain}>${renderSelectedOptimizerProposal(answer,{domain,group:'0',wagon:'0',result:'0'})}</div><section class="optimizer-variants" aria-labelledby="optimizer-${prefix}variants-heading" data-visible-models="${visible}"><h4 id="optimizer-${prefix}variants-heading">Compare ${domain==='rail'?'train':answer.request.includeTrams?'Road + Tram':'Road'} configurations · ${fmt(count,0)} variants</h4><p class="chart-help">Click a row to expand its variants, or select it if there are no variants. Select always displays that row's configuration above. Ordered by total Running costs.</p><div class="optimizer-variants-content"><div class="optimizer-variants-scroll" tabindex="0" role="region" aria-label="${domain==='rail'?'Train':'Road + Tram'} configuration comparison"><table id="optimizer-${prefix}variants-table" class="optimizer-variants-table"><colgroup><col class="optimizer-configuration-column"><col class="optimizer-length-column"><col class="optimizer-fleet-column"><col class="optimizer-capacity-column"><col class="optimizer-frequency-column"><col class="optimizer-leg-column"><col class="optimizer-cost-column"><col class="optimizer-select-column"></colgroup><thead><tr>${['Configuration','Length (m)',domain==='rail'?'Fleet (trains)':'Fleet (vehicles)',T.capacity,T.frequency,'Leg time A→B / B→A',`${T.runningCosts}/year`,'Selection'].map((label,i)=>`<th scope="col"${i===6?' class="optimizer-cost-cell"':i===7?' class="optimizer-select-cell"':''}>${label}</th>`).join('')}</tr></thead>${rows}</table></div><div class="optimizer-variants-more"><span data-model-count role="status">Showing ${visible} of ${groups.length} models</span><button type="button" data-more-proposals aria-controls="optimizer-${prefix}variants-table"${more?'':' hidden'}>Show ${more} more</button><button type="button" data-all-proposals aria-controls="optimizer-${prefix}variants-table"${more?'':' hidden'}>Show all</button></div></div></section>`;
 }
 
 export function showMoreOptimizerProposals(button){
-  const section=button.closest('.optimizer-variants'),groups=[...section.querySelectorAll('[data-powered-group]')];
-  const current=Number(section.dataset.visibleModels);
-  const visible=current<=VISIBLE_POWERED_MODELS?Math.min(current+VISIBLE_POWERED_MODELS,groups.length):groups.length;
-  section.dataset.visibleModels=String(visible);
-  groups.forEach((group,index)=>{group.hidden=index>=visible;});
-  section.querySelector('[data-model-count]').textContent=`Showing ${visible} of ${groups.length} models`;
-  button.hidden=visible===groups.length;button.textContent='Show all';
+  const results=button.closest('.optimizer-results');
+  const sections=results?results.querySelectorAll('.optimizer-variants'):[button.closest('.optimizer-variants')];
+  for(const section of sections){
+    const groups=[...section.querySelectorAll('[data-powered-group]')],current=Number(section.dataset.visibleModels);
+    const visible=button.hasAttribute('data-all-proposals')?groups.length:Math.min(current+VISIBLE_POWERED_MODELS,groups.length);
+    section.dataset.visibleModels=String(visible);
+    groups.forEach((group,index)=>{group.hidden=index>=visible;});
+    section.querySelector('[data-model-count]').textContent=`Showing ${visible} of ${groups.length} models`;
+    section.querySelector('[data-more-proposals]').hidden=visible>=Math.min(2*VISIBLE_POWERED_MODELS,groups.length);
+    section.querySelector('[data-all-proposals]').hidden=visible===groups.length;
+  }
 }
 
 /** A visual header outside horizontal overflow can stick to the page viewport.
  * Keep the original thead for accessibility and synchronize horizontal movement.
  */
 export function mountStickyOptimizerHeaders(root){
+  const tables=[...root.querySelectorAll('.optimizer-variants-table')].map(table=>table.id).join(' ');
+  for(const button of root.querySelectorAll('[data-more-proposals],[data-all-proposals]'))button.setAttribute('aria-controls',tables);
   for(const scroll of root.querySelectorAll('.optimizer-variants-scroll')){
     const table=scroll.querySelector('table'),document=scroll.ownerDocument;
     const header=document.createElement('div'),viewport=document.createElement('div');

@@ -171,6 +171,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   },true);
   root.addEventListener('input',event=>{
     const target=event.target,key=target.dataset.infrastructureField;
+    if(target===enabled&&enabled.checked)$('#optimizer-new-infrastructure').open=true;
     const record=target.dataset.infrastructureSite?sites[target.dataset.infrastructureSite]:target.dataset.infrastructureBound?bounds[target.dataset.infrastructureBound]:entries.find(entry=>entry.id===target.dataset.infrastructureEntry);
     if(record&&key){
       record[key]=target.type==='checkbox'?target.checked:target.type==='number'||key==='factoryTerminals'?(target.value===''?null:Number(target.value)):['specializedTerminal','existingSpecializedWarehouse'].includes(key)?target.value==='true':target.value;

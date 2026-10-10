@@ -80,7 +80,7 @@ function setComparisonCategory(category){
 }
 function syncRouteDistanceControls(){
   const range=$('route-distance'),limit=routeSelection.mode==='simple'?Math.max(10,routeDistance):routeDistance;
-  range.max=limit;range.min=Math.min(.001,routeDistance);range.value=routeDistance;
+  range.max=limit;range.min=Math.min(.1,routeDistance);range.value=routeDistance;
   syncNumberInput($('distance-input'),routeDistance);
   range.setAttribute('aria-valuetext',`${fmtKm(routeDistance)} kilometres; use the number field for longer routes`);
   $('distance-note').textContent=routeSelection.mode==='custom'?'Route distance is the sum of the configured segments.':`Slider up to ${fmtKm(limit)} km; enter a larger distance in the field.`;
@@ -527,6 +527,9 @@ function syncAnalysisView() {
   (space==='compare'&&domain==='road'?$('road-compare-mode'):$('rail-compare-mode')).append($('compare-domain'),$('comparison-category'));
   if(view==='optimizer')ensureOptimizer();
   (view==='optimizer'?$('optimizer-route-slot'):space==='compare'&&domain==='road'?$('road-route-slot'):$('rail-route-slot')).append($('train-race-settings'));
+  const routeSpeeds=$('route-road-speed-control').parentElement;
+  if(view==='optimizer')routeSpeeds.before($('race-gradient'));
+  else routeSpeeds.after($('race-gradient'));
   $('road-service-settings').hidden=view!=='trucks';
   syncRouteSpeeds();
   profileControl?.refresh();
@@ -702,7 +705,7 @@ const optimizerCatalogue=request=>loadOptimizerCatalogue(loadData,request,datase
 function ensureOptimizer(){
   if(optimizerControl)return;
   const applyOptimizerRoute=segments=>{
-    if(routeSelection.mode==='simple')routeSelection.updateSimple(segments[0]);else routeSelection.updateCustom(segments);
+    if(routeSelection.mode==='simple'&&segments.length===1)routeSelection.updateSimple(segments[0]);else routeSelection.updateCustom(segments);
     if(routeSelection.mode==='custom')profileControl?.setSegments(segments);
     syncRouteSelection({restore:true});
   };
@@ -714,7 +717,7 @@ function ensureOptimizer(){
       $('rail-cargo').querySelector(`input[value="${economicCargo}"]`).checked=true;
       const restored=consistEditor.restoreDraft({...proposal.definition,year:proposal.year,freightSpecialization:request.cargo==='all'?'general':request.cargo});
       if(!restored)throw new Error('This composition could not be restored.');
-      if(proposal.routeInfrastructure)applyOptimizerRoute(request.routeProfile);
+      if(request.routeProfile)applyOptimizerRoute(request.routeProfile);
       updateCompositionSettings({...compositionSettings(),fillRatio:request.fillRatio,desiredFlow:request.rate,maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',platformLengthMetres:request.maxTrainLength,loadedReturn:request.loadedReturn,stopA:request.stopA,stopB:request.stopB});
       location.hash='#composition-builder';syncAnalysisView();
     }else{
@@ -725,7 +728,7 @@ function ensureOptimizer(){
         consistEditor.restoreDraft({...proposal.definition,year:proposal.year,freightSpecialization:request.cargo==='all'?'general':request.cargo});
         compareComposition();comparisonId=comparisonComposition.id;
       }
-      if(proposal.routeInfrastructure)applyOptimizerRoute(request.routeProfile);
+      if(request.routeProfile)applyOptimizerRoute(request.routeProfile);
       truckYear=request.year;truckCargo=request.cargo;includeTrams=Boolean(proposal.definition);selectedRoad=new Set([comparisonId]);
       $('truck-year').value=truckYear;$('truck-year-value').textContent=truckYear;$('road-include-trams').checked=includeTrams;
       $('truck-cargo-specialization').querySelector(`input[value="${truckCargo}"]`).checked=true;
