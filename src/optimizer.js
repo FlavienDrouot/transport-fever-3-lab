@@ -4,16 +4,16 @@ import {analyseRoadFleet,matchesFreightFilter,selectRoadVehicles} from './trucks
 import {routeProfileDistance,validateRouteProfile} from './route-profile.js';
 
 export const OPTIMIZER_DEFAULTS={domain:'both',category:'passengers',cargo:'all',rate:1000,minHeadwaySeconds:null,maxHeadwaySeconds:300,fillRatio:1,year:2035,ignoreRetirements:false,
-  maxTrainLength:320,maxLocomotives:2,maxWagons:40,maxUnits:8,maxFleet:1000,loadedReturn:false,stopA:{},stopB:{}};
+  maxTrainLength:320,maxLocomotives:2,maxWagons:40,maxFleet:1000,loadedReturn:false,stopA:{},stopB:{}};
 
 export function optimizerRequest(input){
   const request={...OPTIMIZER_DEFAULTS,...input,routeProfile:validateRouteProfile(input.routeProfile)};
   if(!['both','rail','road'].includes(request.domain))throw new RangeError('Choose Rail, Road or both.');
   if(!['passengers','freight'].includes(request.category)||!['all','bulk','goods','flatbed','liquid'].includes(request.cargo))throw new RangeError('Choose a supported transport type.');
-  const bounds={rate:[.001,1e9],fillRatio:[.01,1],year:[1850,2035],maxTrainLength:[1,2000],maxLocomotives:[1,8],maxWagons:[1,100],maxUnits:[1,20],maxFleet:[1,100000]};
+  const bounds={rate:[.001,1e9],fillRatio:[.01,1],year:[1850,2035],maxTrainLength:[1,2000],maxLocomotives:[1,8],maxWagons:[1,100],maxFleet:[1,100000]};
   for(const [key,[low,high]] of Object.entries(bounds)){
     if(!Number.isFinite(request[key])||request[key]<low||request[key]>high)throw new RangeError(`${key} must be between ${low} and ${high}.`);
-    if(['year','maxLocomotives','maxWagons','maxUnits','maxFleet'].includes(key)&&!Number.isInteger(request[key]))throw new RangeError(`${key} must be a whole number.`);
+    if(['year','maxLocomotives','maxWagons','maxFleet'].includes(key)&&!Number.isInteger(request[key]))throw new RangeError(`${key} must be a whole number.`);
   }
   for(const key of ['minHeadwaySeconds','maxHeadwaySeconds'])if(request[key]!==null&&(!Number.isFinite(request[key])||request[key]<=0))throw new RangeError('Frequency intervals must be positive.');
   if(request.minHeadwaySeconds!==null&&request.maxHeadwaySeconds!==null&&request.minHeadwaySeconds>request.maxHeadwaySeconds)throw new RangeError('Minimum Frequency interval must not exceed the maximum interval.');
@@ -41,7 +41,8 @@ export function* optimizerCandidates(data,request){
     const carrying=item=>freight?item.cargoCapacity>0&&matchesFreightFilter(item,request.cargo):item.passengerCapacity>0;
     const definition=(components,name)=>({schemaVersion:1,id:`optimizer:${components.map(c=>`${c.componentId}:${c.quantity}`).join('|')}`,name,carrier:'rail',category:request.category,...(freight?{cargo:request.cargo}:{}),components});
     for(const unit of available.filter(item=>item.role==='powered-carriage'&&carrying(item))){
-      const maximum=Math.min(request.maxUnits,Math.floor((request.maxTrainLength+1e-9)/unit.lengthMetres));
+      if(!Number.isFinite(unit.lengthMetres)||unit.lengthMetres<=0)throw new RangeError(`Invalid trainset length: ${unit.id}`);
+      const maximum=Math.floor((request.maxTrainLength+1e-9)/unit.lengthMetres);
       for(let quantity=1;quantity<=maximum;quantity++)yield {domain:'rail',catalogue,definition:definition([{componentId:unit.id,quantity}],unit.name)};
     }
     for(const engine of available.filter(item=>item.role==='locomotive'))for(const wagon of available.filter(item=>item.role==='wagon'&&carrying(item))){

@@ -5,7 +5,7 @@ import {mountTransportCategory,mountFreightFilter} from './transport-category.js
 import {renderFreightFacilities} from './service-controls.js';
 
 export function mountOptimizer(root,{getRoute,getCatalogue,onOpen}){
-  const railBounds=['maxTrainLength','maxLocomotives','maxWagons','maxUnits'];
+  const railBounds=['maxTrainLength','maxLocomotives','maxWagons'];
   const number=(key,label,unit,min,max,step='1')=>`<label class="optimizer-field"${railBounds.includes(key)?' data-optimizer-rail-bound':''}>${label}<span><input name="${key}" type="number" value="${OPTIMIZER_DEFAULTS[key]}" min="${min}" max="${max}" step="${step}" required> ${unit}</span></label>`;
   root.innerHTML=`<div class="optimizer-setup"><div id="optimizer-route-slot"></div><form id="optimizer-form" class="panel-group"><div class="panel-group-body">
     <h3>What service do you need?</h3>
@@ -20,7 +20,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen}){
     <p class="chart-help">Meet the Rate with whole vehicles, within the enabled intervals between departures and the Utilization ceiling.</p>
     <details id="optimizer-handling" class="panel-group" hidden><summary>Freight handling &amp; facilities</summary><div class="panel-group-body"><label><input name="loadedReturn" type="checkbox"> Loaded return</label><div class="road-stop-grid">${renderFreightFacilities({terminalA:'optimizer-terminal-a',warehouseA:'optimizer-warehouse-a',terminalB:'optimizer-terminal-b',warehouseB:'optimizer-warehouse-b'})}</div></div></details>
     <details class="panel-group"><summary>Year &amp; search bounds</summary><div class="panel-group-body"><label><input name="ignoreRetirements" type="checkbox"> Ignore retirements</label><div class="optimizer-fields">
-      ${number('year','Game year','',1850,2035)}${number('maxTrainLength','Maximum train length','m',1,2000)}${number('maxLocomotives','Locomotives per train · at most','',1,8)}${number('maxWagons','Wagons per train · at most','',1,100)}${number('maxUnits','Complete trainsets per train · at most','',1,20)}${number('maxFleet','Fleet size · at most','vehicles',1,100000)}
+      ${number('year','Game year','',1850,2035)}${number('maxTrainLength','Maximum train length','m',1,2000)}${number('maxLocomotives','Locomotives per train · at most','',1,8)}${number('maxWagons','Wagons per train · at most','',1,100)}${number('maxFleet','Fleet size · at most','vehicles',1,100000)}
     </div><p class="chart-help">Search vehicles introduced by the game year and not yet retired in the source catalogue. Ignore retirements if your game keeps older vehicles available. Save/mod overrides are not read.</p><p class="chart-help">Rail: identical complete trainsets, or one locomotive model with one wagon model. Road: buses or trucks. Saved compositions and trams are excluded.</p></div></details>
     <div class="optimizer-actions"><button type="submit" class="optimizer-primary">Find solutions</button><button type="button" id="optimizer-cancel" hidden>Cancel</button></div>
     <p id="optimizer-status" role="status" aria-live="polite" class="chart-help">Minimize fleet Running costs while meeting your service goals.</p>

@@ -11,11 +11,11 @@ const [t,l,p,f,b,r]=await Promise.all(['trains','rail-locomotives','rail-passeng
 const catalogue={units:t.source,trains:t.trains,locomotives:l.locomotives,passengerWagons:p.wagons,freightWagons:f.wagons,buses:b.buses,trucks:r.trucks};
 const routeProfile=[{distanceKm:2,gradePercent:0,speedLimitKmh:80}];
 const small={...catalogue,trains:catalogue.trains.slice(0,2),locomotives:catalogue.locomotives.slice(0,2),passengerWagons:catalogue.passengerWagons.slice(0,2),freightWagons:catalogue.freightWagons.slice(0,5),buses:catalogue.buses.slice(0,3),trucks:catalogue.trucks.slice(0,3)};
-const run=(data,input,options)=>{const generator=optimizeService(data,{routeProfile,maxWagons:4,maxUnits:3,...input},options);let next;do{next=generator.next();}while(!next.done);return next.value;};
+const run=(data,input,options)=>{const generator=optimizeService(data,{routeProfile,maxWagons:4,...input},options);let next;do{next=generator.next();}while(!next.done);return next.value;};
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7*Math.max(1,Math.abs(b)),`${a} != ${b}`);
 
 test('bounded search finds the cheapest feasible whole-fleet service in each domain',()=>{
-  const input={routeProfile,rate:250,maxHeadwaySeconds:120,fillRatio:.7,maxWagons:4,maxUnits:3};
+  const input={routeProfile,rate:250,maxHeadwaySeconds:120,fillRatio:.7,maxWagons:4};
   const request=optimizerRequest(input),answer=run(small,input,{limit:1000});
   const exhaustive={rail:[],road:[]};
   for(const candidate of optimizerCandidates(small,request)){
@@ -32,11 +32,34 @@ test('bounded search finds the cheapest feasible whole-fleet service in each dom
 });
 
 test('search enumerates multi-engine trains and identical whole trainsets within length bounds',()=>{
-  const request=optimizerRequest({routeProfile,maxWagons:4,maxUnits:3,maxTrainLength:100});
+  const request=optimizerRequest({routeProfile,maxWagons:4,maxTrainLength:100});
   const candidates=[...optimizerCandidates({...small,trains:catalogue.trains.filter(t=>t.id==='draisine')},request)].filter(c=>c.domain==='rail');
   assert.ok(candidates.some(c=>c.definition.components[0].quantity===2&&c.definition.components.length===2));
   assert.ok(candidates.some(c=>c.definition.components.length===1&&c.definition.components[0].quantity===3));
   for(const candidate of candidates){const train=buildConsist(candidate.definition,candidate.catalogue,small.units);assert.ok(train.lengthMetres<=100+1e-8);}
+});
+
+test('trainset quantities are limited only by length, including quantities beyond the old caps',()=>{
+  const unit=catalogue.trains.find(t=>t.id==='draisine');
+  const data={...small,trains:[unit],locomotives:[],passengerWagons:[],freightWagons:[]};
+  for(const length of [1,unit.lengthMetres-.000001,unit.lengthMetres,2*unit.lengthMetres,99.99,100,2000]){
+    const request=optimizerRequest({routeProfile,domain:'rail',maxTrainLength:length});
+    const candidates=[...optimizerCandidates(data,request)],maximum=Math.floor((length+1e-9)/unit.lengthMetres);
+    assert.deepEqual(candidates.map(c=>c.definition.components[0].quantity),Array.from({length:maximum},(_,i)=>i+1));
+    for(const candidate of candidates)assert.ok(buildConsist(candidate.definition,candidate.catalogue,data.units).lengthMetres<=length+1e-9);
+  }
+  const answer=run(data,{domain:'rail',maxTrainLength:100,rate:250},{limit:1000});
+  assert.equal(answer.stats.tested,26);
+  assert.ok(answer.best.rail.some(r=>r.definition.components[0].quantity===26));
+  const oversized=run(data,{domain:'rail',maxTrainLength:unit.lengthMetres-.000001});
+  assert.equal(oversized.stats.tested,0);assert.deepEqual(oversized.best.rail,[]);
+});
+
+test('invalid trainset lengths fail before quantity enumeration can become unbounded',()=>{
+  for(const lengthMetres of [undefined,0,-1,NaN,Infinity]){
+    const data={...small,trains:[{...small.trains[0],lengthMetres}]};
+    assert.throws(()=>[...optimizerCandidates(data,optimizerRequest({routeProfile,domain:'rail'}))],/Invalid trainset length/);
+  }
 });
 
 test('recommendations reproduce the existing service calculators, including facilities and directional Rate',()=>{
@@ -60,7 +83,7 @@ test('recommendations reproduce the existing service calculators, including faci
 
 test('category, cargo specialization and year consistently filter both domains',()=>{
   for(const cargo of ['all','bulk','goods','flatbed','liquid']){
-    const request=optimizerRequest({routeProfile,category:'freight',cargo,year:2000,maxWagons:1,maxUnits:1});
+    const request=optimizerRequest({routeProfile,category:'freight',cargo,year:2000,maxWagons:1});
     for(const c of optimizerCandidates(catalogue,request)){
       const carrying=c.domain==='rail'?c.catalogue.find(v=>v.id===c.definition.components.at(-1).componentId):c.vehicle;
       assert.ok(carrying.year<=2000);assert.ok(carrying.cargoCapacity>0);
@@ -80,7 +103,7 @@ test('infeasible route and fleet bounds produce explicit empty results',()=>{
 
 test('request validation rejects malformed bounds and leaves catalogue and defaults unchanged',()=>{
   const before=JSON.stringify(small),defaults=JSON.stringify(OPTIMIZER_DEFAULTS);
-  for(const input of [{rate:0},{year:2000.5},{maxUnits:21},{maxLocomotives:0},{fillRatio:1.1},{maxHeadwaySeconds:0},{minHeadwaySeconds:-1},{minHeadwaySeconds:Infinity},{minHeadwaySeconds:301},{domain:'water'},{ignoreRetirements:'yes'},{category:'unknown'},{cargo:'mixed'},{stopA:{specializedTerminal:'yes'}}])assert.throws(()=>optimizerRequest({routeProfile,...input}));
+  for(const input of [{rate:0},{year:2000.5},{maxLocomotives:0},{fillRatio:1.1},{maxHeadwaySeconds:0},{minHeadwaySeconds:-1},{minHeadwaySeconds:Infinity},{minHeadwaySeconds:301},{domain:'water'},{ignoreRetirements:'yes'},{category:'unknown'},{cargo:'mixed'},{stopA:{specializedTerminal:'yes'}}])assert.throws(()=>optimizerRequest({routeProfile,...input}));
   run(small,{category:'freight'});assert.equal(JSON.stringify(small),before);assert.equal(JSON.stringify(OPTIMIZER_DEFAULTS),defaults);
   assert.throws(()=>run(small,{}, {limit:0}));
 });
@@ -111,11 +134,11 @@ test('catalogue loading requests only the selected domain/category and optionall
 
 test('source retirements restrict both domains; ignoring them still respects introduction',async()=>{
   const data=await loadOptimizerCatalogue(read,{domain:'both',category:'passengers',ignoreRetirements:false},t);
-  const contains=(input,id)=>[...optimizerCandidates(data,optimizerRequest({routeProfile,maxWagons:1,maxUnits:1,...input}))].some(c=>c.domain==='road'?c.vehicle.id===id:c.definition.components.some(p=>p.componentId.endsWith(`:${id}`)));
+  const contains=(input,id)=>[...optimizerCandidates(data,optimizerRequest({routeProfile,maxWagons:1,...input}))].some(c=>c.domain==='road'?c.vehicle.id===id:c.definition.components.some(p=>p.componentId.endsWith(`:${id}`)));
   assert.equal(contains({year:2009},'metroliner'),true);assert.equal(contains({year:2010},'metroliner'),false);
   assert.equal(contains({year:1914},'droschky'),true);assert.equal(contains({year:1915},'droschky'),false);
   assert.equal(contains({year:2035,ignoreRetirements:true},'droschky'),true);assert.equal(contains({year:1891,ignoreRetirements:true},'droschky'),false);
-  for(const c of optimizerCandidates(data,optimizerRequest({routeProfile,year:2000,maxWagons:1,maxUnits:1}))){
+  for(const c of optimizerCandidates(data,optimizerRequest({routeProfile,year:2000,maxWagons:1}))){
     const parts=c.domain==='road'?[c.vehicle]:c.definition.components.map(p=>c.catalogue.find(v=>v.id===p.componentId));
     assert.ok(parts.every(v=>v.yearTo===0||v.yearTo===null||v.yearTo>2000));
   }
@@ -168,7 +191,7 @@ test('worker exposes the progress/completion contract and reports validation fai
     worker.on('message',message=>{if(message.type==='progress')progress.push(message);else{clearTimeout(timer);worker.terminate();resolve({message,progress});}});
     worker.postMessage(payload);
   });
-  const {message,progress}=await execute({catalogue:small,request:{routeProfile,maxWagons:2,maxUnits:1}});
+  const {message,progress}=await execute({catalogue:small,request:{routeProfile,maxWagons:2}});
   assert.equal(message.type,'complete');assert.ok(message.result.best.rail.length>0);assert.ok(progress.length>0);assert.ok(progress.every(p=>Number.isInteger(p.tested)&&Number.isInteger(p.feasible)));
   const invalid=await execute({catalogue:small,request:{routeProfile,rate:-1}});assert.equal(invalid.message.type,'error');assert.match(invalid.message.message,/rate/);
 });
