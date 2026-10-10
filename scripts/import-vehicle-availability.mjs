@@ -41,7 +41,7 @@ export function vehicleAvailabilityIndex(catalogue,observations){
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const read=async name=>JSON.parse(await readFile(`data/${name}.json`,'utf8'));
   const catalogue=await read('source-catalogue'),observations=[];
-  for(const [name,key] of [['trains','trains'],['rail-locomotives','locomotives'],['rail-passenger-wagons','wagons'],['rail-freight-wagons','wagons'],['buses','buses'],['trucks','trucks']]){
+  for(const [name,key] of [['trains','trains'],['rail-locomotives','locomotives'],['rail-passenger-wagons','wagons'],['rail-freight-wagons','wagons'],['buses','buses'],['trucks','trucks'],['trams','trams'],['trams','freightTrams'],['tram-locomotives','locomotives'],['tram-passenger-wagons','wagons'],['tram-freight-wagons','wagons']]){
     const data=await read(name);observations.push(...data[key].map(card=>({reference:`data/${name}.json#${card.id}`,card})));
   }
   const index=vehicleAvailabilityIndex(catalogue,observations);

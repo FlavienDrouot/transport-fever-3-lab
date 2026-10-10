@@ -7,4 +7,5 @@ export const UI_TERMS=Object.freeze({
   frequency:'Frequency',
   rate:'Rate',
   runningCosts:'Running costs',
+  industry:'Industry',
 });

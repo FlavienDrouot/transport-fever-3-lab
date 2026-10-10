@@ -11,7 +11,7 @@ export function validateNumberInputs(inputs, notice) {
     const reason = positive&&input.valueAsNumber<=0 ? 'must be greater than zero'
       : validity.rangeUnderflow ? `must be at least ${input.min}`
       : validity.rangeOverflow ? `must be at most ${input.max}`
-      : validity.stepMismatch ? `must use increments of ${input.step}` : 'must be a valid number';
+      : validity.stepMismatch ? `must use increments of ${input.step}` : validity.customError?input.validationMessage:'must be a valid number';
     errors.push(`${name} ${reason}.`);
   }
   notice.hidden = errors.length === 0;

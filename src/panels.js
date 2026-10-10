@@ -14,6 +14,7 @@ export function syncAnalysisPanels(document,view,{domain='rail'}={}){
   $('configuration-sidebar').hidden=view!=='configurator';
   $('configuration-picker-toggle').hidden=view!=='configurator';
   $('profile-sidebar').hidden=view!=='route-profile';
+  if($('optimizer-sidebar'))$('optimizer-sidebar').hidden=view!=='optimizer';
   $('profile-picker-toggle').hidden=view!=='route-profile';
   $('line-capacity').hidden=view!=='economics';
   $('train-race-settings').hidden=!trainView&&!roadView&&view!=='optimizer';

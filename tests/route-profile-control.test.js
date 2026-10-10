@@ -41,3 +41,15 @@ test('selected segments can be removed from the sketch unless they are the only 
   assert.match(multiple,/data-action="remove" data-index="0"[^>]+aria-label="Remove segment 1"/);
   assert.match(multiple,/class="profile-trash-icon"/);
 });
+
+test('compact previews keep distance proportions and slope directions without editor actions',()=>{
+  const html=routeProfileSketch([
+    {distanceKm:1,gradePercent:4,speedLimitKmh:120},
+    {distanceKm:3,gradePercent:-1,speedLimitKmh:80},
+  ],{compact:true,scale:'linear',availableWidth:320,selectedIndex:0});
+  const points=html.match(/<polyline points="([^"]+)"/)[1].split(' ').map(pair=>pair.split(',').map(Number));
+  assert.equal((points[1][0]-points[0][0])/(points[2][0]-points[0][0]),.25);
+  assert.ok(points[1][1]<points[0][1]);assert.ok(points[2][1]>points[1][1]);
+  assert.match(html,/role="img"/);assert.match(html,/Segment 2: 3 km, -1 percent grade, 80 kilometres per hour limit/);
+  assert.doesNotMatch(html,/data-action=|tabindex=|role="button"/);
+});

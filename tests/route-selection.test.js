@@ -37,3 +37,15 @@ test('invalid edits or external mutations cannot destroy either route',()=>{
   route.select('custom');
   assert.equal(route.segments[0].distanceKm,2);
 });
+
+
+test('each route preserves independent Rail and Road caps across mode changes',()=>{
+  const route=createRouteSelection({...initial,roadSpeedLimitKmh:120});
+  route.updateSimple({roadSpeedLimitKmh:80});
+  assert.equal(route.segments[0].speedLimitKmh,350);
+  route.updateCustom(custom.map(p=>({...p,roadSpeedLimitKmh:50})));
+  route.select('simple');route.updateSimple({speedLimitKmh:160});
+  assert.equal(route.segments[0].roadSpeedLimitKmh,80);
+  route.select('custom');
+  assert.deepEqual(route.segments.map(p=>[p.speedLimitKmh,p.roadSpeedLimitKmh]),[[120,50],[80,50]]);
+});

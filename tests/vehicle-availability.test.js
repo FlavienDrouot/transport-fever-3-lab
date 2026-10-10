@@ -6,11 +6,11 @@ const read=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,
 
 test('maintained availability covers every selectable Rail/Road record and matches explicit source provenance',async()=>{
   const catalogue=await read('source-catalogue'),stored=await read('vehicle-availability'),observations=[];
-  for(const [name,key] of [['trains','trains'],['rail-locomotives','locomotives'],['rail-passenger-wagons','wagons'],['rail-freight-wagons','wagons'],['buses','buses'],['trucks','trucks']]){
+  for(const [name,key] of [['trains','trains'],['rail-locomotives','locomotives'],['rail-passenger-wagons','wagons'],['rail-freight-wagons','wagons'],['buses','buses'],['trucks','trucks'],['trams','trams'],['trams','freightTrams'],['tram-locomotives','locomotives'],['tram-passenger-wagons','wagons'],['tram-freight-wagons','wagons']]){
     const data=await read(name);observations.push(...data[key].map(card=>({reference:`data/${name}.json#${card.id}`,card})));
   }
   assert.deepEqual(vehicleAvailabilityIndex(catalogue,observations),stored);
-  assert.equal(Object.keys(stored.entries).length,167);
+  assert.equal(Object.keys(stored.entries).length,223);
   assert.equal(stored.entries['data/trucks.json#man-19304'].yearTo,2010);
   assert.equal(stored.entries['data/buses.json#droschky'].yearTo,1915);
   assert.equal(stored.entries['data/trains.json#tgv'].yearTo,0);

@@ -2,7 +2,8 @@ import {escapeHtml as escape} from './format.js';
 
 /** Original purchase-list images, with an optional leading-section catalogue view. */
 export function vehicleThumbnail(item,index,{headOnly=false}={}){
-  const formation=index?.components?.[item.id]?.parts;
+  const tramId=item.id?.startsWith('rail:light-rail:')?`tram:${item.cargoCapacity>0?'freight':'passenger'}-motor:${item.id.slice('rail:light-rail:'.length)}`:null;
+  const formation=(index?.components?.[item.id]??index?.components?.[tramId])?.parts;
   if(!formation?.length)return '';
   const parts=headOnly?formation.slice(0,1):formation;
   const ratio=parts.reduce((total,part)=>total+part.width/part.height,0);

@@ -1039,6 +1039,342 @@
       "resourceIds": [
         "base::/vehicle/truck/tesla_semi/tesla_semi.mdl"
       ]
+    },
+    "data/trams.json#horse-tram": {
+      "yearTo": 1915,
+      "resourceIds": [
+        "base::/vehicle/tram/double_horse/double_horse.mdl"
+      ]
+    },
+    "data/trams.json#aeg": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/tram/halle/halle.mdl"
+      ]
+    },
+    "data/trams.json#nuremberg-f": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/moscow_f/moscow_f.mdl"
+      ]
+    },
+    "data/trams.json#gotha-t1": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/tram/typ1/typ1.mdl"
+      ]
+    },
+    "data/trams.json#milano-4000": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/tram/atm_4000/atm_4000.mdl"
+      ]
+    },
+    "data/trams.json#pittsburgh-pcc1643": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/tram/pcc_1643_pittsburgh/pcc_1643_pittsburgh.mdl"
+      ]
+    },
+    "data/trams.json#duewag": {
+      "yearTo": 1995,
+      "resourceIds": [
+        "base::/vehicle/tram/duewag_grossraum/duewag_tw.mdl"
+      ]
+    },
+    "data/trams.json#zurich-mirage": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/tram/be4_6mirage/be4_6mirage.mdl"
+      ]
+    },
+    "data/trams.json#tatra-t4": {
+      "yearTo": 2005,
+      "resourceIds": [
+        "base::/vehicle/tram/tatra_t4/tatra_t4.mdl"
+      ]
+    },
+    "data/trams.json#duewag-n8c": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/tram/duewag_n8c/duewag_n8c.mdl"
+      ]
+    },
+    "data/trams.json#toronto-clrv": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/tram/toronto_clrv/toronto_clrv.mdl"
+      ]
+    },
+    "data/trams.json#hong-kong": {
+      "yearTo": 0,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/tram/hongkong/hongkong.mdl"
+      ]
+    },
+    "data/trams.json#st-petersburg-lvs86": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/tram/lvs_86/lvs_86.mdl"
+      ]
+    },
+    "data/trams.json#toyama-8000": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/toyama_8000/toyama_8000.mdl"
+      ]
+    },
+    "data/trams.json#bombardier-k4000": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/bombardier_k4000/bombardier_k4000.mdl"
+      ]
+    },
+    "data/trams.json#skoda-10t": {
+      "yearTo": 2030,
+      "resourceIds": [
+        "base::/vehicle/tram/skoda_10t/skoda_10t.mdl"
+      ]
+    },
+    "data/trams.json#changchun-3000": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/changchun3000/changchun3000.mdl"
+      ]
+    },
+    "data/trams.json#moscow-vityaz-m": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/vityaz_m/vityaz_m.mdl"
+      ]
+    },
+    "data/trams.json#caf-urbos-3": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/caf_urbos3/caf_urbos3.mdl"
+      ]
+    },
+    "data/trams.json#stadler-citylink": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/stadler_citylink/stadler_citylink.mdl"
+      ]
+    },
+    "data/trams.json#stadler-tina": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/stadler_tina/stadler_tina.mdl"
+      ]
+    },
+    "data/trams.json#horse-freight-tram": {
+      "yearTo": 1915,
+      "resourceIds": [
+        "base::/vehicle/tram/double_horse/double_horse_cargo.mdl"
+      ]
+    },
+    "data/trams.json#sydney-24s": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/tram/freightcar_24s/freightcar_24s.mdl"
+      ]
+    },
+    "data/trams.json#russian-x": {
+      "yearTo": 1985,
+      "resourceIds": [
+        "base::/vehicle/tram/series_x/series_x.mdl"
+      ]
+    },
+    "data/trams.json#tatra-t4-tanker": {
+      "yearTo": 2035,
+      "resourceIds": [
+        "base::/vehicle/tram/tatra_t4/tatra_t4_tank.mdl"
+      ]
+    },
+    "data/trams.json#tatra-t4-tipper": {
+      "yearTo": 2035,
+      "resourceIds": [
+        "base::/vehicle/tram/tatra_t4/tatra_t4_bulk.mdl"
+      ]
+    },
+    "data/trams.json#tatra-t4-flatbed": {
+      "yearTo": 2035,
+      "resourceIds": [
+        "base::/vehicle/tram/tatra_t4/tatra_t4_stake.mdl"
+      ]
+    },
+    "data/trams.json#tatra-t4-box": {
+      "yearTo": 2035,
+      "resourceIds": [
+        "base::/vehicle/tram/tatra_t4/tatra_t4_box.mdl"
+      ]
+    },
+    "data/trams.json#dresden-cargotram": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/car_go_tram/car_go_tram.mdl"
+      ]
+    },
+    "data/trams.json#articulated-freight-tram": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/f_tram_univ/f_tram_univ.mdl"
+      ]
+    },
+    "data/tram-locomotives.json#steam-tram-locomotive": {
+      "yearTo": 1930,
+      "resourceIds": [
+        "base::/vehicle/tram/dampftram/dampftram.mdl"
+      ]
+    },
+    "data/tram-locomotives.json#swiss-ge22": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/tram/sig_ge_2_2/sig_ge_2_2.mdl"
+      ]
+    },
+    "data/tram-locomotives.json#ge-25ton-switcher": {
+      "yearTo": 1995,
+      "resourceIds": [
+        "base::/vehicle/tram/ge_25_ton_sw/ge_25_ton_sw.mdl"
+      ]
+    },
+    "data/tram-locomotives.json#schoma-tm22": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/schoema_gm_2_2/schoema_gm_2_2.mdl"
+      ]
+    },
+    "data/tram-locomotives.json#vienna-lh": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/type_lh/type_lh.mdl"
+      ]
+    },
+    "data/tram-passenger-wagons.json#open-wagon": {
+      "yearTo": 1910,
+      "resourceIds": [
+        "base::/vehicle/tram/odessa/odessa.mdl"
+      ]
+    },
+    "data/tram-passenger-wagons.json#closed-wagon": {
+      "yearTo": 1930,
+      "resourceIds": [
+        "base::/vehicle/tram/closed_pax_wagon/closed_pax_wagon.mdl"
+      ]
+    },
+    "data/tram-passenger-wagons.json#double-deck-wagon": {
+      "yearTo": 1945,
+      "resourceIds": [
+        "base::/vehicle/tram/double_deck_wagon/double_deck_wagon.mdl"
+      ]
+    },
+    "data/tram-passenger-wagons.json#nuremberg-f-wagon": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/moscow_f/moscow_nuremberg.mdl"
+      ]
+    },
+    "data/tram-passenger-wagons.json#gotha-t1-wagon": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/tram/typ1/typ1_wagon.mdl"
+      ]
+    },
+    "data/tram-passenger-wagons.json#duewag-wagon": {
+      "yearTo": 1995,
+      "resourceIds": [
+        "base::/vehicle/tram/duewag_grossraum/duewag_bw.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#general-1895": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_a/univ_car_a.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#box-1896": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_a/box_car_a.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#flatbed-1897": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_a/stake_car_a.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#gondola-1898": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_a/bulk_car_a.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#tank-1899": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_a/tank_car_a.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#general-1950": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_b/univ_car_b.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#tank-1950": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_b/tank_car_b.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#gondola-1950": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_b/bulk_car_b.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#flatbed-1950": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_b/stake_car_b.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#box-1950": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_b/box_car_b.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#general-2005": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_c/univ_car_c.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#tank-2005": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_c/tank_car_c.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#gondola-2005": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_c/bulk_car_c.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#flatbed-2005": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_c/stake_car_c.mdl"
+      ]
+    },
+    "data/tram-freight-wagons.json#box-2005": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/tram/cargo_c/box_car_c.mdl"
+      ]
     }
   }
 }
