@@ -50,7 +50,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   mountTransportCategory($('optimizer-category'),{value:category,onChange:value=>{category=value;syncCategory();invalidate();}});
   mountFreightFilter($('optimizer-cargo'));syncCategory();
   const stopValues=stop=>({specializedTerminal:$(`optimizer-terminal-${stop}`).checked,specializedWarehouse:$(`optimizer-warehouse-${stop}`).checked});
-  infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getScope:()=>({domain:field('domain').value,category,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
+  infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getScope:()=>({domain:field('domain').value,category,includeTrams:lineControl?.includeTrams()??false,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
   lineControl=mountOptimizerLineInfrastructure($('optimizer-line-control'),{getRoute,getScope:()=>({domain:field('domain').value,year:Number(field('year').value)}),onRouteChange,onChange:()=>{syncInfrastructure();invalidate();}});
   syncInfrastructure();
   function syncCategory(){
