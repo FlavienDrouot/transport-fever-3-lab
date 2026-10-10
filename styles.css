@@ -218,7 +218,9 @@ details .table-scroll{height:auto;max-height:none;scrollbar-gutter:auto}
 .road-sidebar .road-tram-filter{gap:4px}
 
 .road-stop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.road-stop{min-width:0;border:0;padding:0;margin:0;display:grid;grid-template-columns:minmax(0,1fr) 20px;align-items:center;gap:3px}
+.road-stop{min-width:0;border:0;padding:0;margin:0;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;gap:3px}
+.road-stop .road-inline-check{display:flex;align-items:center;gap:5px;font-size:12px;min-height:28px;cursor:pointer}
+.road-stop .road-inline-check input{flex:none;margin:0;accent-color:var(--green)}
 .road-stop legend{padding:0;margin-bottom:5px;color:var(--muted)}
 #road-phases{scroll-margin-top:calc(var(--app-header-offset) + 16px)}
 .phase-leaders [data-train]:focus-visible,.chart .end-label:focus-visible,.train-legend [data-train]:focus-visible{outline:2px solid currentColor;outline-offset:3px}
