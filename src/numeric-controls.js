@@ -20,6 +20,8 @@ export function validateNumberInputs(inputs, notice) {
 }
 
 export function syncNumberInput(input, value) {
+  // Reassigning a focused number field clears its decimal/exponent buffer and moves the caret.
+  if (input.ownerDocument?.activeElement === input) return;
   if (input.getAttribute('aria-invalid') !== 'true') input.value = value;
 }
 
