@@ -4,7 +4,8 @@ import {readFile} from 'node:fs/promises';
 import {OPTIMIZER_DEFAULTS,optimizerRequest,optimizerCandidates,optimizeService,evaluateOptimizerCandidate,compareOptimizerResults} from '../src/optimizer.js';
 import {buildConsist} from '../src/consists.js';
 import {analyseEconomicService} from '../src/rail-freight.js';
-import {analyseRoadFleet} from '../src/trucks.js';
+import {analyseRoadFleet,analysePassengerRoadService} from '../src/trucks.js';
+import {loadOptimizerCatalogue} from '../src/optimizer-catalogue.js';
 const read=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
 const [t,l,p,f,b,r]=await Promise.all(['trains','rail-locomotives','rail-passenger-wagons','rail-freight-wagons','buses','trucks'].map(read));
 const catalogue={units:t.source,trains:t.trains,locomotives:l.locomotives,passengerWagons:p.wagons,freightWagons:f.wagons,buses:b.buses,trucks:r.trucks};
@@ -79,9 +80,81 @@ test('infeasible route and fleet bounds produce explicit empty results',()=>{
 
 test('request validation rejects malformed bounds and leaves catalogue and defaults unchanged',()=>{
   const before=JSON.stringify(small),defaults=JSON.stringify(OPTIMIZER_DEFAULTS);
-  for(const input of [{rate:0},{year:2000.5},{maxUnits:21},{maxLocomotives:0},{fillRatio:1.1},{maxHeadwaySeconds:0},{category:'unknown'},{cargo:'mixed'},{stopA:{specializedTerminal:'yes'}}])assert.throws(()=>optimizerRequest({routeProfile,...input}));
+  for(const input of [{rate:0},{year:2000.5},{maxUnits:21},{maxLocomotives:0},{fillRatio:1.1},{maxHeadwaySeconds:0},{minHeadwaySeconds:-1},{minHeadwaySeconds:Infinity},{minHeadwaySeconds:301},{domain:'water'},{ignoreRetirements:'yes'},{category:'unknown'},{cargo:'mixed'},{stopA:{specializedTerminal:'yes'}}])assert.throws(()=>optimizerRequest({routeProfile,...input}));
   run(small,{category:'freight'});assert.equal(JSON.stringify(small),before);assert.equal(JSON.stringify(OPTIMIZER_DEFAULTS),defaults);
   assert.throws(()=>run(small,{}, {limit:0}));
+});
+
+test('selected domains alone are enumerated and evaluated, with no access to the other catalogue',()=>{
+  const road={units:catalogue.units,buses:small.buses,trucks:small.trucks};
+  const rail={units:catalogue.units,trains:small.trains,locomotives:small.locomotives,passengerWagons:small.passengerWagons,freightWagons:small.freightWagons};
+  Object.defineProperty(road,'locomotives',{get(){throw Error('Rail accessed');}});
+  Object.defineProperty(rail,'trucks',{get(){throw Error('Road accessed');}});
+  for(const [domain,data,other] of [['road',road,'rail'],['rail',rail,'road']]){
+    const answer=run(data,{domain});assert.ok(answer.best[domain].length>0);assert.deepEqual(answer.best[other],[]);assert.equal(answer.stats.feasible[other],0);
+    assert.equal(answer.stats.tested,answer.stats.feasible[domain]);
+  }
+});
+
+test('catalogue loading requests only the selected domain/category and optionally the retirement index',async()=>{
+  for(const domain of ['rail','road','both'])for(const category of ['passengers','freight'])for(const ignoreRetirements of [false,true]){
+    const names=[],input={domain,category,ignoreRetirements};
+    const data=await loadOptimizerCatalogue(async name=>{names.push(name);return read(name);},input,t);
+    const expected=[...domain!=='road'?['rail-locomotives',category==='freight'?'rail-freight-wagons':'rail-passenger-wagons']:[],
+      ...domain!=='rail'?[category==='freight'?'trucks':'buses']:[],...ignoreRetirements?[]:['vehicle-availability']];
+    assert.deepEqual(names.sort(),expected.sort());
+    assert.equal(data.trains.length,domain==='road'?0:t.trains.length);
+    if(!ignoreRetirements&&domain!=='rail'&&category==='freight')assert.equal(data.trucks.find(v=>v.id==='man-19304').yearTo,2010);
+    if(!ignoreRetirements&&domain!=='road')assert.equal(data.trains.find(v=>v.id==='metroliner').yearTo,2010);
+  }
+});
+
+test('source retirements restrict both domains; ignoring them still respects introduction',async()=>{
+  const data=await loadOptimizerCatalogue(read,{domain:'both',category:'passengers',ignoreRetirements:false},t);
+  const contains=(input,id)=>[...optimizerCandidates(data,optimizerRequest({routeProfile,maxWagons:1,maxUnits:1,...input}))].some(c=>c.domain==='road'?c.vehicle.id===id:c.definition.components.some(p=>p.componentId.endsWith(`:${id}`)));
+  assert.equal(contains({year:2009},'metroliner'),true);assert.equal(contains({year:2010},'metroliner'),false);
+  assert.equal(contains({year:1914},'droschky'),true);assert.equal(contains({year:1915},'droschky'),false);
+  assert.equal(contains({year:2035,ignoreRetirements:true},'droschky'),true);assert.equal(contains({year:1891,ignoreRetirements:true},'droschky'),false);
+  for(const c of optimizerCandidates(data,optimizerRequest({routeProfile,year:2000,maxWagons:1,maxUnits:1}))){
+    const parts=c.domain==='road'?[c.vehicle]:c.definition.components.map(p=>c.catalogue.find(v=>v.id===p.componentId));
+    assert.ok(parts.every(v=>v.yearTo===0||v.yearTo===null||v.yearTo>2000));
+  }
+  for(const yearTo of [0,null,undefined])assert.ok(run({...small,buses:small.buses.map(v=>({...v,yearTo}))},{domain:'road'}).best.road.length>0);
+});
+
+test('minimum intervals filter whole-fleet services, including an equal-bound and a minimum-only search',()=>{
+  for(const domain of ['rail','road']){
+    const input={domain,rate:250,fillRatio:.7,maxHeadwaySeconds:300};
+    const baseline=run(small,input,{limit:1000}).best[domain];assert.ok(baseline.length>1);
+    const intervals=baseline.map(r=>r.frequency).sort((a,b)=>a-b),minimum=(intervals[0]+intervals.at(-1))/2;
+    const answer=run(small,{...input,minHeadwaySeconds:minimum},{limit:1000});
+    assert.deepEqual(answer.best[domain],baseline.filter(r=>r.frequency>=minimum-1e-7));
+    assert.ok(answer.best[domain].length>0&&answer.best[domain].length<baseline.length);
+    const boundary=baseline[0].frequency;
+    assert.ok(run(small,{...input,minHeadwaySeconds:boundary,maxHeadwaySeconds:boundary},{limit:1000}).best[domain].some(r=>r.id===baseline[0].id));
+    const uncapped=run(small,{...input,maxHeadwaySeconds:null},{limit:1000}).best[domain];
+    const onlyMinimum=run(small,{...input,minHeadwaySeconds:minimum,maxHeadwaySeconds:null},{limit:1000});
+    assert.deepEqual(onlyMinimum.best[domain],uncapped.filter(r=>r.frequency>=minimum-1e-7));
+    assert.deepEqual(run(small,{...input,minHeadwaySeconds:1e6,maxHeadwaySeconds:null}).best[domain],[]);
+  }
+});
+
+test('two-sided intervals agree with an exhaustive integer fleet check with Rate-dependent transfers',()=>{
+  const vehicle=small.buses[0],data={buses:[vehicle],trucks:[]},fillRatio=.7;
+  const full=analysePassengerRoadService([vehicle],{distanceKm:2,routeProfile,fillRatio,motion:true})[0];
+  const fixed=full.roundTripSeconds-full.loadingSeconds-full.unloadingSeconds;
+  for(const rate of [10,100,500,1000])for(const minimum of [null,30,180,300])for(const maximum of [null,300,600]){
+    if(minimum!==null&&maximum!==null&&minimum>maximum)continue;
+    const flow=2*rate/1460,transfer=flow*(full.loadingSeconds+full.unloadingSeconds)/full.deliveredPerCycle;
+    const feasible=[];
+    for(let count=1;count<=20;count++){
+      const interval=fixed/(count-transfer),load=flow*interval/full.deliveredPerCycle;
+      if(interval>0&&load<=1+1e-9&&(minimum===null||interval>=minimum-1e-7)&&(maximum===null||interval<=maximum+1e-7))feasible.push(count);
+    }
+    const answer=run(data,{domain:'road',rate,fillRatio,minHeadwaySeconds:minimum,maxHeadwaySeconds:maximum,maxFleet:20});
+    assert.equal(answer.best.road.length,feasible.length?1:0);
+    if(feasible.length)assert.equal(answer.best.road[0].fleet,feasible[0]);
+  }
 });
 
 test('worker exposes the progress/completion contract and reports validation failures',async()=>{

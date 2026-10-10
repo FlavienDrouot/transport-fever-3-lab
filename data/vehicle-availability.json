@@ -1,0 +1,1044 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "catalogue": "source-catalogue.json",
+    "steamBuildId": "25533170",
+    "sourceSha256": "f4f37f86d84ed1670094f6f327b0874cd8efc2a9760034bdf22c65d252a45cb7",
+    "scope": "Source purchase availability; active save/mod overrides are not applied.",
+    "rule": "Formation end is the earliest component end. 0 means no declared end; null means unknown."
+  },
+  "entries": {
+    "data/trains.json#metroliner": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/train/metroliner/metroliner.mdl"
+      ]
+    },
+    "data/trains.json#twindexx": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/twindexx/twindexx_front.mdl",
+        "base::/vehicle/train/twindexx/twindexx_middle1.mdl"
+      ]
+    },
+    "data/trains.json#tgv": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/tgv_duplex/tgv_front.mdl",
+        "base::/vehicle/train/tgv_duplex/tgv_middle1.mdl",
+        "base::/vehicle/train/tgv_duplex/tgv_middle2.mdl",
+        "base::/vehicle/train/tgv_duplex/tgv_middle3.mdl",
+        "base::/vehicle/train/tgv_duplex/tgv_middle4.mdl",
+        "base::/vehicle/train/tgv_duplex/tgv_middle5.mdl"
+      ]
+    },
+    "data/trains.json#fuxing": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/fuxing_hao/fuxing_hao_front.mdl",
+        "base::/vehicle/train/fuxing_hao/fuxing_hao_middle1.mdl",
+        "base::/vehicle/train/fuxing_hao/fuxing_hao_middle2.mdl"
+      ]
+    },
+    "data/trains.json#draisine": {
+      "yearTo": 1940,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/train/handcar/handcar.mdl"
+      ]
+    },
+    "data/trains.json#acf-m300": {
+      "yearTo": 1965,
+      "resourceIds": [
+        "base::/vehicle/train/m_300/m_300.mdl"
+      ]
+    },
+    "data/trains.json#roter-pfeil": {
+      "yearTo": 1975,
+      "resourceIds": [
+        "base::/vehicle/train/roterpfeil/roterpfeil.mdl"
+      ]
+    },
+    "data/trains.json#uerdingen": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/train/schienenbus/schienenbus.mdl"
+      ]
+    },
+    "data/trains.json#tee-vt115": {
+      "yearTo": 0,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_front.mdl",
+        "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle1.mdl",
+        "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle2.mdl",
+        "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle3.mdl",
+        "urbangames_deluxe_upgrade_pack::/vehicle/train/db_vt_11_5/db_vt_11_5_middle4.mdl"
+      ]
+    },
+    "data/trains.json#shinkansen-0": {
+      "yearTo": 2005,
+      "resourceIds": [
+        "base::/vehicle/train/shinkansen_0s/shinkansen_0s_front.mdl",
+        "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle1.mdl",
+        "base::/vehicle/train/shinkansen_0s/shinkansen_0s_middle2.mdl",
+        "base::/vehicle/train/shinkansen_0s/shinkansen_0s_back.mdl"
+      ]
+    },
+    "data/trains.json#intercity-125": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/train/hst_125/hst_125_front.mdl",
+        "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+        "base::/vehicle/train/hst_125/hst_125_middle2.mdl"
+      ]
+    },
+    "data/trains.json#etr-450": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/train/fs_etr_450/etr_450_front.mdl",
+        "base::/vehicle/train/fs_etr_450/etr_450_middle1.mdl",
+        "base::/vehicle/train/fs_etr_450/etr_450_middle2.mdl"
+      ]
+    },
+    "data/trains.json#re450": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/re_450/re_450_front.mdl",
+        "base::/vehicle/train/re_450/re_450_middle1.mdl",
+        "base::/vehicle/train/re_450/re_450_back.mdl"
+      ]
+    },
+    "data/trains.json#ice-1": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/train/ice1/ice1_front.mdl",
+        "base::/vehicle/train/ice1/ice1_middle1.mdl",
+        "base::/vehicle/train/ice1/ice1_middle2.mdl"
+      ]
+    },
+    "data/trains.json#talent-1": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/talent1/talent1.mdl"
+      ]
+    },
+    "data/trains.json#lastochka": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/es1_lastochka/es1_lastochka_front.mdl",
+        "base::/vehicle/train/es1_lastochka/es1_lastochka_middle1.mdl",
+        "base::/vehicle/train/es1_lastochka/es1_lastochka_middle2.mdl"
+      ]
+    },
+    "data/trains.json#avelia-liberty": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/avelia_liberty/avelia_liberty_front.mdl",
+        "base::/vehicle/train/avelia_liberty/avelia_liberty_middle1.mdl",
+        "base::/vehicle/train/avelia_liberty/avelia_liberty_middle2.mdl",
+        "base::/vehicle/train/avelia_liberty/avelia_liberty_middle3.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#prussian-class-t-3": {
+      "yearTo": 1920,
+      "resourceIds": [
+        "base::/vehicle/train/br89/br89.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#2-6-0-mogul": {
+      "yearTo": 1930,
+      "resourceIds": [
+        "base::/vehicle/train/mogul_2_6_0/mogul_2_6_0.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#russian-class-ob": {
+      "yearTo": 1940,
+      "resourceIds": [
+        "base::/vehicle/train/russian_class_ob/russian_class_ob.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#4-4-2-atlantic": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/train/atlantic_4_4_2/atlantic_4_4_2.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#baden-class-vi-c": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/train/br75_4/br75_4.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#chinese-class-jf1": {
+      "yearTo": 1965,
+      "resourceIds": [
+        "base::/vehicle/train/china_jf1/china_jf1.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#ce-6-8-ii-crocodile": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/train/c6_8/c6_8.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#russian-class-su": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/train/russian_class_su/russian_class_su.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#alco-hh-600": {
+      "yearTo": 1975,
+      "resourceIds": [
+        "base::/vehicle/train/alco_hh600/alco_hh600.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#pennsylvanian-class-gg1": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/train/class_prr_gg1/class_prr_gg1.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#british-class-a4": {
+      "yearTo": 1975,
+      "resourceIds": [
+        "base::/vehicle/train/lner_class_a4/lner_class_a4.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#german-class-e-94": {
+      "yearTo": 1985,
+      "resourceIds": [
+        "base::/vehicle/train/br_e94/br_e94.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#alco-4-8-8-4-big-boy": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/train/bigboy/bigboy.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#swiss-re-4-4-i": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/train/re_44i/re_44i.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#emd-f-unit": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/train/emd_f/emd_fa.mdl",
+        "base::/vehicle/train/emd_f/emd_fb.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#chinese-class-rm": {
+      "yearTo": 1985,
+      "resourceIds": [
+        "base::/vehicle/train/china_rm/china_rm.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#german-class-v-100": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/train/db_v100/db_v100.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#austrian-class-1042": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/train/obb_1042/obb_1042.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#emd-sd40-2": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/train/emd_sd40/emd_sd40.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#chinese-class-df5": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/train/china_df5/china_df5.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#emd-aem-7": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/train/emd_aem_7/emd_aem_7.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#chinese-class-ss4g": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/train/shaoshan_4g/shaoshan_4g.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#chinese-class-df4b": {
+      "yearTo": 2025,
+      "resourceIds": [
+        "base::/vehicle/train/china_df4b/china_df4b.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#japanese-class-ef66": {
+      "yearTo": 2025,
+      "resourceIds": [
+        "base::/vehicle/train/jr_ef66_100/jr_ef66_100.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#ge-p42dc": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/ge_p42_dc/ge_p42_dc.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#norwegian-class-el-18": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/el_18/el_18.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#german-class-185": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/br_185_traxx/br_185_traxx.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#german-class-246": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/br_246_traxx/br_246_traxx.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#chinese-class-hxd3b": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/china_hxd3b/china_hxd3b.mdl"
+      ]
+    },
+    "data/rail-locomotives.json#stadler-eurodual": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/eurodual/eurodual.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#bavarian-passenger-carriage": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/waggon/bay_05/bay_05.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#compartment-carriage": {
+      "yearTo": 1930,
+      "resourceIds": [
+        "base::/vehicle/waggon/compartment_car/compartment_car.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#russian-suburban-carriage": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/waggon/suburban_2nd/suburban_2nd.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#heavyweight-28-1-parlor": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/waggon/parlor/parlor.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#german-donnerbuchse": {
+      "yearTo": 1985,
+      "resourceIds": [
+        "base::/vehicle/waggon/donnerbuechse/donnerbuechse.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#egorov-20-2": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/waggon/egorov_20_2/egorov_20_2.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#streamlined-carriage": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/streamlined_nyc/streamlined_nyc.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#chinese-type-yz-22": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/china_type_yz_22/china_type_yz_22.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#swiss-einheitswagen-ii": {
+      "yearTo": 2025,
+      "resourceIds": [
+        "base::/vehicle/waggon/ew_ii/ew_ii.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#british-mark-3-carriage": {
+      "yearTo": 2015,
+      "resourceIds": [
+        "base::/vehicle/train/hst_125/hst_125_middle1.mdl",
+        "base::/vehicle/train/hst_125/hst_125_middle2.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#bombardier-bilevel": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/bilevel/bilevel.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#swiss-einheitswagen-iv": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/ew_iv/ew_iv.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#chinese-type-25c": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/china_type_25c/china_type_25c.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#swiss-dpz-carriage": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/train/re_450/re_450_middle1.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#russian-type-61-4447": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/tvz_61_4447/tvz_61_4447.mdl"
+      ]
+    },
+    "data/rail-passenger-wagons.json#siemens-viaggio": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/viaggio/viaggio.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#gondola-wagon-1891": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/waggon/bulk_1_1794/bulk_1_1794.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#stake-wagon-1895": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/waggon/flatbed_1_1794/flatbed_1_1794.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#box-wagon-1897": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/waggon/boxcar_1_20/boxcar_1_20.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#freight-wagon-1899": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/waggon/univ_1_szap/univ_1_szap.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#tank-wagon-1899": {
+      "yearTo": 1950,
+      "resourceIds": [
+        "base::/vehicle/waggon/liquid_1_n55/liquid_1_n55.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#box-wagon-1910": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/waggon/boxcar_2_verb/boxcar_2_verb.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#tank-wagon-1912": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/waggon/liquid_2_zh/liquid_2_zh.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#freight-wagon-1913": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/waggon/univ_2_r/univ_2_r.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#gondola-wagon-1915": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/waggon/bulk_2_ok/bulk_2_ok.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#stake-wagon-1920": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/flatbed_2_r/flatbed_2_r.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#tank-wagon-1926": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/liquid_3_uglx/liquid_3_uglx.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#freight-wagon-1930": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/univ_3_acl/univ_3_acl.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#box-wagon-1930": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/boxcar_3_223/boxcar_3_223.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#gondola-wagon-1940": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "base::/vehicle/waggon/bulk_3_steel/bulk_3_steel.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#stake-wagon-1945": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/flatbed_3_sslmas/flatbed_3_sslmas.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#tank-wagon-1950": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/liquid_4_ekw/liquid_4_ekw.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#box-wagon-1952": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/boxcar_4_alu/boxcar_4_alu.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#freight-wagon-1960": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/univ_4_rlmmso58/univ_4_rlmmso58.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#stake-wagon-1968": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/flatbed_4_464/flatbed_4_464.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#gondola-wagon-1971": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/bulk_4_002/bulk_4_002.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#box-wagon-1972": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/boxcar_5_hbi/boxcar_5_hbi.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#tank-wagon-1982": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/liquid_5_3752/liquid_5_3752.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#freight-wagon-1999": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/univ_5_rns/univ_5_rns.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#stake-wagon-2000": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/flatbed_5_rnoos644/flatbed_5_rnoos644.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#box-wagon-2000": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/boxcar_6_256/boxcar_6_256.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#gondola-wagon-2001": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/bulk_5_falns/bulk_5_falns.mdl"
+      ]
+    },
+    "data/rail-freight-wagons.json#tank-wagon-2005": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/waggon/liquid_6_zacns/liquid_6_zacns.mdl"
+      ]
+    },
+    "data/buses.json#droschky": {
+      "yearTo": 1915,
+      "resourceIds": [
+        "base::/vehicle/bus/droshky/droshky.mdl"
+      ]
+    },
+    "data/buses.json#stagecoach": {
+      "yearTo": 1925,
+      "resourceIds": [
+        "base::/vehicle/bus/american_post_coach/american_post_coach.mdl"
+      ]
+    },
+    "data/buses.json#obeissante": {
+      "yearTo": 1935,
+      "resourceIds": [
+        "base::/vehicle/bus/obeissante/obeissante.mdl"
+      ]
+    },
+    "data/buses.json#postbus-et13": {
+      "yearTo": 1945,
+      "resourceIds": [
+        "base::/vehicle/bus/et13/et13.mdl"
+      ]
+    },
+    "data/buses.json#daimler-deck": {
+      "yearTo": 1965,
+      "resourceIds": [
+        "base::/vehicle/bus/aboag/aboag.mdl"
+      ]
+    },
+    "data/buses.json#yellow-coach-w": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/bus/yellow_w/yellow_w.mdl"
+      ]
+    },
+    "data/buses.json#mitsubishi-fuso-b46": {
+      "yearTo": 1975,
+      "resourceIds": [
+        "base::/vehicle/bus/fuso_b46/fuso_b46.mdl"
+      ]
+    },
+    "data/buses.json#saurer-tuscher": {
+      "yearTo": 1975,
+      "resourceIds": [
+        "base::/vehicle/bus/saurer_tuescher/saurer_tuescher.mdl"
+      ]
+    },
+    "data/buses.json#scania-vabis-h15": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/bus/scania_vabis_h15/scania_vabis_h15.mdl"
+      ]
+    },
+    "data/buses.json#aec-routemaster": {
+      "yearTo": 2000,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/bus/london_bus/london_bus.mdl"
+      ]
+    },
+    "data/buses.json#citroen-u55-cityrama": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/bus/citroen_cityrama/citroen_cityrama.mdl"
+      ]
+    },
+    "data/buses.json#gm-new-look-fishbowl": {
+      "yearTo": 2005,
+      "resourceIds": [
+        "base::/vehicle/bus/gm_fishbowl/gm_fishbowl.mdl"
+      ]
+    },
+    "data/buses.json#isuzu-bu10p": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/bus/isuzu_bu10p/isuzu_bu10p.mdl"
+      ]
+    },
+    "data/buses.json#shinjin-microbus": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/shinjin_micro_bus/shinjin_micro_bus.mdl"
+      ]
+    },
+    "data/buses.json#mercedes-benz-o303": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/bus/mb_o303/mb_o303.mdl"
+      ]
+    },
+    "data/buses.json#beijing-bk670": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/bus/bk_670/bk_670.mdl"
+      ]
+    },
+    "data/buses.json#mercedes-benz-o405-g": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/bus/mb_o405g/mb_o405g.mdl"
+      ]
+    },
+    "data/buses.json#new-flyer-d40": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/d40/d40.mdl"
+      ]
+    },
+    "data/buses.json#mercedes-benz-citaro-g1": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/mb_citaro_g1/mb_citaro_g1.mdl"
+      ]
+    },
+    "data/buses.json#irisbus-crossway-le": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/irisbus_crossway_le/irisbus_crossway_le.mdl"
+      ]
+    },
+    "data/buses.json#wright-streetcar": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/wright_streetcar/wright_streetcar.mdl"
+      ]
+    },
+    "data/buses.json#zuhai-gtq": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/zuhai_gtq_6186bevbt3/zuhai_gtq_6186bevbt3.mdl"
+      ]
+    },
+    "data/buses.json#mercedes-benz-ecitaro": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/ecitaro/ecitaro.mdl"
+      ]
+    },
+    "data/buses.json#rampini-eltron": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/rampini_2025/rampini_2025.mdl"
+      ]
+    },
+    "data/buses.json#king-long-merry-combo": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/bus/king_long/king_long.mdl"
+      ]
+    },
+    "data/trucks.json#small-horse-wagon": {
+      "yearTo": 1910,
+      "resourceIds": [
+        "base::/vehicle/truck/horse_cart_small/horse_cart_small.mdl"
+      ]
+    },
+    "data/trucks.json#horse-wagon": {
+      "yearTo": 1920,
+      "resourceIds": [
+        "base::/vehicle/truck/horse_cart_medium/horse_cart_medium.mdl"
+      ]
+    },
+    "data/trucks.json#steam-truck": {
+      "yearTo": 1945,
+      "resourceIds": [
+        "base::/vehicle/truck/steam_lorry_univ/steam_lorry_univ.mdl"
+      ]
+    },
+    "data/trucks.json#amo-f15": {
+      "yearTo": 1964,
+      "resourceIds": [
+        "base::/vehicle/truck/amo_f15/amo_f15_univ.mdl"
+      ]
+    },
+    "data/trucks.json#saurer-c": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/truck/saurer_c_typ/saurer_c_typ_univ.mdl"
+      ]
+    },
+    "data/trucks.json#gmc-660": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/truck/gmc_660_dfm/gmc_660_dfm_univ.mdl"
+      ]
+    },
+    "data/trucks.json#isuzu-elf": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/truck/isuzu_elf_tld20/isuzu_elf_tld20_univ.mdl"
+      ]
+    },
+    "data/trucks.json#mercedes-urban-etruck": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/urban_etruck/urban_etruck.mdl"
+      ]
+    },
+    "data/trucks.json#man-19304": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/truck/man_19_304/man_19_304_univ.mdl"
+      ]
+    },
+    "data/trucks.json#gaz-3307": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/gaz_3307/gaz_3307_univ.mdl"
+      ]
+    },
+    "data/trucks.json#faw-j6p": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/faw_jiefang_j6p/faw_jiefang_j6p_univ.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-benz-3t": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/truck/benz1912/benz1912_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-ford-77": {
+      "yearTo": 1965,
+      "resourceIds": [
+        "base::/vehicle/truck/ford_77/ford_77_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-zis-150": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/truck/zis_150/zis_150_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-gmc-660": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/truck/gmc_660_dfm/gmc_660_dfm_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-man-19304": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/truck/man_19_304/man_19_304_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-peterbilt-359": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/truck/peterbilt_359/peterbilt_359_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-kenworth-k100e": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/truck/kenworth_k100e/kenworth_k100e_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-gaz-3307": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/gaz_3307/gaz_3307_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-volvo-fh12": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/volvo_fh12/volvo_fh12_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#tipper-faw-j6p": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/faw_jiefang_j6p/faw_jiefang_j6p_bulk.mdl"
+      ]
+    },
+    "data/trucks.json#box-benz-3t": {
+      "yearTo": 1960,
+      "resourceIds": [
+        "base::/vehicle/truck/benz1912/benz1912_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-ford-aa": {
+      "yearTo": 1970,
+      "resourceIds": [
+        "base::/vehicle/truck/ford_aa/ford_aa_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-saurer-c": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/truck/saurer_c_typ/saurer_c_typ_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-gmc-660": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/truck/gmc_660_dfm/gmc_660_dfm_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-man-19304": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/truck/man_19_304/man_19_304_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-peterbilt-359": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/truck/peterbilt_359/peterbilt_359_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-kenworth-k100e": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/truck/kenworth_k100e/kenworth_k100e_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-gaz-3307": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/gaz_3307/gaz_3307_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-freightliner-fld112": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/freightliner_fld_112/freightliner_fld_112_box.mdl"
+      ]
+    },
+    "data/trucks.json#box-faw-j6p": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/faw_jiefang_j6p/faw_jiefang_j6p_box.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-mack-ac": {
+      "yearTo": 1965,
+      "resourceIds": [
+        "base::/vehicle/truck/mack_ac/mack_ac_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-gaz-mm": {
+      "yearTo": 1978,
+      "resourceIds": [
+        "base::/vehicle/truck/gaz_mm/gaz_mm_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-zis-150": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/truck/zis_150/zis_150_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-gmc-660": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/truck/gmc_660_dfm/gmc_660_dfm_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-peterbilt-359": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/truck/peterbilt_359/peterbilt_359_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-kenworth-k100e": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/truck/kenworth_k100e/kenworth_k100e_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-freightliner-fld112": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/freightliner_fld_112/freightliner_fld_112_stake.mdl"
+      ]
+    },
+    "data/trucks.json#flatbed-faw-j6p": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/faw_jiefang_j6p/faw_jiefang_j6p_stake.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-horse-barrels": {
+      "yearTo": 1930,
+      "resourceIds": [
+        "base::/vehicle/truck/horse_cart_barrels/horse_cart_barrels.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-amo-f15": {
+      "yearTo": 1964,
+      "resourceIds": [
+        "base::/vehicle/truck/amo_f15/amo_f15_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-saurer-c": {
+      "yearTo": 1980,
+      "resourceIds": [
+        "base::/vehicle/truck/saurer_c_typ/saurer_c_typ_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-gmc-660": {
+      "yearTo": 1990,
+      "resourceIds": [
+        "base::/vehicle/truck/gmc_660_dfm/gmc_660_dfm_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-man-19304": {
+      "yearTo": 2010,
+      "resourceIds": [
+        "base::/vehicle/truck/man_19_304/man_19_304_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-isuzu-elf": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/truck/isuzu_elf_tld20/isuzu_elf_tld20_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-peterbilt-359": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "urbangames_deluxe_upgrade_pack::/vehicle/truck/peterbilt_359/peterbilt_359_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-kenworth-k100e": {
+      "yearTo": 2020,
+      "resourceIds": [
+        "base::/vehicle/truck/kenworth_k100e/kenworth_k100e_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-gaz-3307": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/gaz_3307/gaz_3307_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-volvo-fh12": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/volvo_fh12/volvo_fh12_tank.mdl"
+      ]
+    },
+    "data/trucks.json#liquid-faw-j6p": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/faw_jiefang_j6p/faw_jiefang_j6p_tank.mdl"
+      ]
+    },
+    "data/trucks.json#rivian-edv": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/rivian_edv/rivian_edv.mdl"
+      ]
+    },
+    "data/trucks.json#tesla-semi": {
+      "yearTo": 0,
+      "resourceIds": [
+        "base::/vehicle/truck/tesla_semi/tesla_semi.mdl"
+      ]
+    }
+  }
+}

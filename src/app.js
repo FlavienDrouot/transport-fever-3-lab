@@ -1,4 +1,5 @@
 import {mountOptimizer} from './optimizer-controls.js';
+import {loadOptimizerCatalogue} from './optimizer-catalogue.js';
 import {ANALYSIS_VIEWS,initialNavigation,resolveNavigation} from './navigation.js';
 import {mountServiceControls,syncRouteSpeedControls} from './service-controls.js';
 import {UI_TERMS} from './ui-terms.js';
@@ -679,10 +680,7 @@ async function ensureRoad(){
   })();return roadLoading;
 }
 
-async function optimizerCatalogue(){
-  const [locomotives,passengers,freight,buses,trucks]=await Promise.all(['rail-locomotives','rail-passenger-wagons','rail-freight-wagons','buses','trucks'].map(loadData));
-  return {units:dataset.source,trains:dataset.trains,locomotives:locomotives.locomotives,passengerWagons:passengers.wagons,freightWagons:freight.wagons,buses:buses.buses,trucks:trucks.trucks};
-}
+const optimizerCatalogue=request=>loadOptimizerCatalogue(loadData,request,dataset);
 function ensureOptimizer(){
   if(optimizerControl)return;
   optimizerControl=mountOptimizer($('optimizer-control'),{getRoute:()=>routeSelection.segments,getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent)=>{
