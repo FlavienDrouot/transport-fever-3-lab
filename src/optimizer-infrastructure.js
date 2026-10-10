@@ -65,7 +65,7 @@ function validateTerminalConstraint(input,domain,category,siteType,stop,loadedRe
     if(![road.platformCount,road.maxPlatforms].every(n=>Number.isSafeInteger(n)&&n>=1&&n<=100))throw new RangeError('Road platform counts must be whole numbers (1–100).');
     if(road.maxPlatformLength<road.platformLength||road.maxPlatforms<road.platformCount)throw new RangeError('Road limits must accommodate the available platforms.');
   }
-  return {...(input.id===undefined?{}:{id:input.id}),mode,terminalType,allowBusStop,specializedTerminal:terminalType==='busStop'?false:specializedTerminal,allowSpecialization:terminalType==='busStop'?false:allowSpecialization,allowExtension,existingLength,maxTrainLength,siteType,...rail,...road};
+  return {...(input.id===undefined?{}:{id:input.id}),...(input.tramOnly===undefined?{}:{tramOnly:booleanSetting(input,'tramOnly')}),mode,terminalType,allowBusStop,specializedTerminal:terminalType==='busStop'?false:specializedTerminal,allowSpecialization:terminalType==='busStop'?false:allowSpecialization,allowExtension,existingLength,maxTrainLength,siteType,...rail,...road};
 }
 
 /** Enumerate distinct serial-place layouts, retaining the cheapest length for each place count. */
@@ -248,6 +248,7 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
         if(Object.keys(railGeometry).length&&(![railGeometry.platformTrackCount,railGeometry.platformCount].every(n=>Number.isSafeInteger(n)&&n>=1&&n<=100)||
           railGeometry.platformCount<Math.ceil(railGeometry.platformTrackCount/2)||railGeometry.platformCount>railGeometry.platformTrackCount))throw new RangeError('Rail platforms must serve one or two platform tracks.');
         return {id,name:name.trim(),annualMaintenance,constructionCost,maxTrainLength,maintenanceBasis,siteType,
+          ...(plan.tramOnly===undefined?{}:{tramOnly:booleanSetting(plan,'tramOnly')}),
           ...(automatic?{additionalAnnualMaintenance:plan.additionalAnnualMaintenance}:{}),...railGeometry,
           ...(maintenanceBasis==='roadPlatforms'?{platformCount:plan.platformCount,platformLength:plan.platformLength??20,additionalLanes:plan.additionalLanes??0}:{}),...flags};
       });
@@ -264,11 +265,12 @@ export function optimizerTrainLengthLimit(request){
   }));
 }
 
-export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinity,vehicleLength=0,{costCeiling=()=>Infinity}={}){
+export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinity,vehicleLength=0,{costCeiling=()=>Infinity,vehicleType}={}){
   if(!request.infrastructure){yield {stopA:request.stopA,stopB:request.stopB,maxTrainLength:request.maxTrainLength,selection:null};return;}
   const {stopA,stopB}=request.infrastructure[domain];
   function* variants(terminal,stop){
     for(const definition of Array.isArray(terminal)?terminal:[terminal]){
+      if(definition.tramOnly&&vehicleType!=='Tram')continue;
       const plans=definition.mode?terminalVariants(definition,domain,request.category,vehicleLength,costCeiling):
         [domain==='road'&&vehicleLength>0&&definition.maintenanceBasis==='roadPlatforms'&&definition.siteType!=='factory'?{...definition,
           platformLengths:Array(definition.platformCount).fill(definition.platformLength),
@@ -276,6 +278,8 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
           vehicleSlots:roadPlatformVehicleSlots(vehicleLength,definition.platformCount,definition.platformLength)}:definition];
       for(const selected of plans){
         const factory=domain==='road'&&request.category==='freight'&&(selected.mode==='factory'||!selected.mode&&selected.siteType==='factory');
+        // Industry's built-in loading bays cannot serve trams, including legacy priced plans.
+        if(factory&&vehicleType==='Tram')continue;
         const count=request.infrastructure.sites[stop].factoryTerminals??2;
         const plan=factory?{...selected,name:selected.mode==='factory'?`${T.industry} terminals`:selected.name,
           factoryTerminals:count,platformCount:count,platformSlots:Array(count).fill(1),vehicleSlots:count}:selected;

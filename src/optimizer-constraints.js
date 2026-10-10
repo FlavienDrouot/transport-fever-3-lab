@@ -58,6 +58,8 @@ export function renderOptimizerConstraints(root,settings){
           const plans=infrastructure[kind][stop];
           return `<h6>${kind==='rail'?'Rail':'Road'}</h6><ul>${(Array.isArray(plans)?plans:[plans]).map(plan=>{
             const description=[plan.terminalType==='busStop'?(plan.mode==='reuse'?'Reuse available bus stop':'New bus stop'):{new:'New station + platform',add:'Existing station · add platform',reuse:'Reuse available platform',factory:'Free industry terminals'}[plan.mode]];
+            if(plan.mode==='factory')description.push('Trucks only');
+            else if(plan.tramOnly)description.push('Trams only');
             if(kind==='road'){
               if(plan.terminalType==='busStop')description.push('1 vehicle at a time');
               else if(plan.mode==='factory')description.push(`${fmt(site.factoryTerminals??2,0)} parallel terminals · 1 vehicle each`);

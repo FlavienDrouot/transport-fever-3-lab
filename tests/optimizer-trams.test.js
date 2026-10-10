@@ -5,7 +5,7 @@ import {buildConsist,lightRailComponents,railComponents,tramComponents} from '..
 import {OPTIMIZER_DEFAULTS,optimizerRequest,optimizerCandidates,optimizeService,evaluateOptimizerCandidate,compareOptimizerResults} from '../src/optimizer.js';
 import {loadOptimizerCatalogue} from '../src/optimizer-catalogue.js';
 import {segmentTramTiers} from '../src/optimizer-line-infrastructure.js';
-import {optimizerProposalRequest} from '../src/optimizer-infrastructure.js';
+import {optimizerProposalRequest,optimizerTerminalChoices} from '../src/optimizer-infrastructure.js';
 import {renderOptimizerProposals,optimizerProposalAt} from '../src/optimizer-proposals.js';
 import {reverseRouteProfile} from '../src/route-profile.js';
 const load=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
@@ -120,6 +120,48 @@ test('Road tram practical length defaults to 80 m and is independent of Rail and
  }
  assert.throws(()=>request({maxRoadTramLength:0}),/maxRoadTramLength/);
  assert.throws(()=>request({maxRoadTramLength:NaN}),/maxRoadTramLength/);
+});
+
+test('Road freight trams cannot use industry terminals, including coupled and legacy configurations',()=>{
+ const sites={stopA:{type:'factory'},stopB:{type:'factory'}},terminal={mode:'factory'};
+ const req=request({domain:'road',category:'freight',includeTrams:true,maxRoadTramLength:80,maxWagons:1,rate:100,infrastructure:{sites,road:{stopA:terminal,stopB:terminal}}});
+ const candidates=[...optimizerCandidates(data,req)];
+ assert.ok(candidates.some(c=>c.definition.components.length>1));
+ assert.ok(candidates.some(c=>c.definition.components[0].quantity>1));
+ for(const candidate of candidates){
+  const answer=evaluateOptimizerCandidate(candidate,data,req);
+  assert.equal(answer.result,undefined);assert.equal(answer.rejected,'infrastructure');
+ }
+ const legacy={id:'industry',name:'Included industry terminal',annualMaintenance:0};
+ const old=request({...req,infrastructure:{sites,road:{stopA:[legacy],stopB:{mode:'new'}}}});
+ assert.equal(evaluateOptimizerCandidate(candidates[0],data,old).rejected,'infrastructure');
+});
+
+test('industry truck terminals and separate new or reusable tram platforms remain distinct choices',()=>{
+ const sites={stopA:{type:'factory'},stopB:{type:'factory'}};
+ const tramPlatform={mode:'new',tramOnly:true,maxPlatformLength:20,maxPlatforms:1,allowSpecialization:false};
+ const terminals=[{mode:'factory'},tramPlatform];
+ const req=request({domain:'road',category:'freight',includeTrams:true,rate:100,maxRoadTramLength:80,maxWagons:1,infrastructure:{sites,road:{stopA:terminals,stopB:terminals}}});
+ assert.deepEqual(optimizerRequest(req),req);
+ const trucks=[...optimizerTerminalChoices(req,'road',18,10,{vehicleType:'Truck'})];
+ assert.equal(trucks.length,1);
+ assert.equal(trucks[0].selection.annualMaintenance,0);
+ assert.ok(['stopA','stopB'].every(stop=>trucks[0][stop].vehicleSlots===2&&trucks[0][stop].specializedTerminal));
+ const candidate=[...optimizerCandidates(data,req)].find(c=>c.definition.components.length===1&&c.definition.components[0].quantity===1);
+ assert.ok(candidate);
+ const result=evaluateOptimizerCandidate(candidate,data,req).result;assert.ok(result);
+ assert.equal(result.infrastructureRunningCosts,2*(42000+2*30000));
+ for(const stop of ['stopA','stopB']){
+  assert.equal(result.infrastructure[stop].mode,'new');
+  assert.equal(result.infrastructure[stop].specializedTerminal,false);
+  assert.equal(result.infrastructure[stop].factoryTerminals,undefined);
+ }
+ const reusable={...tramPlatform,mode:'reuse',platformLength:20,platformCount:1,allowParallelPlatforms:false};
+ const reuse=request({...req,infrastructure:{sites,road:{stopA:[{mode:'factory'},reusable],stopB:terminals}}});
+ const reused=evaluateOptimizerCandidate(candidate,data,reuse).result;assert.ok(reused);
+ assert.equal(reused.infrastructureRunningCosts,102000);
+ assert.equal(reused.infrastructure.stopA.mode,'reuse');
+ assert.throws(()=>request({...req,infrastructure:{sites,road:{stopA:{...tramPlatform,tramOnly:'true'},stopB:terminals}}}),/tramOnly/);
 });
 
 test('tram tracks exclude highway tiers, preserve curve/city caps and charge dedicated upkeep once for both tracks',()=>{

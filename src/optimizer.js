@@ -120,7 +120,7 @@ export function evaluateOptimizerCandidate(candidate,data,request){
   }
   let best=null,rejected='infrastructure';
   const limitingConstraints=new Set(),singleConstraints=new Set();
-  for(const choice of optimizerTerminalChoices(request,candidate.domain,vehicle.cargoCapacity,vehicle.lengthMetres,{costCeiling:()=>best?best.cost-vehicle.economy.annualMaintenance:Infinity})){
+  for(const choice of optimizerTerminalChoices(request,candidate.domain,vehicle.cargoCapacity,vehicle.lengthMetres,{vehicleType:vehicle.vehicleType,costCeiling:()=>best?best.cost-vehicle.economy.annualMaintenance:Infinity})){
     if(best&&(choice.selection?.annualMaintenance??0)+vehicle.economy.annualMaintenance>best.cost+1e-7)continue;
     if(candidate.domain==='rail'&&vehicle.lengthMetres>choice.maxTrainLength+1e-9)continue;
     const search=request.lineInfrastructure||vehicle.vehicleType==='Tram'&&candidate.domain==='road'?searchLineInfrastructure(request,candidate.domain,vehicle,choice,
