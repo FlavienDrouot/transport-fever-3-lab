@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {optimizerRequest,optimizerCandidates,evaluateOptimizerCandidate,optimizeService} from '../src/optimizer.js';
+import {buildConsist} from '../src/consists.js';
+import {optimizerExclusionSummary} from '../src/optimizer-diagnostics.js';
 import {railTerminalRunningCosts,roadTerminalRunningCosts,optimizerProposalRequest,optimizerTrainLengthLimit,optimizerTerminalChoices} from '../src/optimizer-infrastructure.js';
 const read=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
 const [trains,trucks]=await Promise.all(['trains','trucks'].map(read));
@@ -95,9 +97,9 @@ test('Rail search obeys both physical terminal limits and retains existing termi
 });
 
 test('handoff applies the chosen handling and physical limits without changing the original request',()=>{
-  const request=optimizerRequest({...input,domain:'rail',infrastructure:{...infrastructure('rail',[plan({maxTrainLength:80,specializedTerminal:true})],[plan({maxTrainLength:120})]),sites:{stopB:{type:'warehouse',warehouseSpecialization:'specialized'}}}});
-  const before=JSON.stringify(request),result={domain:'rail',capacity:1000,infrastructure:[...optimizerTerminalChoices(request,'rail',1000)][0].selection},opened=optimizerProposalRequest(result,request);
-  assert.equal(opened.fillRatio,.5);
+  const request=optimizerRequest({...input,domain:'rail',fillRatio:.7,infrastructure:{...infrastructure('rail',[plan({maxTrainLength:80,specializedTerminal:true})],[plan({maxTrainLength:120})]),sites:{stopB:{type:'warehouse',warehouseSpecialization:'specialized'}}}});
+  const before=JSON.stringify(request),result={domain:'rail',capacity:1000,infrastructure:[...optimizerTerminalChoices(request,'rail',1000)].find(c=>c.stopB.warehouseCapacity===1000).selection},opened=optimizerProposalRequest(result,request);
+  assert.equal(opened.fillRatio,.7);
   assert.equal(opened.maxTrainLength,80);assert.equal(opened.stopA.specializedTerminal,true);assert.equal(opened.stopB.specializedWarehouse,true);
   assert.equal(JSON.stringify(request),before);
 });
@@ -137,9 +139,9 @@ test('warehouses are fixed endpoints, retaining existing capacity and enumeratin
   const infra={...infrastructure('road',[plan()]),sites:{stopA:{type:'warehouse',warehouseCapacity:1000,maxWarehouseCapacity:3000},stopB:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:1000,warehouseSpecialization:'generic'}}};
   const request=optimizerRequest({...input,fillRatio:.7,infrastructure:infra});
   const choices=[...optimizerTerminalChoices(request,'road',2000)];
-  assert.deepEqual([...new Set(choices.map(c=>c.stopA.warehouseCapacity))],[1000,1500]);
+  assert.deepEqual([...new Set(choices.map(c=>c.stopA.warehouseCapacity))],[1000,1500,2000]);
   assert.deepEqual([...new Set(choices.map(c=>c.stopB.warehouseCapacity))],[500,1000]);
-  assert.equal(choices.length,8);
+  assert.equal(choices.length,12);
   for(const c of choices){
     assert.ok(c.stopA.warehouseCapacity>=1000);assert.ok(c.stopB.warehouseCapacity>=500);
     assert.equal(c.stopA.warehouseRunningCosts,c.stopA.warehouseCapacity/500*(c.stopA.specializedWarehouse?300000:150000));
@@ -163,37 +165,62 @@ test('warehouse specialization is chosen only when reduced fleet upkeep offsets 
   assert.equal(busy.infrastructureRunningCosts,602000);
 });
 
-test('storage limits load rather than nominal capacity, and expansion trades warehouse upkeep against fleet upkeep',()=>{
+test('full vehicle Capacity must fit both warehouses regardless of Utilization or fleet costs',()=>{
   const truck={...data.trucks[0],cargoCapacity:1000,loadingUnloadingSpeedMultiplier:100,economy:{...data.trucks[0].economy,annualMaintenance:1e7}};
   const candidate={domain:'road',vehicle:truck};
   const infra=max=>({...infrastructure('road',[plan()]),sites:{stopA:{type:'warehouse',maxWarehouseCapacity:max,warehouseSpecialization:'generic'},stopB:{type:'warehouse',maxWarehouseCapacity:max,warehouseSpecialization:'generic'}}});
   const base={...input,rate:10000};
-  const limited=evaluateOptimizerCandidate(candidate,data,optimizerRequest({...base,infrastructure:infra(500)})).result;
-  const expanded=evaluateOptimizerCandidate(candidate,data,optimizerRequest({...base,infrastructure:infra(1000)})).result;
-  assert.ok(limited);assert.ok(expanded);
-  assert.ok(limited.capacity*limited.utilization<=500+1e-7);
-  assert.equal(limited.infrastructure.stopA.warehouseCapacity,500);
+  for(const fillRatio of [1,.1]){
+    const limited=evaluateOptimizerCandidate(candidate,data,optimizerRequest({...base,fillRatio,infrastructure:infra(500)}));
+    assert.equal(limited.result,undefined);assert.deepEqual(limited.limitingConstraints,['storageCapacityA','storageCapacityB']);
+  }
+  const expanded=evaluateOptimizerCandidate(candidate,data,optimizerRequest({...base,fillRatio:.1,infrastructure:infra(1000)})).result;
+  assert.ok(expanded);
   assert.equal(expanded.infrastructure.stopA.warehouseCapacity,1000);
   assert.equal(expanded.infrastructure.stopB.warehouseCapacity,1000);
-  assert.ok(expanded.fleet<limited.fleet);assert.ok(expanded.cost<limited.cost);
   const cheap={...truck,economy:{...truck.economy,annualMaintenance:1}};
   const smaller=evaluateOptimizerCandidate({domain:'road',vehicle:cheap},data,optimizerRequest({...base,infrastructure:infra(1000)})).result;
-  assert.equal(smaller.infrastructure.stopA.warehouseCapacity,500);
-  assert.equal(smaller.infrastructure.stopB.warehouseCapacity,500);
+  assert.equal(smaller.infrastructure.stopA.warehouseCapacity,1000);
+  assert.equal(smaller.infrastructure.stopB.warehouseCapacity,1000);
 });
 
-test('a real freight formation above 500 capacity can operate within a 500 capacity warehouse by reducing load',async()=>{
+test('a real freight formation above 500 capacity is rejected unless every warehouse can be expanded to fit it',async()=>{
   const [locomotives,wagons]=await Promise.all(['rail-locomotives','rail-freight-wagons'].map(read));
   const rail={...data,trains:[],locomotives:locomotives.locomotives.filter(l=>l.id==='chinese-class-hxd3b'),freightWagons:wagons.wagons.filter(w=>w.id==='freight-wagon-1999')};
   const request=optimizerRequest({...input,domain:'rail',rate:5000,maxLocomotives:1,maxWagons:40,maxTrainLength:840,
     infrastructure:{...infrastructure('rail',[plan({maxTrainLength:840})]),sites:{stopA:{type:'warehouse',maxWarehouseCapacity:500},stopB:{type:'warehouse',maxWarehouseCapacity:500}}}});
-  const candidate=[...optimizerCandidates(rail,request)].at(-1),result=evaluateOptimizerCandidate(candidate,rail,request).result;
-  assert.ok(result);assert.ok(result.capacity>500);assert.ok(result.capacity*result.utilization<=500+1e-7);
-  assert.equal(result.infrastructure.stopA.warehouseCapacity,500);assert.equal(result.infrastructure.stopB.warehouseCapacity,500);
-  const opened=optimizerProposalRequest(result,request);
-  assert.equal(opened.fillRatio,500/result.capacity);
+  const candidate=[...optimizerCandidates(rail,request)].at(-1);
+  const blocked=evaluateOptimizerCandidate(candidate,rail,request);
+  assert.equal(blocked.result,undefined);assert.deepEqual(blocked.limitingConstraints,['storageCapacityA','storageCapacityB']);
+  const capacity=buildConsist(candidate.definition,candidate.catalogue,rail.units).cargoCapacity,needed=Math.ceil(capacity/500)*500;
+  assert.ok(capacity>500);
+  const expanded=optimizerRequest({...request,fillRatio:.5,infrastructure:{...request.infrastructure,sites:{stopA:{type:'warehouse',maxWarehouseCapacity:needed},stopB:{type:'warehouse',maxWarehouseCapacity:needed}}}});
+  const result=evaluateOptimizerCandidate(candidate,rail,expanded).result;assert.ok(result);
+  assert.equal(result.infrastructure.stopA.warehouseCapacity,needed);assert.equal(result.infrastructure.stopB.warehouseCapacity,needed);
+  const opened=optimizerProposalRequest(result,expanded);
+  assert.equal(opened.fillRatio,.5);
   const reevaluated=evaluateOptimizerCandidate(candidate,rail,optimizerRequest(opened)).result;
   assert.equal(reevaluated.fleet,result.fleet);close(reevaluated.cycle,result.cycle);
+});
+
+test('industry storage uses A output and B input, and both other stores for a loaded return',()=>{
+  const truck={...data.trucks[0],cargoCapacity:800},candidate={domain:'road',vehicle:truck};
+  const sites={stopA:{type:'factory',inputStorageCapacity:100,outputStorageCapacity:900},stopB:{type:'factory',inputStorageCapacity:1000,outputStorageCapacity:200}};
+  const request=optimizerRequest({...input,rate:100,infrastructure:{sites,road:{stopA:{mode:'factory'},stopB:{mode:'factory'}}}});
+  const forward=evaluateOptimizerCandidate(candidate,data,request).result;assert.ok(forward);
+  assert.equal(forward.infrastructure.stopA.storageCapacity,900);assert.equal(forward.infrastructure.stopB.storageCapacity,1000);
+  assert.equal(forward.infrastructure.stopA.inputStorageCapacity,undefined);assert.equal(forward.infrastructure.stopB.outputStorageCapacity,undefined);
+  assert.deepEqual(optimizerRequest(request),request);
+  const loaded=evaluateOptimizerCandidate(candidate,data,optimizerRequest({...request,loadedReturn:true,fillRatio:.1}));
+  assert.equal(loaded.result,undefined);assert.deepEqual(loaded.limitingConstraints,['storageCapacityA','storageCapacityB']);
+  const enlarged=optimizerRequest({...request,loadedReturn:true,infrastructure:{...request.infrastructure,sites:{stopA:{...sites.stopA,inputStorageCapacity:800},stopB:{...sites.stopB,outputStorageCapacity:800}}}});
+  assert.ok(evaluateOptimizerCandidate(candidate,data,enlarged).result);
+  const blockedRequest=optimizerRequest({...request,infrastructure:{...request.infrastructure,sites:{...sites,stopB:{...sites.stopB,inputStorageCapacity:700}}}});
+  const search=optimizeService({...data,trucks:[truck]},blockedRequest);let step;do{step=search.next();}while(!step.done);
+  assert.equal(step.value.stats.singleConstraintByDomain.road.storageCapacityB,1);
+  assert.match(optimizerExclusionSummary(step.value,'road'),/Vehicle Capacity exceeds available storage at B/);
+  for(const key of ['inputStorageCapacity','outputStorageCapacity'])for(const value of [null,0,50,150,-100,Infinity,'900'])
+    assert.throws(()=>optimizerRequest({...request,infrastructure:{...request.infrastructure,sites:{...sites,stopA:{...sites.stopA,[key]:value}}}}),/Industry storage/);
 });
 
 const access=(mode,values={})=>({mode,existingLength:160,maxTrainLength:320,

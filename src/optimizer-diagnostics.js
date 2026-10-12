@@ -15,9 +15,11 @@ export function optimizerExclusionSummary(answer,domain){
     stopCapacityA:domain==='rail'?'Rail terminal capacity without waiting at A':'Terminal vehicle throughput at A',
     stopCapacityB:domain==='rail'?'Rail terminal capacity without waiting at B':'Terminal vehicle throughput at B',
     railTerminalGeometry:'Overlapping Rail terminal approaches (train length + 200 m exceeds route length)',
+    storageCapacityA:`Vehicle ${T.capacity} exceeds available storage at A`,
+    storageCapacityB:`Vehicle ${T.capacity} exceeds available storage at B`,
     infrastructure:'Platform, storage or infrastructure access constraints',route:'Cannot complete the route',data:'Incomplete vehicle data',service:'Service constraints',fleet:'Fleet size limit'
   };
-  const sole=Object.entries(answer.stats.singleConstraintByDomain?.[domain]??{}).filter(([key])=>['minHeadwaySeconds','maxHeadwaySeconds','maxOutboundLegSeconds','maxReturnLegSeconds','maxFleet','rate','fillRatio','stopCapacityA','stopCapacityB','railTerminalGeometry'].includes(key)).sort((a,b)=>b[1]-a[1]);
+  const sole=Object.entries(answer.stats.singleConstraintByDomain?.[domain]??{}).filter(([key])=>['minHeadwaySeconds','maxHeadwaySeconds','maxOutboundLegSeconds','maxReturnLegSeconds','maxFleet','rate','fillRatio','stopCapacityA','stopCapacityB','railTerminalGeometry','storageCapacityA','storageCapacityB'].includes(key)).sort((a,b)=>b[1]-a[1]);
   if(sole.length)return `<div class="optimizer-exclusions"><p>Identified limiting constraints:</p><ul>${sole.map(([key,count])=>`<li><strong>${escapeHtml(labels[key])}</strong> excludes ${formatNumber(count)} design${count===1?'':'s'} that meet the other settings.</li>`).join('')}</ul></div>`;
   const observed=Object.entries(answer.stats.rejectedByDomain?.[domain]??{}).sort((a,b)=>b[1]-a[1]);
   if(!observed.length)return '<p class="chart-help">No candidate vehicles in this search. Check the year, transport type and search bounds.</p>';

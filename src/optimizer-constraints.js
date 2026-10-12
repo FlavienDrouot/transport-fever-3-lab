@@ -53,6 +53,10 @@ export function renderOptimizerConstraints(root,settings){
         const site=infrastructure.sites[stop];
         return `<div class="optimizer-constraint-stop"><h5>${index===0?'Source · A':'Destination · B'}</h5>${freight?list([
           row('Building',{factory:T.industry,warehouse:'Warehouse',industrial:'Industrial building'}[site.type]||'To set'),
+          ...(site.type==='factory'?[
+            ...(stop==='stopB'||settings.loadedReturn?[row(`Input storage ${T.capacity}`,`${fmt(site.inputStorageCapacity,0)} ${T.capacityUnit}`)]:[]),
+            ...(stop==='stopA'||settings.loadedReturn?[row(`Output storage ${T.capacity}`,`${fmt(site.outputStorageCapacity,0)} ${T.capacityUnit}`)]:[])
+          ]:[]),
           ...(site.type==='warehouse'?[row('Warehouse',`${site.existingSpecializedWarehouse?'Specialized':'Generic'} · ${fmt(site.warehouseCapacity,0)} ${T.capacityUnit}`),row('Storage expansion',site.maxWarehouseCapacity>site.warehouseCapacity?`Up to ${fmt(site.maxWarehouseCapacity,0)} ${T.capacityUnit}`:'Not allowed'),row('Warehouse specialization',site.warehouseSpecialization==='optimize'?'Allowed':site.existingSpecializedWarehouse?'Already specialized':'Not allowed')]:[])
         ]):''}${domains.map(kind=>{
           const plans=infrastructure[kind][stop];

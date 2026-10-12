@@ -164,6 +164,25 @@ test('industry truck terminals and separate new or reusable tram platforms remai
  assert.throws(()=>request({...req,infrastructure:{sites,road:{stopA:{...tramPlatform,tramOnly:'true'},stopB:terminals}}}),/tramOnly/);
 });
 
+test('the captured 880-capacity Rail tram formation must fit its warehouse and industry input storage',()=>{
+ const sites={stopA:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:500,warehouseSpecialization:'generic'},stopB:{type:'factory',inputStorageCapacity:900}};
+ const terminal={mode:'new',maxTrainLength:400,maxPlatformTracks:2};
+ const req=request({domain:'rail',category:'freight',rate:100,maxTrainLength:400,fillRatio:.5,infrastructure:{sites,rail:{stopA:terminal,stopB:terminal}}});
+ const candidate=[...optimizerCandidates(data,req)].find(c=>c.definition.components.length===1&&c.definition.components[0].componentId.endsWith(':articulated-freight-tram')&&c.definition.components[0].quantity===11);
+ assert.ok(candidate);assert.equal(buildConsist(candidate.definition,candidate.catalogue,data.units).cargoCapacity,880);
+ const blocked=evaluateOptimizerCandidate(candidate,data,req);
+ assert.equal(blocked.result,undefined);assert.deepEqual(blocked.limitingConstraints,['storageCapacityA']);
+ const expanded=request({...req,infrastructure:{...req.infrastructure,sites:{...sites,stopA:{...sites.stopA,maxWarehouseCapacity:1000}}}});
+ const feasible=evaluateOptimizerCandidate(candidate,data,expanded).result;assert.ok(feasible);
+ assert.equal(feasible.infrastructure.stopA.warehouseCapacity,1000);
+ assert.equal(feasible.infrastructure.stopB.inputStorageCapacity,900);
+ const insufficient=request({...expanded,infrastructure:{...expanded.infrastructure,sites:{...expanded.infrastructure.sites,stopB:{type:'factory',inputStorageCapacity:800}}}});
+ assert.equal(evaluateOptimizerCandidate(candidate,data,insufficient).result,undefined);
+ const larger=request({...expanded,infrastructure:{...expanded.infrastructure,sites:{...expanded.infrastructure.sites,stopB:{type:'factory',inputStorageCapacity:1200}}}});
+ const result=evaluateOptimizerCandidate(candidate,data,larger).result;assert.ok(result);
+ assert.match(renderOptimizerProposals({request:larger,best:{rail:[result]}},'rail'),/Input storage 1,200 capacity/);
+});
+
 test('tram tracks exclude highway tiers, preserve curve/city caps and charge dedicated upkeep once for both tracks',()=>{
  const part={distanceKm:2,gradePercent:0,speedLimitKmh:350,roadSpeedLimitKmh:120,roadLanes:4};
  const req=request({routeProfile:[part],includeTrams:true,lineInfrastructure:{}});

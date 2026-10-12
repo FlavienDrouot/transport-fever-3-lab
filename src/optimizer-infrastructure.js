@@ -202,8 +202,10 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
     if(existingSpecializedWarehouse&&warehouseSpecialization==='generic')throw new RangeError('A reused specialized warehouse cannot be downgraded.');
     const factoryTerminals=Object.hasOwn(site,'factoryTerminals')?site.factoryTerminals:2;
     if(site.type==='factory'&&category==='freight'&&domain!=='rail'&&![2,3].includes(factoryTerminals))throw new RangeError('Choose 2 or 3 parallel Road industry terminals.');
+    const inputStorageCapacity=Object.hasOwn(site,'inputStorageCapacity')?site.inputStorageCapacity:100,outputStorageCapacity=Object.hasOwn(site,'outputStorageCapacity')?site.outputStorageCapacity:100;
+    if(site.type==='factory'&&category==='freight'&&![inputStorageCapacity,outputStorageCapacity].every(n=>Number.isSafeInteger(n)&&n>=100&&n%100===0))throw new RangeError('Industry storage capacities must be positive whole 100 capacity sections.');
     result.sites[stop]={type:site.type,warehouseSpecialization:existingSpecializedWarehouse?'specialized':warehouseSpecialization,warehouseCapacity,maxWarehouseCapacity,existingSpecializedWarehouse,
-      ...(site.type==='factory'?{factoryTerminals}:{})};
+      ...(site.type==='factory'?{factoryTerminals,...(category==='freight'?{inputStorageCapacity,outputStorageCapacity}:{})}:{})};
   }
   for(const kind of domain==='both'?['rail','road']:[domain]){
     result[kind]={};
@@ -283,11 +285,18 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
         const count=request.infrastructure.sites[stop].factoryTerminals??2;
         const plan=factory?{...selected,name:selected.mode==='factory'?`${T.industry} terminals`:selected.name,
           factoryTerminals:count,platformCount:count,platformSlots:Array(count).fill(1),vehicleSlots:count}:selected;
+        const site=request.infrastructure.sites[stop];
+        if(request.category==='freight'&&site.type==='factory'){
+          const input=stop==='stopB'||request.loadedReturn,output=stop==='stopA'||request.loadedReturn;
+          yield {...plan,...(input?{inputStorageCapacity:site.inputStorageCapacity}:{}),...(output?{outputStorageCapacity:site.outputStorageCapacity}:{}),
+            storageCapacity:Math.min(input?site.inputStorageCapacity:Infinity,output?site.outputStorageCapacity:Infinity)};
+          continue;
+        }
         if(request.category!=='freight'||request.infrastructure.sites[stop].type!=='warehouse'){yield plan;continue;}
-        const site=request.infrastructure.sites[stop],allowed=site.warehouseSpecialization;
+        const allowed=site.warehouseSpecialization;
         const minimum=site.warehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection;
-        // More storage than the largest possible single load has no service benefit. Retain all existing storage.
-        const maximum=Math.max(minimum,Math.min(site.maxWarehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection,Math.ceil(vehicleCapacity*request.fillRatio/WAREHOUSE_TARIFFS.capacityPerSection)));
+        // The full vehicle Capacity must fit, even when service Utilization is lower. Retain existing storage.
+        const maximum=Math.max(minimum,Math.min(site.maxWarehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection,Math.ceil(vehicleCapacity/WAREHOUSE_TARIFFS.capacityPerSection)));
         for(let sections=minimum;sections<=maximum;sections++)for(const specializedWarehouse of allowed==='optimize'?[false,true]:[allowed==='specialized']){
           const fullWarehouseCosts=sections*(specializedWarehouse?WAREHOUSE_TARIFFS.specialized:WAREHOUSE_TARIFFS.generic);
           const baseline=minimum*(site.existingSpecializedWarehouse?WAREHOUSE_TARIFFS.specialized:WAREHOUSE_TARIFFS.generic);
@@ -315,8 +324,6 @@ export function optimizerProposalRequest(proposal,request){
   const selected=proposal.infrastructure;
   if(!selected)return request;
   const flags=plan=>({specializedTerminal:plan.specializedTerminal,specializedWarehouse:plan.specializedWarehouse});
-  const storage=Math.min(selected.stopA.warehouseCapacity??Infinity,selected.stopB.warehouseCapacity??Infinity);
   return {...request,stopA:flags(selected.stopA),stopB:flags(selected.stopB),
-    fillRatio:request.category==='freight'?Math.min(request.fillRatio,storage/proposal.capacity):request.fillRatio,
     maxTrainLength:proposal.domain==='rail'?Math.min(request.maxTrainLength,selected.stopA.maxTrainLength,selected.stopB.maxTrainLength):request.maxTrainLength};
 }

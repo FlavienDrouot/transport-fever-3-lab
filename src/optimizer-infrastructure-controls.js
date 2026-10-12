@@ -8,11 +8,11 @@ import {RAIL_TERMINAL_ASSUMPTIONS} from './rail-terminal-service.js';
 export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   const stops=['stopA','stopB'],kinds=['rail','road'],entries=[];
   const bounds=Object.fromEntries(stops.map(stop=>[stop,{maxTrainLength:RAIL_PLATFORM_MAX_LENGTH,maxPlatformTracks:2,maxPlatformLength:40,maxPlatforms:2,allowSpecialization:true,allowBusStop:true}]));
-  const sites=Object.fromEntries(stops.map(stop=>[stop,{type:'',factoryTerminals:2,existingSpecializedWarehouse:false,
+  const sites=Object.fromEntries(stops.map(stop=>[stop,{type:'',factoryTerminals:2,inputStorageCapacity:100,outputStorageCapacity:100,existingSpecializedWarehouse:false,
     allowWarehouseSpecialization:true,allowWarehouseExpansion:false,warehouseCapacity:500,maxWarehouseCapacity:1000}]));
   let nextId=0;
   const title=stop=>stop==='stopA'?'Source · A':'Destination · B';
-  const numeric=(attrs,key,label,value,min,max,step,unit='')=>`<label class="optimizer-field">${label}<span><input ${attrs} data-infrastructure-field="${key}" type="number" value="${value??''}" min="${min}" max="${max}" step="${step}" required> ${unit}</span></label>`;
+  const numeric=(attrs,key,label,value,min,max,step,unit='')=>`<label class="optimizer-field">${label}<span><input ${attrs} data-infrastructure-field="${key}" type="number" value="${value??''}" min="${min}"${max==null?'':` max="${max}"`} step="${step}" required> ${unit}</span></label>`;
   const check=(attrs,key,label,checked=false)=>`<label class="road-inline-check"><input ${attrs} data-infrastructure-field="${key}" type="checkbox"${checked?' checked':''}> ${label}</label>`;
   const toggle=(attrs,key,legend,choices,value,name,className='')=>`<fieldset class="scale-toggle ${className}"><legend>${legend}</legend>${choices.map(([v,label])=>`<label data-toggle-choice="${v}"><input ${attrs} data-infrastructure-field="${key}" type="radio" name="${name}" value="${v}"${String(value)===v?' checked':''} required><span>${label}</span></label>`).join('')}</fieldset>`;
   root.innerHTML=`<details class="panel-group" open><summary>Stops &amp; infrastructure</summary><div class="panel-group-body">
@@ -22,6 +22,11 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
         const attrs=`data-infrastructure-site="${stop}"`;
         return `<fieldset><legend>${title(stop)}</legend>${toggle(attrs,'type','Building',[['factory',T.industry],['warehouse','Warehouse'],['industrial','Industrial building']],'',`optimizer-building-${stop}`,'optimizer-building-toggle')}
           <p data-building-help="${stop}" class="chart-help" hidden></p>
+          <div data-industry-storage="${stop}" class="optimizer-infra-fields" hidden>
+            ${numeric(attrs,'inputStorageCapacity',`Input storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
+            ${numeric(attrs,'outputStorageCapacity',`Output storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
+            <p class="chart-help">Enter the storage available for this freight type. Full vehicle Capacity must fit; low Utilization does not relax this limit. Industry storage cannot be expanded by the search.</p>
+          </div>
           <div data-factory-options="${stop}">${toggle(attrs,'factoryTerminals','Parallel Truck terminals',[['2','2'],['3','3']],2,`optimizer-industry-terminals-${stop}`)}<p class="chart-help">Free specialized terminals, one truck each. Trams require a separate station/platform.</p></div>
           <details data-warehouse-options="${stop}" class="panel-group" hidden><summary>Warehouse access <span data-warehouse-summary="${stop}"></span></summary><div class="optimizer-infra-fields">
             ${numeric(attrs,'warehouseCapacity','Existing warehouse Capacity',500,500,100000,500,T.capacityUnit)}
@@ -29,7 +34,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
             <div data-warehouse-specialization="${stop}">${check(attrs,'allowWarehouseSpecialization','Allow specialization',true)}</div>
             ${check(attrs,'allowWarehouseExpansion','Allow expansion')}
             <div data-warehouse-expansion="${stop}">${numeric(attrs,'maxWarehouseCapacity','Maximum allowed warehouse Capacity',1000,500,100000,500,T.capacityUnit)}</div>
-            <p class="chart-help">Existing storage is retained without attributing its upkeep to this project. Allowed expansions and specialization add their own Running costs. Each delivery load must fit the available storage.</p>
+            <p class="chart-help">Existing storage is retained without attributing its upkeep to this project. Allowed expansions and specialization add their own Running costs. Full vehicle Capacity must fit the available storage, regardless of Utilization.</p>
           </div></details></fieldset>`;
       }).join('')}</div></section>
       <section class="optimizer-infra-section"><h4>Reusable infrastructure</h4><p class="chart-help">Only add existing facilities available to this service.</p>
@@ -93,6 +98,9 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
     $('[data-rail-terminal-assumptions]').hidden=scope.domain==='road';
     for(const stop of stops){
       const site=sites[stop],options=$(`[data-warehouse-options="${stop}"]`);options.hidden=!freight||site.type!=='warehouse';
+      $(`[data-industry-storage="${stop}"]`).hidden=!freight||site.type!=='factory';
+      for(const [key,relevant] of [['inputStorageCapacity',stop==='stopB'||scope.loadedReturn],['outputStorageCapacity',stop==='stopA'||scope.loadedReturn]])
+        $(`[data-infrastructure-site="${stop}"][data-infrastructure-field="${key}"]`).closest('label').hidden=!relevant;
       $(`[data-factory-options="${stop}"]`).hidden=!freight||site.type!=='factory'||scope.domain==='rail';
       $(`[data-warehouse-specialization="${stop}"]`).hidden=site.existingSpecializedWarehouse;
       $(`[data-warehouse-expansion="${stop}"]`).hidden=!site.allowWarehouseExpansion;
@@ -215,7 +223,9 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
     return {sites:Object.fromEntries(stops.map(stop=>{
       const site=sites[stop];
       return [stop,scope.category!=='freight'?{type:'industrial'}:{type:site.type,warehouseCapacity:site.warehouseCapacity,
-        ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals}:{}),
+        ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals,
+          ...(stop==='stopB'||scope.loadedReturn?{inputStorageCapacity:site.inputStorageCapacity}:{}),
+          ...(stop==='stopA'||scope.loadedReturn?{outputStorageCapacity:site.outputStorageCapacity}:{})}:{}),
         maxWarehouseCapacity:site.allowWarehouseExpansion?site.maxWarehouseCapacity:site.warehouseCapacity,
         existingSpecializedWarehouse:site.existingSpecializedWarehouse,
         warehouseSpecialization:site.existingSpecializedWarehouse?'specialized':site.allowWarehouseSpecialization?'optimize':'generic'}];
