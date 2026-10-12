@@ -122,9 +122,10 @@ function analyseSingleService(train, options, fleetCount = null) {
 }
 
 
-/** Platform length is a hard limit; no short-platform loading penalty is modelled. */
+/** Platform length is a hard limit except for passenger trams. */
 export function serviceEligible(train, {platformLengthMetres = null,gradePercent = 0,routeProfile = null} = {}) {
   if (platformLengthMetres !== null && (!Number.isFinite(platformLengthMetres) || platformLengthMetres <= 0)) throw new RangeError('Platform length must be positive or null');
+  if(train.vehicleType==='Tram'&&train.passengerCapacity>0)platformLengthMetres=null;
   validateGradient(gradePercent);
   if(routeProfile){
     const route=validateRouteProfile(routeProfile);

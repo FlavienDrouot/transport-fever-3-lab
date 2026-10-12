@@ -54,6 +54,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
           <div data-new-bus-stop>${check(attrs,'allowBusStop','Allow bus stop',true)}<p class="chart-help">$30,000/year · one vehicle at a time. The search can choose a bus stop or a station platform.</p></div></fieldset>`;
       }).join('')}<p class="chart-help">Applies where no reusable terminal is declared. Rail platforms cannot exceed ${RAIL_PLATFORM_MAX_LENGTH} m and use 40 m sections. Road: the search compares lengths and parallel platforms within your limits; the first section is 20 m, extensions add 10 m.</p></div></details>
       <p class="chart-help" data-rail-terminal-assumptions>${RAIL_TERMINAL_ASSUMPTIONS} Clearance includes half the train length and 100 m of switches on each side. Two platform tracks can share one platform.</p>
+      <p class="chart-help" data-tram-platform-help>Freight trams must fit each platform they use, on Rail and Road. Bus stops have no length limit and can only unload freight at industrial destination B without a loaded return. Passenger trams are modeled without a platform-length limit; formation search bounds still apply.</p>
       <details class="panel-group optimizer-infra-cost-help"><summary>How infrastructure costs are calculated</summary><div class="panel-group-body">
         <p class="chart-help">Station only: add platforms without station upkeep. Station + platform: reuse the available platforms; only allowed extensions, parallel additions and specialization upgrades add upkeep. Without reusable infrastructure, include a new station. Shared platform availability is your constraint.</p>
         <p class="chart-help">Rail: $18,000/year per station, then $30,000/year per track per 40 m. Platform per 40 m: passengers $60,000/year, all freight $30,000/year, specialized freight $60,000/year. Two new platform tracks share one platform. Reusable tracks and platforms are excluded from upkeep; undeclared sides are not assumed available.</p>
@@ -102,6 +103,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
     $('#optimizer-storage-policy-help').hidden=$('#optimizer-limit-vehicle-capacity').checked;
     $('#optimizer-infrastructure-sites').hidden=!freight;
     $('[data-rail-terminal-assumptions]').hidden=scope.domain==='road';
+    $('[data-tram-platform-help]').hidden=scope.domain==='road'&&!scope.includeTrams;
     for(const stop of stops){
       const site=sites[stop],options=$(`[data-warehouse-options="${stop}"]`);options.hidden=!freight||site.type!=='warehouse';
       $(`[data-industry-storage="${stop}"]`).hidden=!freight||site.type!=='factory';
