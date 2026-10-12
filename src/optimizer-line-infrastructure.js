@@ -2,6 +2,7 @@ import {validateRouteProfile} from './route-profile.js';
 import {sizeFleet} from './service-fleet.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {RAIL_MOTION,gradientAcceleration,MOTION_UNITS} from './gradient.js';
+import {optimizerStorageCapacity} from './optimizer-infrastructure.js';
 
 export const RAIL_LINE_TIERS=[{speed:100,maintenance:10000,year:1850},{speed:160,maintenance:30000,year:1930},{speed:350,maintenance:90000,year:1980}];
 export const railLineTiers=year=>RAIL_LINE_TIERS.filter(tier=>tier.year<=year);
@@ -111,7 +112,7 @@ export function searchLineInfrastructure(request,domain,vehicle,choice,evaluate,
   check(cheapest);check(fastest);
   // Even infinite speed cannot deliver more than this load per departure at the requested Rate.
   const capacity=request.category==='freight'?vehicle.cargoCapacity:vehicle.passengerCapacity;
-  const fill=Math.min(request.fillRatio,request.category==='freight'?Math.min(choice.stopA.warehouseCapacity??Infinity,choice.stopB.warehouseCapacity??Infinity)/capacity:Infinity);
+  const fill=Math.min(request.fillRatio,request.category==='freight'?optimizerStorageCapacity(choice.stopA,choice.stopB)/capacity:Infinity);
   const deliveries=request.category==='freight'&&request.loadedReturn?2:1;
   if(request.minHeadwaySeconds!==null&&capacity*fill*deliveries*GAME_YEAR_SECONDS/request.rate<request.minHeadwaySeconds-1e-7)return {result:best,rejections};
   const chosen=[];

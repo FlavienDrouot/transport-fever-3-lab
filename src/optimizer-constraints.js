@@ -48,16 +48,22 @@ export function renderOptimizerConstraints(root,settings){
         return row(index===0?'A':'B',[facilities.specializedTerminal?'Terminal ×2':'',facilities.specializedWarehouse?'Warehouse ×2':''].filter(Boolean).join(' + ')||'Standard handling');
       })):''));
   }else{
-    html+=section('Stops & infrastructure',`<p>New installations and allowed upgrades included; existing upkeep excluded.</p>${settings.incompleteInfrastructure?`<p class="optimizer-constraint-pending">${settings.incompleteInfrastructure} declaration${settings.incompleteInfrastructure===1?'':'s'} to complete.</p>`:''}`+
+    html+=section('Stops & infrastructure',`<p>New installations and allowed upgrades included; existing upkeep excluded.</p>${freight?`<p>Storage limit: ${infrastructure.limitVehicleCapacity!==false?`full vehicle ${T.capacity}`:`load only (${T.capacity} × ${T.utilization})`}.</p>`:''}${settings.incompleteInfrastructure?`<p class="optimizer-constraint-pending">${settings.incompleteInfrastructure} declaration${settings.incompleteInfrastructure===1?'':'s'} to complete.</p>`:''}`+
       ['stopA','stopB'].map((stop,index)=>{
         const site=infrastructure.sites[stop];
         return `<div class="optimizer-constraint-stop"><h5>${index===0?'Source · A':'Destination · B'}</h5>${freight?list([
           row('Building',{factory:T.industry,warehouse:'Warehouse',industrial:'Industrial building'}[site.type]||'To set'),
+          ...(site.type==='factory'?[
+            ...(stop==='stopB'||settings.loadedReturn?[row(`Input storage ${T.capacity}`,`${fmt(site.inputStorageCapacity,0)} ${T.capacityUnit}`)]:[]),
+            ...(stop==='stopA'||settings.loadedReturn?[row(`Output storage ${T.capacity}`,`${fmt(site.outputStorageCapacity,0)} ${T.capacityUnit}`)]:[])
+          ]:[]),
           ...(site.type==='warehouse'?[row('Warehouse',`${site.existingSpecializedWarehouse?'Specialized':'Generic'} · ${fmt(site.warehouseCapacity,0)} ${T.capacityUnit}`),row('Storage expansion',site.maxWarehouseCapacity>site.warehouseCapacity?`Up to ${fmt(site.maxWarehouseCapacity,0)} ${T.capacityUnit}`:'Not allowed'),row('Warehouse specialization',site.warehouseSpecialization==='optimize'?'Allowed':site.existingSpecializedWarehouse?'Already specialized':'Not allowed')]:[])
         ]):''}${domains.map(kind=>{
           const plans=infrastructure[kind][stop];
           return `<h6>${kind==='rail'?'Rail':'Road'}</h6><ul>${(Array.isArray(plans)?plans:[plans]).map(plan=>{
             const description=[plan.terminalType==='busStop'?(plan.mode==='reuse'?'Reuse available bus stop':'New bus stop'):{new:'New station + platform',add:'Existing station · add platform',reuse:'Reuse available platform',factory:'Free industry terminals'}[plan.mode]];
+            if(plan.mode==='factory')description.push('Trucks only');
+            else if(plan.tramOnly)description.push('Trams only');
             if(kind==='road'){
               if(plan.terminalType==='busStop')description.push('1 vehicle at a time');
               else if(plan.mode==='factory')description.push(`${fmt(site.factoryTerminals??2,0)} parallel terminals · 1 vehicle each`);

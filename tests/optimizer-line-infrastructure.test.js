@@ -96,7 +96,7 @@ test('joint track and freight terminal search retains storage limits and counts 
   const data={...catalogue,trains:[],locomotives:engines.locomotives.filter(v=>v.id==='german-class-246'),freightWagons:wagons.wagons.filter(v=>v.id==='gondola-wagon-2001')};
   const terminal={id:'generic',name:'Generic',annualMaintenance:1000,maxTrainLength:840,existing:false,specializedTerminal:false,specializedWarehouse:false};
   const infrastructure={rail:{stopA:[terminal,{...terminal,id:'specialized',specializedTerminal:true,annualMaintenance:20000}],stopB:[terminal]},
-    sites:{stopA:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:500},stopB:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:500}}};
+    sites:{stopA:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:5000},stopB:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:5000}}};
   const routeProfile=[{...part,distanceKm:4},{...part,distanceKm:2,speedLimitKmh:130}];
   const request=optimizerRequest({domain:'rail',category:'freight',cargo:'bulk',loadedReturn:true,rate:10000,minHeadwaySeconds:null,maxHeadwaySeconds:null,lineInfrastructure:{},infrastructure,routeProfile});
   const candidate=[...optimizerCandidates(data,request)].at(-1),actual=evaluateOptimizerCandidate(candidate,data,request).result;
@@ -108,13 +108,37 @@ test('joint track and freight terminal search retains storage limits and counts 
     if(!expected||compareOptimizerResults(result,expected)<0)expected=result;
   }
   assert.ok(actual&&expected);assert.equal(actual.cost,expected.cost);
-  assert.ok(actual.capacity>500);assert.ok(actual.capacity*actual.utilization<=500+1e-7);
+  assert.ok(actual.capacity>500);
+  for(const stop of ['stopA','stopB'])assert.ok(actual.capacity<=actual.infrastructure[stop].warehouseCapacity);
   assert.equal(actual.terminalRunningCosts,actual.infrastructure.annualMaintenance);
   assert.equal(actual.infrastructureRunningCosts,actual.routeRunningCosts+actual.terminalRunningCosts);
   assert.equal(actual.cost,actual.vehicleRunningCosts+actual.infrastructureRunningCosts);
   const opened=optimizerProposalRequest(actual,request);
   assert.deepEqual(opened.routeProfile,actual.routeInfrastructure.routeProfile);
-  assert.ok(opened.fillRatio<=500/actual.capacity);
+  assert.equal(opened.fillRatio,request.fillRatio);
+  const fixed=optimizerRequest({...request,infrastructure:{...infrastructure,sites:{stopA:{type:'warehouse',maxWarehouseCapacity:500},stopB:{type:'warehouse',maxWarehouseCapacity:500}}}});
+  assert.deepEqual(evaluateOptimizerCandidate(candidate,data,fixed).limitingConstraints,['storageCapacityA','storageCapacityB']);
+});
+
+test('joint Road tier search matches exhaustive freight delivery deadlines with load-only storage limits',()=>{
+  const vehicle={...catalogue.trucks[0],cargoCapacity:800,loadingUnloadingSpeedMultiplier:80};
+  const data={trucks:[vehicle]},terminal={mode:'new',maxPlatformLength:40,maxPlatforms:2};
+  const routeProfile=[{...part,distanceKm:2,roadLanes:2},{...part,distanceKm:3,roadLanes:4}];
+  const infrastructure={limitVehicleCapacity:false,road:{stopA:terminal,stopB:{mode:'factory'}},sites:{stopA:{type:'warehouse',maxWarehouseCapacity:500},stopB:{type:'factory',inputStorageCapacity:400,outputStorageCapacity:300}}};
+  const base=optimizerRequest({domain:'road',category:'freight',rate:10000,loadedReturn:true,lineInfrastructure:{},routeProfile,infrastructure});
+  const candidate={domain:'road',vehicle},baseline=evaluateOptimizerCandidate(candidate,data,base).result;assert.ok(baseline);
+  const request=optimizerRequest({...base,maxOutboundLegSeconds:baseline.outboundTravelSeconds+(baseline.outboundLegSeconds-baseline.outboundTravelSeconds)*.6});
+  const actual=evaluateOptimizerCandidate(candidate,data,request).result;assert.ok(actual);
+  let expected=null;
+  for(const plan of plans(routeProfile,'road',request.year)){
+    const {result}=evaluateOptimizerCandidate(candidate,data,{...request,lineInfrastructure:null,routeProfile:plan.routeProfile});
+    if(!result)continue;
+    result.cost+=plan.annualMaintenance;
+    if(!expected||compareOptimizerResults(result,expected)<0)expected=result;
+  }
+  assert.ok(expected);assert.equal(actual.cost,expected.cost);
+  assert.ok(actual.outboundLegSeconds<=request.maxOutboundLegSeconds+1e-7);
+  assert.ok(actual.capacity*actual.utilization<=300+1e-7);
 });
 
 test('joint Road tier and serial-terminal search matches full tier enumeration with waiting',()=>{

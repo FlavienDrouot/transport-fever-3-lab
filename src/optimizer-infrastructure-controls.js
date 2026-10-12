@@ -8,28 +8,37 @@ import {RAIL_TERMINAL_ASSUMPTIONS} from './rail-terminal-service.js';
 export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   const stops=['stopA','stopB'],kinds=['rail','road'],entries=[];
   const bounds=Object.fromEntries(stops.map(stop=>[stop,{maxTrainLength:RAIL_PLATFORM_MAX_LENGTH,maxPlatformTracks:2,maxPlatformLength:40,maxPlatforms:2,allowSpecialization:true,allowBusStop:true}]));
-  const sites=Object.fromEntries(stops.map(stop=>[stop,{type:'',factoryTerminals:2,existingSpecializedWarehouse:false,
+  const sites=Object.fromEntries(stops.map(stop=>[stop,{type:'',factoryTerminals:2,inputStorageCapacity:100,outputStorageCapacity:100,existingSpecializedWarehouse:false,
     allowWarehouseSpecialization:true,allowWarehouseExpansion:false,warehouseCapacity:500,maxWarehouseCapacity:1000}]));
   let nextId=0;
   const title=stop=>stop==='stopA'?'Source · A':'Destination · B';
-  const numeric=(attrs,key,label,value,min,max,step,unit='')=>`<label class="optimizer-field">${label}<span><input ${attrs} data-infrastructure-field="${key}" type="number" value="${value??''}" min="${min}" max="${max}" step="${step}" required> ${unit}</span></label>`;
+  const numeric=(attrs,key,label,value,min,max,step,unit='')=>`<label class="optimizer-field">${label}<span><input ${attrs} data-infrastructure-field="${key}" type="number" value="${value??''}" min="${min}"${max==null?'':` max="${max}"`} step="${step}" required> ${unit}</span></label>`;
   const check=(attrs,key,label,checked=false)=>`<label class="road-inline-check"><input ${attrs} data-infrastructure-field="${key}" type="checkbox"${checked?' checked':''}> ${label}</label>`;
   const toggle=(attrs,key,legend,choices,value,name,className='')=>`<fieldset class="scale-toggle ${className}"><legend>${legend}</legend>${choices.map(([v,label])=>`<label data-toggle-choice="${v}"><input ${attrs} data-infrastructure-field="${key}" type="radio" name="${name}" value="${v}"${String(value)===v?' checked':''} required><span>${label}</span></label>`).join('')}</fieldset>`;
   root.innerHTML=`<details class="panel-group" open><summary>Stops &amp; infrastructure</summary><div class="panel-group-body">
     <label class="road-inline-check"><input id="optimizer-include-infrastructure" type="checkbox"> Include infrastructure ${T.runningCosts}</label>
     <div id="optimizer-infrastructure-body" hidden>
+      <div data-storage-policy>
+        <label class="road-inline-check"><input id="optimizer-limit-vehicle-capacity" type="checkbox" checked aria-describedby="optimizer-storage-policy-help"> Require full vehicle ${T.capacity} to fit storage</label>
+        <p id="optimizer-storage-policy-help" class="chart-help" hidden>Only the load (${T.capacity} × ${T.utilization}) must fit storage. This can sometimes select trains with more Capacity than needed: extra carrying units can shorten loading/unloading times.</p>
+      </div>
       <section id="optimizer-infrastructure-sites" class="optimizer-infra-section"><h4>Endpoint buildings</h4><p class="chart-help">Choose the building served at each stop. Its storage and handling apply to this route.</p><div class="optimizer-infra-stops">${stops.map(stop=>{
         const attrs=`data-infrastructure-site="${stop}"`;
         return `<fieldset><legend>${title(stop)}</legend>${toggle(attrs,'type','Building',[['factory',T.industry],['warehouse','Warehouse'],['industrial','Industrial building']],'',`optimizer-building-${stop}`,'optimizer-building-toggle')}
           <p data-building-help="${stop}" class="chart-help" hidden></p>
-          <div data-factory-options="${stop}">${toggle(attrs,'factoryTerminals','Parallel Road terminals',[['2','2'],['3','3']],2,`optimizer-industry-terminals-${stop}`)}<p class="chart-help">Free specialized terminals, one vehicle each.</p></div>
+          <div data-industry-storage="${stop}" class="optimizer-infra-fields" hidden>
+            ${numeric(attrs,'inputStorageCapacity',`Input storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
+            ${numeric(attrs,'outputStorageCapacity',`Output storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
+            <p class="chart-help">Enter the storage available for this freight type. The storage limit above applies. Industry storage cannot be expanded by the search.</p>
+          </div>
+          <div data-factory-options="${stop}">${toggle(attrs,'factoryTerminals','Parallel Truck terminals',[['2','2'],['3','3']],2,`optimizer-industry-terminals-${stop}`)}<p class="chart-help">Free specialized terminals, one truck each. Trams require a separate station/platform.</p></div>
           <details data-warehouse-options="${stop}" class="panel-group" hidden><summary>Warehouse access <span data-warehouse-summary="${stop}"></span></summary><div class="optimizer-infra-fields">
             ${numeric(attrs,'warehouseCapacity','Existing warehouse Capacity',500,500,100000,500,T.capacityUnit)}
             ${toggle(attrs,'existingSpecializedWarehouse','Existing warehouse',[['false','Generic'],['true','Specialized']],false,`optimizer-warehouse-${stop}`)}
             <div data-warehouse-specialization="${stop}">${check(attrs,'allowWarehouseSpecialization','Allow specialization',true)}</div>
             ${check(attrs,'allowWarehouseExpansion','Allow expansion')}
             <div data-warehouse-expansion="${stop}">${numeric(attrs,'maxWarehouseCapacity','Maximum allowed warehouse Capacity',1000,500,100000,500,T.capacityUnit)}</div>
-            <p class="chart-help">Existing storage is retained without attributing its upkeep to this project. Allowed expansions and specialization add their own Running costs. Each delivery load must fit the available storage.</p>
+            <p class="chart-help">Existing storage is retained without attributing its upkeep to this project. Allowed expansions and specialization add their own Running costs. The storage limit above applies.</p>
           </div></details></fieldset>`;
       }).join('')}</div></section>
       <section class="optimizer-infra-section"><h4>Reusable infrastructure</h4><p class="chart-help">Only add existing facilities available to this service.</p>
@@ -66,7 +75,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
         ${toggle(attrs,'stop','Stop',[['stopA',title('stopA')],['stopB',title('stopB')]],entry.stop,`${entry.id}-stop`)}
         <div data-entry-domain>${toggle(attrs,'domain','Infrastructure',[['rail','Rail'],['road','Road']],entry.domain,`${entry.id}-domain`)}</div>
         <div data-entry-type>${toggle(attrs,'kind','Available to this project',[['station','Station only'],['platform','Station + platform'],['busStop','Bus stop']],entry.kind,`${entry.id}-kind`)}</div>
-        <p class="chart-help" data-entry-factory hidden>The industry includes free specialized Road terminals. No reusable Road infrastructure declaration is needed here.</p>
+        <p class="chart-help" data-entry-factory hidden>The industry includes free specialized Truck terminals. No reusable Truck infrastructure declaration is needed here.</p>
         <div class="optimizer-infra-fields" data-entry-settings>
           <p class="chart-help" data-entry-help></p>
           <div data-entry-specialized>${toggle(attrs,'specializedTerminal','Existing platform',[['false','Generic'],['true','Specialized']],entry.specializedTerminal,`${entry.id}-specialized`)}</div>
@@ -89,17 +98,22 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   function refresh(){
     const scope=getScope(),freight=scope.category==='freight';
     $('#optimizer-infrastructure-body').hidden=!enabled.checked;
+    $('[data-storage-policy]').hidden=!freight;
+    $('#optimizer-storage-policy-help').hidden=$('#optimizer-limit-vehicle-capacity').checked;
     $('#optimizer-infrastructure-sites').hidden=!freight;
     $('[data-rail-terminal-assumptions]').hidden=scope.domain==='road';
     for(const stop of stops){
       const site=sites[stop],options=$(`[data-warehouse-options="${stop}"]`);options.hidden=!freight||site.type!=='warehouse';
+      $(`[data-industry-storage="${stop}"]`).hidden=!freight||site.type!=='factory';
+      for(const [key,relevant] of [['inputStorageCapacity',stop==='stopB'||scope.loadedReturn],['outputStorageCapacity',stop==='stopA'||scope.loadedReturn]])
+        $(`[data-infrastructure-site="${stop}"][data-infrastructure-field="${key}"]`).closest('label').hidden=!relevant;
       $(`[data-factory-options="${stop}"]`).hidden=!freight||site.type!=='factory'||scope.domain==='rail';
       $(`[data-warehouse-specialization="${stop}"]`).hidden=site.existingSpecializedWarehouse;
       $(`[data-warehouse-expansion="${stop}"]`).hidden=!site.allowWarehouseExpansion;
       $(`[data-infrastructure-site="${stop}"][data-infrastructure-field=maxWarehouseCapacity]`).min=site.warehouseCapacity||500;
       $(`[data-warehouse-summary="${stop}"]`).textContent=`· ${formatNumber(site.warehouseCapacity||0,0)} ${T.capacityUnit}${site.allowWarehouseExpansion?` → ${formatNumber(site.maxWarehouseCapacity||0,0)}`:''}`;
       const help=$(`[data-building-help="${stop}"]`);help.hidden=!site.type;
-      help.textContent=site.type==='factory'?'The included Road terminals are specialized and free; each holds one vehicle.':site.type==='warehouse'?'This warehouse is a fixed endpoint; choose available storage and permitted improvements.':'No building handling bonus.';
+      help.textContent=site.type==='factory'?'The included Truck terminals are specialized and free; trams cannot use them.':site.type==='warehouse'?'This warehouse is a fixed endpoint; choose available storage and permitted improvements.':'No building handling bonus.';
     }
     let visible=0;
     for(const entry of entries){
@@ -108,7 +122,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
       }
       const node=$(`[data-reusable-entry="${entry.id}"]`);node.hidden=!active(entry,scope);if(node.hidden)continue;
       visible++;
-      const factory=factoryTerminal(entry.stop,entry.domain,scope);
+      const factory=factoryTerminal(entry.stop,entry.domain,scope)&&!scope.includeTrams;
       node.querySelector('[data-entry-summary]').textContent=[entry.stop?title(entry.stop):`Existing infrastructure ${entries.indexOf(entry)+1}`,entry.domain==='rail'?'Rail':entry.domain==='road'?'Road':'',factory?`${T.industry} terminals included`:entry.kind==='station'?'Station only':entry.kind==='platform'?'Station + platform':entry.kind==='busStop'?'Bus stop':''].filter(Boolean).join(' · ');
       // The stop is chosen first, then the optional domain, then the reusable part.
       node.querySelector('[data-entry-domain]').hidden=!entry.stop||scope.domain!=='both';
@@ -140,12 +154,12 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
         reused?'You confirm this platform is available to this service. Only allowed extensions or specialization upgrades add upkeep.':'The station is reusable; a new track/lane and platform are required and counted.';
     }
     $('#optimizer-infrastructure-empty').hidden=visible>0;
-    $('#optimizer-infrastructure-empty').textContent=selectedKinds(scope).some(kind=>stops.some(stop=>factoryTerminal(stop,kind,scope)))?'No reusable terminals declared. New terminals are included where needed; industries provide free specialized Road terminals.':'No reusable terminals declared. New stations and platforms will be included at A and B.';
+    $('#optimizer-infrastructure-empty').textContent=selectedKinds(scope).some(kind=>stops.some(stop=>factoryTerminal(stop,kind,scope)))?'No reusable terminals declared. Industries provide free specialized Truck terminals; trams require separate stations/platforms.':'No reusable terminals declared. New stations and platforms will be included at A and B.';
     const retained=$('#optimizer-infrastructure-retained');retained.hidden=entries.length===visible;
     retained.textContent=`${entries.length-visible} reusable infrastructure ${entries.length-visible===1?'entry is':'entries are'} retained outside the current search.`;
     let needsLimits=false;
     for(const stop of stops){
-      const needed=selectedKinds(scope).filter(kind=>!factoryTerminal(stop,kind,scope)&&!matching(stop,kind,scope).length),node=$(`[data-new-terminal="${stop}"]`);
+      const needed=selectedKinds(scope).filter(kind=>(!factoryTerminal(stop,kind,scope)||kind==='road'&&scope.includeTrams)&&!matching(stop,kind,scope).length),node=$(`[data-new-terminal="${stop}"]`);
       const hasControls=needed.length>0;
       node.hidden=!hasControls;needsLimits ||= hasControls;
       node.querySelector('[data-new-rail-length]').hidden=!needed.includes('rail');
@@ -162,7 +176,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
       for(let parent=control.parentElement;parent&&parent!==root;parent=parent.parentElement)if(parent.hidden){hidden=true;break;}
       control.disabled=!enabled.checked||hidden;
     }
-    for(const entry of entries)if(entry.kind==='busStop'&&active(entry,scope)&&!factoryTerminal(entry.stop,entry.domain,scope)&&!busStopAllowed(entry.domain,scope.category,entry.stop,sites[entry.stop]?.type,scope.loadedReturn)){
+    for(const entry of entries)if(entry.kind==='busStop'&&active(entry,scope)&&(!factoryTerminal(entry.stop,entry.domain,scope)||scope.includeTrams)&&!busStopAllowed(entry.domain,scope.category,entry.stop,sites[entry.stop]?.type,scope.loadedReturn)){
       $(`[data-infrastructure-entry="${entry.id}"][data-infrastructure-field=kind][value=busStop]`).setCustomValidity('Bus stops serve passengers or unload freight at industrial destination B without a loaded return.');
     }
   }
@@ -200,10 +214,11 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   return {refresh,isEnabled:()=>enabled.checked,reportValidity(){
     const scope=getScope();
     for(const kind of selectedKinds(scope))for(const stop of stops){
-      const group=factoryTerminal(stop,kind,scope)?[]:matching(stop,kind,scope);
-      if(group.length>MAX_TERMINAL_CONFIGURATIONS){
+      const factory=factoryTerminal(stop,kind,scope),group=factory&&!scope.includeTrams?[]:matching(stop,kind,scope);
+      const maximum=MAX_TERMINAL_CONFIGURATIONS-(factory&&scope.includeTrams?1:0);
+      if(group.length>maximum){
         const input=$(`[data-infrastructure-entry="${group.at(-1).id}"][data-infrastructure-field=stop]:checked`);
-        input.setCustomValidity(`Declare at most ${MAX_TERMINAL_CONFIGURATIONS} reusable infrastructures per stop and domain.`);
+        input.setCustomValidity(`Declare at most ${maximum} reusable infrastructures per stop and domain.`);
       }
     }
     const invalid=[...root.querySelectorAll('input')].find(control=>!control.disabled&&!control.checkValidity());
@@ -211,17 +226,20 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   },getValue(){
     if(!enabled.checked)return null;
     const scope=getScope();
-    return {sites:Object.fromEntries(stops.map(stop=>{
+    return {limitVehicleCapacity:$('#optimizer-limit-vehicle-capacity').checked,sites:Object.fromEntries(stops.map(stop=>{
       const site=sites[stop];
       return [stop,scope.category!=='freight'?{type:'industrial'}:{type:site.type,warehouseCapacity:site.warehouseCapacity,
-        ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals}:{}),
+        ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals,
+          ...(stop==='stopB'||scope.loadedReturn?{inputStorageCapacity:site.inputStorageCapacity}:{}),
+          ...(stop==='stopA'||scope.loadedReturn?{outputStorageCapacity:site.outputStorageCapacity}:{})}:{}),
         maxWarehouseCapacity:site.allowWarehouseExpansion?site.maxWarehouseCapacity:site.warehouseCapacity,
         existingSpecializedWarehouse:site.existingSpecializedWarehouse,
         warehouseSpecialization:site.existingSpecializedWarehouse?'specialized':site.allowWarehouseSpecialization?'optimize':'generic'}];
     })),...Object.fromEntries(selectedKinds(scope).map(kind=>[kind,Object.fromEntries(stops.map(stop=>{
       const available=matching(stop,kind,scope);
-      if(factoryTerminal(stop,kind,scope))return [stop,{mode:'factory'}];
-      return [stop,available.length?available.map(entry=>({id:entry.id,mode:entry.kind==='platform'||entry.kind==='busStop'?'reuse':'add',terminalType:entry.kind==='busStop'?'busStop':'station',
+      const factory=factoryTerminal(stop,kind,scope);
+      if(factory&&!scope.includeTrams)return [stop,{mode:'factory'}];
+      const plans=available.length?available.map(entry=>({id:entry.id,mode:entry.kind==='platform'||entry.kind==='busStop'?'reuse':'add',terminalType:entry.kind==='busStop'?'busStop':'station',
         specializedTerminal:entry.specializedTerminal,allowSpecialization:entry.allowSpecialization,allowExtension:entry.allowExtension,existingLength:entry.existingLength,
         maxTrainLength:entry.kind==='platform'&&!entry.allowExtension?entry.existingLength:entry.maxTrainLength,
         ...(kind==='rail'?{platformTrackCount:entry.platformTrackCount,platformCount:entry.railPlatformCount,
@@ -230,7 +248,8 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
         ...(kind==='road'?{platformLength:entry.platformLength,platformCount:entry.platformCount,allowParallelPlatforms:entry.kind==='station'||entry.allowParallelPlatforms,
           maxPlatformLength:entry.kind==='platform'&&!entry.allowExtension?entry.platformLength:entry.maxPlatformLength,
           maxPlatforms:entry.kind==='platform'&&!entry.allowParallelPlatforms?entry.platformCount:entry.maxPlatforms}:{}),
-      })):{mode:'new',...bounds[stop],allowBusStop:bounds[stop].allowBusStop&&busStopAllowed(kind,scope.category,stop,sites[stop]?.type,scope.loadedReturn)}];
+      })):{mode:'new',...bounds[stop],allowBusStop:bounds[stop].allowBusStop&&busStopAllowed(kind,scope.category,stop,sites[stop]?.type,scope.loadedReturn)};
+      return [stop,factory?[{mode:'factory'},...(Array.isArray(plans)?plans:[plans]).map(plan=>({...plan,tramOnly:true}))]:plans];
     }))]))};
   }};
 }

@@ -11,6 +11,7 @@ export const STATION_TARIFFS={railBase:18000,roadBase:36000,roadAccess:6000};
 export const BUS_STOP_TARIFFS={annualMaintenance:30000,vehicleSlots:1};
 export const ROAD_PLATFORM_LENGTH=20;
 export const ROAD_PLATFORM_EXTENSION_LENGTH=10;
+export const optimizerStorageCapacity=(...plans)=>Math.min(...plans.flatMap(plan=>[plan.warehouseCapacity??Infinity,plan.storageCapacity??Infinity]));
 export function roadPlatformVehicleSlots(vehicleLength,platformCount=1,platformLength=ROAD_PLATFORM_LENGTH){
   if(!Number.isFinite(vehicleLength)||vehicleLength<=0||!Number.isInteger(platformCount)||platformCount<1||!Number.isFinite(platformLength)||platformLength<20||platformLength%10)throw new RangeError('Road platform capacity requires a positive vehicle length, platform count and valid length.');
   return Math.max(1,Math.floor((platformLength+1e-9)/vehicleLength))*platformCount;
@@ -65,7 +66,7 @@ function validateTerminalConstraint(input,domain,category,siteType,stop,loadedRe
     if(![road.platformCount,road.maxPlatforms].every(n=>Number.isSafeInteger(n)&&n>=1&&n<=100))throw new RangeError('Road platform counts must be whole numbers (1–100).');
     if(road.maxPlatformLength<road.platformLength||road.maxPlatforms<road.platformCount)throw new RangeError('Road limits must accommodate the available platforms.');
   }
-  return {...(input.id===undefined?{}:{id:input.id}),mode,terminalType,allowBusStop,specializedTerminal:terminalType==='busStop'?false:specializedTerminal,allowSpecialization:terminalType==='busStop'?false:allowSpecialization,allowExtension,existingLength,maxTrainLength,siteType,...rail,...road};
+  return {...(input.id===undefined?{}:{id:input.id}),...(input.tramOnly===undefined?{}:{tramOnly:booleanSetting(input,'tramOnly')}),mode,terminalType,allowBusStop,specializedTerminal:terminalType==='busStop'?false:specializedTerminal,allowSpecialization:terminalType==='busStop'?false:allowSpecialization,allowExtension,existingLength,maxTrainLength,siteType,...rail,...road};
 }
 
 /** Enumerate distinct serial-place layouts, retaining the cheapest length for each place count. */
@@ -186,7 +187,9 @@ export function roadTerminalRunningCosts(plan,category){
 export function validateOptimizerInfrastructure(input,domain,category='passengers',{loadedReturn=false}={}){
   if(input==null)return null;
   if(typeof input!=='object'||Array.isArray(input))throw new RangeError('Choose valid terminal configurations.');
-  const result={};
+  const limitVehicleCapacity=Object.hasOwn(input,'limitVehicleCapacity')?input.limitVehicleCapacity:true;
+  if(typeof limitVehicleCapacity!=='boolean')throw new RangeError('Choose a valid full vehicle Capacity storage limit.');
+  const result={limitVehicleCapacity};
   result.sites={};
   for(const stop of ['stopA','stopB']){
     const site=input.sites?.[stop]??{type:'industrial',warehouseSpecialization:'optimize'};
@@ -202,8 +205,10 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
     if(existingSpecializedWarehouse&&warehouseSpecialization==='generic')throw new RangeError('A reused specialized warehouse cannot be downgraded.');
     const factoryTerminals=Object.hasOwn(site,'factoryTerminals')?site.factoryTerminals:2;
     if(site.type==='factory'&&category==='freight'&&domain!=='rail'&&![2,3].includes(factoryTerminals))throw new RangeError('Choose 2 or 3 parallel Road industry terminals.');
+    const inputStorageCapacity=Object.hasOwn(site,'inputStorageCapacity')?site.inputStorageCapacity:100,outputStorageCapacity=Object.hasOwn(site,'outputStorageCapacity')?site.outputStorageCapacity:100;
+    if(site.type==='factory'&&category==='freight'&&![inputStorageCapacity,outputStorageCapacity].every(n=>Number.isSafeInteger(n)&&n>=100&&n%100===0))throw new RangeError('Industry storage capacities must be positive whole 100 capacity sections.');
     result.sites[stop]={type:site.type,warehouseSpecialization:existingSpecializedWarehouse?'specialized':warehouseSpecialization,warehouseCapacity,maxWarehouseCapacity,existingSpecializedWarehouse,
-      ...(site.type==='factory'?{factoryTerminals}:{})};
+      ...(site.type==='factory'?{factoryTerminals,...(category==='freight'?{inputStorageCapacity,outputStorageCapacity}:{})}:{})};
   }
   for(const kind of domain==='both'?['rail','road']:[domain]){
     result[kind]={};
@@ -248,6 +253,7 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
         if(Object.keys(railGeometry).length&&(![railGeometry.platformTrackCount,railGeometry.platformCount].every(n=>Number.isSafeInteger(n)&&n>=1&&n<=100)||
           railGeometry.platformCount<Math.ceil(railGeometry.platformTrackCount/2)||railGeometry.platformCount>railGeometry.platformTrackCount))throw new RangeError('Rail platforms must serve one or two platform tracks.');
         return {id,name:name.trim(),annualMaintenance,constructionCost,maxTrainLength,maintenanceBasis,siteType,
+          ...(plan.tramOnly===undefined?{}:{tramOnly:booleanSetting(plan,'tramOnly')}),
           ...(automatic?{additionalAnnualMaintenance:plan.additionalAnnualMaintenance}:{}),...railGeometry,
           ...(maintenanceBasis==='roadPlatforms'?{platformCount:plan.platformCount,platformLength:plan.platformLength??20,additionalLanes:plan.additionalLanes??0}:{}),...flags};
       });
@@ -264,11 +270,12 @@ export function optimizerTrainLengthLimit(request){
   }));
 }
 
-export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinity,vehicleLength=0,{costCeiling=()=>Infinity}={}){
+export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinity,vehicleLength=0,{costCeiling=()=>Infinity,vehicleType}={}){
   if(!request.infrastructure){yield {stopA:request.stopA,stopB:request.stopB,maxTrainLength:request.maxTrainLength,selection:null};return;}
   const {stopA,stopB}=request.infrastructure[domain];
   function* variants(terminal,stop){
     for(const definition of Array.isArray(terminal)?terminal:[terminal]){
+      if(definition.tramOnly&&vehicleType!=='Tram')continue;
       const plans=definition.mode?terminalVariants(definition,domain,request.category,vehicleLength,costCeiling):
         [domain==='road'&&vehicleLength>0&&definition.maintenanceBasis==='roadPlatforms'&&definition.siteType!=='factory'?{...definition,
           platformLengths:Array(definition.platformCount).fill(definition.platformLength),
@@ -276,14 +283,24 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
           vehicleSlots:roadPlatformVehicleSlots(vehicleLength,definition.platformCount,definition.platformLength)}:definition];
       for(const selected of plans){
         const factory=domain==='road'&&request.category==='freight'&&(selected.mode==='factory'||!selected.mode&&selected.siteType==='factory');
+        // Industry's built-in loading bays cannot serve trams, including legacy priced plans.
+        if(factory&&vehicleType==='Tram')continue;
         const count=request.infrastructure.sites[stop].factoryTerminals??2;
         const plan=factory?{...selected,name:selected.mode==='factory'?`${T.industry} terminals`:selected.name,
           factoryTerminals:count,platformCount:count,platformSlots:Array(count).fill(1),vehicleSlots:count}:selected;
+        const site=request.infrastructure.sites[stop];
+        if(request.category==='freight'&&site.type==='factory'){
+          const input=stop==='stopB'||request.loadedReturn,output=stop==='stopA'||request.loadedReturn;
+          yield {...plan,...(input?{inputStorageCapacity:site.inputStorageCapacity}:{}),...(output?{outputStorageCapacity:site.outputStorageCapacity}:{}),
+            storageCapacity:Math.min(input?site.inputStorageCapacity:Infinity,output?site.outputStorageCapacity:Infinity)};
+          continue;
+        }
         if(request.category!=='freight'||request.infrastructure.sites[stop].type!=='warehouse'){yield plan;continue;}
-        const site=request.infrastructure.sites[stop],allowed=site.warehouseSpecialization;
+        const allowed=site.warehouseSpecialization;
         const minimum=site.warehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection;
-        // More storage than the largest possible single load has no service benefit. Retain all existing storage.
-        const maximum=Math.max(minimum,Math.min(site.maxWarehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection,Math.ceil(vehicleCapacity*request.fillRatio/WAREHOUSE_TARIFFS.capacityPerSection)));
+        // Full Capacity is required by default; the opt-out bounds actual load instead. Retain existing storage.
+        const required=vehicleCapacity*(request.infrastructure.limitVehicleCapacity!==false?1:request.fillRatio);
+        const maximum=Math.max(minimum,Math.min(site.maxWarehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection,Math.ceil(required/WAREHOUSE_TARIFFS.capacityPerSection)));
         for(let sections=minimum;sections<=maximum;sections++)for(const specializedWarehouse of allowed==='optimize'?[false,true]:[allowed==='specialized']){
           const fullWarehouseCosts=sections*(specializedWarehouse?WAREHOUSE_TARIFFS.specialized:WAREHOUSE_TARIFFS.generic);
           const baseline=minimum*(site.existingSpecializedWarehouse?WAREHOUSE_TARIFFS.specialized:WAREHOUSE_TARIFFS.generic);
@@ -308,11 +325,11 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
 /** Transfer the selected handling bonuses and physical length limit to the vehicle service views. */
 export function optimizerProposalRequest(proposal,request){
   if(proposal.routeInfrastructure)request={...request,routeProfile:proposal.routeInfrastructure.routeProfile};
+  if(request.category==='freight'&&proposal.serviceFillRatio!=null)request={...request,fillRatio:Math.min(request.fillRatio,proposal.serviceFillRatio)};
   const selected=proposal.infrastructure;
   if(!selected)return request;
   const flags=plan=>({specializedTerminal:plan.specializedTerminal,specializedWarehouse:plan.specializedWarehouse});
-  const storage=Math.min(selected.stopA.warehouseCapacity??Infinity,selected.stopB.warehouseCapacity??Infinity);
   return {...request,stopA:flags(selected.stopA),stopB:flags(selected.stopB),
-    fillRatio:request.category==='freight'?Math.min(request.fillRatio,storage/proposal.capacity):request.fillRatio,
+    fillRatio:request.category==='freight'?Math.min(request.fillRatio,optimizerStorageCapacity(selected.stopA,selected.stopB)/proposal.capacity):request.fillRatio,
     maxTrainLength:proposal.domain==='rail'?Math.min(request.maxTrainLength,selected.stopA.maxTrainLength,selected.stopB.maxTrainLength):request.maxTrainLength};
 }

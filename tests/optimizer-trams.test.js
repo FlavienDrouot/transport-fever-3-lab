@@ -5,7 +5,7 @@ import {buildConsist,lightRailComponents,railComponents,tramComponents} from '..
 import {OPTIMIZER_DEFAULTS,optimizerRequest,optimizerCandidates,optimizeService,evaluateOptimizerCandidate,compareOptimizerResults} from '../src/optimizer.js';
 import {loadOptimizerCatalogue} from '../src/optimizer-catalogue.js';
 import {segmentTramTiers} from '../src/optimizer-line-infrastructure.js';
-import {optimizerProposalRequest} from '../src/optimizer-infrastructure.js';
+import {optimizerProposalRequest,optimizerTerminalChoices} from '../src/optimizer-infrastructure.js';
 import {renderOptimizerProposals,optimizerProposalAt} from '../src/optimizer-proposals.js';
 import {reverseRouteProfile} from '../src/route-profile.js';
 const load=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
@@ -120,6 +120,74 @@ test('Road tram practical length defaults to 80 m and is independent of Rail and
  }
  assert.throws(()=>request({maxRoadTramLength:0}),/maxRoadTramLength/);
  assert.throws(()=>request({maxRoadTramLength:NaN}),/maxRoadTramLength/);
+});
+
+test('Road freight trams cannot use industry terminals, including coupled and legacy configurations',()=>{
+ const sites={stopA:{type:'factory'},stopB:{type:'factory'}},terminal={mode:'factory'};
+ const req=request({domain:'road',category:'freight',includeTrams:true,maxRoadTramLength:80,maxWagons:1,rate:100,infrastructure:{sites,road:{stopA:terminal,stopB:terminal}}});
+ const candidates=[...optimizerCandidates(data,req)];
+ assert.ok(candidates.some(c=>c.definition.components.length>1));
+ assert.ok(candidates.some(c=>c.definition.components[0].quantity>1));
+ for(const candidate of candidates){
+  const answer=evaluateOptimizerCandidate(candidate,data,req);
+  assert.equal(answer.result,undefined);assert.equal(answer.rejected,'infrastructure');
+ }
+ const legacy={id:'industry',name:'Included industry terminal',annualMaintenance:0};
+ const old=request({...req,infrastructure:{sites,road:{stopA:[legacy],stopB:{mode:'new'}}}});
+ assert.equal(evaluateOptimizerCandidate(candidates[0],data,old).rejected,'infrastructure');
+});
+
+test('industry truck terminals and separate new or reusable tram platforms remain distinct choices',()=>{
+ const sites={stopA:{type:'factory'},stopB:{type:'factory'}};
+ const tramPlatform={mode:'new',tramOnly:true,maxPlatformLength:20,maxPlatforms:1,allowSpecialization:false};
+ const terminals=[{mode:'factory'},tramPlatform];
+ const req=request({domain:'road',category:'freight',includeTrams:true,rate:100,maxRoadTramLength:80,maxWagons:1,infrastructure:{sites,road:{stopA:terminals,stopB:terminals}}});
+ assert.deepEqual(optimizerRequest(req),req);
+ const trucks=[...optimizerTerminalChoices(req,'road',18,10,{vehicleType:'Truck'})];
+ assert.equal(trucks.length,1);
+ assert.equal(trucks[0].selection.annualMaintenance,0);
+ assert.ok(['stopA','stopB'].every(stop=>trucks[0][stop].vehicleSlots===2&&trucks[0][stop].specializedTerminal));
+ const candidate=[...optimizerCandidates(data,req)].find(c=>c.definition.components.length===1&&c.definition.components[0].quantity===1);
+ assert.ok(candidate);
+ const result=evaluateOptimizerCandidate(candidate,data,req).result;assert.ok(result);
+ assert.equal(result.infrastructureRunningCosts,2*(42000+2*30000));
+ for(const stop of ['stopA','stopB']){
+  assert.equal(result.infrastructure[stop].mode,'new');
+  assert.equal(result.infrastructure[stop].specializedTerminal,false);
+  assert.equal(result.infrastructure[stop].factoryTerminals,undefined);
+ }
+ const reusable={...tramPlatform,mode:'reuse',platformLength:20,platformCount:1,allowParallelPlatforms:false};
+ const reuse=request({...req,infrastructure:{sites,road:{stopA:[{mode:'factory'},reusable],stopB:terminals}}});
+ const reused=evaluateOptimizerCandidate(candidate,data,reuse).result;assert.ok(reused);
+ assert.equal(reused.infrastructureRunningCosts,102000);
+ assert.equal(reused.infrastructure.stopA.mode,'reuse');
+ assert.throws(()=>request({...req,infrastructure:{sites,road:{stopA:{...tramPlatform,tramOnly:'true'},stopB:terminals}}}),/tramOnly/);
+});
+
+test('the captured 880-capacity Rail tram formation must fit its warehouse and industry input storage',()=>{
+ const sites={stopA:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:500,warehouseSpecialization:'generic'},stopB:{type:'factory',inputStorageCapacity:900}};
+ const terminal={mode:'new',maxTrainLength:400,maxPlatformTracks:2};
+ const req=request({domain:'rail',category:'freight',rate:100,maxTrainLength:400,fillRatio:.5,infrastructure:{sites,rail:{stopA:terminal,stopB:terminal}}});
+ const candidate=[...optimizerCandidates(data,req)].find(c=>c.definition.components.length===1&&c.definition.components[0].componentId.endsWith(':articulated-freight-tram')&&c.definition.components[0].quantity===11);
+ assert.ok(candidate);assert.equal(buildConsist(candidate.definition,candidate.catalogue,data.units).cargoCapacity,880);
+ const blocked=evaluateOptimizerCandidate(candidate,data,req);
+ assert.equal(blocked.result,undefined);assert.deepEqual(blocked.limitingConstraints,['storageCapacityA']);
+ const relaxed=request({...req,infrastructure:{...req.infrastructure,limitVehicleCapacity:false}});
+ const partial=evaluateOptimizerCandidate(candidate,data,relaxed).result;assert.ok(partial);
+ assert.equal(partial.capacity,880);assert.ok(partial.capacity*partial.utilization<=500+1e-7);
+ assert.match(renderOptimizerProposals({request:relaxed,best:{rail:[partial]}},'rail'),/Extra carrying units can shorten loading\/unloading/);
+ const transfer=optimizerProposalRequest(partial,relaxed);
+ assert.ok(transfer.fillRatio<=500/880);assert.equal(transfer.infrastructure.limitVehicleCapacity,false);
+ const reopened=evaluateOptimizerCandidate(candidate,data,request(transfer)).result;assert.ok(reopened);close(reopened.cycle,partial.cycle);
+ const expanded=request({...req,infrastructure:{...req.infrastructure,sites:{...sites,stopA:{...sites.stopA,maxWarehouseCapacity:1000}}}});
+ const feasible=evaluateOptimizerCandidate(candidate,data,expanded).result;assert.ok(feasible);
+ assert.equal(feasible.infrastructure.stopA.warehouseCapacity,1000);
+ assert.equal(feasible.infrastructure.stopB.inputStorageCapacity,900);
+ const insufficient=request({...expanded,infrastructure:{...expanded.infrastructure,sites:{...expanded.infrastructure.sites,stopB:{type:'factory',inputStorageCapacity:800}}}});
+ assert.equal(evaluateOptimizerCandidate(candidate,data,insufficient).result,undefined);
+ const larger=request({...expanded,infrastructure:{...expanded.infrastructure,sites:{...expanded.infrastructure.sites,stopB:{type:'factory',inputStorageCapacity:1200}}}});
+ const result=evaluateOptimizerCandidate(candidate,data,larger).result;assert.ok(result);
+ assert.match(renderOptimizerProposals({request:larger,best:{rail:[result]}},'rail'),/Input storage 1,200 capacity/);
 });
 
 test('tram tracks exclude highway tiers, preserve curve/city caps and charge dedicated upkeep once for both tracks',()=>{

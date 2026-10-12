@@ -28,7 +28,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     <label class="optimizer-field">${T.utilization} · ceiling <span><input name="utilization" type="number" min="1" max="100" step="1" value="100" required> %</span></label>
     </div><details class="optimizer-timing"><summary>Departure intervals &amp; leg time</summary><div class="optimizer-fields optimizer-service-fields">
     ${[['enableFrequency','minutes',`${T.frequency} · maximum interval`,OPTIMIZER_DEFAULTS.maxHeadwaySeconds,300],['enableMinimumFrequency','minMinutes',`${T.frequency} · minimum interval`,OPTIMIZER_DEFAULTS.minHeadwaySeconds,30],['enableMaxOutboundLeg','outboundMinutes','Max leg time A→B',OPTIMIZER_DEFAULTS.maxOutboundLegSeconds,600],['enableMaxReturnLeg','returnMinutes','Max leg time B→A',OPTIMIZER_DEFAULTS.maxReturnLegSeconds,600]].map(([toggle,name,label,value,fallback])=>`<div class="optimizer-field"><label><input name="${toggle}" type="checkbox"${value!==null?' checked':''}> ${label}</label>${durationInputs({id:`optimizer-${name}`,name,label,value:value??fallback,disabled:value===null})}</div>`).join('')}
-    <p class="chart-help optimizer-leg-help">Leg times include acceleration and any modeled braking; stop handling is excluded.</p>
+    <p class="chart-help optimizer-leg-help"></p>
     </div></details>
     <p class="chart-help">Meet the Rate with whole vehicles, within the enabled intervals between departures and the Utilization ceiling.</p>
     <div id="optimizer-loaded-return" hidden><label class="road-inline-check"><input name="loadedReturn" type="checkbox"> Loaded return</label></div>
@@ -50,10 +50,11 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   mountTransportCategory($('optimizer-category'),{value:category,onChange:value=>{category=value;syncCategory();invalidate();}});
   mountFreightFilter($('optimizer-cargo'));syncCategory();
   const stopValues=stop=>({specializedTerminal:$(`optimizer-terminal-${stop}`).checked,specializedWarehouse:$(`optimizer-warehouse-${stop}`).checked});
-  infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getScope:()=>({domain:field('domain').value,category,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
+  infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getScope:()=>({domain:field('domain').value,category,includeTrams:lineControl?.includeTrams()??false,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
   lineControl=mountOptimizerLineInfrastructure($('optimizer-line-control'),{getRoute,getScope:()=>({domain:field('domain').value,year:Number(field('year').value)}),onRouteChange,onChange:()=>{syncInfrastructure();invalidate();}});
   syncInfrastructure();
   function syncCategory(){
+    root.querySelector('.optimizer-leg-help').textContent=category==='freight'?'Freight leg time includes loading, travel, estimated waiting at the destination and unloading. An empty return includes travel only. Maneuvering and operation/departure pauses are excluded.':'Passenger leg time includes acceleration and any modeled braking; stop handling is excluded.';
     for(const id of ['optimizer-cargo','optimizer-cargo-help','optimizer-loaded-return'])$(id).hidden=category!=='freight';
     $('optimizer-rate-unit').textContent=`${T.capacityUnit}/year${category==='passengers'?'/direction':''}`;
     syncInfrastructure();

@@ -3,7 +3,7 @@ import {mixedLightRailFormations,formationVehicleCostBound} from './optimizer-tr
 import {analyseEconomicService} from './rail-freight.js';
 import {analyseRoadFleet,matchesFreightFilter,selectRoadVehicles} from './trucks.js';
 import {routeProfileDistance,validateRouteProfile} from './route-profile.js';
-import {RAIL_PLATFORM_MAX_LENGTH,validateOptimizerInfrastructure,optimizerTrainLengthLimit,optimizerTerminalChoices} from './optimizer-infrastructure.js';
+import {RAIL_PLATFORM_MAX_LENGTH,validateOptimizerInfrastructure,optimizerTrainLengthLimit,optimizerTerminalChoices,optimizerStorageCapacity} from './optimizer-infrastructure.js';
 import {validateLineInfrastructure,searchLineInfrastructure,sizeRailLineTracks} from './optimizer-line-infrastructure.js';
 import {ROAD_MANEUVER_SECONDS} from './road-terminal-service.js';
 import {railTerminalEstimates,RAIL_SWITCH_LENGTH_METRES} from './rail-terminal-service.js';
@@ -120,19 +120,20 @@ export function evaluateOptimizerCandidate(candidate,data,request){
   }
   let best=null,rejected='infrastructure';
   const limitingConstraints=new Set(),singleConstraints=new Set();
-  for(const choice of optimizerTerminalChoices(request,candidate.domain,vehicle.cargoCapacity,vehicle.lengthMetres,{costCeiling:()=>best?best.cost-vehicle.economy.annualMaintenance:Infinity})){
+  for(const choice of optimizerTerminalChoices(request,candidate.domain,vehicle.cargoCapacity,vehicle.lengthMetres,{vehicleType:vehicle.vehicleType,costCeiling:()=>best?best.cost-vehicle.economy.annualMaintenance:Infinity})){
     if(best&&(choice.selection?.annualMaintenance??0)+vehicle.economy.annualMaintenance>best.cost+1e-7)continue;
     if(candidate.domain==='rail'&&vehicle.lengthMetres>choice.maxTrainLength+1e-9)continue;
-    const search=request.lineInfrastructure||vehicle.vehicleType==='Tram'&&candidate.domain==='road'?searchLineInfrastructure(request,candidate.domain,vehicle,choice,
+    const storageLimits=request.category==='freight'&&request.infrastructure?.limitVehicleCapacity!==false?['stopA','stopB'].filter(stop=>vehicle.cargoCapacity>optimizerStorageCapacity(choice[stop])+1e-7).map(stop=>`storageCapacity${stop==='stopA'?'A':'B'}`):[];
+    const search=!storageLimits.length&&(request.lineInfrastructure||vehicle.vehicleType==='Tram'&&candidate.domain==='road')?searchLineInfrastructure(request,candidate.domain,vehicle,choice,
       plan=>evaluateOptimizerService(candidate.domain,vehicle,definition,parts,{...request,routeProfile:plan.routeProfile},choice,plan),compareOptimizerResults):null;
-    const evaluations=search?[...(search.result?[{result:search.result}]:[]),...search.rejections]:[evaluateOptimizerService(candidate.domain,vehicle,definition,parts,request,choice)];
+    const evaluations=storageLimits.length?[{rejected:'infrastructure',limitingConstraints:storageLimits}]:search?[...(search.result?[{result:search.result}]:[]),...search.rejections]:[evaluateOptimizerService(candidate.domain,vehicle,definition,parts,request,choice)];
     for(const evaluation of evaluations)if(evaluation.result){
       if(!best||compareOptimizerResults(evaluation.result,best)<0)best=evaluation.result;
     }else {
       rejected=evaluation.rejected;
       const limits=evaluation.limitingConstraints??[rejected];
       for(const limit of limits)limitingConstraints.add(limit);
-      if(limits.length===1&&['minHeadwaySeconds','maxHeadwaySeconds','maxOutboundLegSeconds','maxReturnLegSeconds','maxFleet','rate','fillRatio','stopCapacityA','stopCapacityB','railTerminalGeometry'].includes(limits[0]))singleConstraints.add(limits[0]);
+      if(limits.length===1&&['minHeadwaySeconds','maxHeadwaySeconds','maxOutboundLegSeconds','maxReturnLegSeconds','maxFleet','rate','fillRatio','stopCapacityA','stopCapacityB','railTerminalGeometry','storageCapacityA','storageCapacityB'].includes(limits[0]))singleConstraints.add(limits[0]);
     }
   }
   if(best){
@@ -147,28 +148,43 @@ export function evaluateOptimizerCandidate(candidate,data,request){
 
 function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice,linePlan=null){
   const freight=request.category==='freight';
-  const warehouseLimit=freight?Math.min(choice.stopA.warehouseCapacity??Infinity,choice.stopB.warehouseCapacity??Infinity)/vehicle.cargoCapacity:Infinity;
-  const options={distanceKm:request.distanceKm,routeProfile:request.routeProfile,fillRatio:Math.min(request.fillRatio,warehouseLimit),
+  const storage=freight?optimizerStorageCapacity(choice.stopA,choice.stopB):Infinity;
+  const options={distanceKm:request.distanceKm,routeProfile:request.routeProfile,fillRatio:freight?Math.min(request.fillRatio,storage/vehicle.cargoCapacity):request.fillRatio,
     maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',loadedReturn:request.loadedReturn,stopA:choice.stopA,stopB:choice.stopB,
     maneuverSeconds:domain==='road'&&choice.selection?ROAD_MANEUVER_SECONDS:0};
-  const service=domain==='rail'?analyseEconomicService(vehicle,{...options,freight,allowMultipleUnits:false,platformLengthMetres:choice.maxTrainLength,
+  const analyse=()=>domain==='rail'?analyseEconomicService(vehicle,{...options,freight,allowMultipleUnits:false,platformLengthMetres:choice.maxTrainLength,
     ...(freight?{demandPerYear:request.rate}:{demandPerDirection:request.rate})}):
     analyseRoadFleet([vehicle],{...options,passenger:!freight,motion:true,demandPerYear:request.rate*(freight?1:2)})[0];
+  let service=analyse();
   if(!service||service.eligible===false)return {rejected:'route'};
   const outboundTravelSeconds=service.outboundTravelSeconds??service.travelSeconds,returnTravelSeconds=service.returnTravelSeconds??service.travelSeconds;
+  if(freight){
+    const transfer=(service.loadingSeconds+service.unloadingSeconds)/(1+Number(request.loadedReturn));
+    const available=Math.min(request.maxOutboundLegSeconds===null?Infinity:request.maxOutboundLegSeconds-outboundTravelSeconds,
+      !request.loadedReturn||request.maxReturnLegSeconds===null?Infinity:request.maxReturnLegSeconds-returnTravelSeconds);
+    const actualFill=service.actualOccupancyRatio??service.actualFillRatio;
+    // A delivery deadline can require smaller loads and an additional whole vehicle.
+    // Destination queueing is checked against the final estimate below.
+    if(available>0&&available<transfer-1e-7){options.fillRatio=Math.min(options.fillRatio,actualFill*available/transfer);service=analyse();}
+  }
+  const handlingSeconds=freight?(service.loadingSeconds+service.unloadingSeconds)/(1+Number(request.loadedReturn)):0;
+  const outboundLegSeconds=outboundTravelSeconds+handlingSeconds+(freight?(service.waitingSecondsB??0):0);
+  const returnLegSeconds=returnTravelSeconds+(freight&&request.loadedReturn?handlingSeconds+(service.waitingSecondsA??0):0);
   const result={domain,id:vehicle.id,name:vehicle.name,definition,parts,year:vehicle.year,
     length:vehicle.lengthMetres,capacity:freight?vehicle.cargoCapacity:vehicle.passengerCapacity,
     fleet:service.trainCount??service.vehicleCount,cost:service.fleetMaintenance,
     rate:domain==='rail'&&!freight?service.perDirectionJourneysPerYear:service.deliveredPerYear/(freight?1:2),
     frequency:service.headwaySeconds,utilization:service.actualOccupancyRatio??service.actualFillRatio,
-    cycle:service.roundTripSeconds,outboundTravelSeconds,returnTravelSeconds,unitCost:service.maintenancePerUnit??service.costPerCargo,
+    ...(freight?{serviceFillRatio:options.fillRatio}:{}),
+    cycle:service.roundTripSeconds,outboundTravelSeconds,returnTravelSeconds,outboundLegSeconds,returnLegSeconds,unitCost:service.maintenancePerUnit??service.costPerCargo,
     purchase:vehicle.economy.purchasePrice*(service.trainCount??service.vehicleCount)};
-  if(![result.cost,result.rate,result.frequency,result.utilization,result.cycle,result.unitCost,outboundTravelSeconds,returnTravelSeconds].every(Number.isFinite)||result.cost<=0)throw new Error('A service calculation returned invalid values.');
+  if(![result.cost,result.rate,result.frequency,result.utilization,result.cycle,result.unitCost,outboundTravelSeconds,returnTravelSeconds,outboundLegSeconds,returnLegSeconds].every(Number.isFinite)||result.cost<=0)throw new Error('A service calculation returned invalid values.');
   const transfer=domain==='rail'&&!freight?4*service.loadingSeconds:service.loadingSeconds+service.unloadingSeconds;
-  const fleetModel={transferSeconds:transfer/result.utilization*options.fillRatio,
+  const optimisticFill=freight?Math.min(request.fillRatio,storage/vehicle.cargoCapacity):request.fillRatio;
+  const fleetModel={transferSeconds:transfer/result.utilization*optimisticFill,
     // Queue estimates depend on headway and route tiers; omit them from optimistic search bounds.
     stationSeconds:Math.max(0,result.cycle-outboundTravelSeconds-returnTravelSeconds-transfer-(service.waitingSecondsA??0)-(service.waitingSecondsB??0)),
-    unitsPerCycle:result.capacity*options.fillRatio*(freight?1+Number(request.loadedReturn):2)};
+    unitsPerCycle:result.capacity*optimisticFill*(freight?1+Number(request.loadedReturn):2)};
   const limitingConstraints=[];
   const railStops=domain==='rail'&&choice.selection&&['stopA','stopB'].some(stop=>choice[stop].platformTrackCount!=null);
   let terminalEstimates=null;
@@ -183,12 +199,12 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
     if(service[`terminalEstimate${suffix}`]?.overloaded)limitingConstraints.push(`stopCapacity${suffix}`);
   }
   if(result.fleet>request.maxFleet)limitingConstraints.push('maxFleet');
-  if(request.maxOutboundLegSeconds!==null&&outboundTravelSeconds>request.maxOutboundLegSeconds+1e-7)limitingConstraints.push('maxOutboundLegSeconds');
-  if(request.maxReturnLegSeconds!==null&&returnTravelSeconds>request.maxReturnLegSeconds+1e-7)limitingConstraints.push('maxReturnLegSeconds');
+  if(request.maxOutboundLegSeconds!==null&&outboundLegSeconds>request.maxOutboundLegSeconds+1e-7)limitingConstraints.push('maxOutboundLegSeconds');
+  if(request.maxReturnLegSeconds!==null&&returnLegSeconds>request.maxReturnLegSeconds+1e-7)limitingConstraints.push('maxReturnLegSeconds');
   if(result.rate+Math.max(1,request.rate)*1e-8<request.rate)limitingConstraints.push('rate');
   if(result.utilization>request.fillRatio+1e-8)limitingConstraints.push('fillRatio');
+  if(freight&&result.capacity*result.utilization>storage+1e-7)limitingConstraints.push('infrastructure');
   if(request.maxHeadwaySeconds!==null&&result.frequency>request.maxHeadwaySeconds+1e-7)limitingConstraints.push('maxHeadwaySeconds');
-  if(freight&&result.capacity*result.utilization>Math.min(choice.stopA.warehouseCapacity??Infinity,choice.stopB.warehouseCapacity??Infinity)+1e-7)limitingConstraints.push('infrastructure');
   // The calculator chooses the smallest feasible fleet. More vehicles shorten the interval,
   // so a fleet already below the minimum interval cannot be repaired by adding vehicles.
   if(request.minHeadwaySeconds!==null&&result.frequency<request.minHeadwaySeconds-1e-7)limitingConstraints.push('minHeadwaySeconds');
