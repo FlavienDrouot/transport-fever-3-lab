@@ -120,6 +120,27 @@ test('joint track and freight terminal search retains storage limits and counts 
   assert.deepEqual(evaluateOptimizerCandidate(candidate,data,fixed).limitingConstraints,['storageCapacityA','storageCapacityB']);
 });
 
+test('joint Road tier search matches exhaustive freight delivery deadlines with load-only storage limits',()=>{
+  const vehicle={...catalogue.trucks[0],cargoCapacity:800,loadingUnloadingSpeedMultiplier:80};
+  const data={trucks:[vehicle]},terminal={mode:'new',maxPlatformLength:40,maxPlatforms:2};
+  const routeProfile=[{...part,distanceKm:2,roadLanes:2},{...part,distanceKm:3,roadLanes:4}];
+  const infrastructure={limitVehicleCapacity:false,road:{stopA:terminal,stopB:{mode:'factory'}},sites:{stopA:{type:'warehouse',maxWarehouseCapacity:500},stopB:{type:'factory',inputStorageCapacity:400,outputStorageCapacity:300}}};
+  const base=optimizerRequest({domain:'road',category:'freight',rate:10000,loadedReturn:true,lineInfrastructure:{},routeProfile,infrastructure});
+  const candidate={domain:'road',vehicle},baseline=evaluateOptimizerCandidate(candidate,data,base).result;assert.ok(baseline);
+  const request=optimizerRequest({...base,maxOutboundLegSeconds:baseline.outboundTravelSeconds+(baseline.outboundLegSeconds-baseline.outboundTravelSeconds)*.6});
+  const actual=evaluateOptimizerCandidate(candidate,data,request).result;assert.ok(actual);
+  let expected=null;
+  for(const plan of plans(routeProfile,'road',request.year)){
+    const {result}=evaluateOptimizerCandidate(candidate,data,{...request,lineInfrastructure:null,routeProfile:plan.routeProfile});
+    if(!result)continue;
+    result.cost+=plan.annualMaintenance;
+    if(!expected||compareOptimizerResults(result,expected)<0)expected=result;
+  }
+  assert.ok(expected);assert.equal(actual.cost,expected.cost);
+  assert.ok(actual.outboundLegSeconds<=request.maxOutboundLegSeconds+1e-7);
+  assert.ok(actual.capacity*actual.utilization<=300+1e-7);
+});
+
 test('joint Road tier and serial-terminal search matches full tier enumeration with waiting',()=>{
   const data={trucks:trucks.trucks.filter(v=>v.id==='man-19304')};
   const terminal={mode:'new',maxPlatformLength:40,maxPlatforms:2,allowSpecialization:true};

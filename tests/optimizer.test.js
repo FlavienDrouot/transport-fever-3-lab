@@ -5,6 +5,8 @@ import {OPTIMIZER_DEFAULTS,optimizerRequest,optimizerCandidates,optimizeService,
 import {buildConsist} from '../src/consists.js';
 import {analyseEconomicService} from '../src/rail-freight.js';
 import {analyseRoadFleet,analysePassengerRoadService} from '../src/trucks.js';
+import {optimizerProposalRequest} from '../src/optimizer-infrastructure.js';
+import {formatTime} from '../src/format.js';
 import {loadOptimizerCatalogue} from '../src/optimizer-catalogue.js';
 import {renderOptimizerProposals,renderSelectedOptimizerProposal,optimizerProposalAt} from '../src/optimizer-proposals.js';
 const read=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
@@ -302,11 +304,11 @@ test('maximum leg time checks the slower direction and reports exact limiting co
   for(const candidate of candidates){
     const baseline=evaluateOptimizerCandidate(candidate,small,request).result;
     assert.ok(baseline);
-    const slower=Math.max(baseline.outboundTravelSeconds,baseline.returnTravelSeconds),faster=Math.min(baseline.outboundTravelSeconds,baseline.returnTravelSeconds);
+    const slower=Math.max(baseline.outboundLegSeconds,baseline.returnLegSeconds),faster=Math.min(baseline.outboundLegSeconds,baseline.returnLegSeconds);
     assert.ok(slower>faster);
     assert.ok(evaluateOptimizerCandidate(candidate,small,optimizerRequest({...input,maxLegSeconds:slower})).result);
     const blocked=evaluateOptimizerCandidate(candidate,small,optimizerRequest({...input,maxLegSeconds:(slower+faster)/2}));
-    const slowerDirection=baseline.outboundTravelSeconds>baseline.returnTravelSeconds?'maxOutboundLegSeconds':'maxReturnLegSeconds';
+    const slowerDirection=baseline.outboundLegSeconds>baseline.returnLegSeconds?'maxOutboundLegSeconds':'maxReturnLegSeconds';
     assert.deepEqual(blocked.limitingConstraints,[slowerDirection]);
     assert.deepEqual(blocked.singleConstraints,[slowerDirection]);
     const both=evaluateOptimizerCandidate(candidate,small,optimizerRequest({...input,maxLegSeconds:1,minHeadwaySeconds:baseline.frequency+1}));
@@ -314,6 +316,35 @@ test('maximum leg time checks the slower direction and reports exact limiting co
     assert.deepEqual(both.singleConstraints,[]);
   }
   for(const maxLegSeconds of [0,-1,Infinity,NaN])assert.throws(()=>optimizerRequest({...input,maxLegSeconds}));
+});
+
+test('freight leg time includes transfers per loaded direction and deadlines can require additional vehicles',()=>{
+  for(const domain of ['rail','road'])for(const loadedReturn of [false,true]){
+    const request=optimizerRequest({domain,category:'freight',routeProfile,loadedReturn,rate:10000,maxWagons:1,maxTrainLength:120,maxFleet:100000});
+    const candidate=optimizerCandidates(small,request).next().value;assert.ok(candidate);
+    const vehicle=domain==='rail'?buildConsist(candidate.definition,candidate.catalogue,small.units):candidate.vehicle;
+    const service=domain==='rail'?analyseEconomicService(vehicle,{distanceKm:2,routeProfile,freight:true,loadedReturn,fillRatio:1,demandPerYear:10000,allowMultipleUnits:false}):analyseRoadFleet([vehicle],{distanceKm:2,routeProfile,loadedReturn,fillRatio:1,demandPerYear:10000,motion:true})[0];
+    const result=evaluateOptimizerCandidate(candidate,small,request).result;assert.ok(result);
+    const handling=(service.loadingSeconds+service.unloadingSeconds)/(1+Number(loadedReturn));
+    close(result.outboundLegSeconds,result.outboundTravelSeconds+handling);
+    close(result.returnLegSeconds,result.returnTravelSeconds+(loadedReturn?handling:0));
+    assert.ok(result.cycle>=result.outboundLegSeconds+result.returnLegSeconds);
+    const bound=result.outboundTravelSeconds+handling*.6;
+    const limited=evaluateOptimizerCandidate(candidate,small,optimizerRequest({...request,maxOutboundLegSeconds:bound})).result;assert.ok(limited);
+    assert.ok(limited.outboundLegSeconds<=bound+1e-7);assert.ok(limited.fleet>result.fleet);
+    const opened=optimizerProposalRequest(limited,request);
+    const reopened=evaluateOptimizerCandidate(candidate,small,optimizerRequest({...opened,maxOutboundLegSeconds:bound})).result;assert.ok(reopened);
+    close(reopened.cycle,limited.cycle);
+    const impossible=evaluateOptimizerCandidate(candidate,small,optimizerRequest({...request,maxOutboundLegSeconds:result.outboundTravelSeconds}));
+    assert.equal(impossible.result,undefined);assert.deepEqual(impossible.singleConstraints,['maxOutboundLegSeconds']);
+    if(loadedReturn){
+      const backBound=result.returnTravelSeconds+handling*.6;
+      const back=evaluateOptimizerCandidate(candidate,small,optimizerRequest({...request,maxReturnLegSeconds:backBound})).result;assert.ok(back);
+      assert.ok(back.returnLegSeconds<=backBound+1e-7);
+    }else assert.ok(evaluateOptimizerCandidate(candidate,small,optimizerRequest({...request,maxReturnLegSeconds:result.returnTravelSeconds})).result);
+    const html=renderOptimizerProposals({request,best:{[domain]:[result]}},domain);
+    assert.ok(html.includes(`${formatTime(result.outboundLegSeconds)} / ${formatTime(result.returnLegSeconds)}`));
+  }
 });
 
 test('empty searches identify a minimum interval that excludes otherwise feasible designs per domain',()=>{
@@ -331,7 +362,7 @@ test('directional leg time limits can differ and be enabled independently',()=>{
   const candidates=[optimizerCandidates(small,request).next().value,{domain:'road',vehicle:catalogue.buses.find(v=>v.maxSpeedKmh>80)}];
   for(const candidate of candidates){
     const result=evaluateOptimizerCandidate(candidate,small,request).result;
-    const outbound=result.outboundTravelSeconds,back=result.returnTravelSeconds;
+    const outbound=result.outboundLegSeconds,back=result.returnLegSeconds;
     const evaluate=limits=>evaluateOptimizerCandidate(candidate,small,optimizerRequest({...input,...limits}));
     assert.ok(evaluate({maxOutboundLegSeconds:outbound,maxReturnLegSeconds:back}).result);
     assert.ok(evaluate({maxOutboundLegSeconds:null,maxReturnLegSeconds:back}).result);

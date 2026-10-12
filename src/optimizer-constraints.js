@@ -48,7 +48,7 @@ export function renderOptimizerConstraints(root,settings){
         return row(index===0?'A':'B',[facilities.specializedTerminal?'Terminal ×2':'',facilities.specializedWarehouse?'Warehouse ×2':''].filter(Boolean).join(' + ')||'Standard handling');
       })):''));
   }else{
-    html+=section('Stops & infrastructure',`<p>New installations and allowed upgrades included; existing upkeep excluded.</p>${settings.incompleteInfrastructure?`<p class="optimizer-constraint-pending">${settings.incompleteInfrastructure} declaration${settings.incompleteInfrastructure===1?'':'s'} to complete.</p>`:''}`+
+    html+=section('Stops & infrastructure',`<p>New installations and allowed upgrades included; existing upkeep excluded.</p>${freight?`<p>Storage limit: ${infrastructure.limitVehicleCapacity!==false?`full vehicle ${T.capacity}`:`load only (${T.capacity} × ${T.utilization})`}.</p>`:''}${settings.incompleteInfrastructure?`<p class="optimizer-constraint-pending">${settings.incompleteInfrastructure} declaration${settings.incompleteInfrastructure===1?'':'s'} to complete.</p>`:''}`+
       ['stopA','stopB'].map((stop,index)=>{
         const site=infrastructure.sites[stop];
         return `<div class="optimizer-constraint-stop"><h5>${index===0?'Source · A':'Destination · B'}</h5>${freight?list([

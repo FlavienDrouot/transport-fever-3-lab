@@ -213,6 +213,13 @@ test('industry storage uses A output and B input, and both other stores for a lo
   assert.deepEqual(optimizerRequest(request),request);
   const loaded=evaluateOptimizerCandidate(candidate,data,optimizerRequest({...request,loadedReturn:true,fillRatio:.1}));
   assert.equal(loaded.result,undefined);assert.deepEqual(loaded.limitingConstraints,['storageCapacityA','storageCapacityB']);
+  assert.equal(request.infrastructure.limitVehicleCapacity,true);
+  const relaxed=optimizerRequest({...request,loadedReturn:true,infrastructure:{...request.infrastructure,limitVehicleCapacity:false}});
+  const partial=evaluateOptimizerCandidate(candidate,data,relaxed).result;assert.ok(partial);
+  assert.ok(partial.capacity*partial.utilization<=100+1e-7);
+  assert.ok(optimizerProposalRequest(partial,relaxed).fillRatio<=100/800);
+  assert.deepEqual(optimizerRequest(relaxed),relaxed);
+  for(const limitVehicleCapacity of [null,0,'false'])assert.throws(()=>optimizerRequest({...request,infrastructure:{...request.infrastructure,limitVehicleCapacity}}),/full vehicle Capacity/);
   const enlarged=optimizerRequest({...request,loadedReturn:true,infrastructure:{...request.infrastructure,sites:{stopA:{...sites.stopA,inputStorageCapacity:800},stopB:{...sites.stopB,outputStorageCapacity:800}}}});
   assert.ok(evaluateOptimizerCandidate(candidate,data,enlarged).result);
   const blockedRequest=optimizerRequest({...request,infrastructure:{...request.infrastructure,sites:{...sites,stopB:{...sites.stopB,inputStorageCapacity:700}}}});

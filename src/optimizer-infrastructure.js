@@ -11,6 +11,7 @@ export const STATION_TARIFFS={railBase:18000,roadBase:36000,roadAccess:6000};
 export const BUS_STOP_TARIFFS={annualMaintenance:30000,vehicleSlots:1};
 export const ROAD_PLATFORM_LENGTH=20;
 export const ROAD_PLATFORM_EXTENSION_LENGTH=10;
+export const optimizerStorageCapacity=(...plans)=>Math.min(...plans.flatMap(plan=>[plan.warehouseCapacity??Infinity,plan.storageCapacity??Infinity]));
 export function roadPlatformVehicleSlots(vehicleLength,platformCount=1,platformLength=ROAD_PLATFORM_LENGTH){
   if(!Number.isFinite(vehicleLength)||vehicleLength<=0||!Number.isInteger(platformCount)||platformCount<1||!Number.isFinite(platformLength)||platformLength<20||platformLength%10)throw new RangeError('Road platform capacity requires a positive vehicle length, platform count and valid length.');
   return Math.max(1,Math.floor((platformLength+1e-9)/vehicleLength))*platformCount;
@@ -186,7 +187,9 @@ export function roadTerminalRunningCosts(plan,category){
 export function validateOptimizerInfrastructure(input,domain,category='passengers',{loadedReturn=false}={}){
   if(input==null)return null;
   if(typeof input!=='object'||Array.isArray(input))throw new RangeError('Choose valid terminal configurations.');
-  const result={};
+  const limitVehicleCapacity=Object.hasOwn(input,'limitVehicleCapacity')?input.limitVehicleCapacity:true;
+  if(typeof limitVehicleCapacity!=='boolean')throw new RangeError('Choose a valid full vehicle Capacity storage limit.');
+  const result={limitVehicleCapacity};
   result.sites={};
   for(const stop of ['stopA','stopB']){
     const site=input.sites?.[stop]??{type:'industrial',warehouseSpecialization:'optimize'};
@@ -295,8 +298,9 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
         if(request.category!=='freight'||request.infrastructure.sites[stop].type!=='warehouse'){yield plan;continue;}
         const allowed=site.warehouseSpecialization;
         const minimum=site.warehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection;
-        // The full vehicle Capacity must fit, even when service Utilization is lower. Retain existing storage.
-        const maximum=Math.max(minimum,Math.min(site.maxWarehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection,Math.ceil(vehicleCapacity/WAREHOUSE_TARIFFS.capacityPerSection)));
+        // Full Capacity is required by default; the opt-out bounds actual load instead. Retain existing storage.
+        const required=vehicleCapacity*(request.infrastructure.limitVehicleCapacity!==false?1:request.fillRatio);
+        const maximum=Math.max(minimum,Math.min(site.maxWarehouseCapacity/WAREHOUSE_TARIFFS.capacityPerSection,Math.ceil(required/WAREHOUSE_TARIFFS.capacityPerSection)));
         for(let sections=minimum;sections<=maximum;sections++)for(const specializedWarehouse of allowed==='optimize'?[false,true]:[allowed==='specialized']){
           const fullWarehouseCosts=sections*(specializedWarehouse?WAREHOUSE_TARIFFS.specialized:WAREHOUSE_TARIFFS.generic);
           const baseline=minimum*(site.existingSpecializedWarehouse?WAREHOUSE_TARIFFS.specialized:WAREHOUSE_TARIFFS.generic);
@@ -321,9 +325,11 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
 /** Transfer the selected handling bonuses and physical length limit to the vehicle service views. */
 export function optimizerProposalRequest(proposal,request){
   if(proposal.routeInfrastructure)request={...request,routeProfile:proposal.routeInfrastructure.routeProfile};
+  if(request.category==='freight'&&proposal.serviceFillRatio!=null)request={...request,fillRatio:Math.min(request.fillRatio,proposal.serviceFillRatio)};
   const selected=proposal.infrastructure;
   if(!selected)return request;
   const flags=plan=>({specializedTerminal:plan.specializedTerminal,specializedWarehouse:plan.specializedWarehouse});
   return {...request,stopA:flags(selected.stopA),stopB:flags(selected.stopB),
+    fillRatio:request.category==='freight'?Math.min(request.fillRatio,optimizerStorageCapacity(selected.stopA,selected.stopB)/proposal.capacity):request.fillRatio,
     maxTrainLength:proposal.domain==='rail'?Math.min(request.maxTrainLength,selected.stopA.maxTrainLength,selected.stopB.maxTrainLength):request.maxTrainLength};
 }

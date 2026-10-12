@@ -18,6 +18,10 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   root.innerHTML=`<details class="panel-group" open><summary>Stops &amp; infrastructure</summary><div class="panel-group-body">
     <label class="road-inline-check"><input id="optimizer-include-infrastructure" type="checkbox"> Include infrastructure ${T.runningCosts}</label>
     <div id="optimizer-infrastructure-body" hidden>
+      <div data-storage-policy>
+        <label class="road-inline-check"><input id="optimizer-limit-vehicle-capacity" type="checkbox" checked aria-describedby="optimizer-storage-policy-help"> Require full vehicle ${T.capacity} to fit storage</label>
+        <p id="optimizer-storage-policy-help" class="chart-help" hidden>Only the load (${T.capacity} × ${T.utilization}) must fit storage. This can sometimes select trains with more Capacity than needed: extra carrying units can shorten loading/unloading times.</p>
+      </div>
       <section id="optimizer-infrastructure-sites" class="optimizer-infra-section"><h4>Endpoint buildings</h4><p class="chart-help">Choose the building served at each stop. Its storage and handling apply to this route.</p><div class="optimizer-infra-stops">${stops.map(stop=>{
         const attrs=`data-infrastructure-site="${stop}"`;
         return `<fieldset><legend>${title(stop)}</legend>${toggle(attrs,'type','Building',[['factory',T.industry],['warehouse','Warehouse'],['industrial','Industrial building']],'',`optimizer-building-${stop}`,'optimizer-building-toggle')}
@@ -25,7 +29,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
           <div data-industry-storage="${stop}" class="optimizer-infra-fields" hidden>
             ${numeric(attrs,'inputStorageCapacity',`Input storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
             ${numeric(attrs,'outputStorageCapacity',`Output storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
-            <p class="chart-help">Enter the storage available for this freight type. Full vehicle Capacity must fit; low Utilization does not relax this limit. Industry storage cannot be expanded by the search.</p>
+            <p class="chart-help">Enter the storage available for this freight type. The storage limit above applies. Industry storage cannot be expanded by the search.</p>
           </div>
           <div data-factory-options="${stop}">${toggle(attrs,'factoryTerminals','Parallel Truck terminals',[['2','2'],['3','3']],2,`optimizer-industry-terminals-${stop}`)}<p class="chart-help">Free specialized terminals, one truck each. Trams require a separate station/platform.</p></div>
           <details data-warehouse-options="${stop}" class="panel-group" hidden><summary>Warehouse access <span data-warehouse-summary="${stop}"></span></summary><div class="optimizer-infra-fields">
@@ -34,7 +38,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
             <div data-warehouse-specialization="${stop}">${check(attrs,'allowWarehouseSpecialization','Allow specialization',true)}</div>
             ${check(attrs,'allowWarehouseExpansion','Allow expansion')}
             <div data-warehouse-expansion="${stop}">${numeric(attrs,'maxWarehouseCapacity','Maximum allowed warehouse Capacity',1000,500,100000,500,T.capacityUnit)}</div>
-            <p class="chart-help">Existing storage is retained without attributing its upkeep to this project. Allowed expansions and specialization add their own Running costs. Full vehicle Capacity must fit the available storage, regardless of Utilization.</p>
+            <p class="chart-help">Existing storage is retained without attributing its upkeep to this project. Allowed expansions and specialization add their own Running costs. The storage limit above applies.</p>
           </div></details></fieldset>`;
       }).join('')}</div></section>
       <section class="optimizer-infra-section"><h4>Reusable infrastructure</h4><p class="chart-help">Only add existing facilities available to this service.</p>
@@ -94,6 +98,8 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   function refresh(){
     const scope=getScope(),freight=scope.category==='freight';
     $('#optimizer-infrastructure-body').hidden=!enabled.checked;
+    $('[data-storage-policy]').hidden=!freight;
+    $('#optimizer-storage-policy-help').hidden=$('#optimizer-limit-vehicle-capacity').checked;
     $('#optimizer-infrastructure-sites').hidden=!freight;
     $('[data-rail-terminal-assumptions]').hidden=scope.domain==='road';
     for(const stop of stops){
@@ -220,7 +226,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   },getValue(){
     if(!enabled.checked)return null;
     const scope=getScope();
-    return {sites:Object.fromEntries(stops.map(stop=>{
+    return {limitVehicleCapacity:$('#optimizer-limit-vehicle-capacity').checked,sites:Object.fromEntries(stops.map(stop=>{
       const site=sites[stop];
       return [stop,scope.category!=='freight'?{type:'industrial'}:{type:site.type,warehouseCapacity:site.warehouseCapacity,
         ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals,

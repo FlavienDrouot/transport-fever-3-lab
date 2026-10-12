@@ -172,6 +172,13 @@ test('the captured 880-capacity Rail tram formation must fit its warehouse and i
  assert.ok(candidate);assert.equal(buildConsist(candidate.definition,candidate.catalogue,data.units).cargoCapacity,880);
  const blocked=evaluateOptimizerCandidate(candidate,data,req);
  assert.equal(blocked.result,undefined);assert.deepEqual(blocked.limitingConstraints,['storageCapacityA']);
+ const relaxed=request({...req,infrastructure:{...req.infrastructure,limitVehicleCapacity:false}});
+ const partial=evaluateOptimizerCandidate(candidate,data,relaxed).result;assert.ok(partial);
+ assert.equal(partial.capacity,880);assert.ok(partial.capacity*partial.utilization<=500+1e-7);
+ assert.match(renderOptimizerProposals({request:relaxed,best:{rail:[partial]}},'rail'),/Extra carrying units can shorten loading\/unloading/);
+ const transfer=optimizerProposalRequest(partial,relaxed);
+ assert.ok(transfer.fillRatio<=500/880);assert.equal(transfer.infrastructure.limitVehicleCapacity,false);
+ const reopened=evaluateOptimizerCandidate(candidate,data,request(transfer)).result;assert.ok(reopened);close(reopened.cycle,partial.cycle);
  const expanded=request({...req,infrastructure:{...req.infrastructure,sites:{...sites,stopA:{...sites.stopA,maxWarehouseCapacity:1000}}}});
  const feasible=evaluateOptimizerCandidate(candidate,data,expanded).result;assert.ok(feasible);
  assert.equal(feasible.infrastructure.stopA.warehouseCapacity,1000);
