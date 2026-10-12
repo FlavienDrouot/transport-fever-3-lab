@@ -70,19 +70,19 @@ function validateTerminalConstraint(input,domain,category,siteType,stop,loadedRe
 }
 
 /** Enumerate distinct serial-place layouts, retaining the cheapest length for each place count. */
-function* roadTerminalVariants(constraint,category,vehicleLength,costCeiling){
+function* roadTerminalVariants(constraint,category,vehicleLength,costCeiling,requiresFullLength=false){
   const reused=constraint.mode==='reuse',tariff=platformRunningCosts(constraint,category),station=stationRunningCosts('road');
   const existing=reused?Array(constraint.platformCount).fill(constraint.platformLength):[];
   const baseline=constraint.mode==='new'?0:station+existing.reduce((sum,length)=>sum+length/10*tariff,0);
   const lengths=minimum=>{
     const choices=[],seen=new Set();
     for(let length=minimum;length<=constraint.maxPlatformLength;length+=10){
-      const places=vehicleLength>0?roadPlatformVehicleSlots(vehicleLength,1,length):length;
+      const places=requiresFullLength&&length+1e-9<vehicleLength?0:vehicleLength>0?roadPlatformVehicleSlots(vehicleLength,1,length):length;
       if(!seen.has(places)){seen.add(places);choices.push(length);}
     }
     return choices;
   };
-  const reusedLengths=lengths(constraint.platformLength),newLengths=lengths(20);
+  const reusedLengths=lengths(constraint.platformLength),newMinimum=requiresFullLength?Math.max(20,Math.ceil((vehicleLength-1e-9)/10)*10):20,newLengths=lengths(newMinimum);
   // Identical existing platforms and new platforms each have interchangeable positions.
   function* extend(current,left,choices,start,reservedLength=0){
     const minimumLength=current.reduce((sum,n)=>sum+n,0)+(left?left*(choices[start]??Infinity):0)+reservedLength;
@@ -111,7 +111,7 @@ function* roadTerminalVariants(constraint,category,vehicleLength,costCeiling){
   }
 }
 
-function terminalVariants(constraint,domain,category,vehicleLength,costCeiling=()=>Infinity){
+function terminalVariants(constraint,domain,category,vehicleLength,costCeiling=()=>Infinity,requiresFullLength=false){
   const busStop={id:`${constraint.id??'bus-stop'}:busStop`,name:constraint.mode==='reuse'?'Reused bus stop':'New bus stop',mode:constraint.mode,terminalType:'busStop',
     siteType:constraint.siteType,existing:constraint.mode==='reuse',specializedTerminal:false,specializedWarehouse:false,maxTrainLength:null,vehicleSlots:BUS_STOP_TARIFFS.vehicleSlots,
     annualMaintenance:constraint.mode==='reuse'?0:BUS_STOP_TARIFFS.annualMaintenance,existingRunningCosts:0,
@@ -121,7 +121,7 @@ function terminalVariants(constraint,domain,category,vehicleLength,costCeiling=(
     annualMaintenance:0,existingRunningCosts:0,addedRunningCosts:0,excludedExistingRunningCosts:0,maxTrainLength:null}];
   if(domain==='road'){
     return (function*(){
-      yield* roadTerminalVariants(constraint,category,vehicleLength,costCeiling);
+      yield* roadTerminalVariants(constraint,category,vehicleLength,costCeiling,requiresFullLength);
       if(constraint.mode==='new'&&constraint.allowBusStop)yield busStop;
     })();
   }
@@ -273,10 +273,11 @@ export function optimizerTrainLengthLimit(request){
 export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinity,vehicleLength=0,{costCeiling=()=>Infinity,vehicleType}={}){
   if(!request.infrastructure){yield {stopA:request.stopA,stopB:request.stopB,maxTrainLength:request.maxTrainLength,selection:null};return;}
   const {stopA,stopB}=request.infrastructure[domain];
+  const passengerTram=vehicleType==='Tram'&&request.category==='passengers',freightTram=vehicleType==='Tram'&&request.category==='freight';
   function* variants(terminal,stop){
     for(const definition of Array.isArray(terminal)?terminal:[terminal]){
       if(definition.tramOnly&&vehicleType!=='Tram')continue;
-      const plans=definition.mode?terminalVariants(definition,domain,request.category,vehicleLength,costCeiling):
+      const plans=definition.mode?terminalVariants(definition,domain,request.category,domain==='rail'&&passengerTram?0:vehicleLength,costCeiling,freightTram):
         [domain==='road'&&vehicleLength>0&&definition.maintenanceBasis==='roadPlatforms'&&definition.siteType!=='factory'?{...definition,
           platformLengths:Array(definition.platformCount).fill(definition.platformLength),
           platformSlots:Array(definition.platformCount).fill(roadPlatformVehicleSlots(vehicleLength,1,definition.platformLength)),
@@ -285,9 +286,16 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
         const factory=domain==='road'&&request.category==='freight'&&(selected.mode==='factory'||!selected.mode&&selected.siteType==='factory');
         // Industry's built-in loading bays cannot serve trams, including legacy priced plans.
         if(factory&&vehicleType==='Tram')continue;
+        let compatible=selected;
+        if(domain==='road'&&freightTram&&selected.terminalType!=='busStop'){
+          const usable=(selected.platformLengths??[]).filter(length=>length+1e-9>=vehicleLength);
+          if(!usable.length)continue;
+          const platformSlots=usable.map(length=>roadPlatformVehicleSlots(vehicleLength,1,length));
+          compatible={...selected,usablePlatformCount:usable.length,platformSlots,vehicleSlots:platformSlots.reduce((sum,n)=>sum+n,0)};
+        }
         const count=request.infrastructure.sites[stop].factoryTerminals??2;
         const plan=factory?{...selected,name:selected.mode==='factory'?`${T.industry} terminals`:selected.name,
-          factoryTerminals:count,platformCount:count,platformSlots:Array(count).fill(1),vehicleSlots:count}:selected;
+          factoryTerminals:count,platformCount:count,platformSlots:Array(count).fill(1),vehicleSlots:count}:compatible;
         const site=request.infrastructure.sites[stop];
         if(request.category==='freight'&&site.type==='factory'){
           const input=stop==='stopB'||request.loadedReturn,output=stop==='stopA'||request.loadedReturn;
@@ -318,7 +326,7 @@ export function* optimizerTerminalChoices(request,domain,vehicleCapacity=Infinit
     }
   }
   for(const a of variants(stopA,'stopA'))for(const b of variants(stopB,'stopB'))yield {stopA:a,stopB:b,
-    maxTrainLength:domain==='rail'?Math.min(request.maxTrainLength,a.maxTrainLength,b.maxTrainLength):request.maxTrainLength,
+    maxTrainLength:domain==='rail'&&!passengerTram?Math.min(request.maxTrainLength,a.maxTrainLength,b.maxTrainLength):request.maxTrainLength,
     selection:{stopA:a,stopB:b,annualMaintenance:a.annualMaintenance+b.annualMaintenance}};
 }
 
@@ -331,5 +339,5 @@ export function optimizerProposalRequest(proposal,request){
   const flags=plan=>({specializedTerminal:plan.specializedTerminal,specializedWarehouse:plan.specializedWarehouse});
   return {...request,stopA:flags(selected.stopA),stopB:flags(selected.stopB),
     fillRatio:request.category==='freight'?Math.min(request.fillRatio,optimizerStorageCapacity(selected.stopA,selected.stopB)/proposal.capacity):request.fillRatio,
-    maxTrainLength:proposal.domain==='rail'?Math.min(request.maxTrainLength,selected.stopA.maxTrainLength,selected.stopB.maxTrainLength):request.maxTrainLength};
+    maxTrainLength:proposal.domain==='rail'&&!(proposal.vehicleType==='Tram'&&request.category==='passengers')?Math.min(request.maxTrainLength,selected.stopA.maxTrainLength,selected.stopB.maxTrainLength):request.maxTrainLength};
 }

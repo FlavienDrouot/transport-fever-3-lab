@@ -8,6 +8,7 @@ import {segmentTramTiers} from '../src/optimizer-line-infrastructure.js';
 import {optimizerProposalRequest,optimizerTerminalChoices} from '../src/optimizer-infrastructure.js';
 import {renderOptimizerProposals,optimizerProposalAt} from '../src/optimizer-proposals.js';
 import {reverseRouteProfile} from '../src/route-profile.js';
+import {serviceEligible} from '../src/line.js';
 const load=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
 const [source,trams,buses,engines,passengers,freight]=await Promise.all(['trains','trams','buses','tram-locomotives','tram-passenger-wagons','tram-freight-wagons'].map(load));
 const routeProfile=[{distanceKm:1,gradePercent:0,speedLimitKmh:80,roadSpeedLimitKmh:80}];
@@ -188,6 +189,81 @@ test('the captured 880-capacity Rail tram formation must fit its warehouse and i
  const larger=request({...expanded,infrastructure:{...expanded.infrastructure,sites:{...expanded.infrastructure.sites,stopB:{type:'factory',inputStorageCapacity:1200}}}});
  const result=evaluateOptimizerCandidate(candidate,data,larger).result;assert.ok(result);
  assert.match(renderOptimizerProposals({request:larger,best:{rail:[result]}},'rail'),/Input storage 1,200 capacity/);
+});
+
+test('freight Road trams require one sufficiently long platform, with a length-free industrial bus-stop exception',()=>{
+ const stop={mode:'new',maxPlatformLength:40,maxPlatforms:2},sites={stopA:{type:'industrial'},stopB:{type:'industrial'}};
+ const req=request({domain:'road',category:'freight',includeTrams:true,rate:100,maxRoadTramLength:80,identicalMUsOnly:true,infrastructure:{sites,road:{stopA:stop,stopB:stop}}});
+ const candidates=[...optimizerCandidates(data,req)];
+ const candidate=quantity=>candidates.find(c=>c.definition.components.length===1&&c.definition.components[0].componentId.endsWith(':articulated-freight-tram')&&c.definition.components[0].quantity===quantity);
+ const single=evaluateOptimizerCandidate(candidate(1),data,req).result;assert.ok(single);
+ assert.deepEqual(single.infrastructure.stopA.platformLengths,[40]);
+ assert.equal(evaluateOptimizerCandidate(candidate(2),data,req).result,undefined); // Two short platforms cannot substitute for one long platform.
+ const wagons=request({...req,identicalMUsOnly:false});
+ const wagonFormation=[...optimizerCandidates(data,wagons)].find(c=>c.definition.components.length>1&&c.definition.components.some(p=>c.catalogue.find(v=>v.id===p.componentId).role==='wagon')&&buildConsist(c.definition,c.catalogue,data.units).lengthMetres>40);
+ assert.ok(wagonFormation);assert.equal(evaluateOptimizerCandidate(wagonFormation,data,wagons).result,undefined);
+ const longer=request({...req,infrastructure:{sites,road:{stopA:{...stop,maxPlatformLength:80},stopB:{mode:'reuse',terminalType:'busStop'}}}});
+ const result=evaluateOptimizerCandidate(candidate(2),data,longer).result;assert.ok(result);
+ assert.deepEqual(result.infrastructure.stopA.platformLengths,[80]);assert.equal(result.infrastructure.stopB.terminalType,'busStop');
+ assert.equal(result.infrastructure.stopB.vehicleSlots,1);assert.equal(result.infrastructure.stopB.platformLengths,undefined);
+ assert.throws(()=>request({...longer,loadedReturn:true}),/Bus stops serve/);
+ assert.throws(()=>request({...longer,infrastructure:{sites,road:{stopA:{mode:'reuse',terminalType:'busStop'},stopB:stop}}}),/Bus stops serve/);
+ const fixed={mode:'reuse',platformLength:20,platformCount:1};
+ const short=request({...req,infrastructure:{sites,road:{stopA:fixed,stopB:stop}}});
+ assert.equal(evaluateOptimizerCandidate(candidate(1),data,short).result,undefined);
+ const extend=request({...short,infrastructure:{sites,road:{stopA:{...fixed,allowExtension:true,maxPlatformLength:40},stopB:stop}}});
+ const extended=evaluateOptimizerCandidate(candidate(1),data,extend).result;assert.ok(extended);
+ assert.equal(extended.infrastructure.stopA.platformExtended,true);assert.deepEqual(extended.infrastructure.stopA.platformLengths,[40]);
+ const boundary=request({...req,infrastructure:{sites,road:{stopA:{mode:'reuse',platformLength:40},stopB:{mode:'reuse',platformLength:40}}}});
+ assert.equal([...optimizerTerminalChoices(boundary,'road',80,40,{vehicleType:'Tram'})].length,1);
+ assert.equal([...optimizerTerminalChoices(boundary,'road',80,40.001,{vehicleType:'Tram'})].length,0);
+ const priced={id:'priced',name:'Priced platform',maintenanceBasis:'roadPlatforms',platformLength:80,platformCount:1,additionalAnnualMaintenance:0};
+ const legacy=request({...req,infrastructure:{sites,road:{stopA:[priced],stopB:[priced]}}});
+ assert.ok(evaluateOptimizerCandidate(candidate(2),data,legacy).result);
+ const unknown={id:'unknown',name:'Unspecified platform',annualMaintenance:1000};
+ const missing=request({...req,infrastructure:{sites,road:{stopA:[unknown],stopB:[priced]}}});
+ assert.equal(evaluateOptimizerCandidate(candidate(2),data,missing).result,undefined);
+ const truck=[...optimizerTerminalChoices(short,'road',80,35,{vehicleType:'Truck'})];assert.ok(truck.length);assert.equal(truck[0].stopA.vehicleSlots,1);
+});
+
+test('freight tram throughput counts only platforms long enough for the entire formation',()=>{
+ const stop={mode:'reuse',platformLength:20,platformCount:1,allowExtension:true,maxPlatformLength:40,allowParallelPlatforms:true,maxPlatforms:2};
+ const req=request({domain:'road',category:'freight',infrastructure:{road:{stopA:stop,stopB:stop}}});
+ const choices=[...optimizerTerminalChoices(req,'road',80,35.7344,{vehicleType:'Tram'})];
+ const mixed=choices.find(c=>c.stopA.platformLengths.join(',')==='20,40');assert.ok(mixed);
+ assert.deepEqual(mixed.stopA.platformSlots,[1]);assert.equal(mixed.stopA.vehicleSlots,1);
+ assert.equal(mixed.stopA.platformCount,2);assert.equal(mixed.stopA.usablePlatformCount,1);
+ assert.ok(choices.every(c=>['stopA','stopB'].every(stop=>c[stop].vehicleSlots>0)));
+});
+
+test('passenger trams ignore Rail platform length while freight and conventional trains remain constrained',()=>{
+ const stop={mode:'reuse',existingLength:40,platformTrackCount:2,platformCount:1};
+ const req=request({domain:'rail',rate:100,identicalMUsOnly:true,maxTrainLength:120,infrastructure:{rail:{stopA:stop,stopB:stop}}});
+ const candidates=[...optimizerCandidates(data,req)];
+ const combined={...data,trains:source.trains.filter(v=>v.id==='draisine')};
+ const conventional=[...optimizerCandidates(combined,req)].filter(c=>!buildConsist(c.definition,c.catalogue,data.units).lightRailCompatible);
+ assert.ok(conventional.length);assert.ok(conventional.every(c=>buildConsist(c.definition,c.catalogue,data.units).lengthMetres<=40+1e-9));
+ const candidate=candidates.find(c=>c.definition.components[0].componentId.endsWith(':stadler-citylink')&&c.definition.components[0].quantity===3);assert.ok(candidate);
+ const tram=buildConsist(candidate.definition,candidate.catalogue,data.units);assert.ok(tram.lengthMetres>40);
+ assert.equal(serviceEligible(tram,{platformLengthMetres:40}),true);
+ assert.equal(serviceEligible({...tram,vehicleType:'Train'},{platformLengthMetres:40}),false);
+ const result=evaluateOptimizerCandidate(candidate,data,req).result;assert.ok(result);
+ assert.equal(result.infrastructure.stopA.maxTrainLength,40);assert.equal(result.infrastructure.stopA.platformExtended,false);
+ const opened=optimizerProposalRequest(result,req);assert.equal(opened.maxTrainLength,120);
+ assert.ok(evaluateOptimizerCandidate(candidate,data,request(opened)).result);
+ const mixedRequest=request({...req,identicalMUsOnly:false});
+ const mixed=[...optimizerCandidates(data,mixedRequest)].find(c=>c.kind==='mixed-light-rail'&&buildConsist(c.definition,c.catalogue,data.units).lengthMetres>40);
+ assert.ok(mixed);assert.ok(evaluateOptimizerCandidate(mixed,data,mixedRequest).result);
+ const fresh=request({...req,infrastructure:{rail:{stopA:{mode:'new',maxTrainLength:40,maxPlatformTracks:2},stopB:{mode:'new',maxTrainLength:40,maxPlatformTracks:2}}}});
+ const newlyBuilt=evaluateOptimizerCandidate(candidate,data,fresh).result;assert.ok(newlyBuilt);assert.equal(newlyBuilt.infrastructure.stopA.maxTrainLength,40);
+ const freightReq=request({...req,category:'freight'});
+ assert.ok([...optimizerCandidates(data,freightReq)].every(c=>buildConsist(c.definition,c.catalogue,data.units).lengthMetres<=40+1e-9));
+ const motor=lightRailComponents(data.freightTrams).find(v=>v.id.endsWith(':dresden-cargotram'));
+ const cargo=buildConsist({schemaVersion:1,id:'long-freight',name:'Long freight',carrier:'rail',category:'freight',components:[{componentId:motor.id,quantity:1}]},[motor],data.units);
+ assert.equal(serviceEligible(cargo,{platformLengthMetres:40}),false);
+ const road=request({domain:'road',includeTrams:true,rate:100,maxRoadTramLength:120,infrastructure:{road:{stopA:{mode:'reuse',platformLength:20},stopB:{mode:'reuse',platformLength:20}}}});
+ const passenger=[...optimizerCandidates(data,road)].find(c=>c.definition?.components.length===1&&c.definition.components[0].componentId.endsWith(':stadler-citylink')&&c.definition.components[0].quantity===3);
+ assert.ok(evaluateOptimizerCandidate(passenger,data,road).result);
 });
 
 test('tram tracks exclude highway tiers, preserve curve/city caps and charge dedicated upkeep once for both tracks',()=>{

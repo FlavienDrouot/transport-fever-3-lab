@@ -48,13 +48,14 @@ export function* optimizerCandidates(data,request,{mixedCostCeiling=()=>Infinity
   const isAvailable=item=>item.year<=request.year&&(request.ignoreRetirements||item.yearTo==null||item.yearTo===0||request.year<item.yearTo);
   if(request.domain!=='road'){
     const maxTrainLength=optimizerTrainLengthLimit(request);
+    const lightRailLength=freight?maxTrainLength:request.maxTrainLength;
     const catalogue=railCatalogue(data);
     const available=catalogue.filter(isAvailable);
     const carrying=item=>freight?item.cargoCapacity>0&&matchesFreightFilter(item,request.cargo):item.passengerCapacity>0;
     const definition=(components,name)=>({schemaVersion:1,id:`optimizer:${components.map(c=>`${c.componentId}:${c.quantity}`).join('|')}`,name,carrier:'rail',category:request.category,...(freight?{cargo:request.cargo}:{}),components});
     for(const unit of available.filter(item=>item.role==='powered-carriage'&&carrying(item))){
       if(!Number.isFinite(unit.lengthMetres)||unit.lengthMetres<=0)throw new RangeError(`Invalid trainset length: ${unit.id}`);
-      const maximum=Math.floor((maxTrainLength+1e-9)/unit.lengthMetres);
+      const maximum=Math.floor(((unit.lightRailCompatible?lightRailLength:maxTrainLength)+1e-9)/unit.lengthMetres);
       for(let quantity=1;quantity<=maximum;quantity++)yield {domain:'rail',catalogue,definition:definition([{componentId:unit.id,quantity}],unit.name)};
     }
     for(const engine of available.filter(item=>item.role==='locomotive'))for(const wagon of available.filter(item=>item.role==='wagon'&&carrying(item))){
@@ -76,7 +77,7 @@ export function* optimizerCandidates(data,request,{mixedCostCeiling=()=>Infinity
         }
       }
     }
-    if(!request.identicalMUsOnly)for(const components of mixedLightRailFormations(available.filter(item=>item.lightRailCompatible&&carrying(item)),request,maxTrainLength,()=>mixedCostCeiling('rail')))
+    if(!request.identicalMUsOnly)for(const components of mixedLightRailFormations(available.filter(item=>item.lightRailCompatible&&carrying(item)),request,lightRailLength,()=>mixedCostCeiling('rail')))
       yield {domain:'rail',kind:'mixed-light-rail',catalogue,definition:definition(components,'Mixed tram composition')};
   }
   if(request.domain!=='rail'){
