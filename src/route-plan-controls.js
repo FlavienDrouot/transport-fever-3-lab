@@ -1,4 +1,4 @@
-import {createRoutePlan,validateRoutePlan,restoreRoutePlans,updateRoutePlanSegments,routePlanFlows,newRouteStop,routeId,ROUTE_STORAGE_KEY} from './route-plan.js';
+import {createRoutePlan,validateRoutePlan,restoreRoutePlans,updateRoutePlanSegments,routePlanFlows,newRouteStop,newRouteBuilding,routeId,ROUTE_STORAGE_KEY} from './route-plan.js';
 import {escapeHtml as escape,formatNumber} from './format.js';
 import {UI_TERMS as T} from './ui-terms.js';
 import {DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY} from './optimizer-infrastructure.js';
@@ -28,11 +28,11 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   </form>`;
   const $=selector=>root.querySelector(selector),name=$('[data-plan-path=name]'),savedSelect=$('[data-route-library]');
   const field=(path,label,value,{type='number',min=0,max=null,step='any'}={})=>`<label>${escape(label)}<input data-plan-path="${path}" type="${type}" value="${escape(value)}"${type==='number'?` min="${min}"${max==null?'':` max="${max}"`} step="${step}"`:' maxlength="120"'} required></label>`;
-  const select=(path,label,value,options)=>`<label>${escape(label)}<select data-plan-path="${path}" required>${Object.entries(options).map(([key,title])=>`<option value="${escape(key)}"${key===value?' selected':''}>${escape(title)}</option>`).join('')}</select></label>`;
+  const select=(path,label,value,options,required=true)=>`<label>${escape(label)}<select data-plan-path="${path}"${required?' required':''}>${Object.entries(options).map(([key,title])=>`<option value="${escape(key)}"${key===value?' selected':''}>${escape(title)}</option>`).join('')}</select></label>`;
   const check=(path,label,value)=>`<label class="road-inline-check"><input type="checkbox" data-plan-path="${path}"${value?' checked':''}> ${escape(label)}</label>`;
   const cargo=(path,value)=>select(path,'Good',value,Object.fromEntries(plan.goods.map(g=>[g.id,g.name])));
   const remove=path=>`<button type="button" data-route-action="remove-row" data-path="${path}" aria-label="Remove entry">Remove</button>`;
-  const article=(heading,body)=>`<details class="panel-group" data-route-section="${heading}"><summary>${heading}</summary><div class="panel-group-body">${body}</div></details>`;
+  const article=(heading,body,key=heading)=>`<details class="panel-group" data-route-section="${escape(key)}"><summary>${heading}</summary><div class="panel-group-body">${body}</div></details>`;
   function drawLibrary(){
     const selected=savedSelect.value;
     savedSelect.innerHTML=library.size?[...library.values()].map(r=>`<option value="${escape(r.id)}">${escape(r.name)} · ${fmt(r.segments.reduce((n,s)=>n+s.distanceKm,0))} km · ${r.stops.length} stops</option>`).join(''):'<option value="">No saved routes</option>';
@@ -45,22 +45,32 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   function drawAssets(){
     $('[data-route-segment-assets]').innerHTML=plan.segmentAssets.map((a,i)=>{const p=`segmentAssets.${i}`;return `<fieldset class="route-plan-row"><legend>Segment ${i+1}</legend>${select(`${p}.railTier`,'Existing Rail tier',String(a.railTier??'none'),{none:'Not declared',100:'100 km/h',160:'160 km/h',350:'350 km/h'})}${select(`${p}.railTracks`,'Rail tracks',String(a.railTracks),{1:'1',2:'2'})}${select(`${p}.roadTier`,'Existing Road tier',String(a.roadTier??'none'),{none:'Not declared',40:'40 km/h',60:'60 km/h',50:'50 km/h · city',80:'80 km/h',100:'100 km/h · 2 lanes',120:'120 km/h · 4 lanes'})}${select(`${p}.roadLanes`,'Road lanes',String(a.roadLanes),a.roadTier===100?{2:'2'}:a.roadTier===120?{4:'4'}:{2:'2',4:'4'})}${select(`${p}.tramTracks`,'Tram tracks',a.tramTracks,{none:'Not declared',road:'On the Road',dedicated:'Dedicated · 2 tracks'})}</fieldset>`;}).join('');
   }
+  const buildingLabel=b=>`${b.name}${b.type==='none'?'':` · ${buildings[b.type]}`}`;
+  function buildingBody(building,i,j){
+    const base=`stops.${i}.buildings.${j}`;
+    const stocks=building.storage.map((stock,k)=>{const p=`${base}.storage.${k}`;return `<div class="route-plan-row">${cargo(`${p}.cargoId`,stock.cargoId)}${field(`${p}.inputCapacity`,`Input storage ${T.capacity}`,stock.inputCapacity,{min:100,step:100})}${field(`${p}.outputCapacity`,`Output storage ${T.capacity}`,stock.outputCapacity,{min:100,step:100})}${remove(p)}</div>`;}).join('');
+    const recipe=['inputs','outputs'].map(key=>`<h5>${key==='inputs'?'Inputs':'Outputs'}</h5>${building.recipe[key].map((r,k)=>{const p=`${base}.recipe.${key}.${k}`;return `<div class="route-plan-row">${cargo(`${p}.cargoId`,r.cargoId)}${field(`${p}.ratio`,'Recipe ratio',r.ratio,{min:0,max:1e9})}${remove(p)}</div>`;}).join('')}<button type="button" data-route-action="add-recipe" data-stop="${i}" data-building="${j}" data-side="${key}"${plan.goods.length?'':' disabled'}>Add ${key==='inputs'?'input':'output'}</button>`).join('');
+    return `<details class="panel-group route-plan-building" data-route-section="building:${building.id}" open><summary><span data-building-title="${building.id}">${escape(buildingLabel(building))}</span></summary><div class="panel-group-body">
+      <div class="route-plan-row">${field(`${base}.name`,'Building name',building.name,{type:'text'})}${select(`${base}.type`,'Building type',building.type,buildings)}<button type="button" data-route-action="remove-building" data-stop="${i}" data-building="${j}">Remove building</button></div>
+      ${building.type==='factory'?`${select(`${base}.industryTerminals`,'Included parallel Truck terminals',String(building.industryTerminals),{'2':'2','3':'3'})}<p class="chart-help">Free specialized terminals; trams require separate infrastructure.</p>`:building.type==='warehouse'?field(`${base}.warehouseCapacity`,`Shared warehouse ${T.capacity}`,building.warehouseCapacity,{min:500,max:100000,step:500}):''}
+      ${article('Storage by good',stocks+`<button type="button" data-route-action="add-storage" data-stop="${i}" data-building="${j}"${plan.goods.length?'':' disabled'}>Add storage</button><p class="chart-help">Storage belongs to this building. Industry values use multiples of 100, without an 800-capacity ceiling.</p>`,`building:${building.id}:storage`)}
+      ${building.type==='factory'?article('Industry recipe',recipe+'<p class="chart-help">Ratios describe one production cycle, for example 2 A + 1 B → 3 C. Only operations assigned to this Industry enter its requirements; other services may supply part of the inputs.</p>',`building:${building.id}:recipe`):''}
+    </div></details>`;
+  }
   function stopBody(stop,i){
     const base=`stops.${i}`;
-    const operations=stop.operations.map((op,j)=>{const p=`${base}.operations.${j}`;return `<div class="route-plan-row">${select(`${p}.direction`,'Direction',op.direction,{outbound:'A → B',return:'B → A'})}${select(`${p}.action`,'Operation',op.action,{load:'Load',unload:'Unload'})}${cargo(`${p}.cargoId`,op.cargoId)}${select(`${p}.quantity.mode`,'Quantity',op.quantity.mode,{visit:'Per visit',year:`${T.rate} per year`,percent:'% of this good onboard'})}${field(`${p}.quantity.value`,op.quantity.mode==='percent'?'%':op.quantity.mode==='year'?`${T.capacityUnit}/year`:`${T.capacityUnit}/visit`,op.quantity.value,{max:op.quantity.mode==='percent'?100:1e12})}${remove(p)}</div>`;}).join('');
-    const recipe=['inputs','outputs'].map(key=>`<h5>${key==='inputs'?'Inputs':'Outputs'}</h5>${stop.recipe[key].map((r,j)=>{const p=`${base}.recipe.${key}.${j}`;return `<div class="route-plan-row">${cargo(`${p}.cargoId`,r.cargoId)}${field(`${p}.ratio`,'Recipe ratio',r.ratio,{min:0,max:1e9})}${remove(p)}</div>`;}).join('')}<button type="button" data-route-action="add-recipe" data-stop="${i}" data-side="${key}"${plan.goods.length?'':' disabled'}>Add ${key==='inputs'?'input':'output'}</button>`).join('');
+    const operations=stop.operations.map((op,j)=>{const p=`${base}.operations.${j}`;return `<div class="route-plan-row">${select(`${p}.direction`,'Direction',op.direction,{outbound:'A → B',return:'B → A'})}${select(`${p}.action`,'Operation',op.action,{load:'Load',unload:'Unload'})}${cargo(`${p}.cargoId`,op.cargoId)}${select(`${p}.buildingId`,'From / to building',op.buildingId??'',{'':'Not specified',...Object.fromEntries(stop.buildings.map(b=>[b.id,buildingLabel(b)]))},false)}${select(`${p}.quantity.mode`,'Quantity',op.quantity.mode,{visit:'Per visit',year:`${T.rate} per year`,percent:'% of this good onboard'})}${field(`${p}.quantity.value`,op.quantity.mode==='percent'?'%':op.quantity.mode==='year'?`${T.capacityUnit}/year`:`${T.capacityUnit}/visit`,op.quantity.value,{max:op.quantity.mode==='percent'?100:1e12})}${remove(p)}</div>`;}).join('');
     const infra=stop.infrastructure.map((entry,j)=>{const p=`${base}.infrastructure.${j}`;return `<div class="route-plan-row">${select(`${p}.kind`,'Existing infrastructure',entry.kind,kinds)}${entry.kind.endsWith('Platform')?field(`${p}.length`,'Platform length · m',entry.length,{min:entry.kind==='railPlatform'?40:20,max:entry.kind==='railPlatform'?840:10000,step:entry.kind==='railPlatform'?40:10})+field(`${p}.platforms`,entry.kind==='railPlatform'?'Platforms':'Parallel platforms',entry.platforms,{min:entry.kind==='railPlatform'?Math.ceil(entry.tracks/2):1,max:entry.kind==='railPlatform'?entry.tracks:100,step:1})+(entry.kind==='railPlatform'?field(`${p}.tracks`,'Platform tracks',entry.tracks,{min:1,max:100,step:1}):'')+check(`${p}.specialized`,'Specialized freight platform',entry.specialized):entry.kind==='busStop'?'<p class="chart-help">No specified length; one vehicle at a time. Freight unloading at industrial buildings only.</p>':'<p class="chart-help">Station exists; no available platform is assumed.</p>'}${remove(p)}</div>`;}).join('');
-    const stocks=stop.storage.map((s,j)=>{const p=`${base}.storage.${j}`;return `<div class="route-plan-row">${cargo(`${p}.cargoId`,s.cargoId)}${field(`${p}.inputCapacity`,`Input storage ${T.capacity}`,s.inputCapacity,{min:100,step:100})}${field(`${p}.outputCapacity`,`Output storage ${T.capacity}`,s.outputCapacity,{min:100,step:100})}${remove(p)}</div>`;}).join('');
-    return `<div class="route-plan-row">${field(`${base}.name`,'Stop name',stop.name,{type:'text'})}${select(`${base}.building`,'Building',stop.building,buildings)}${i>0&&i<plan.stops.length-1?`<button type="button" data-route-action="remove-stop" data-stop="${i}">Remove stop</button>`:''}</div>
-      ${stop.building==='factory'?`<p class="chart-help">Industry storage and recipe belong to the site, independently of the selected vehicles.</p>${select(`${base}.industryTerminals`,'Included parallel Truck terminals',String(stop.industryTerminals),{'2':'2','3':'3'})}<p class="chart-help">Free specialized terminals; trams require separate infrastructure.</p>`:stop.building==='warehouse'?field(`${base}.warehouseCapacity`,`Shared warehouse ${T.capacity}`,stop.warehouseCapacity,{min:500,max:100000,step:500}):''}
+    return `<div class="route-plan-row">${field(`${base}.name`,'Stop name',stop.name,{type:'text'})}${i>0&&i<plan.stops.length-1?`<button type="button" data-route-action="remove-stop" data-stop="${i}">Remove stop</button>`:''}</div>
+      <section aria-label="Buildings served at this stop"><h4>Served buildings</h4><p class="chart-help">A stop can serve several buildings. Assign each loading or unloading operation to its own building. Station and platform declarations belong to this stop; storage and recipes belong to each building.</p>${stop.buildings.map((b,j)=>buildingBody(b,i,j)).join('')}<button type="button" data-route-action="add-building" data-stop="${i}"${stop.buildings.length>=20?' disabled':''}>Add building</button></section>
       ${article('Existing infrastructure',infra+`<button type="button" data-route-action="add-infrastructure" data-stop="${i}">Add infrastructure</button>`)}
-      ${article('Storage by good',stocks+`<button type="button" data-route-action="add-storage" data-stop="${i}"${plan.goods.length?'':' disabled'}>Add storage</button><p class="chart-help">Declare the capacities actually present. Industry values use multiples of 100, without an 800-capacity ceiling.</p>`)}
-      <details class="panel-group" open><summary>Freight operations</summary><div class="panel-group-body">${operations||'<p class="chart-help">No freight operation declared.</p>'}<button type="button" data-route-action="add-operation" data-stop="${i}"${plan.goods.length?'':' disabled'}>Add operation</button><p class="chart-help">Annual Rate and per-visit quantities are separate targets until Frequency is known. Percentages use this good's planned incoming load/flow, not vehicle Capacity. Unloading precedes loading at each visit.</p></div></details>
-      ${stop.building==='factory'?article('Industry recipe',recipe+'<p class="chart-help">Ratios describe one production cycle. For example, 2 A + 1 B → 3 C. Requirements are derived from the outputs this service plans to load; other services may supply part of the inputs.</p>'):''}`;
+      <details class="panel-group" open><summary>Freight operations</summary><div class="panel-group-body">${operations||'<p class="chart-help">No freight operation declared.</p>'}<button type="button" data-route-action="add-operation" data-stop="${i}"${plan.goods.length?'':' disabled'}>Add operation</button><p class="chart-help">Annual Rate and per-visit quantities are separate targets until Frequency is known. Percentages use this good's planned load/flow at the operation, not vehicle Capacity. Unloading precedes loading at each visit.</p></div></details>`;
   }
   function drawStops(focusId=null){
     const opened=new Set([...root.querySelectorAll('[data-route-stop]:is([open])')].map(el=>el.dataset.routeStop));
-    const sections=new Set([...root.querySelectorAll('[data-route-section][open]')].map(el=>`${el.closest('[data-route-stop]').dataset.routeStop}/${el.dataset.routeSection}`));
+    const sectionKey=el=>`${el.closest('[data-route-stop]').dataset.routeStop}/${el.dataset.routeSection}`;
+    const priorSections=new Set([...root.querySelectorAll('[data-route-section]')].map(sectionKey));
+    const sections=new Set([...root.querySelectorAll('[data-route-section][open]')].map(sectionKey));
     let km=0;const nodes=[];
     for(let boundary=0;boundary<=plan.segments.length;boundary++){
       const i=plan.stops.findIndex(s=>s.boundary===boundary),stop=plan.stops[i];
@@ -69,14 +79,14 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
       if(boundary<plan.segments.length){const segment=plan.segments[boundary];nodes.push(`<button type="button" class="route-plan-segment" data-route-action="select-segment" data-index="${boundary}">Segment ${boundary+1} · ${fmt(segment.distanceKm)} km · ${fmt(segment.gradePercent)}% · Rail ${fmt(segment.speedLimitKmh)} / Road ${fmt(segment.roadSpeedLimitKmh??segment.speedLimitKmh)} km/h</button>`);km+=segment.distanceKm;}
     }
     $('[data-route-stops]').innerHTML=nodes.join('');
-    for(const el of root.querySelectorAll('[data-route-section]'))el.open=sections.has(`${el.closest('[data-route-stop]').dataset.routeStop}/${el.dataset.routeSection}`);
+    for(const el of root.querySelectorAll('[data-route-section]'))if(priorSections.has(sectionKey(el)))el.open=sections.has(sectionKey(el));
     if(focusId)$(`[data-route-stop="${focusId}"] input`)?.focus();
   }
   function drawSummary(){
     const flows=routePlanFlows(plan),good=id=>plan.goods.find(g=>g.id===id)?.name??id,stop=id=>plan.stops.find(s=>s.id===id)?.name??id;
     const quantities=q=>[['visit',`${T.capacityUnit}/visit`],['year',`${T.capacityUnit}/year`]].filter(([basis])=>q[basis]>1e-9).map(([basis,unit])=>`${fmt(q[basis])} ${unit}`).join(' · ')||'0';
     const load=q=>Object.entries(q).filter(([,value])=>value.visit>1e-9||value.year>1e-9).map(([id,value])=>`${good(id)}: ${quantities(value)}`).join('; ')||'Empty';
-    const production=flows.production.map(p=>`<article><h4>${escape(stop(p.stopId))} · recipe requirements</h4>${p.incomplete?'<p class="chart-help">Declare the recipe outputs to derive requirements.</p>':!['visit','year'].some(b=>Object.values(p.plannedOutputs[b]).some(n=>n>0))?'<p class="chart-help">Declare a quantity or Rate to load a recipe output and derive its input requirements.</p>':['visit','year'].map(basis=>{
+    const production=flows.production.map(p=>`<article><h4>${escape(`${stop(p.stopId)} · ${plan.stops.find(s=>s.id===p.stopId).buildings.find(b=>b.id===p.buildingId).name}`)} · recipe requirements</h4>${p.incomplete?'<p class="chart-help">Declare the recipe outputs to derive requirements.</p>':!['visit','year'].some(b=>Object.values(p.plannedOutputs[b]).some(n=>n>0))?'<p class="chart-help">Declare a quantity or Rate to load a recipe output and derive its input requirements.</p>':['visit','year'].map(basis=>{
       if(!Object.values(p.plannedOutputs[basis]).some(n=>n>0))return '';
       const unit=basis==='year'?`${T.capacityUnit}/year`:`${T.capacityUnit}/visit`;
       return `<p>Outputs: ${Object.entries(p.plannedOutputs[basis]).map(([id,n])=>escape(`${good(id)} ${fmt(n)} ${unit}`)).join(' · ')}</p>${Object.keys(p.required[basis]).length?`<ul>${Object.entries(p.required[basis]).map(([id,n])=>`<li>${escape(`${good(id)}: ${fmt(n)} ${unit} required; ${fmt(p.incoming[basis][id]??0)} declared deliveries on this route`)}</li>`).join('')}</ul>`:'<p class="chart-help">No input requirement is declared for this recipe.</p>'}`;
@@ -95,7 +105,8 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
       if(input.disabled)continue;
       const parts=input.dataset.planPath.split('.'),key=parts.pop();let record=candidate;for(const p of parts)record=record[p];
       record[key]=input.type==='checkbox'?input.checked:input.type==='number'?input.value===''?null:input.valueAsNumber:input.value;
-      if(['industryTerminals','railTracks','roadLanes'].includes(key))record[key]=Number(input.value);
+      if(key==='buildingId')record[key]=input.value||null;
+      else if(['industryTerminals','railTracks','roadLanes'].includes(key))record[key]=Number(input.value);
       else if(['railTier','roadTier'].includes(key))record[key]=input.value==='none'?null:Number(input.value);
     }
     return candidate;
@@ -103,6 +114,11 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   function accept(candidate,{redraw=false,focusId=null}={}){
     try{const next=validateRoutePlan(candidate);routePlanFlows(next);plan=next;message='';if(redraw){name.value=plan.name;drawGoods();drawAssets();drawStops(focusId);}else for(const s of plan.stops){const title=$(`[data-stop-title="${s.id}"]`);if(title)title.textContent=s.name;}
       for(const input of root.querySelectorAll('select[data-plan-path$="cargoId"]'))for(const option of input.options){const good=plan.goods.find(g=>g.id===option.value);if(good)option.textContent=good.name;}
+      for(const [i,stop] of plan.stops.entries()){
+        const stopRoot=$(`[data-route-stop="${stop.id}"]`);
+        for(const building of stop.buildings){const title=stopRoot?.querySelector(`[data-building-title="${building.id}"]`);if(title)title.textContent=buildingLabel(building);}
+        for(const input of root.querySelectorAll(`select[data-plan-path^="stops.${i}.operations."][data-plan-path$="buildingId"]`))for(const option of input.options){const building=stop.buildings.find(b=>b.id===option.value);if(building)option.textContent=buildingLabel(building);}
+      }
       drawSummary();refreshStatus();onChange(structuredClone(plan));return true;
     }catch(error){refreshStatus(error);return false;}
   }
@@ -123,7 +139,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     for(const asset of candidate.segmentAssets)if(asset.roadTier===100)asset.roadLanes=2;else if(asset.roadTier===120)asset.roadLanes=4;
     if(path.at(-1)==='kind'){const i=Number(path[1]),j=Number(path[3]);candidate.stops[i].infrastructure[j]={...newInfrastructure(input.value),id:plan.stops[i].infrastructure[j].id};}
     if(path.at(-1)==='tracks'){const entry=candidate.stops[Number(path[1])].infrastructure[Number(path[3])];entry.platforms=Math.max(Math.ceil(entry.tracks/2),Math.min(entry.platforms,entry.tracks));}
-    const redraw=path[0]==='segmentAssets'||['building','kind','tracks','mode'].includes(path.at(-1));if(accept(candidate,{redraw})&&redraw)$(`[data-plan-path="${input.dataset.planPath}"]`)?.focus();
+    const redraw=path[0]==='segmentAssets'||['type','kind','tracks','mode'].includes(path.at(-1));if(accept(candidate,{redraw})&&redraw)$(`[data-plan-path="${input.dataset.planPath}"]`)?.focus();
   });
   root.addEventListener('change',event=>{if(event.target.hasAttribute('data-plan-path')&&!event.target.checkValidity())event.target.reportValidity();});
   root.addEventListener('click',event=>{
@@ -147,17 +163,32 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     else if(action==='add-good'){if(candidate.goods.length>=50){refreshStatus(new RangeError('Limit: 50 goods.'));return;}let n=candidate.goods.length+1;while(candidate.goods.some(g=>g.name===`Good ${n}`))n++;candidate.goods.push({id:routeId('good'),name:`Good ${n}`});}
     else if(action==='remove-good'){
       const id=candidate.goods[Number(button.dataset.index)].id;
-      if(candidate.stops.some(s=>[...s.operations,...s.storage,...s.recipe.inputs,...s.recipe.outputs].some(r=>r.cargoId===id))){refreshStatus(new RangeError('Remove the operations, storage and recipe entries using this good first.'));return;}
+      if(candidate.stops.some(s=>[...s.operations,...s.buildings.flatMap(b=>[...b.storage,...b.recipe.inputs,...b.recipe.outputs])].some(r=>r.cargoId===id))){refreshStatus(new RangeError('Remove the operations, storage and recipe entries using this good first.'));return;}
       candidate.goods.splice(Number(button.dataset.index),1);
     }else if(action==='add-stop'){const boundary=Number(button.dataset.boundary);const stop=newRouteStop(boundary,`Stop ${candidate.stops.length}`);candidate.stops.push(stop);focusId=stop.id;}
     else if(action==='remove-stop'){if(i<=0||i>=candidate.stops.length-1)return;candidate.stops.splice(i,1);}
     else if(action==='add-infrastructure')candidate.stops[i].infrastructure.push(newInfrastructure('railPlatform'));
-    else if(action==='add-operation')candidate.stops[i].operations.push({id:routeId('operation'),cargoId:candidate.goods[0].id,direction:'outbound',action:i===candidate.stops.length-1?'unload':'load',quantity:{mode:'year',value:1000}});
-    else if(action==='add-storage'){const unused=candidate.goods.find(g=>!candidate.stops[i].storage.some(r=>r.cargoId===g.id));if(!unused){refreshStatus(new RangeError('All goods already have storage here.'));return;}candidate.stops[i].storage.push({id:routeId('stock'),cargoId:unused.id,inputCapacity:100,outputCapacity:candidate.stops[i].building==='factory'?DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY:100});}
-    else if(action==='add-recipe'){const side=button.dataset.side,unused=candidate.goods.find(g=>!candidate.stops[i].recipe[side].some(r=>r.cargoId===g.id));if(!unused){refreshStatus(new RangeError('Each good can appear once on this side of the recipe.'));return;}candidate.stops[i].recipe[side].push({id:routeId('recipe'),cargoId:unused.id,ratio:1});}
+    else if(action==='add-operation')candidate.stops[i].operations.push({id:routeId('operation'),buildingId:candidate.stops[i].buildings[0]?.id??null,cargoId:candidate.goods[0].id,direction:'outbound',action:i===candidate.stops.length-1?'unload':'load',quantity:{mode:'year',value:1000}});
+    else if(action==='add-building'){
+      if(candidate.stops[i].buildings.length>=20){refreshStatus(new RangeError('Limit: 20 buildings per stop.'));return;}
+      let n=candidate.stops[i].buildings.length+1;while(candidate.stops[i].buildings.some(b=>b.name===`Building ${n}`))n++;
+      candidate.stops[i].buildings.push(newRouteBuilding(`Building ${n}`));focusId=candidate.stops[i].id;
+    }else if(action==='remove-building'){
+      const j=Number(button.dataset.building),id=candidate.stops[i].buildings[j].id;
+      if(candidate.stops[i].operations.some(op=>op.buildingId===id)){refreshStatus(new RangeError('Reassign or remove the operations using this building first.'));return;}
+      candidate.stops[i].buildings.splice(j,1);
+    }else if(action==='add-storage'){
+      const building=candidate.stops[i].buildings[Number(button.dataset.building)],unused=candidate.goods.find(g=>!building.storage.some(r=>r.cargoId===g.id));
+      if(!unused){refreshStatus(new RangeError('All goods already have storage in this building.'));return;}
+      building.storage.push({id:routeId('stock'),cargoId:unused.id,inputCapacity:100,outputCapacity:building.type==='factory'?DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY:100});
+    }else if(action==='add-recipe'){
+      const building=candidate.stops[i].buildings[Number(button.dataset.building)],side=button.dataset.side,unused=candidate.goods.find(g=>!building.recipe[side].some(r=>r.cargoId===g.id));
+      if(!unused){refreshStatus(new RangeError('Each good can appear once on this side of this building recipe.'));return;}
+      building.recipe[side].push({id:routeId('recipe'),cargoId:unused.id,ratio:1});
+    }
     else if(action==='remove-row'){const parts=button.dataset.path.split('.'),index=Number(parts.pop());let rows=candidate;for(const p of parts)rows=rows[p];rows.splice(index,1);}
     else return;
-    accept(candidate,{redraw:true,focusId});
+    if(accept(candidate,{redraw:true,focusId})&&action==='add-building')$(`[data-plan-path="stops.${i}.buildings.${plan.stops[i].buildings.length-1}.name"]`)?.focus();
   });
   root.querySelector('form').addEventListener('submit',event=>{event.preventDefault();$('[data-route-action=save]').click();});
   root.addEventListener('invalid',event=>{for(let p=event.target.parentElement;p&&p!==root;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;},true);

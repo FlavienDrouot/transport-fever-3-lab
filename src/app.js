@@ -925,7 +925,7 @@ async function init() {
   routePlanControl=mountRoutePlanControls($('route-plan-control'),{initialSegments:railRouteProfile,storage:routeStorage,
     onSelectSegment:index=>profileControl.selectSegment(index),
     onLoad:plan=>{profileControl.setSegments(plan.segments);routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});},
-    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.building!=='none'||s.operations.length||s.infrastructure.length||s.storage.length||s.recipe.inputs.length||s.recipe.outputs.length);profileControl.setStops(plan.stops);syncRouteDeclarationNotice();}
+    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.operations.length||s.infrastructure.length||s.buildings.some(b=>b.type!=='none'||b.storage.length||b.recipe.inputs.length||b.recipe.outputs.length));profileControl.setStops(plan.stops);syncRouteDeclarationNotice();}
   });
   profileControl.setStops(routePlanControl.plan.stops);
   mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});

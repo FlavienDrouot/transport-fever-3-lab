@@ -11,15 +11,27 @@ const list=(value,label,max)=>{if(!Array.isArray(value)||value.length>max)throw 
 const identities=(items,label)=>{const ids=new Set();for(const item of items){const id=identity(item?.id,`${label} ID`);if(ids.has(id))throw new RangeError(`Duplicate ${label} ID.`);ids.add(id);}return ids;};
 const choice=(value,values,label)=>{if(!values.includes(value))throw new RangeError(`Choose a valid ${label}.`);return value;};
 const ratio=value=>{number(value,'Recipe ratio',0,1e9);if(value===0)throw new RangeError('Recipe ratio must be positive.');return value;};
-export const newRouteStop=(boundary,name)=>({id:routeId('stop'),boundary,name,building:'none',warehouseCapacity:500,industryTerminals:2,storage:[],infrastructure:[],operations:[],recipe:{inputs:[],outputs:[]}});
+export const newRouteBuilding=(name='Building 1',type='none')=>({id:routeId('building'),name,type,warehouseCapacity:500,industryTerminals:2,storage:[],recipe:{inputs:[],outputs:[]}});
+export const newRouteStop=(boundary,name)=>({id:routeId('stop'),boundary,name,buildings:[],infrastructure:[],operations:[]});
 export function createRoutePlan(segments,name='Custom route'){
   const profile=validateRouteProfile(segments);
-  return {schemaVersion:1,id:routeId('route'),name,segments:profile,segmentAssets:profile.map(newSegmentAssets),goods:[],stops:[newRouteStop(0,'A'),newRouteStop(profile.length,'B')]};
+  return {schemaVersion:2,id:routeId('route'),name,segments:profile,segmentAssets:profile.map(newSegmentAssets),goods:[],stops:[newRouteStop(0,'A'),newRouteStop(profile.length,'B')]};
+}
+
+/** Version 1's single building owns its existing storage, recipe and operations. */
+function currentDefinition(input){
+  if(input?.schemaVersion===2)return input;
+  if(input?.schemaVersion!==1)throw new RangeError('Unsupported route schema.');
+  return {...input,schemaVersion:2,stops:list(input.stops,'Stops',25).map(stop=>{
+    const building={id:`building:${identity(stop.id,'Stop ID').slice(0,100)}`,name:stop.name,type:stop.building,
+      warehouseCapacity:stop.warehouseCapacity,industryTerminals:stop.industryTerminals,storage:stop.storage,recipe:stop.recipe};
+    return {...stop,buildings:[building],operations:list(stop.operations,'Freight operations',200).map(op=>({...op,buildingId:building.id}))};
+  })};
 }
 
 /** A service declaration, not a vehicle definition or a cached simulation. */
 export function validateRoutePlan(input){
-  if(input?.schemaVersion!==1)throw new RangeError('Unsupported route schema.');
+  input=currentDefinition(input);
   const segments=validateRouteProfile(input.segments),goods=list(input.goods,'Goods',50).map(g=>({id:identity(g.id,'Good ID'),name:text(g.name,'Good name')}));
   const cargoIds=identities(goods,'good'),names=new Set();
   const segmentAssets=list(input.segmentAssets??segments.map(newSegmentAssets),'Segment infrastructure',24).map(asset=>{
@@ -35,8 +47,19 @@ export function validateRoutePlan(input){
   const cargo=value=>{if(!cargoIds.has(value))throw new RangeError('Choose a declared good.');return value;};
   const row=(item)=>({id:identity(item.id,'Row ID'),cargoId:cargo(item.cargoId)});
   const stops=list(input.stops,'Stops',25).map(stop=>{
-    const building=choice(stop.building,['none','factory','warehouse','industrial'],'building');
-    const storage=list(stop.storage,'Storage',50).map(s=>({...row(s),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)}));
+    const buildings=list(stop.buildings,'Buildings at a stop',20).map(building=>{
+      const type=choice(building.type,['none','factory','warehouse','industrial'],'building');
+      const storage=list(building.storage,'Storage',50).map(s=>({...row(s),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)}));
+      const recipe=Object.fromEntries(['inputs','outputs'].map(key=>[key,list(building.recipe?.[key],`Recipe ${key}`,50).map(r=>({...row(r),ratio:ratio(r.ratio)}))]));
+      for(const [key,items] of Object.entries({storage,...recipe})){
+        identities(items,key);
+        if(new Set(items.map(r=>r.cargoId)).size!==items.length)throw new RangeError(`Declare each good once in ${key} for this building.`);
+      }
+      return {id:identity(building.id,'Building ID'),name:text(building.name,'Building name'),type,
+        warehouseCapacity:whole(building.warehouseCapacity,'Warehouse Capacity',500,100000,500),industryTerminals:choice(building.industryTerminals,[2,3],'parallel industry terminals'),storage,recipe};
+    });
+    const buildingIds=identities(buildings,'building');
+    if(new Set(buildings.map(b=>b.name.toLocaleLowerCase('en'))).size!==buildings.length)throw new RangeError('Building names must be distinct within a stop.');
     const infrastructure=list(stop.infrastructure,'Infrastructure',20).map(entry=>{
       const kind=choice(entry.kind,['railPlatform','roadPlatform','railStation','roadStation','busStop'],'infrastructure');
       const result={id:identity(entry.id,'Infrastructure ID'),kind};
@@ -50,20 +73,18 @@ export function validateRoutePlan(input){
       if(kind.endsWith('Platform')){if(typeof entry.specialized!=='boolean')throw new RangeError('Choose a valid specialization.');result.specialized=entry.specialized;}
       return result;
     });
-    const operations=list(stop.operations,'Freight operations',200).map(op=>({...row(op),direction:choice(op.direction,['outbound','return'],'direction'),action:choice(op.action,['load','unload'],'operation'),
-      quantity:{mode:choice(op.quantity?.mode,['visit','year','percent'],'quantity mode'),value:number(op.quantity?.value,'Quantity',0,op.quantity?.mode==='percent'?100:1e12)}}));
-    const recipe=Object.fromEntries(['inputs','outputs'].map(key=>[key,list(stop.recipe?.[key],`Recipe ${key}`,50).map(r=>({...row(r),ratio:ratio(r.ratio)}))]));
-    for(const [key,items] of Object.entries({storage,infrastructure,operations,...recipe})){
-      identities(items,key);
-      if(['storage','inputs','outputs'].includes(key)&&new Set(items.map(r=>r.cargoId)).size!==items.length)throw new RangeError(`Declare each good once in ${key}.`);
-    }
-    return {id:identity(stop.id,'Stop ID'),name:text(stop.name,'Stop name'),boundary:whole(stop.boundary,'Stop boundary',0,segments.length),building,
-      warehouseCapacity:whole(stop.warehouseCapacity,'Warehouse Capacity',500,100000,500),industryTerminals:choice(stop.industryTerminals,[2,3],'parallel industry terminals'),storage,infrastructure,operations,recipe};
+    const operations=list(stop.operations,'Freight operations',200).map(op=>{
+      if(op.buildingId!==null&&!buildingIds.has(op.buildingId))throw new RangeError('Choose a building at this stop, or leave it unspecified.');
+      return {...row(op),buildingId:op.buildingId,direction:choice(op.direction,['outbound','return'],'direction'),action:choice(op.action,['load','unload'],'operation'),
+        quantity:{mode:choice(op.quantity?.mode,['visit','year','percent'],'quantity mode'),value:number(op.quantity?.value,'Quantity',0,op.quantity?.mode==='percent'?100:1e12)}};
+    });
+    identities(infrastructure,'infrastructure');identities(operations,'operations');
+    return {id:identity(stop.id,'Stop ID'),name:text(stop.name,'Stop name'),boundary:whole(stop.boundary,'Stop boundary',0,segments.length),buildings,infrastructure,operations};
   }).sort((a,b)=>a.boundary-b.boundary);
   identities(stops,'stop');
   if(stops.length<2||stops[0].boundary!==0||stops.at(-1).boundary!==segments.length)throw new RangeError('Keep a source and destination at the route ends.');
   if(new Set(stops.map(s=>s.boundary)).size!==stops.length)throw new RangeError('Two stops cannot occupy the same boundary. Remove one stop before removing their connecting segment.');
-  return {schemaVersion:1,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops};
+  return {schemaVersion:2,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops};
 }
 
 /** Stops stay attached to the following segment; reordering geometry keeps stop order. */
@@ -115,24 +136,24 @@ export function routePlanFlows(input){
           current[basis]=op.action==='load'?current[basis]+q[basis]:Math.max(0,current[basis]-q[basis]);
           if(!Number.isFinite(current[basis]))throw new RangeError('Planned quantities overflow. Reduce the quantities or percentage operations.');
         }
-        moves.push({cargoId:op.cargoId,action:op.action,quantity:q});
+        moves.push({cargoId:op.cargoId,buildingId:op.buildingId,action:op.action,quantity:q});
       }
       visits.push({stopId:stop.id,direction,moves,load:amount()});
       if(i<ordered.length-1)sections.push({from:stop.id,to:ordered[i+1].id,direction,startBoundary:Math.min(stop.boundary,ordered[i+1].boundary),endBoundary:Math.max(stop.boundary,ordered[i+1].boundary),load:amount()});
     }
   }
-  const production=plan.stops.filter(s=>s.building==='factory'&&(s.recipe.inputs.length||s.recipe.outputs.length)).map(stop=>{
-    const moves=visits.filter(v=>v.stopId===stop.id).flatMap(v=>v.moves),required={},plannedOutputs={},incoming={};
+  const production=plan.stops.flatMap(stop=>stop.buildings.filter(b=>b.type==='factory'&&(b.recipe.inputs.length||b.recipe.outputs.length)).map(building=>{
+    const moves=visits.filter(v=>v.stopId===stop.id).flatMap(v=>v.moves).filter(m=>m.buildingId===building.id),required={},plannedOutputs={},incoming={};
     for(const basis of ['visit','year']){
       const quantity=(cargoId,action)=>moves.filter(m=>m.cargoId===cargoId&&m.action===action).reduce((sum,m)=>sum+m.quantity[basis],0);
-      const cycles=Math.max(0,...stop.recipe.outputs.map(r=>quantity(r.cargoId,'load')/r.ratio));
+      const cycles=Math.max(0,...building.recipe.outputs.map(r=>quantity(r.cargoId,'load')/r.ratio));
       if(!Number.isFinite(cycles))throw new RangeError('Production requirements overflow. Use representable recipe ratios.');
-      required[basis]=Object.fromEntries(stop.recipe.inputs.map(r=>[r.cargoId,cycles*r.ratio]));
-      plannedOutputs[basis]=Object.fromEntries(stop.recipe.outputs.map(r=>[r.cargoId,cycles*r.ratio]));
+      required[basis]=Object.fromEntries(building.recipe.inputs.map(r=>[r.cargoId,cycles*r.ratio]));
+      plannedOutputs[basis]=Object.fromEntries(building.recipe.outputs.map(r=>[r.cargoId,cycles*r.ratio]));
       if([...Object.values(required[basis]),...Object.values(plannedOutputs[basis])].some(n=>!Number.isFinite(n)))throw new RangeError('Production quantities overflow. Reduce the recipe ratios.');
-      incoming[basis]=Object.fromEntries(stop.recipe.inputs.map(r=>[r.cargoId,quantity(r.cargoId,'unload')]));
+      incoming[basis]=Object.fromEntries(building.recipe.inputs.map(r=>[r.cargoId,quantity(r.cargoId,'unload')]));
     }
-    return {stopId:stop.id,required,plannedOutputs,incoming,incomplete:!stop.recipe.outputs.length};
-  });
+    return {stopId:stop.id,buildingId:building.id,required,plannedOutputs,incoming,incomplete:!building.recipe.outputs.length};
+  }));
   return {visits,sections,production,warnings,remaining:amount()};
 }

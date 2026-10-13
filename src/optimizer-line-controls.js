@@ -9,7 +9,7 @@ export function mountOptimizerLineInfrastructure(root,{getRoute,getScope,onRoute
     <label class="road-inline-check" data-tram-option><input type="checkbox" data-include-trams> Include trams in Road search</label>
     <p class="chart-help" data-tram-help hidden>Trams use Road tracks or dedicated tracks, chosen per segment. Road tracks add no upkeep and cannot use 100/120 km/h highway tiers. Dedicated tram tracks cost $20,000/km/year for both directions, with a 100 km/h maximum. The nine confirmed light-rail models are also searched with Rail.</p>
     <div data-tram-segments></div>
-    <div data-line-settings><p class="chart-help">Choose the cheapest feasible tier for each segment, including its upkeep. City segments and non-tier speed limits stay constrained; tier selection cannot raise a curve limit.</p>
+    <div data-line-settings><p class="chart-help">Choose the cheapest feasible tier for each segment within the configured maximum, including its upkeep. A selected tier is a ceiling; city and curve speed limits cannot be raised.</p>
     <div data-line-segments></div><p class="chart-help" data-line-track-help>Auto uses one track for a one-train service, or two tracks (one per direction) for larger fleets. Passing loops, shared switches and signal capacity are not modeled.</p><details><summary>Maintenance tariffs</summary><div data-line-tariffs class="chart-help"></div></details></div>
   </div></details>`;
   let key='',lanes=new Map(),tracks=new Map(),tramTracks=new Map();
