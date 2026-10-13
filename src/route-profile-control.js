@@ -1,4 +1,5 @@
 import {validateRouteProfile,routeProfileDistance,routeProfileForDomain} from './route-profile.js';
+import {escapeHtml} from './format.js';
 
 import {ROUTE_SPEED_PRESETS as SPEED_PRESETS} from './transport-category.js';
 const speedLabel=part=>part.roadSpeedLimitKmh==null?`${format(part.speedLimitKmh)} km/h`:`Rail ${format(part.speedLimitKmh)} · Road ${format(part.roadSpeedLimitKmh)} km/h`;
@@ -10,7 +11,7 @@ const positions=parts=>{
 };
 
 /** Elevation is exaggerated; compact previews are read-only. */
-export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,selectable=true,availableWidth=900,compact=false}={}) {
+export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,selectable=true,availableWidth=900,compact=false,stops=[]}={}) {
   if(compact)selectable=false;
   const parts=validateRouteProfile(segments),total=routeProfileDistance(parts);
   if(scale!=='equal'&&scale!=='linear')throw new RangeError('Unknown profile scale');
@@ -35,7 +36,7 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
     const after=bandWidth>=90?xs[i+1]-18:before+68;
     return `<g class="profile-inline-actions${selectedIndex===i?' is-selected':''}" data-actions-for="${i}" aria-hidden="${selectedIndex!==i}">${parts.length<24?action('insert-before',i,before,200,'+',`Add segment before segment ${i+1}`)+action('insert',i,after,200,'+',`Add segment after segment ${i+1}`):''}${i>0?action('up',i,before,235,'←',`Move segment ${i+1} earlier`):''}${parts.length>1?action('remove',i,(before+after)/2,235,'',`Remove segment ${i+1}`):''}${i<parts.length-1?action('down',i,after,235,'→',`Move segment ${i+1} later`):''}</g>`;
   }).join(''):'';
-  const markers=heights.map((height,i)=>`<circle cx="${xs[i].toFixed(1)}" cy="${y(height).toFixed(1)}" r="4" class="profile-node"><title>${i===0?'A':i===parts.length?'B':`After segment ${i}`} · ${format(distances[i])} km from A</title></circle>`).join('');
+  const markers=heights.map((height,i)=>{const stop=stops.find(s=>s.boundary===i);return `<circle cx="${xs[i].toFixed(1)}" cy="${y(height).toFixed(1)}" r="${stop?7:4}" class="profile-node${stop?' profile-stop-node':''}"><title>${escapeHtml(stop?.name??(i===0?'A':i===parts.length?'B':`After segment ${i}`))} · ${format(distances[i])} km from A</title></circle>${stop?`<text class="profile-stop-label" x="${xs[i].toFixed(1)}" y="${(y(height)-14).toFixed(1)}" text-anchor="${i===0?'start':i===parts.length?'end':'middle'}">${escapeHtml(stop.name.slice(0,28))}</text>`:''}`;}).join('');
   const axisY=compact?130:278,axisLabelY=compact?154:300;
   const tickCount=compact?Math.max(2,Math.min(6,Math.floor(span/70)+1)):6;
   const axis=scale==='linear'?Array.from({length:tickCount},(_,i)=>{
@@ -43,7 +44,8 @@ export function routeProfileSketch(segments,{scale='equal',selectedIndex=null,se
     return `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${axisY}" y2="${axisY+6}" class="profile-axis-tick"/><text x="${x.toFixed(1)}" y="${axisLabelY}" text-anchor="middle">${format(distance)}</text>`;
   }).join(''):`<text x="${left}" y="${axisLabelY}" text-anchor="start">A · 0 km</text><text x="${right}" y="${axisLabelY}" text-anchor="end">B · ${format(total)} km</text>`;
   const description=`Route from A to B, ${format(total)} km over ${parts.length} segment${parts.length===1?'':'s'}. ${scale==='linear'?'Horizontal distance is linear.':'Segments have equal visual widths.'} ${parts.map((p,i)=>`Segment ${i+1}: ${format(p.distanceKm)} km, ${format(p.gradePercent)} percent grade, ${p.roadSpeedLimitKmh==null?`${format(p.speedLimitKmh)} kilometres per hour`:`Rail ${format(p.speedLimitKmh)}, Road ${format(p.roadSpeedLimitKmh)} kilometres per hour`} limit.`).join(' ')}`;
-  return `<div class="profile-sketch-scroll"><svg class="profile-sketch${compact?' is-compact':''}" viewBox="0 0 ${width} ${compact?184:330}" role="${selectable?'group':'img'}" aria-label="${description}">${bands}<line x1="${left}" x2="${right}" y1="${compact?95:228}" y2="${compact?95:228}" class="profile-baseline"/><polyline points="${points}" class="profile-terrain"/>${markers}${actions}<line x1="${left}" x2="${right}" y1="${axisY}" y2="${axisY}" class="profile-axis"/>${axis}<text x="${(left+right)/2}" y="${compact?176:322}" text-anchor="middle">Distance from A (km)${scale==='linear'?' · linear':''}</text></svg></div>`;
+  const stopDescription=stops.filter(s=>Number.isInteger(s.boundary)&&s.boundary>=0&&s.boundary<=parts.length).map(s=>`${s.name} at ${format(distances[s.boundary])} km.`).join(' ');
+  return `<div class="profile-sketch-scroll"><svg class="profile-sketch${compact?' is-compact':''}" viewBox="0 0 ${width} ${compact?184:330}" role="${selectable?'group':'img'}" aria-label="${escapeHtml(`${description} ${stopDescription}`.trim())}">${bands}<line x1="${left}" x2="${right}" y1="${compact?95:228}" y2="${compact?95:228}" class="profile-baseline"/><polyline points="${points}" class="profile-terrain"/>${markers}${actions}<line x1="${left}" x2="${right}" y1="${axisY}" y2="${axisY}" class="profile-axis"/>${axis}<text x="${(left+right)/2}" y="${compact?176:322}" text-anchor="middle">Distance from A (km)${scale==='linear'?' · linear':''}</text></svg></div>`;
 }
 
 /** A summary of the active route, independent of the saved editor preset. */
@@ -54,11 +56,11 @@ export function renderRouteProfileStatus(status,segments,{domain='rail'}={}){
 }
 
 /** The route editor owns the custom preset shared by rail and road comparisons. */
-export function mountRouteProfileControls(container,{initial,onChange,visual,scaleControl,scaleNote,segmentList}) {
-  let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0;
+export function mountRouteProfileControls(container,{initial,onChange,beforeChange=()=>{},visual,scaleControl,scaleNote,segmentList}) {
+  let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0,previewStops=[];
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
-    visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex,availableWidth:Math.max(0,visual.clientWidth-18)});
+    visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex,availableWidth:Math.max(0,visual.clientWidth-18),stops:previewStops});
     scaleNote.textContent=scale==='linear'?'Distance to scale · elevation exaggerated. Short segments can also be selected in the sidebar.':'Symbolic elevation · exaggerated scale.';
   };
   const segmentEditor=(part,i,distances)=>`<fieldset class="profile-segment${selectedIndex===i?' is-selected':''}" data-index="${i}">
@@ -84,7 +86,7 @@ export function mountRouteProfileControls(container,{initial,onChange,visual,sca
     renderInspector();
     renderVisual();
   };
-  const notify=()=>onChange({active:true,segments,distanceKm:routeProfileDistance(segments)});
+  const notify=(edit=null)=>onChange({active:true,segments,distanceKm:routeProfileDistance(segments),edit});
   const refreshValues=()=>{
     renderVisual();
     const error=container.querySelector('.profile-error');error.hidden=true;error.textContent='';
@@ -93,8 +95,8 @@ export function mountRouteProfileControls(container,{initial,onChange,visual,sca
     renderSegmentList();
     notify();
   };
-  const changed=(origin,action)=>{
-    selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify();
+  const changed=(origin,action,index)=>{
+    selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify({action,index});
     const focus=origin===segmentList?segmentList.querySelector(`button[data-select-segment="${selectedIndex}"]`):action==='remove'?visual.querySelector(`[data-segment="${selectedIndex}"]`):visual.querySelector(`.profile-inline-actions.is-selected [data-action="${action}"]`)??visual.querySelector(`[data-segment="${selectedIndex}"]`);
     (focus??container.querySelector(`.profile-segment[data-index="${selectedIndex}"] input`))?.focus();
   };
@@ -125,6 +127,7 @@ export function mountRouteProfileControls(container,{initial,onChange,visual,sca
     if(field==='roadSpeedLimitKmh'){delete next[index].roadSpeedConstraintKmh;delete next[index].roadCity;}
     try{
       const valid=validateRouteProfile(next);
+      beforeChange(valid,null);
       segments=valid;
       const row=container.querySelector(`.profile-segment[data-index="${index}"]`);
       const matching=row.querySelector(`[data-field="${field}"][data-control="${event.target.dataset.control==='range'?'number':'range'}"]`);
@@ -148,7 +151,8 @@ export function mountRouteProfileControls(container,{initial,onChange,visual,sca
       else if(action==='remove')next.splice(index,1);
       else if(action==='up'||action==='down'){const other=index+(action==='up'?-1:1);[next[index],next[other]]=[next[other],next[index]];}
       const valid=validateRouteProfile(next);
-      segments=valid;selectedIndex=action==='add'?next.length-1:action==='insert-before'?index:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed(origin,action);
+      beforeChange(valid,{action,index});
+      segments=valid;selectedIndex=action==='add'?next.length-1:action==='insert-before'?index:action==='insert'?index+1:action==='remove'?Math.min(index,next.length-1):index+(action==='up'?-1:1);changed(origin,action,index);
     }catch(error){showError(error);}
   };
   container.addEventListener('click',event=>{
@@ -170,7 +174,7 @@ export function mountRouteProfileControls(container,{initial,onChange,visual,sca
     new ResizeObserver(()=>{const width=visual.clientWidth;if(width>0&&width!==priorWidth){priorWidth=width;renderVisual();}}).observe(visual);
   }
   render();
-  return {refresh:render,setSegments(parts){
+  return {refresh:render,selectSegment:select,setStops(stops){previewStops=stops.map(s=>({...s}));renderVisual();},setSegments(parts){
     const next=validateRouteProfile(parts);
     if(JSON.stringify(next)===JSON.stringify(segments))return;
     segments=next;selectedIndex=Math.min(selectedIndex,segments.length-1);render();

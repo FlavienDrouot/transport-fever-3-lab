@@ -416,6 +416,28 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .profile-speed-presets button[aria-pressed=true]{border-color:var(--green);background:var(--tint,#edf4ef);color:var(--green);font-weight:650}
 .profile-error{color:#a63e32!important}
 .profile-destinations{display:flex;gap:20px;border-top:1px solid var(--line);padding:20px 0;margin-top:24px;font-size:13px}
+.route-plan-panel{margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+.route-plan-form{display:flex;flex-direction:column;gap:12px;min-width:0}
+.route-plan-toolbar,.route-plan-library,.route-plan-row{display:flex;flex-wrap:wrap;align-items:end;gap:10px}
+.route-plan-form label:not(.road-inline-check){display:flex;flex-direction:column;gap:5px;font-size:12px;min-width:100px;flex:1}
+.route-plan-toolbar label{max-width:440px}.route-plan-library label{max-width:650px}
+.route-plan-form input:not([type=checkbox]),.route-plan-form select{box-sizing:border-box;width:100%;min-height:34px;padding:6px 8px;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:4px;font:inherit}
+.route-plan-row{padding:8px 0;border-bottom:1px solid var(--line)}
+.route-plan-row label{flex-basis:120px}.route-plan-row label:has(input[type=number]){flex-basis:90px;max-width:160px}
+.route-plan-row label.road-inline-check{align-self:center;max-width:220px}
+.route-plan-form .panel-group{margin:0}.route-plan-stop{border-left:3px solid var(--green)}
+.route-plan-stop>.panel-group-body{display:flex;flex-direction:column;gap:10px}
+.route-plan-form .panel-group-body>h5{margin:12px 0 6px}
+.route-plan-itinerary{display:flex;flex-direction:column;gap:10px}
+.route-plan-segment{padding:12px 14px;text-align:left;font-size:12px;color:var(--muted);background:transparent;border:1px dashed var(--line)}
+.route-plan-add-stop{align-self:center;font-size:12px}.route-plan-summary h3{font-size:16px;margin:12px 0}
+.route-plan-summary h4{font-size:13px;margin:18px 0 8px}.route-plan-summary p,.route-plan-summary li{font-size:12px}
+.route-plan-summary th,.route-plan-summary td{padding:10px;text-align:left;vertical-align:top;white-space:normal}
+.route-plan-warning{color:var(--bad,#d87b64)}
+.route-plan-form p,.route-plan-form li{overflow-wrap:anywhere}
+.route-plan-analysis-warning{padding:10px 14px;border:1px solid var(--line);border-radius:5px}
+.profile-sketch .profile-stop-node{stroke-width:3}.profile-sketch .profile-stop-label{font-size:11px;fill:var(--green);font-weight:650;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+@media(max-width:600px){.route-plan-toolbar>button{flex:1}.route-plan-row>button{align-self:end}.route-plan-row label{min-width:100px}.route-plan-summary th,.route-plan-summary td{padding:7px}.route-plan-library{align-items:stretch}.route-plan-library label{flex-basis:100%}}
 @media(max-width:800px){.profile-sketch{width:900px}.profile-segment-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.route-model{flex-wrap:wrap}}
 @media(max-width:470px){.profile-segment-fields{grid-template-columns:1fr 1fr}.profile-field:nth-child(n+3){grid-column:1/-1}}
 

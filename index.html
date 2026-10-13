@@ -21,6 +21,7 @@
   <main>
     <div class="workspace">
     <div class="main-column">
+<p id="route-declaration-analysis-note" class="chart-help route-plan-analysis-warning" role="status" hidden>Vehicle analyses currently use this custom route's geometry only. Declared stops, freight operations, recipes and existing infrastructure are not yet included in these calculations. <a href="#route-profile">Review the route &amp; expected service ↗</a></p>
 
 <div id="comparison-preview" class="comparison-preview" hidden><span>Unsaved comparison: <strong id="comparison-preview-name"></strong></span><a href="#composition-builder">Adjust composition ↗</a></div>
     <div id="race" class="analysis-view">
@@ -137,7 +138,8 @@
         <div class="profile-preview"><div id="route-profile-visual" class="profile-visual"></div></div>
         <section id="profile-editor-section" class="profile-inspector-panel" aria-labelledby="profile-editor-heading"><h2 id="profile-editor-heading" class="sr-only">Selected segment</h2><div id="route-profile-control"></div></section>
         <p id="profile-scale-note" class="chart-help">Symbolic elevation · exaggerated scale.</p>
-        <details class="info-disclosure profile-notes"><summary>About route profiles</summary><p class="chart-help">One segment describes a constant gradient and speed limit; add segments for a changing route. The route is shared by Race, rail and road Service, and composition results. Return services traverse segments in reverse with opposite grades and no intermediate stops. Custom segments start at 0.01 km; total route length is at most 100 km. The elevation sketch is symbolic. Rail and Road use the same calibrated gradient factor. Rail anticipates lower speed limits with braking; Road applies them instantly and omits braking.</p></details>
+        <section class="route-plan-panel" aria-labelledby="route-plan-heading"><h2 id="route-plan-heading">Route &amp; expected service</h2><div id="route-plan-control"></div></section>
+        <details class="info-disclosure profile-notes"><summary>About route profiles</summary><p class="chart-help">One segment describes a constant gradient and speed limit; add segments for a changing route. Saved routes also retain stop, infrastructure and freight declarations. Current vehicle analyses share the geometry: return services traverse segments in reverse with opposite grades, without simulating declared intermediate stops or freight operations yet. Custom segments start at 0.01 km; total route length is at most 100 km. The elevation sketch is symbolic. Rail and Road use the same calibrated gradient factor. Rail anticipates lower speed limits with braking; Road applies them instantly and omits braking.</p></details>
         <div class="profile-destinations"><a id="profile-compare-race" href="#race">Compare Race ↗</a><a id="profile-compare-service" href="#economics">Compare service ↗</a><a href="#configurator">Adjust composition ↗</a></div>
       </section>
     </div>

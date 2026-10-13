@@ -8,6 +8,7 @@ import {ROAD_TRAVEL_TIME_WARNING} from './road-limitations.js';
 import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransitions,renderModelTransitions,speedOrdinateMaximum,motionCurveEnd} from './motion-chart.js';
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profile-control.js';
+import {mountRoutePlanControls} from './route-plan-controls.js';
 import {routeProfileForDomain} from './route-profile.js';
 import {createRouteSelection,mountRouteChoice} from './route-selection.js';
 import {canClimbRail} from './gradient.js';
@@ -59,7 +60,7 @@ const views = {
 };
 let speedView='speed';
 let economicStoryKey, currentEconomicStory;
-let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl;
+let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl,routePlanControl,routeHasDeclarations=false;
 let consistEditor,compositionAnalysis,raceGradientControl,baseTrains,trainSelector,roadSelector;
 let comparisonCategoryControl,optimizerControl;
 let selectedRoad=new Set(),knownCustom=new Set();
@@ -113,7 +114,11 @@ function syncRouteSelection({restore=false}={}){
   $('race-input-error').hidden=true;$('race-input-error').textContent='';
 
   truckService={...truckService,distanceKm:routeDistance};
+  syncRouteDeclarationNotice();
   crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();
+}
+function syncRouteDeclarationNotice(){
+  $('route-declaration-analysis-note').hidden=!routeHasDeclarations||routeSelection.mode!=='custom'||['route-profile','data'].includes(navigation.view);
 }
 function updateSimpleRoute(part){
   if(routeSelection.mode!=='simple')return;
@@ -510,6 +515,7 @@ function syncAnalysisView() {
   const target=document.getElementById(location.hash.slice(1));
   const owner=target?.closest('.analysis-view')?.id??(target?.closest('#configuration-sidebar')?'configurator':target?.closest('#profile-sidebar')?'route-profile':target?.closest('#road-sidebar')?'trucks':target?.closest('#line-capacity')?'economics':target?.closest('#train-race-settings')?'race':null);
   navigation=resolveNavigation(navigation,{hash:location.hash,owner,dataSection:target?.closest('[data-reference-pane]')?.dataset.referencePane});
+  syncRouteDeclarationNotice();
   const {view,space,domain,dataView}=navigation;
   for(const name of ANALYSIS_VIEWS)$(name).hidden=name!==view;
   for(const name of ['compare','design','data']){
@@ -706,7 +712,7 @@ function ensureOptimizer(){
   if(optimizerControl)return;
   const applyOptimizerRoute=segments=>{
     if(routeSelection.mode==='simple'&&segments.length===1)routeSelection.updateSimple(segments[0]);else routeSelection.updateCustom(segments);
-    if(routeSelection.mode==='custom')profileControl?.setSegments(segments);
+    if(routeSelection.mode==='custom'){profileControl?.setSegments(segments);routePlanControl?.setSegments(segments);}
     syncRouteSelection({restore:true});
   };
   optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:()=>routeSelection.segments,onRouteChange:applyOptimizerRoute,getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent,action)=>{
@@ -912,8 +918,16 @@ async function init() {
   profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:railRouteProfile,
     visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),
-    onChange:state=>{routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
+    beforeChange:(segments,edit)=>routePlanControl?.validateSegmentEdit(segments,edit),
+    onChange:state=>{routePlanControl?.setSegments(state.segments,state.edit);routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
   });
+  let routeStorage;try{routeStorage=window.localStorage;}catch{}
+  routePlanControl=mountRoutePlanControls($('route-plan-control'),{initialSegments:railRouteProfile,storage:routeStorage,
+    onSelectSegment:index=>profileControl.selectSegment(index),
+    onLoad:plan=>{profileControl.setSegments(plan.segments);routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});},
+    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.building!=='none'||s.operations.length||s.infrastructure.length||s.storage.length||s.recipe.inputs.length||s.recipe.outputs.length);profileControl.setStops(plan.stops);syncRouteDeclarationNotice();}
+  });
+  profileControl.setStops(routePlanControl.plan.stops);
   mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});
   $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');syncRouteSelection({restore:true});});
   syncRouteSelection();
