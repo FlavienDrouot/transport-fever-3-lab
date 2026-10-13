@@ -1,6 +1,7 @@
 import {createRoutePlan,validateRoutePlan,restoreRoutePlans,updateRoutePlanSegments,routePlanFlows,newRouteStop,routeId,ROUTE_STORAGE_KEY} from './route-plan.js';
 import {escapeHtml as escape,formatNumber} from './format.js';
 import {UI_TERMS as T} from './ui-terms.js';
+import {DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY} from './optimizer-infrastructure.js';
 
 const fmt=n=>formatNumber(n,3);
 const kinds={railPlatform:'Rail station + platform',roadPlatform:'Road station + platform',railStation:'Rail station only',roadStation:'Road station only',busStop:'Bus stop'};
@@ -152,7 +153,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     else if(action==='remove-stop'){if(i<=0||i>=candidate.stops.length-1)return;candidate.stops.splice(i,1);}
     else if(action==='add-infrastructure')candidate.stops[i].infrastructure.push(newInfrastructure('railPlatform'));
     else if(action==='add-operation')candidate.stops[i].operations.push({id:routeId('operation'),cargoId:candidate.goods[0].id,direction:'outbound',action:i===candidate.stops.length-1?'unload':'load',quantity:{mode:'year',value:1000}});
-    else if(action==='add-storage'){const unused=candidate.goods.find(g=>!candidate.stops[i].storage.some(r=>r.cargoId===g.id));if(!unused){refreshStatus(new RangeError('All goods already have storage here.'));return;}candidate.stops[i].storage.push({id:routeId('stock'),cargoId:unused.id,inputCapacity:100,outputCapacity:100});}
+    else if(action==='add-storage'){const unused=candidate.goods.find(g=>!candidate.stops[i].storage.some(r=>r.cargoId===g.id));if(!unused){refreshStatus(new RangeError('All goods already have storage here.'));return;}candidate.stops[i].storage.push({id:routeId('stock'),cargoId:unused.id,inputCapacity:100,outputCapacity:candidate.stops[i].building==='factory'?DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY:100});}
     else if(action==='add-recipe'){const side=button.dataset.side,unused=candidate.goods.find(g=>!candidate.stops[i].recipe[side].some(r=>r.cargoId===g.id));if(!unused){refreshStatus(new RangeError('Each good can appear once on this side of the recipe.'));return;}candidate.stops[i].recipe[side].push({id:routeId('recipe'),cargoId:unused.id,ratio:1});}
     else if(action==='remove-row'){const parts=button.dataset.path.split('.'),index=Number(parts.pop());let rows=candidate;for(const p of parts)rows=rows[p];rows.splice(index,1);}
     else return;

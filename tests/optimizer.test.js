@@ -318,6 +318,32 @@ test('maximum leg time checks the slower direction and reports exact limiting co
   for(const maxLegSeconds of [0,-1,Infinity,NaN])assert.throws(()=>optimizerRequest({...input,maxLegSeconds}));
 });
 
+test('a loaded return activates Industry output storage and can need another train without a return deadline',()=>{
+  const terminal={mode:'new',maxTrainLength:840,maxPlatformTracks:2,allowSpecialization:true};
+  const input={domain:'rail',category:'freight',cargo:'goods',rate:300,maxFleet:1,loadedReturn:true,
+    maxOutboundLegSeconds:600,maxReturnLegSeconds:null,lineInfrastructure:{},
+    routeProfile:[{distanceKm:24,gradePercent:0,speedLimitKmh:160,roadSpeedLimitKmh:120,railTracks:2}],
+    infrastructure:{limitVehicleCapacity:false,rail:{stopA:terminal,stopB:terminal},sites:{
+      stopA:{type:'warehouse',warehouseCapacity:500,maxWarehouseCapacity:1000,existingSpecializedWarehouse:true,warehouseSpecialization:'specialized'},
+      stopB:{type:'factory',inputStorageCapacity:600}}}};
+  const request=optimizerRequest(input);
+  const candidate=[...optimizerCandidates(catalogue,request)].find(c=>c.definition.components.length===2&&
+    c.definition.components[0].componentId==='rail:locomotive:stadler-eurodual'&&c.definition.components[0].quantity===1&&
+    c.definition.components[1].componentId==='rail:freight-wagon:box-wagon-2000'&&c.definition.components[1].quantity===12);
+  assert.ok(candidate);
+  const changed=values=>optimizerRequest({...input,...values});
+  const narrow=changed({infrastructure:{...input.infrastructure,sites:{...input.infrastructure.sites,stopB:{...input.infrastructure.sites.stopB,outputStorageCapacity:100}}}});
+  const blocked=evaluateOptimizerCandidate(candidate,catalogue,narrow);
+  assert.equal(blocked.result,undefined);assert.ok(blocked.limitingConstraints.includes('maxFleet'));
+  assert.equal(narrow.maxReturnLegSeconds,null);assert.equal(narrow.infrastructure.sites.stopB.outputStorageCapacity,100);
+  const empty=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...narrow,loadedReturn:false})).result;
+  assert.ok(empty);assert.equal(empty.fleet,1);close(empty.cost,10872822);close(empty.outboundLegSeconds,599.1655586846841);
+  const loaded=evaluateOptimizerCandidate(candidate,catalogue,request).result;
+  assert.ok(loaded);assert.equal(loaded.fleet,1);assert.ok(loaded.outboundLegSeconds<=600);assert.ok(loaded.capacity*loaded.utilization>100);
+  const expandedFleet=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...narrow,maxFleet:2})).result;
+  assert.ok(expandedFleet);assert.equal(expandedFleet.fleet,2);assert.ok(expandedFleet.capacity*expandedFleet.utilization<=100);
+});
+
 test('freight leg time includes transfers per loaded direction and deadlines can require additional vehicles',()=>{
   for(const domain of ['rail','road'])for(const loadedReturn of [false,true]){
     const request=optimizerRequest({domain,category:'freight',routeProfile,loadedReturn,rate:10000,maxWagons:1,maxTrainLength:120,maxFleet:100000});
