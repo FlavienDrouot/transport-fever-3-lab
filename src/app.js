@@ -92,11 +92,12 @@ function syncStudyControls(){
   $('route-distance').closest('.horizon-control').hidden=custom||automatic;
   $('race-profile-status').hidden=automatic;
   $('distance-note').hidden=automatic;
+  $('rail-train-constraints').disabled=automatic;
   for(const domain of ['rail','road']){
     $(`${domain}-service-targets`).disabled=automatic;
     $(`${domain}-service-targets`).hidden=automatic;
-    $(domain==='rail'?'service-options':'road-service-options').hidden=automatic&&domain==='road';
-    $(`${domain}-service-options-heading`).textContent=automatic?'Train constraints':'Targets & constraints';
+    $(domain==='rail'?'service-options':'road-service-options').hidden=automatic;
+    $(`${domain}-service-options-heading`).textContent='Targets & constraints';
     $(domain==='rail'?'service-options-summary':'road-service-options-summary').hidden=automatic;
     $(`${domain}-service-targets-help`).hidden=automatic;
     $(`${domain}-service-study-notice`).hidden=!automatic;
@@ -191,7 +192,7 @@ function updateCompositionSettings(settings){
   if(routeSelection.mode==='simple'){routeSelection.updateSimple({distanceKm:settings.distanceKm,gradePercent:settings.gradePercent,speedLimitKmh:settings.infrastructureSpeedKmh});syncRouteSelection({restore:true});}
   else {crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();}
 }
-function economicSelectionOptions(){return {freight:comparisonCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres,gradePercent:railGradePercent,routeProfile:railRouteProfile};}
+function economicSelectionOptions(){return {freight:comparisonCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres:serviceTargets().platformLengthMetres,gradePercent:railGradePercent,routeProfile:railRouteProfile};}
 function speedUsesProfile(){const route=activeRouteProfile();return route.some(part=>part.gradePercent!==route[0].gradePercent||part.speedLimitKmh!==route[0].speedLimitKmh);}
 function raceCandidates(allYears=false){return navigation.domain==='road'?selectRoadVehicles(roadDatasets(),{category:comparisonCategory,includeTrams,cargo:truckCargo,year:allYears?2035:truckYear}).filter(t=>selectedRoad.has(t.id)).map(withRoadModel):trainCandidates(allYears?Infinity:catalogueYear).filter(t=>selected.has(t.id));}
 function raceStudyModels(allYears=false){
@@ -511,7 +512,7 @@ function renderEconomicControls() {
 }
 function renderLineAnalysis() {
   renderEconomicControls();
-  const targets=serviceTargets(),desiredFlow=targets.demandPerYear??targets.demandPerDirection??null,maxHeadwaySeconds=targets.maxHeadwaySeconds,allowMultipleUnits=targets.allowMultipleUnits;
+  const targets=serviceTargets(),desiredFlow=targets.demandPerYear??targets.demandPerDirection??null,maxHeadwaySeconds=targets.maxHeadwaySeconds,allowMultipleUnits=targets.allowMultipleUnits,platformLengthMetres=targets.platformLengthMetres;
   const freight=comparisonCategory==='freight',unit=UI_TERMS.capacityUnit;
   $('occupancy-label').textContent=desiredFlow===null?'Utilization':'Utilization limit';
   $('utilization-help').textContent=desiredFlow===null?'Share of capacity used on each loaded leg.':'Maximum utilization of capacity when sizing the fleet.';
@@ -978,7 +979,7 @@ async function init() {
       allowMultipleUnits=frequencyEnabled&&flowEnabled&&$('allow-multiple-units').checked;
     }
     crossoverCache.clear();raceYearKey=null;economicStoryKey=null;
-    platformLengthMetres=platformEnabled?length:null;
+    if(!$('rail-train-constraints').disabled)platformLengthMetres=platformEnabled?length:null;
     $('frequency-mode').disabled=maxHeadwaySeconds===null;
     $('desired-flow').disabled=desiredFlow===null;
     enableDurationInputs($('desired-headway'),$('desired-headway-seconds'),maxHeadwaySeconds!==null);

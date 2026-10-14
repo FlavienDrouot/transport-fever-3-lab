@@ -21,7 +21,7 @@ export function mountServiceControls(document,domain,{onSelectRoute}={}){
   };
   const info=(text,id)=>`<button class="control-info" type="button" title="${text}" aria-label="Help: ${text}"${id?` aria-describedby="${id}"`:''}>ⓘ</button>`;
   const check=(id,label)=>`<label class="road-inline-check"><input id="${id}" type="checkbox"> ${label}</label>`;
-  const constraints=road?'':`<fieldset class="service-option-group"><legend>Train constraints</legend>
+  const constraints=road?'':`<fieldset id="rail-train-constraints" class="service-option-group"><legend>Train constraints</legend>
     <div id="economic-coupling-control" class="target-control">${info('Automatic coupling joins identical complete trainsets; custom compositions retain their chosen vehicles.')}<span id="composition-description" class="sr-only">One MU is one complete trainset. Coupling joins identical sets.</span><label><input id="allow-multiple-units" type="checkbox" aria-describedby="coupling-help" disabled> Couple identical units</label><p id="coupling-help" class="control-help field-help">Requires both a target rate and a target frequency. Nearest frequency first, then lowest cost.</p></div>
     <div class="target-control"><label><input id="enable-platform-limit" type="checkbox"> Maximum train length</label><div><input required id="platform-length" type="number" min="1" step="1" value="320" disabled aria-label="Maximum train length in metres" aria-describedby="${ids.error}"><span id="economic-length-unit">m of platform</span></div></div>
   </fieldset>`;

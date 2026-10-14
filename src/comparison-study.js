@@ -74,8 +74,8 @@ export function uniformServiceStudyOptions(options){
   return part?{...options,routeProfile:null,gradePercent:part.gradePercent,infrastructureSpeedKmh:part.speedLimitKmh}:{...options};
 }
 
-/** Suspend stored fleet requirements during an automatic distance study. */
+/** Suspend stored service and train constraints during an automatic distance study. */
 export function serviceStudyTargets(options={}){
   if(options.studyScope!=='auto'||options.studyCustomRoute)return options;
-  return {...options,demandPerYear:null,demandPerDirection:null,maxHeadwaySeconds:null,allowMultipleUnits:false};
+  return {...options,demandPerYear:null,demandPerDirection:null,maxHeadwaySeconds:null,allowMultipleUnits:false,platformLengthMetres:null};
 }
