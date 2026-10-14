@@ -102,3 +102,49 @@ test('automatic Service suspends saved fleet requirements and train constraints 
   assert.equal(economicSelection([train],selected,serviceStudyTargets({...short,studyScope:'distance'})).empty,'length');
   assert.equal(stored.platformLengthMetres,320);
 });
+
+test('automatic Rail cost stories and distance curves ignore retained simple-route lengths',async()=>{
+  const {renderEconomicChart}=await import('../src/economic-chart.js');
+  const cohort=trains.filter(t=>['metroliner','twindexx','fuxing'].includes(t.id));
+  let expectedStory,expectedSvg;
+  for(const distance of [.1,3.4,100]){
+    const targets={studyScope:'auto',routeProfile:[{distanceKm:distance,gradePercent:0,speedLimitKmh:160}]};
+    const story=economicStory(cohort,distance,.75,targets);
+    assert.equal(story.current,null);assert.equal(story.automatic,true);
+    const snapshot={start:story.start,end:story.end,phases:story.phases,intervals:story.intervals,roots:story.roots};
+    const container={id:'study-cost',clientWidth:900};
+    renderEconomicChart(container,{trains:cohort,distance:story.end,startDistance:story.start,referenceDistance:null,fill:.75,mode:'linear',targets:uniformServiceStudyOptions(targets)});
+    assert.doesNotMatch(container.innerHTML,/km route|NaN|Infinity/);
+    if(expectedStory){assert.deepEqual(snapshot,expectedStory);assert.equal(container.innerHTML,expectedSvg);}
+    else{expectedStory=snapshot;expectedSvg=container.innerHTML;}
+    const zero=economicStory(cohort,distance,0,targets);
+    assert.equal(zero.start,.1);assert.equal(zero.end,1);assert.equal(zero.current,null);
+  }
+  const bounded=economicStory(cohort,3.4,.75,{studyScope:'distance'});
+  assert.equal(bounded.current,3.4);assert.equal(bounded.end,3.4);
+  const container={id:'bounded-cost',clientWidth:900};
+  renderEconomicChart(container,{trains:cohort,distance:3.4,fill:.75,mode:'linear'});
+  assert.match(container.innerHTML,/3.4 km route/);
+});
+
+test('automatic Road diagrams ignore retained distance, preserve the Road cap and omit reference markers',async()=>{
+  const {renderRoadPhases,automaticRoadCostStory}=await import('../src/road-phases.js');
+  const {analysePassengerRoadService}=await import('../src/trucks.js');
+  const buses=(await read('buses')).buses.slice(-4),selection={category:'passengers',year:2035};
+  const nodes=Object.fromEntries(['road-phase-axis','road-cost-scale','road-rank-scale','road-phase-help','road-cost-phases-chart','road-rank-phases-chart'].map(id=>[id,{id,value:'focus',clientWidth:900,querySelector(){return {value:this.value};}}]));
+  nodes['road-phase-axis'].value='distance';
+  const document={getElementById:id=>nodes[id]};
+  let expected;
+  for(const distance of [.1,3.4,100]){
+    const options={studyScope:'auto',distanceKm:distance,fillRatio:.75,motion:true,passenger:true,routeProfile:[{distanceKm:distance,gradePercent:0,speedLimitKmh:350,roadSpeedLimitKmh:80}]};
+    renderRoadPhases(document,{buses,trucks:[],trams:[],freightTrams:[]},selection,options);
+    const actual={cost:nodes['road-cost-phases-chart'].innerHTML,rank:nodes['road-rank-phases-chart'].innerHTML,help:nodes['road-phase-help'].textContent};
+    assert.doesNotMatch(actual.cost,/Current setting|NaN|Infinity/);
+    if(expected)assert.deepEqual(actual,expected);else expected=actual;
+    const story=automaticRoadCostStory(buses,options);
+    const reference=analysePassengerRoadService(buses,{distanceKm:.25,fillRatio:.75,roadSpeedLimit:80,motion:true});
+    for(const row of reference)assert.ok(Math.abs(story.valueAt(row.truck.id,.25)-row.costPerCargo)<1e-8);
+  }
+  renderRoadPhases(document,{buses,trucks:[],trams:[],freightTrams:[]},selection,{studyScope:'distance',distanceKm:3.4,fillRatio:.75,motion:true,passenger:true});
+  assert.match(nodes['road-cost-phases-chart'].innerHTML,/Current setting: 3.4/);
+});

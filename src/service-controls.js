@@ -34,7 +34,7 @@ export function mountServiceControls(document,domain,{onSelectRoute}={}){
     </div></details>
     <div id="${domain}-service-study-notice" class="service-route-prompt" hidden>
       <strong>Service requirements need a route distance</strong>
-      <p>∞ explores changing distances. Choose a route to set ${UI_TERMS.rate} and ${UI_TERMS.frequency}.</p>
+      <p>∞ explores changing distances. Choose a route to set ${UI_TERMS.rate} and ${UI_TERMS.frequency} and view its service ranking.</p>
       <div class="service-route-actions"><button type="button" data-service-route="distance">Simple distance</button><button type="button" data-service-route="custom">Custom</button></div>
     </div>
     <details id="${ids.options}" class="panel-group"><summary id="${domain}-service-options-heading">Targets &amp; constraints</summary><div class="panel-group-body"><p id="${ids.summary}" class="chart-help">No targets</p><div class="service-options-grid">

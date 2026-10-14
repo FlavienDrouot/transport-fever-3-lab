@@ -69,9 +69,9 @@ export function automaticCostStudyAllowed(options={}){
   return options.studyScope==='auto'&&!options.studyCustomRoute&&!(options.routeProfile?.length>1)&&options.demandPerYear==null&&options.demandPerDirection==null&&options.maxHeadwaySeconds==null;
 }
 /** Extend a uniform law, without scaling a physical profile beyond its 100 km editor bound. */
-export function uniformServiceStudyOptions(options){
+export function uniformServiceStudyOptions(options,road=false){
   const part=options.routeProfile?.[0];
-  return part?{...options,routeProfile:null,gradePercent:part.gradePercent,infrastructureSpeedKmh:part.speedLimitKmh}:{...options};
+  return part?{...options,routeProfile:null,gradePercent:part.gradePercent,...(road?{roadSpeedLimit:part.roadSpeedLimitKmh??part.speedLimitKmh}:{infrastructureSpeedKmh:part.speedLimitKmh})}:{...options};
 }
 
 /** Suspend stored service and train constraints during an automatic distance study. */

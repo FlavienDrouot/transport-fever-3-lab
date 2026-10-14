@@ -14,12 +14,12 @@ const axisDefinitions = {
 export function economicStory(trains, distance, fill, targets = {}, {axis='distance',year=2035} = {}) {
   if(axis==='utilisation')axis='utilization';
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
-  const start=axis==='distance'?Math.min(axisDefinitions.distance.start,distance/10):axisDefinitions[axis].start;
+  const automatic=axis==='distance'&&automaticCostStudyAllowed(targets);
+  const start=axis==='distance'?(automatic?axisDefinitions.distance.start:Math.min(axisDefinitions.distance.start,distance/10)):axisDefinitions[axis].start;
   const label=axis==='demand'&&targets.freight?`${UI_TERMS.rate} (${UI_TERMS.capacityUnit} / year)`:axisDefinitions[axis].label;
   const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
-  const current={distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
-  let end={distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
-  const automatic=axis==='distance'&&fill>0&&automaticCostStudyAllowed(targets);
+  const current=automatic?null:{distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
+  let end={distance:automatic?1:distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
   const analysisTargets=automatic?uniformServiceStudyOptions(targets):targets;
   const byId=new Map(trains.map(train=>[train.id,train]));
   const values=new Map();
@@ -35,8 +35,8 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
     if(axis==='headway')options.maxHeadwaySeconds=x*60;
     const value=analyseLine(train,options).maintenancePerUnit;values.set(cacheKey,value);return value;
   };
-  const steady=automatic?serviceSteadyDistance(trains,targets):null;
-  const tail=automatic?automaticCostTail(trains,(id,x)=>valueAt(id,x),steady):null;
+  const steady=automatic&&fill>0?serviceSteadyDistance(trains,targets):null;
+  const tail=automatic&&fill>0?automaticCostTail(trains,(id,x)=>valueAt(id,x),steady):null;
   if(tail)end=tail.end;
   const enabled=fill>0 || axis==='utilization';
   let story=axis==='year'?yearRankingStory(trains,valueAt,start,end,enabled):rankingStory(trains.map(t=>t.id),(id,x)=>{
@@ -48,7 +48,7 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
     story=clipStudyStory(story,end,{unbounded:true});
   }
   return {...story,automatic,axis,label,current,year,valueAt,discontinuous:axis==='year'||axis==='demand'||axis==='headway'||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null,
-    sampled:axis!=='year'&&(targets.routeProfile||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
+    sampled:axis!=='year'&&(analysisTargets.routeProfile||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
 }
 
 function ranksFor(ids,score,x,absoluteTolerance=null) {

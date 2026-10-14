@@ -1,4 +1,4 @@
-import {automaticRaceDistance,clipStudyStory,withStudyDistance,finiteStudyMotion,serviceStudyTargets} from './comparison-study.js';
+import {automaticRaceDistance,clipStudyStory,withStudyDistance,finiteStudyMotion,serviceStudyTargets,uniformServiceStudyOptions} from './comparison-study.js';
 import {durationSeconds,syncDurationInputs,enableDurationInputs} from './duration-controls.js';
 import {mountOptimizer} from './optimizer-controls.js';
 import {loadOptimizerCatalogue} from './optimizer-catalogue.js';
@@ -106,11 +106,12 @@ function syncStudyControls(){
     for(const input of numbers.filter(input=>input.matches(':disabled')))input.setAttribute('aria-invalid','false');
     validateNumberInputs(numbers.filter(input=>!input.matches(':disabled')),$(domain==='rail'?'economic-input-error':'road-input-error'));
   }
-  for(const input of $('economic-phase-axis').querySelectorAll('input[value=demand],input[value=headway]')){
+  for(const id of ['economic-phase-axis','road-phase-axis'])for(const input of $(id).querySelectorAll('input:not([value=distance])')){
     input.disabled=automatic;
     input.closest('label').hidden=automatic;
-    if(automatic&&input.checked)$('economic-phase-axis').querySelector('input[value=distance]').checked=true;
+    if(automatic&&input.checked)$(id).querySelector('input[value=distance]').checked=true;
   }
+  if(['economics','trucks'].includes(navigation.view))document.querySelector('.skip').href='#'+(navigation.view==='economics'?(automatic?'economic-efficiency':'line-results'):(automatic?'road-phases':'truck-service'));
   updateRoadCategory?.();
 }
 function syncRouteDistanceControls(){
@@ -162,7 +163,9 @@ function updateSimpleRoute(part){
   routeSelection.updateSimple(part);syncRouteSelection();
 }
 function comparisonServiceTargets(targets){
-  return navigation.space==='compare'?serviceStudyTargets({...targets,studyScope,studyCustomRoute:routeSelection.mode==='custom'}):targets;
+  if(navigation.space!=='compare')return targets;
+  const active=serviceStudyTargets({...targets,studyScope,studyCustomRoute:routeSelection.mode==='custom'});
+  return studyBounded()?active:uniformServiceStudyOptions(active);
 }
 function serviceTargets(){return comparisonServiceTargets({studyScope,studyCustomRoute:routeSelection.mode==='custom',gradePercent:railGradePercent,routeProfile:railRouteProfile,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh:railRouteProfile?null:infrastructureSpeedKmh,platformLengthMetres,...(comparisonCategory==='freight'?{freight:true,demandPerYear:desiredFlow,allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})});}
 function compositionSettings(){return {distanceKm:routeDistance,fillRatio:lineFill,gradePercent:railGradePercent,routeProfile:railRouteProfile,routeMode:routeSelection.mode,desiredFlow,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...railFreight};}
@@ -192,7 +195,10 @@ function updateCompositionSettings(settings){
   if(routeSelection.mode==='simple'){routeSelection.updateSimple({distanceKm:settings.distanceKm,gradePercent:settings.gradePercent,speedLimitKmh:settings.infrastructureSpeedKmh});syncRouteSelection({restore:true});}
   else {crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();}
 }
-function economicSelectionOptions(){return {freight:comparisonCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres:serviceTargets().platformLengthMetres,gradePercent:railGradePercent,routeProfile:railRouteProfile};}
+function economicSelectionOptions(){
+  const {platformLengthMetres,gradePercent,routeProfile,infrastructureSpeedKmh}=serviceTargets();
+  return {freight:comparisonCategory==='freight',cargo:economicCargo,year:catalogueYear,platformLengthMetres,gradePercent,routeProfile,infrastructureSpeedKmh};
+}
 function speedUsesProfile(){const route=activeRouteProfile();return route.some(part=>part.gradePercent!==route[0].gradePercent||part.speedLimitKmh!==route[0].speedLimitKmh);}
 function raceCandidates(allYears=false){return navigation.domain==='road'?selectRoadVehicles(roadDatasets(),{category:comparisonCategory,includeTrams,cargo:truckCargo,year:allYears?2035:truckYear}).filter(t=>selectedRoad.has(t.id)).map(withRoadModel):trainCandidates(allYears?Infinity:catalogueYear).filter(t=>selected.has(t.id));}
 function raceStudyModels(allYears=false){
@@ -520,6 +526,11 @@ function renderLineAnalysis() {
   $('service-options-summary').textContent=[desiredFlow===null?'No rate target':`${fmt(desiredFlow,0)} ${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`,maxHeadwaySeconds===null?'No frequency target':`${formatTime(maxHeadwaySeconds)} ${frequencyMode==='maximum'?'maximum interval':'target interval'}`,freight?(railFreight.loadedReturn?'Loaded return':'Empty return'):(allowMultipleUnits?'Coupling allowed':'Single units'),platformLengthMetres===null?'No length limit':`${fmt(platformLengthMetres,0)} m maximum`].join(' · ');
   $('line-fill-value').textContent = `${Math.round(lineFill * 100)}%`;
   const selection=economicSelection(trains,selected,economicSelectionOptions());
+  $('line-results').hidden=!studyBounded();
+  if(!studyBounded()){
+    $('line-summary').replaceChildren();$('line-readout').replaceChildren();$('line-caption').textContent='';
+    return selection;
+  }
   const rows=selection.eligible.map(t=>({t,result:analyseLine(t,{distanceKm:routeDistance,fillRatio:lineFill,...serviceTargets()})})).sort((a,b)=>b.result.efficiency-a.result.efficiency);
   const best=rows[0]?.result.efficiency||0;
   const winners=rows.filter(({result})=>best>0&&Math.abs(result.efficiency/best-1)<1e-9);
@@ -602,7 +613,7 @@ function syncAnalysisView() {
   for(let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details'))disclosure.open=true;
   if(target&&['model','economic-method'].includes(target.id))target.querySelector('details').open=true;
   syncAnalysisPanels(document,view,{domain});renderCatalogue();
-  const destination=view==='optimizer'?'optimizer-heading':view==='route-profile'?'profile-overview':view==='configurator'?'component-catalogue':view==='data'?dataView==='models'?'model':dataView==='checks'?'experimental-models':'source-catalogue':view==='race'?'speed-explorer':view==='trucks'?'truck-service':'line-results';
+  const destination=view==='optimizer'?'optimizer-heading':view==='route-profile'?'profile-overview':view==='configurator'?'component-catalogue':view==='data'?dataView==='models'?'model':dataView==='checks'?'experimental-models':'source-catalogue':view==='race'?'speed-explorer':view==='trucks'?(studyBounded()?'truck-service':'road-phases'):(studyBounded()?'line-results':'economic-efficiency');
   document.querySelector('.skip').textContent='Skip to content';document.querySelector('.skip').href=`#${destination}`;
   if(space==='compare'&&domain==='road')void ensureRoad();if(view==='configurator')void ensureConfigurator();if(view==='data')void ensureData();
   $('comparison-preview').hidden=space!=='compare'||!comparisonComposition||(domain==='rail')!==(comparisonComposition.carrier==='rail');
@@ -642,7 +653,12 @@ function render() {
     const selection={category:comparisonCategory,includeTrams,cargo:truckCargo,year:truckYear};
     const vehicles=selectRoadVehicles(sources,selection);
     const options={...truckService,...roadTargets(),studyScope,studyCustomRoute:routeSelection.mode==='custom',motion:true,distanceKm:routeDistance,routeProfile:railRouteProfile,passenger};
-    renderTruckService(document,vehicles,options);
+    $('road-route-results').hidden=!studyBounded();
+    if(studyBounded())renderTruckService(document,vehicles,options);
+    else{
+      for(const id of ['truck-service-summary','truck-service-readout','truck-bars'])$(id).replaceChildren();
+      $('road-service-caption').textContent='';
+    }
     clearTimeout(roadPhaseTimer);
     const phasePanel=$('road-phases');
     if(options.demandPerYear!==null){
@@ -658,6 +674,7 @@ function render() {
   }
   if (!$('economics').hidden) {
     clearTimeout(economicProfileTimer);
+    const automatic=!studyBounded(),targets=serviceTargets(),studyDistance=automatic?1:routeDistance;
     const economic=renderLineAnalysis();
     const phaseAxis=$('economic-phase-axis').querySelector('input:checked').value;
     const economicTrains=phaseAxis==='year'?economic.phaseItems:economic.eligible;
@@ -665,18 +682,18 @@ function render() {
     $('economic-empty').hidden=!showEmpty;
     $('economic-results').hidden=showEmpty;
     if(showEmpty){
-      $('economic-empty').innerHTML=economicEmptyContent(economic.empty,comparisonCategory==='freight',!!railRouteProfile);
+      $('economic-empty').innerHTML=economicEmptyContent(economic.empty,comparisonCategory==='freight',!!targets.routeProfile);
       for(const id of ['economic-efficiency-chart','economic-crossover-curves-chart','economic-crossovers-chart'])$(id).replaceChildren();
       return;
     }
     $('economic-efficiency').hidden=!economic.eligible.length;
     const drawEconomicCharts=()=>{
-    renderEconomicChart($('economic-efficiency-chart'), {trains:economic.eligible,distance:routeDistance,fill:lineFill,targets:serviceTargets(),highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
-    const key=JSON.stringify([economicTrains.map(t=>[t.id,t.name,t.color,t.dash,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]),routeDistance,lineFill,serviceTargets(),phaseAxis,catalogueYear]);
-    if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(economicTrains,routeDistance,lineFill,serviceTargets(),{axis:phaseAxis,year:catalogueYear});}
+    const key=JSON.stringify([economicTrains.map(t=>[t.id,t.name,t.color,t.dash,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]),studyDistance,lineFill,targets,phaseAxis,catalogueYear]);
+    if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(economicTrains,studyDistance,lineFill,targets,{axis:phaseAxis,year:catalogueYear});}
+    renderEconomicChart($('economic-efficiency-chart'), {trains:economic.eligible,distance:automatic?currentEconomicStory.end:routeDistance,...(automatic?{startDistance:currentEconomicStory.start,referenceDistance:null}:{}),fill:lineFill,targets,highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
     $('economic-rank-scale').querySelector(':scope > span').textContent=currentEconomicStory.label;
     const phaseValue=value=>phaseAxis==='year'?value:phaseAxis==='distance'?fmtKm(value):fmt(value,2);
-    $('economic-phase-help').textContent=`${currentEconomicStory.label} varies over ${phaseValue(currentEconomicStory.start)}–${phaseValue(currentEconomicStory.end)}; other settings remain fixed. ${currentEconomicStory.automatic?'Automatic extent covers the last modeled leader change. ':studyScope==='auto'&&phaseAxis==='distance'&&routeSelection.mode!=='custom'&&(serviceTargets().demandPerYear!=null||serviceTargets().demandPerDirection!=null||serviceTargets().maxHeadwaySeconds!=null)?'Distance is bounded here: fleet targets can prevent a final stable leader. ':''}Dashed line: reference setting when inside the range. ${phaseAxis==='demand'||phaseAxis==='headway'?'This target applies to these diagrams even if its service checkbox is off. ':''}Utilization is a ceiling when a rate target applies; demand is assumed, not predicted.`;
+    $('economic-phase-help').textContent=`${currentEconomicStory.label} varies over ${phaseValue(currentEconomicStory.start)}–${phaseValue(currentEconomicStory.end)}; other settings remain fixed. ${currentEconomicStory.automatic?'Automatic extent covers the last modeled leader change. ':studyScope==='auto'&&phaseAxis==='distance'&&routeSelection.mode!=='custom'&&(serviceTargets().demandPerYear!=null||serviceTargets().demandPerDirection!=null||serviceTargets().maxHeadwaySeconds!=null)?'Distance is bounded here: fleet targets can prevent a final stable leader. ':''}${automatic?'':'Dashed line: reference setting when inside the range. '}${phaseAxis==='demand'||phaseAxis==='headway'?'This target applies to these diagrams even if its service checkbox is off. ':''}Utilization is a ceiling when a rate target applies; demand is assumed, not predicted.`;
     $('economic-phase-info').title=$('economic-phase-help').textContent;
     renderEconomicCrossovers($('economic-crossover-curves-chart'),{trains:economicTrains,story:currentEconomicStory,fill:lineFill,targets:serviceTargets(),kind:'curves',ordinateTitle:`Running cost / ${UI_TERMS.capacityUnit} ($)`,highlighted,distanceMode:document.querySelector('input[name="economic-focus-scale"]:checked').value,verticalMode:document.querySelector('input[name="economic-focus-y"]:checked').value});
     renderEconomicCrossovers($('economic-crossovers-chart'),{trains:economicTrains,story:currentEconomicStory,fill:lineFill,targets:serviceTargets(),kind:'rank',highlighted,distanceMode:document.querySelector('input[name="economic-rank-scale"]:checked').value});
@@ -684,7 +701,7 @@ function render() {
     $('economic-phases').innerHTML=currentEconomicStory.phases.map(p=>`<tr><td>${phaseValue(p.start)} – ${p.unbounded?'∞':phaseValue(p.end)}</td><td>${p.leaders.map(id=>escape(economicTrains.find(t=>t.id===id).name)).join(' / ')||'No available train'}</td></tr>`).join('');
     $('economic-results').removeAttribute('aria-busy');
     };
-    if(railRouteProfile){$('economic-results').setAttribute('aria-busy','true');economicProfileTimer=setTimeout(()=>{if(!$('economics').hidden)drawEconomicCharts();},150);}else drawEconomicCharts();
+    if(targets.routeProfile){$('economic-results').setAttribute('aria-busy','true');economicProfileTimer=setTimeout(()=>{if(!$('economics').hidden)drawEconomicCharts();},150);}else drawEconomicCharts();
     return;
   }
   if(navigation.domain==='road')renderRoadCatalogue();
