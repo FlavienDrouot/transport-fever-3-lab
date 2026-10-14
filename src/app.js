@@ -83,10 +83,15 @@ function setComparisonCategory(category){
   updateRoadCategory?.();
 }
 function syncStudyControls(){
-  const custom=routeSelection.mode==='custom';
-  $('comparison-study-scope').querySelector('input[value=auto]').disabled=custom;
-  $('comparison-study-scope').querySelector(`input[value=${custom?'distance':studyScope}]`).checked=true;
-  $('comparison-study-note').textContent=custom?'Custom route: every distance study ends at B.':studyScope==='auto'?'Automatic axes cover the last modeled leader change. Editing the distance selects Defined distance. Service readouts use the reference route distance below.':'All distance studies stop at the defined distance; speed curves stop when each vehicle reaches it.';
+  const comparing=navigation.space==='compare',custom=routeSelection.mode==='custom';
+  const automatic=comparing&&!custom&&studyScope==='auto';
+  $('comparison-route-choice').hidden=comparing;
+  $('comparison-study-scope').hidden=$('comparison-study-note').hidden=!comparing;
+  $('comparison-study-scope').querySelector(`input[value=${custom?'custom':studyScope}]`).checked=true;
+  $('comparison-study-note').textContent=custom?'Distance studies end at B.':studyScope==='auto'?'Axes adapt to the last modeled leader change.':'Distance studies stop at the defined distance.';
+  $('route-distance').closest('.horizon-control').hidden=custom||automatic;
+  $('race-profile-status').hidden=automatic;
+  $('distance-note').hidden=automatic;
 }
 function syncRouteDistanceControls(){
   syncStudyControls();
@@ -554,8 +559,8 @@ function syncAnalysisView() {
   if(view==='optimizer')routeSpeeds.before($('race-gradient'));
   else routeSpeeds.after($('race-gradient'));
   $('road-service-settings').hidden=view!=='trucks';
-  $('comparison-study-scope').hidden=$('comparison-study-note').hidden=space!=='compare';
   syncRouteSpeeds();
+  syncStudyControls();
   profileControl?.refresh();
   document.querySelector('[data-analysis="race"]').href=domain==='road'?'#road-race':'#race';
   $('profile-compare-race').href=domain==='road'?'#road-race':'#race';
@@ -1003,7 +1008,12 @@ async function init() {
   });
   $('service-options').addEventListener('toggle',updateStickyOffsets);
   $('line-fill').addEventListener('input',updateTargets);
-  $('comparison-study-scope').addEventListener('change',event=>{studyScope=event.target.value;crossoverCache.clear();raceYearKey=null;economicStoryKey=null;syncStudyControls();render();});
+  $('comparison-study-scope').addEventListener('change',event=>{
+    const value=event.target.value;
+    if(value!=='custom')studyScope=value;
+    routeSelection.select(value==='custom'?'custom':'simple');
+    syncRouteSelection({restore:true});
+  });
   mountDistanceControl({number:$('distance-input'),range:$('route-distance'),validate:validateRace,onChange:distance=>{studyScope='distance';updateSimpleRoute({distanceKm:distance});},event:'input'});
   for(const id of ['x-scale','y-scale','speed-x-scale','speed-y-scale','focus-distance','focus-time','crossover-orientation','emphasize-leaders','rank-distance-scale','economic-efficiency-scale','economic-focus-scale','economic-focus-y','economic-rank-scale']) $(id).addEventListener('change',()=>render());
   for (const kind of ['speed','race']) {
