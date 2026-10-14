@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createModel} from '../src/model.js';
-import {automaticRaceDistance,clipStudyStory,withStudyDistance,automaticCostDistance,automaticCostStudyAllowed,serviceSteadyDistance,uniformServiceStudyOptions} from '../src/comparison-study.js';
+import {serviceStudyTargets,automaticRaceDistance,clipStudyStory,withStudyDistance,automaticCostDistance,automaticCostStudyAllowed,serviceSteadyDistance,uniformServiceStudyOptions} from '../src/comparison-study.js';
 import {crossoverStory} from '../src/crossovers.js';
 import {motionCurveEnd,motionTransitions,speedOrdinateMaximum,renderModelTransitions} from '../src/motion-chart.js';
 import {economicStory} from '../src/economic-crossovers.js';
@@ -76,4 +76,24 @@ test('automatic Road cost leaders remain stable beyond the tail, without distanc
     const actual=buses.filter(b=>probe.valueAt(b.id,distance)<=best+tail.absoluteTolerance).map(b=>b.id).sort();
     assert.deepEqual(actual,leaders);
   }
+});
+
+
+test('automatic Service suspends saved fleet requirements without changing utilization, equipment limits or bounded requests',()=>{
+  const stored={studyScope:'auto',demandPerDirection:100000,maxHeadwaySeconds:30,frequencyMode:'closest',allowMultipleUnits:true,fillRatio:.75,platformLengthMetres:320};
+  const automatic=serviceStudyTargets(stored);
+  assert.equal(automaticCostStudyAllowed(automatic),true);
+  assert.equal(automatic.fillRatio,.75);assert.equal(automatic.platformLengthMetres,320);
+  const train=trains.find(t=>t.id==='twindexx');
+  const result=analyseEconomicService(train,{distanceKm:10,...automatic});
+  const reference=analyseEconomicService(train,{distanceKm:10,fillRatio:.75,platformLengthMetres:320});
+  assert.equal(result.trainCount,reference.trainCount);
+  assert.equal(result.maintenancePerUnit,reference.maintenancePerUnit);
+  assert.equal(stored.demandPerDirection,100000);assert.equal(stored.maxHeadwaySeconds,30);assert.equal(stored.allowMultipleUnits,true);
+  for(const scope of [{studyScope:'distance'},{studyCustomRoute:true}]){
+    const bounded={...stored,...scope},active=serviceStudyTargets(bounded);
+    assert.equal(active,bounded);
+    assert.ok(analyseEconomicService(train,{distanceKm:10,...active}).trainCount>result.trainCount);
+  }
+  assert.equal(serviceStudyTargets({...stored,freight:true,demandPerYear:500}).demandPerYear,null);
 });
