@@ -13,13 +13,13 @@ export function motionValue(train,x,view) {
 
 /** A finite A→B profile has no trajectory after this train reaches B. */
 export function motionCurveEnd(train,view,horizon) {
-  if (!train.model.routeProfile || (view!=='distance' && view!=='speed')) return horizon;
-  return Math.min(horizon,train.model.timeAt(train.model.routeDistanceKm));
+  if ((!train.model.routeProfile&&train.model.studyDistanceKm==null) || (view!=='distance' && view!=='speed')) return horizon;
+  return Math.min(horizon,train.model.timeAt(train.model.studyDistanceKm??train.model.routeDistanceKm));
 }
 
 /** Keep the speed domain close to the speeds actually reached in this view. */
 export function speedOrdinateMaximum(trains,horizon,view) {
-  const maximum=Math.max(1,...trains.map(t=>t.model.routeProfile?Math.max(motionValue(t,horizon,view),t.model.effectiveMaxSpeedKmh):motionValue(t,horizon,view)));
+  const maximum=Math.max(1,...trains.map(t=>t.model.routeProfile?Math.max(motionValue(t,horizon,view),t.model.effectiveMaxSpeedKmh):motionValue(t,motionCurveEnd(t,view,horizon),view)));
   const step=10**Math.floor(Math.log10(maximum))/20;
   return Math.max(maximum,Math.ceil(maximum/step)*step);
 }
@@ -40,6 +40,10 @@ export function motionTransitions(train,view) {
   const events=hasPower?[{time:traction,label:'Traction → power'}]:[];
   events.push({time:model.asymptoticSpeed?model.speedViewSeconds:cap,
     label:model.asymptoticSpeed?'99% equilibrium':'Speed limit'});
+  if(model.studyDistanceKm!=null){
+    const end=model.timeAt(model.studyDistanceKm);
+    events.splice(0,events.length,...events.filter(e=>e.time<end));events.push({time:end,label:'End of study'});
+  }
   return events.filter(e=>Number.isFinite(e.time)&&e.time>0).map(event=>{
     const state=model.stateAt(event.time);
     const horizontalDistance=view==='time'||view==='speed-distance';
@@ -53,7 +57,7 @@ export function motionTransitions(train,view) {
 export function renderModelTransitions(trains) {
   return trains.map(train=>{
     const model=train.model,end=motionTransitions(train,'speed').at(-1);
-    if(model.routeProfile){const first=model.profileEvents.find(event=>event.label==='Traction → power');return `<tr><td>${escape(train.name)}</td><td>${first?formatTime(first.time):'—'}</td><td>${first?formatNumber(first.distanceKm*1000,0):'—'}</td><td>${formatNumber(model.effectiveMaxSpeedKmh,1)}</td><td>${formatTime(model.speedCapSeconds)}</td><td>${formatNumber(model.routeDistanceKm,2)}</td></tr>`;}
+    if(model.routeProfile||model.studyDistanceKm!=null){const first=motionTransitions(train,'speed').find(event=>event.label==='Traction → power');return `<tr><td>${escape(train.name)}</td><td>${first?formatTime(first.time):'—'}</td><td>${first?formatNumber(model.stateAt(first.time).distanceKm*1000,0):'—'}</td><td>${formatNumber(model.studyDistanceKm!=null?model.stateAt(model.timeAt(model.studyDistanceKm)).speedKmh:model.effectiveMaxSpeedKmh,1)}</td><td>${formatTime(model.studyDistanceKm!=null?model.timeAt(model.studyDistanceKm):model.speedCapSeconds)}</td><td>${formatNumber(model.studyDistanceKm??model.routeDistanceKm,2)}</td></tr>`;}
     if(!end)return '';
     const maximum=model.effectiveMaxSpeedKmh??model.stateAt(model.speedCapSeconds).speedKmh;
     return `<tr><td>${escape(train.name)}</td><td>${formatTime(model.tractionEndSeconds)}</td><td>${formatNumber(model.stateAt(model.tractionEndSeconds).distanceKm*1000,0)}</td><td>${formatNumber(maximum,1)}</td><td>${formatTime(end.time)}</td><td>${formatNumber(model.stateAt(end.time).distanceKm,2)}</td></tr>`;
