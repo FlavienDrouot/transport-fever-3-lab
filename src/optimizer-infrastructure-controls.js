@@ -1,4 +1,4 @@
-import {RAIL_PLATFORM_MAX_LENGTH,busStopAllowed} from './optimizer-infrastructure.js';
+import {RAIL_PLATFORM_MAX_LENGTH,busStopAllowed,DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY} from './optimizer-infrastructure.js';
 import {formatNumber} from './format.js';
 import {UI_TERMS as T} from './ui-terms.js';
 import {MAX_TERMINAL_CONFIGURATIONS} from './optimizer-infrastructure.js';
@@ -8,7 +8,7 @@ import {RAIL_TERMINAL_ASSUMPTIONS} from './rail-terminal-service.js';
 export function mountOptimizerInfrastructure(root,{getScope,onChange}){
   const stops=['stopA','stopB'],kinds=['rail','road'],entries=[];
   const bounds=Object.fromEntries(stops.map(stop=>[stop,{maxTrainLength:RAIL_PLATFORM_MAX_LENGTH,maxPlatformTracks:2,maxPlatformLength:40,maxPlatforms:2,allowSpecialization:true,allowBusStop:true}]));
-  const sites=Object.fromEntries(stops.map(stop=>[stop,{type:'',factoryTerminals:2,inputStorageCapacity:100,outputStorageCapacity:100,existingSpecializedWarehouse:false,
+  const sites=Object.fromEntries(stops.map(stop=>[stop,{type:'',factoryTerminals:2,inputStorageCapacity:100,outputStorageCapacity:DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY,existingSpecializedWarehouse:false,
     allowWarehouseSpecialization:true,allowWarehouseExpansion:false,warehouseCapacity:500,maxWarehouseCapacity:1000}]));
   let nextId=0;
   const title=stop=>stop==='stopA'?'Source · A':'Destination · B';
@@ -28,7 +28,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange}){
           <p data-building-help="${stop}" class="chart-help" hidden></p>
           <div data-industry-storage="${stop}" class="optimizer-infra-fields" hidden>
             ${numeric(attrs,'inputStorageCapacity',`Input storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
-            ${numeric(attrs,'outputStorageCapacity',`Output storage ${T.capacity}`,100,100,null,100,T.capacityUnit)}
+            ${numeric(attrs,'outputStorageCapacity',`Output storage ${T.capacity}`,DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY,100,null,100,T.capacityUnit)}
             <p class="chart-help">Enter the storage available for this freight type. The storage limit above applies. Industry storage cannot be expanded by the search.</p>
           </div>
           <div data-factory-options="${stop}">${toggle(attrs,'factoryTerminals','Parallel Truck terminals',[['2','2'],['3','3']],2,`optimizer-industry-terminals-${stop}`)}<p class="chart-help">Free specialized terminals, one truck each. Trams require a separate station/platform.</p></div>

@@ -1,4 +1,5 @@
 import {UI_TERMS} from './ui-terms.js';
+import {automaticCostStudyAllowed,automaticCostTail,serviceSteadyDistance,clipStudyStory,uniformServiceStudyOptions} from './comparison-study.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
 
 const axisDefinitions = {
@@ -13,11 +14,13 @@ const axisDefinitions = {
 export function economicStory(trains, distance, fill, targets = {}, {axis='distance',year=2035} = {}) {
   if(axis==='utilisation')axis='utilization';
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
-  const start=axis==='distance'?Math.min(axisDefinitions.distance.start,distance/10):axisDefinitions[axis].start;
+  const automatic=axis==='distance'&&automaticCostStudyAllowed(targets);
+  const start=axis==='distance'?(automatic?axisDefinitions.distance.start:Math.min(axisDefinitions.distance.start,distance/10)):axisDefinitions[axis].start;
   const label=axis==='demand'&&targets.freight?`${UI_TERMS.rate} (${UI_TERMS.capacityUnit} / year)`:axisDefinitions[axis].label;
   const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
-  const current={distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
-  const end={distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
+  const current=automatic?null:{distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
+  let end={distance:automatic?1:distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
+  const analysisTargets=automatic?uniformServiceStudyOptions(targets):targets;
   const byId=new Map(trains.map(train=>[train.id,train]));
   const values=new Map();
   const valueAt=(id,x)=>{
@@ -25,25 +28,33 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
     if(!train || (axis==='year' && train.year>Math.floor(x)))return null;
     const cacheKey=axis==='year'?id:`${id}:${x}`;
     if(values.has(cacheKey))return values.get(cacheKey);
-    const options={distanceKm:distance,fillRatio:fill,...targets};
+    const options={distanceKm:distance,fillRatio:fill,...analysisTargets};
     if(axis==='distance')options.distanceKm=x;
     if(axis==='utilization')options.fillRatio=x/100;
     if(axis==='demand')options[rateKey]=x;
     if(axis==='headway')options.maxHeadwaySeconds=x*60;
     const value=analyseLine(train,options).maintenancePerUnit;values.set(cacheKey,value);return value;
   };
+  const steady=automatic&&fill>0?serviceSteadyDistance(trains,targets):null;
+  const tail=automatic&&fill>0?automaticCostTail(trains,(id,x)=>valueAt(id,x),steady):null;
+  if(tail)end=tail.end;
   const enabled=fill>0 || axis==='utilization';
-  const story=axis==='year'?yearRankingStory(trains,valueAt,start,end,enabled):rankingStory(trains.map(t=>t.id),(id,x)=>{
-    const cost=valueAt(id,x);return cost===null?null:1/cost;
-  },start,end,enabled,targets.routeProfile&&axis==='distance'?24:512);
-  return {...story,axis,label,current,year,valueAt,discontinuous:axis==='year'||axis==='demand'||axis==='headway'||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null,
-    sampled:axis!=='year'&&(targets.routeProfile||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
+  let story=axis==='year'?yearRankingStory(trains,valueAt,start,end,enabled):rankingStory(trains.map(t=>t.id),(id,x)=>{
+    const cost=valueAt(id,x);return cost===null?null:automatic?-cost:1/cost;
+  },start,end,enabled,targets.routeProfile&&axis==='distance'&&!automatic?24:512,tail?{knownRoots:tail.roots,absoluteTolerance:tail.absoluteTolerance}:{});
+  if(automatic&&Number.isFinite(steady)&&story.phases.length){
+    const last=story.phases.at(-1);last.unbounded=true;
+    end=story.phases.length>1?last.start*1.15:Math.max(1,serviceSteadyDistance(trains.filter(t=>last.leaders.includes(t.id)),targets));
+    story=clipStudyStory(story,end,{unbounded:true});
+  }
+  return {...story,automatic,axis,label,current,year,valueAt,discontinuous:axis==='year'||axis==='demand'||axis==='headway'||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null,
+    sampled:axis!=='year'&&(analysisTargets.routeProfile||targets[rateKey]!=null||targets.maxHeadwaySeconds!=null||axis==='demand'||axis==='headway')};
 }
 
-function ranksFor(ids,score,x) {
+function ranksFor(ids,score,x,absoluteTolerance=null) {
   const scores=ids.map(id=>({id,value:score(id,x)}));
   const available=scores.filter(s=>Number.isFinite(s.value)).sort((a,b)=>b.value-a.value);
-  const tolerance=Math.max(...available.map(s=>Math.abs(s.value)),Number.MIN_VALUE)*1e-9;
+  const tolerance=absoluteTolerance??Math.max(...available.map(s=>Math.abs(s.value)),Number.MIN_VALUE)*1e-9;
   const ranks=Object.fromEntries(ids.map(id=>[id,null]));
   let better=0;
   for(const entry of available){
@@ -79,13 +90,13 @@ export function yearRankingStory(items,valueAt,start=1900,end=2035,enabled=true)
     ranksAt:x=>ranksFor(ids,score,x)};
 }
 
-export function rankingStory(ids, score, start, end, enabled = true, samples = 512) {
+export function rankingStory(ids, score, start, end, enabled = true, samples = 512, {knownRoots=[],absoluteTolerance=null}={}) {
   if (!Number.isFinite(start) || !Number.isFinite(end) || start<=0 || end<=start) throw new RangeError('Invalid ranking domain');
   if (!ids.length || !enabled) return {start,end,roots:[],intervals:[],phases:[]};
   const grid = [...new Set(Array.from({length:samples+1},(_,i)=>[start+(end-start)*i/samples,start*(end/start)**(i/samples)]).flat())].sort((a,b)=>a-b);
   const values = Object.fromEntries(ids.map(id=>[id,grid.map(x=>score(id,x))]));
   const delta = (a,b) => (a-b)/Math.max(Math.abs(a),Math.abs(b),Number.MIN_VALUE);
-  const roots=[];
+  const roots=knownRoots.filter(root=>Number.isFinite(root)&&root>start&&root<end);
   for(let i=0;i<ids.length;i++) for(let j=i+1;j<ids.length;j++) {
     const a=ids[i],b=ids[j];let priorSign=0,priorX=start;
     for(let k=0;k<grid.length;k++) {
@@ -106,7 +117,7 @@ export function rankingStory(ids, score, start, end, enabled = true, samples = 5
   const knots=[start,...distinct,end],intervals=[],phases=[];
   for(let i=0;i<knots.length-1;i++) {
     const first=knots[i],last=knots[i+1],x=(first+last)/2;
-    const ranks=ranksFor(ids,score,x);
+    const ranks=ranksFor(ids,score,x,absoluteTolerance);
     const leaders=ids.filter(id=>ranks[id]===1).sort();
     if(intervals.length&&ids.every(id=>intervals.at(-1).ranks[id]===ranks[id]))intervals.at(-1).end=last;
     else intervals.push({start:first,end:last,ranks});
