@@ -26,7 +26,7 @@ import {mountTransportCategory,mountFreightFilter} from './transport-category.js
 import {renderServiceSummary} from './service-summary.js';
 import {styleVehicleCatalogues} from './vehicle-styles.js';
 import {mountSourceCatalogue} from './source-catalogue.js';
-import {tramComponents,railComponents,lightRailComponents} from './consists.js';
+import {tramComponents,railComponents,lightRailComponents,lightRailComparisonVehicles} from './consists.js';
 import {mountConsistEditor} from './consist-editor.js';
 import {mountCompositionAnalysis} from './composition-analysis-controls.js';
 import {renderTruckService, selectRoadVehicles} from './trucks.js';
@@ -62,6 +62,7 @@ let speedView='speed';
 let economicStoryKey, currentEconomicStory;
 let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl,routePlanControl,routeHasDeclarations=false;
 let consistEditor,compositionAnalysis,raceGradientControl,baseTrains,trainSelector,roadSelector;
+let lightRailTrains=[],lightRailLoaded=false,lightRailLoading;
 let comparisonCategoryControl,optimizerControl;
 let selectedRoad=new Set(),knownCustom=new Set();
 let busDataset, tramDataset, includeTrams = false;
@@ -187,12 +188,16 @@ function roadDatasets(selectedOnly=false){
 }
 function roadCandidates(){return selectRoadVehicles(roadDatasets(),{category:comparisonCategory,includeTrams,cargo:truckCargo,year:truckYear});}
 function renderRoadCatalogue(){$('road-vehicle-count').textContent=roadCandidates().length;roadSelector.render();}
+function rebuildRailComparisons(){
+  const custom=consistEditor?.getCompositions()??[];
+  trains=[...baseTrains,...lightRailTrains,...(comparisonComposition?.carrier==='rail'?[comparisonComposition]:[]),...custom.filter(t=>t.carrier==='rail').map((t,i)=>({...t,color:['#147d64','#ad5a28','#9270b9','#3897a7'][i%4]}))];
+}
 function syncCustomCompositions(change={}){
   const custom=consistEditor.getCompositions();
   for(const id of knownCustom)if(!custom.some(t=>t.id===id)){selected.delete(id);selectedRoad.delete(id);}
   for(const t of custom)if(!knownCustom.has(t.id))(t.carrier==='rail'?selected:selectedRoad).add(t.id);
   knownCustom=new Set(custom.map(t=>t.id));
-  trains=[...baseTrains,...(comparisonComposition?.carrier==='rail'?[comparisonComposition]:[]),...custom.filter(t=>t.carrier==='rail').map((t,i)=>({...t,color:['#147d64','#ad5a28','#9270b9','#3897a7'][i%4]}))];
+  rebuildRailComparisons();
   crossoverCache.clear();economicStoryKey=null;raceYearKey=null;
   if(change.item?.carrier==='rail'){
     catalogueYear=Math.max(catalogueYear,change.item.year);
@@ -692,6 +697,23 @@ function initTheme() {
 }
 initTheme();
 
+async function ensureLightRailComparisons(){
+  if(lightRailLoaded)return;
+  if(lightRailLoading)return lightRailLoading;
+  $('rail-light-rail-status').hidden=false;$('rail-light-rail-status').textContent='Loading light-rail vehicles…';$('rail-light-rail-retry').hidden=true;
+  lightRailLoading=(async()=>{
+    try{
+      const tram=await loadData('trams');
+      const adapted=lightRailComparisonVehicles([...tram.trams,...tram.freightTrams],dataset.source);
+      lightRailTrains=styleVehicleCatalogues({base:baseTrains,lightRail:adapted}).lightRail;
+      for(const train of lightRailTrains)selected.add(train.id);
+      lightRailLoaded=true;rebuildRailComparisons();
+      $('rail-light-rail-status').hidden=true;
+      crossoverCache.clear();raceYearKey=null;economicStoryKey=null;renderCatalogue();render();
+    }catch(error){$('rail-light-rail-status').textContent='Unable to load light-rail vehicles. Other Rail comparisons remain available.';$('rail-light-rail-retry').hidden=false;console.error(error);}
+    finally{lightRailLoading=null;}
+  })();return lightRailLoading;
+}
 async function ensureRoad(){
   if(roadLoaded||roadLoading)return roadLoading;
   $('road-load-status').hidden=false;$('road-load-status').textContent='Loading road and tram comparisons…';$('road-retry').hidden=true;
@@ -991,6 +1013,7 @@ async function init() {
   updateStickyOffsets();
   window.addEventListener('resize',()=>render());
   $('road-retry').addEventListener('click',()=>void ensureRoad());
+  $('rail-light-rail-retry').addEventListener('click',()=>void ensureLightRailComparisons());
   $('configuration-retry').addEventListener('click',()=>void ensureConfigurator());
   $('source-retry').addEventListener('click',()=>void ensureData());
   $('experiment-retry').addEventListener('click',()=>void ensureData());
@@ -1005,6 +1028,7 @@ async function init() {
   $('comparison-preview').querySelector('a').addEventListener('click',event=>{event.preventDefault();editComposition(comparisonComposition.id);});
   $('compare-domain').addEventListener('change',event=>{location.hash=navigation.view==='race'?(event.target.value==='road'?'#road-race':'#race'):(event.target.value==='road'?'#trucks':'#economics');});
   window.addEventListener('hashchange',syncAnalysisView);syncAnalysisView();
+  void ensureLightRailComparisons();
   try{if(localStorage.getItem('tf3-compositions-v1'))void ensureConfigurator();}catch{}
 }
 init().catch(error=>{$('status').textContent='Unable to load the lab. Serve the site over HTTP and try again.';console.error(error);});
