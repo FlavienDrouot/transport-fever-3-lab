@@ -94,6 +94,11 @@ function syncStudyControls(){
   $('distance-note').hidden=automatic;
   for(const domain of ['rail','road']){
     $(`${domain}-service-targets`).disabled=automatic;
+    $(`${domain}-service-targets`).hidden=automatic;
+    $(domain==='rail'?'service-options':'road-service-options').hidden=automatic&&domain==='road';
+    $(`${domain}-service-options-heading`).textContent=automatic?'Train constraints':'Targets & constraints';
+    $(domain==='rail'?'service-options-summary':'road-service-options-summary').hidden=automatic;
+    $(`${domain}-service-targets-help`).hidden=automatic;
     $(`${domain}-service-study-notice`).hidden=!automatic;
     const root=$(domain==='rail'?'rail-service-controls':'road-service-settings');
     const numbers=[...root.querySelectorAll('input[type=number]')];
@@ -102,6 +107,7 @@ function syncStudyControls(){
   }
   for(const input of $('economic-phase-axis').querySelectorAll('input[value=demand],input[value=headway]')){
     input.disabled=automatic;
+    input.closest('label').hidden=automatic;
     if(automatic&&input.checked)$('economic-phase-axis').querySelector('input[value=distance]').checked=true;
   }
   updateRoadCategory?.();
@@ -485,7 +491,7 @@ function renderEconomicControls() {
   $('rail-freight-filter').hidden=$('economics').hidden||!freight;
   $('rail-service-note').hidden=$('economics').hidden;
   $('rail-service-note').textContent=freight?'Saved freight compositions':'Passenger services';
-  $('economic-coupling-control').hidden=freight;
+  $('economic-coupling-control').hidden=freight||(navigation.space==='compare'&&!studyBounded());
   $('allow-multiple-units').disabled=freight||serviceTargets().maxHeadwaySeconds===null||serviceTargets().demandPerDirection===null;
 
   $('economic-length-unit').textContent=freight?'m of train':'m of platform';
@@ -863,7 +869,9 @@ async function ensureData(){
 
 async function init() {
   for(const note of document.querySelectorAll('[data-road-travel-warning]'))note.textContent=ROAD_TRAVEL_TIME_WARNING;
-  mountServiceControls(document,'rail');mountServiceControls(document,'road');
+  const onSelectServiceRoute=mode=>$('comparison-study-scope').querySelector(`input[value=${mode}]`).click();
+  mountServiceControls(document,'rail',{onSelectRoute:onSelectServiceRoute});
+  mountServiceControls(document,'road',{onSelectRoute:onSelectServiceRoute});
   for(const [id,name] of [['rail-cargo','rail-cargo'],['truck-cargo-specialization','truck-cargo'],['configuration-cargo','configuration-cargo']])mountFreightFilter($(id),{name});
   mountTablePreviews(document);
   mountControlHelp(document);

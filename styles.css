@@ -652,3 +652,9 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .optimizer-no-results>p{margin-top:0}
 .optimizer-exclusions ul{padding-left:20px;margin:8px 0}
 .optimizer-exclusions li+li{margin-top:8px}
+
+.service-route-prompt{margin:12px 0;padding:12px;border:1px solid var(--green);border-left:4px solid var(--green);border-radius:5px;background:color-mix(in srgb,var(--green) 10%,transparent);font-size:12px}
+.service-route-prompt strong{display:block;color:var(--green);font-size:13px;line-height:1.4}
+.service-route-prompt p{margin:8px 0 12px}
+.service-route-actions{display:flex;flex-wrap:wrap;gap:8px}
+.service-route-actions button{border-color:var(--green);min-height:34px}

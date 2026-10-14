@@ -3,7 +3,7 @@ import {UI_TERMS} from './ui-terms.js';
 import {speedPresets} from './transport-category.js';
 
 /** One Service form for both domains; IDs adapt to the existing calculators. */
-export function mountServiceControls(document,domain){
+export function mountServiceControls(document,domain,{onSelectRoute}={}){
   bindDurationInputs(document);
   const road=domain==='road';
   const ids=road?{
@@ -32,14 +32,25 @@ export function mountServiceControls(document,domain){
       <div id="${ids.return}" class="target-control handling-return">${check(ids.loaded,'Loaded return')}${info('Off: deliver at B and return empty. On: carry equal loads in both directions.')}</div>
       <div id="${ids.facilities}" class="road-stop-grid">${renderFreightFacilities(ids)}</div>
     </div></details>
-    <p id="${domain}-service-study-notice" class="chart-help" role="status" hidden>Choose Simple distance or Custom to set service requirements (Rate and Frequency).</p>
-    <details id="${ids.options}" class="panel-group"><summary>Targets &amp; constraints</summary><div class="panel-group-body"><p id="${ids.summary}" class="chart-help">No targets</p><div class="service-options-grid">
-      <fieldset id="${domain}-service-targets" class="service-option-group" aria-describedby="${domain}-service-study-notice"><legend>Service targets</legend>${info('Optional: size a fleet for a transport rate or frequency target.',road?'road-targets-description':'service-targets-description')}<span id="${road?'road-targets-description':'service-targets-description'}" class="sr-only">Optional: size a fleet for the service you want.</span>
+    <div id="${domain}-service-study-notice" class="service-route-prompt" hidden>
+      <strong>Service requirements need a route distance</strong>
+      <p>∞ explores changing distances. Choose a route to set ${UI_TERMS.rate} and ${UI_TERMS.frequency}.</p>
+      <div class="service-route-actions"><button type="button" data-service-route="distance">Simple distance</button><button type="button" data-service-route="custom">Custom</button></div>
+    </div>
+    <details id="${ids.options}" class="panel-group"><summary id="${domain}-service-options-heading">Targets &amp; constraints</summary><div class="panel-group-body"><p id="${ids.summary}" class="chart-help">No targets</p><div class="service-options-grid">
+      <fieldset id="${domain}-service-targets" class="service-option-group"><legend>Service targets</legend>${info('Optional: size a fleet for a transport rate or frequency target.',road?'road-targets-description':'service-targets-description')}<span id="${road?'road-targets-description':'service-targets-description'}" class="sr-only">Optional: size a fleet for the service you want.</span>
         <div class="target-control"><label><input id="${ids.flow}" type="checkbox"> Target rate</label><div><input required id="${ids.rate}" type="number" min="1" step="1" value="1000" disabled aria-label="Target transport rate" aria-describedby="${ids.error}"><span id="${ids.unit}">${UI_TERMS.capacityUnit}/year</span></div></div>
         <div class="target-control"><label><input id="${ids.frequency}" type="checkbox"> Target frequency</label><div>${durationInputs({id:ids.headway,label:'Target frequency',value:300,disabled:true,describedBy:ids.error})}<span>between vehicles</span><fieldset id="${ids.policy}" class="scale-toggle frequency-toggle" disabled><legend class="sr-only">Frequency policy</legend><label><input type="radio" name="${ids.policy}" value="maximum" checked><span>At most</span></label><label><input type="radio" name="${ids.policy}" value="closest"><span>Closest to target</span></label></fieldset></div></div>
       </fieldset>${constraints}
-    </div><p class="chart-help">Whole vehicles, evenly spaced. Traffic and station queues are excluded.</p></div></details>
+    </div><p id="${domain}-service-targets-help" class="chart-help">Whole vehicles, evenly spaced. Traffic and station queues are excluded.</p></div></details>
   </div></details>`;
+  document.getElementById(`${domain}-service-study-notice`).addEventListener('click',event=>{
+    const button=event.target.closest('[data-service-route]');
+    if(!button)return;
+    onSelectRoute?.(button.dataset.serviceRoute);
+    document.getElementById(ids.options).open=true;
+    document.getElementById(ids.flow).focus();
+  });
 }
 
 /** Comparisons edit their own mode's cap; Optimizer exposes both caps. */
