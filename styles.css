@@ -683,3 +683,11 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .optimizer-service-selectors .scale-toggle{font-size:12px}
 .phase-controls .scale-toggle label span,.phase-control-label{font-size:12px}
 @media(max-width:700px){.chart-toolbar,.chart-toolbar .chart-options{justify-content:flex-start;flex-wrap:wrap}}
+/* Current settings: a recap at the top of the Compare panel, with sharing as a secondary action.
+   Phones also get a one-line recap above the content that opens the panel. */
+.settings-summary{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;font-size:12px}.settings-summary h3{margin:0 0 8px;font-size:13px}
+.share-params{display:flex;flex-wrap:wrap;gap:5px;margin:0;padding:0;list-style:none}.share-params li{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:var(--field-bg)}.share-key{color:var(--muted)}
+.share-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.share-url:not(#_){width:100%;font-size:12px}.share-status{color:var(--green);font-weight:600}.share-note{margin:8px 0 0;color:var(--muted)}
+.settings-peek{display:none}
+@media(max-width:700px){.settings-peek:not([hidden]){display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;margin:12px 0 0;padding:10px 12px;border:1px solid var(--field-line);border-radius:6px;text-align:left;font-size:13px}.settings-peek-edit{flex:none;color:var(--green);font-weight:600}}
+#settings-summary-heading:focus{outline:none}
