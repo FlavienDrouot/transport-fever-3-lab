@@ -691,3 +691,8 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .settings-peek{display:none}
 @media(max-width:700px){.settings-peek:not([hidden]){display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;margin:12px 0 0;padding:10px 12px;border:1px solid var(--field-line);border-radius:6px;text-align:left;font-size:13px}.settings-peek-edit{flex:none;color:var(--green);font-weight:600}}
 #settings-summary-heading:focus{outline:none}
+/* Optimizer results: the verdict first, then Rail and Road stacked at full width so every column fits */
+.optimizer-results:not(#_){grid-template-columns:minmax(0,1fr)}.optimizer-results>section:not(#_){grid-template-rows:auto auto auto;grid-row:auto}.optimizer-results .optimizer-variants:not(#_){grid-template-rows:auto auto auto;grid-row:auto}.optimizer-results .optimizer-no-results:not(#_){grid-row:auto}
+.optimizer-verdict{margin:0;flex-wrap:wrap}.optimizer-verdict .service-winner-cost{align-items:flex-end}.optimizer-verdict-note{flex-basis:100%;margin:0;font-size:12px;color:var(--muted)}
+.optimizer-result-visibility:not(#_){font-size:12px}.optimizer-result-heading{margin-top:8px}
+@media(max-width:700px){.optimizer-verdict .service-winner-cost{align-items:flex-start}}
