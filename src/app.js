@@ -270,6 +270,7 @@ function syncShareLink(){
     ...(road&&includeTrams?[['Trams','included']]:[]),
     ...(['economics','trucks'].includes(navigation.view)||(road?truckService.fillRatio:lineFill)!==1?[[UI_TERMS.utilization,`${formatNumber((road?truckService.fillRatio:lineFill)*100,0)}%`]]:[]),
     ['Vehicles',starter?`${count} · starter selection`:`${count} chosen`]];
+  $('settings-peek-text').textContent=[params[0][1],params[1][1],`${count} vehicles`].join(' · ');
   $('share-summary').innerHTML=params.map(([key,value])=>`<li>${key?`<span class="share-key">${key}</span> `:''}${escape(value)}</li>`).join('');
   $('share-note').hidden=![...chosen].some(id=>String(id).startsWith('custom:'));
 }
@@ -634,7 +635,7 @@ function welcomeHidden(){try{return localStorage.getItem(WELCOME_KEY)==='1';}cat
 function syncWelcome(){
   const {space,domain,view}=navigation,hidden=welcomeHidden();
   $('welcome').hidden=hidden||space!=='compare';$('welcome-open').hidden=!hidden;
-  $('share-bar').hidden=space!=='compare';
+  $('settings-peek').hidden=space!=='compare';
   for(const link of $('welcome').querySelectorAll('[data-welcome]')){
     const race=link.dataset.welcome==='race';
     link.href=race?(domain==='road'?'#road-race':'#race'):(domain==='road'?'#trucks':'#economics');
@@ -661,6 +662,7 @@ function syncAnalysisView() {
   document.querySelector(`#compare-domain input[value="${domain}"]`).checked=true;
   document.querySelector('[data-analysis="race"]').hidden=false;
   (space==='compare'&&domain==='road'?$('road-compare-mode'):$('rail-compare-mode')).append($('compare-domain'),$('comparison-category'));
+  (space==='compare'&&domain==='road'?$('road-compare-mode'):$('rail-compare-mode')).before($('settings-summary'));
   if(view==='optimizer')ensureOptimizer();
   (view==='optimizer'?$('optimizer-route-slot'):space==='compare'&&domain==='road'?$('road-route-slot'):$('rail-route-slot')).append($('train-race-settings'));
   const routeSpeeds=$('route-road-speed-control').parentElement;
@@ -1217,6 +1219,12 @@ async function init() {
   // A malformed link must never block the lab: keep whatever applied and continue.
   try{applySharedState(sharedAtLoad);}catch(error){console.error(error);}
   shareReady=true;
+  // The recap opens the panel at its own summary rather than at the vehicle search.
+  $('settings-peek').addEventListener('click',()=>{
+    const road=navigation.domain==='road';
+    $(road?'road-picker-toggle':'picker-toggle').click();
+    requestAnimationFrame(()=>{$('settings-summary-heading').focus({preventScroll:true});for(const id of road?['road-drawer','road-sidebar']:['train-drawer','catalogue'])$(id).scrollTop=0;});
+  });
   $('share-copy').addEventListener('click',async()=>{
     syncShareLink();
     const status=$('share-status');
