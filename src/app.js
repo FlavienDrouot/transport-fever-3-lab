@@ -773,10 +773,10 @@ function render() {
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
   const transitionPanel=$('transitions').closest('details'),transitionHeadings=transitionPanel.querySelectorAll('thead th');
-  transitionPanel.querySelector('.chart-help').textContent=studyBounded()||speedUsesProfile()?(navigation.domain==='road'?'Maximum speed is the highest speed reached before B. Traction-to-power and segment points appear on hover. Braking is omitted.':'Maximum speed is the highest speed reached before B. Traction-to-power and braking/segment points appear on hover. Arrival is at B; no terminal stop is modelled in Race.'):'Maximum speed is the vehicle/track cap or the lower equilibrium limit. Approach times and distances use the same milestones as the graph: the speed cap, or 99% of equilibrium. They are independent of route distance.';
-  transitionHeadings[3].textContent=studyBounded()||speedUsesProfile()?'Highest speed reached (km/h)':'Maximum speed (km/h)';
-  transitionHeadings[4].textContent=studyBounded()||speedUsesProfile()?'Arrival at B (m:ss)':'Approach time (m:ss)';
-  transitionHeadings[5].textContent=studyBounded()||speedUsesProfile()?'Route length (km)':'Approach distance (km)';
+  transitionPanel.querySelector('.chart-help').textContent=studyBounded()||speedUsesProfile()?(navigation.domain==='road'?'Maximum speed is the highest speed reached before B. Traction-to-power and segment points appear on hover. Braking is omitted.':'Maximum speed is the highest speed reached before B. Traction-to-power and braking/segment points appear on hover. Arrival is at B; no terminal stop is modelled in Race.'):'Top speed is the vehicle or track speed limit. If the vehicle lacks the power to reach it (for example uphill), top speed is the balance speed where its power only offsets resistance. Time and distance to top speed count from the standing start; a vehicle approaching a balance speed never quite reaches it, so they stop at 99% of it, as on the chart. They do not depend on the route distance.';
+  transitionHeadings[3].textContent=studyBounded()||speedUsesProfile()?'Highest speed reached (km/h)':'Top speed (km/h)';
+  transitionHeadings[4].textContent=studyBounded()||speedUsesProfile()?'Arrival at B (m:ss)':'Time to top speed (m:ss)';
+  transitionHeadings[5].textContent=studyBounded()||speedUsesProfile()?'Route length (km)':'Distance to top speed (km)';
   $('transitions').innerHTML=renderModelTransitions(active(speedView));
 }
 function download(content,type,filename) {
