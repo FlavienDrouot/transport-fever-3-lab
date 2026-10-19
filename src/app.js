@@ -259,10 +259,18 @@ function syncShareLink(){
   const query=encodeShareState(currentShareState()),url=`${location.pathname}${query?`?${query}`:''}${location.hash}`;
   if(url!==`${location.pathname}${location.search}${location.hash}`)history.replaceState(history.state,'',url);
   const road=navigation.domain==='road',custom=routeSelection.mode==='custom',part=railRouteProfile[0];
-  const items=road?(roadLoaded?roadCandidates():[]):(trains?trainCandidates():[]),chosen=road?selectedRoad:selected;
-  const route=custom?`Custom route · ${fmtKm(routeDistance)} km · ${railRouteProfile.length} segment${railRouteProfile.length===1?'':'s'}`
-    :`${studyScope==='auto'?'∞ any distance':`${fmtKm(routeDistance)} km`} · ${road?(part.roadSpeedLimitKmh??part.speedLimitKmh):part.speedLimitKmh} km/h · ${formatNumber(part.gradePercent,1)}%`;
-  $('share-summary').textContent=[road?'Road':'Rail',comparisonCategory==='freight'?'Freight':'Passengers',route,road?truckYear:catalogueYear,`${items.filter(t=>chosen.has(t.id)).length} vehicles`].join(' · ');
+  const items=road?(roadLoaded?roadCandidates():[]):(trains?trainCandidates():[]),chosen=road?selectedRoad:selected,starter=road?roadStarter:railStarter;
+  const count=items.filter(t=>chosen.has(t.id)).length;
+  // Each shared setting is named, so the link's content reads at a glance.
+  const params=[['',`${road?'Road':'Rail'} · ${comparisonCategory==='freight'?'Freight':'Passengers'}`],
+    ['Route',custom?`Custom · ${fmtKm(routeDistance)} km · ${railRouteProfile.length} segment${railRouteProfile.length===1?'':'s'}`:studyScope==='auto'?'∞ any distance':`${fmtKm(routeDistance)} km`],
+    ...(custom?[]:[['Speed limit',`${road?(part.roadSpeedLimitKmh??part.speedLimitKmh):part.speedLimitKmh} km/h`],['Gradient',`${formatNumber(part.gradePercent,1)}%`]]),
+    ['Year',String(road?truckYear:catalogueYear)],
+    ...((road?truckCargo:economicCargo)!=='all'&&comparisonCategory==='freight'?[['Freight',road?truckCargo:economicCargo]]:[]),
+    ...(road&&includeTrams?[['Trams','included']]:[]),
+    ...(['economics','trucks'].includes(navigation.view)||(road?truckService.fillRatio:lineFill)!==1?[[UI_TERMS.utilization,`${formatNumber((road?truckService.fillRatio:lineFill)*100,0)}%`]]:[]),
+    ['Vehicles',starter?`${count} · starter selection`:`${count} chosen`]];
+  $('share-summary').innerHTML=params.map(([key,value])=>`<li>${key?`<span class="share-key">${key}</span> `:''}${escape(value)}</li>`).join('');
   $('share-note').hidden=![...chosen].some(id=>String(id).startsWith('custom:'));
 }
 function renderCatalogue() {

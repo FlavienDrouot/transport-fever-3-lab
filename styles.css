@@ -686,3 +686,5 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 /* Share bar: what this comparison shows, and one action to copy its link */
 .share-bar{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;margin:16px 0 0;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-size:12px}.share-text{margin:0;min-width:0}.share-label{font-weight:600}.share-note{color:var(--muted)}.share-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.share-url:not(#_){width:min(100%,360px);font-size:12px}.share-status{color:var(--green);font-weight:600}
 .welcome+.share-bar{margin-top:12px}
+/* Share bar v2: label, named settings and the action read as one line */
+.share-bar{justify-content:flex-start;gap:8px 10px}.share-bar .share-label{margin:0;font-size:12px;font-weight:600}.share-params{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}.share-params li{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:var(--field-bg);white-space:nowrap}.share-key{color:var(--muted)}.share-bar .share-note{flex-basis:100%;margin:0}
