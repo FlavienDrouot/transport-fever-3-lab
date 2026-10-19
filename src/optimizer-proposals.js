@@ -34,7 +34,7 @@ function proposal(r,index,category,group=null,wagon=null,selected=false){
     ...(r.routeInfrastructure?[[`${T.runningCosts} · route`,`${money(r.routeRunningCosts)}/year`]]:[]),
     ...(r.infrastructure?[[`${T.runningCosts} · stops`,`${money(r.terminalRunningCosts??r.infrastructureRunningCosts)}/year`]]:[]),
     [`${T.runningCosts} / capacity${r.infrastructure||r.routeInfrastructure?' · total':''}`,`${money(r.unitCost)}`]
-  ].map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>${routeSummary(r)}<button type="button" data-domain="${domain}" data-result="${index}"${group===null?'':` data-group="${group}" data-wagon="${wagon}"`}>${domain==='rail'?'Open composition':'Compare service'} ↗</button>${domain==='road'&&r.definition?`<button type="button" data-open="composition" data-domain="${domain}" data-result="${index}"${group===null?'':` data-group="${group}" data-wagon="${wagon}"`}>Edit composition ↗</button>`:''}</article>`;
+  ].map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>${routeSummary(r)}<button type="button" data-domain="${domain}" data-result="${index}"${group===null?'':` data-group="${group}" data-wagon="${wagon}"`}>${domain==='rail'?'Open composition':'Compare service'} →</button>${domain==='road'&&r.definition?`<button type="button" data-open="composition" data-domain="${domain}" data-result="${index}"${group===null?'':` data-group="${group}" data-wagon="${wagon}"`}>Edit composition →</button>`:''}</article>`;
 }
 
 const configuration=result=>result.parts.map(part=>`${part.quantity} × ${part.name}`).join(' + ');

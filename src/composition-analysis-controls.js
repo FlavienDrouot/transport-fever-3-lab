@@ -71,7 +71,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     for(const id of ['composition-distance','composition-distance-range','composition-gradient-input','composition-gradient-range','composition-speed-limit','composition-speed-input'])$(id).disabled=custom;
     if(custom)for(const id of ['composition-distance','composition-gradient-input','composition-speed-input'])$(id).setAttribute('aria-invalid','false');
     const status=$('composition-route-profile-status');status.hidden=!profile;
-    status.innerHTML=profile?`A→B · ${Number(distance.toFixed(3))} km · ${profile.length} segment${profile.length===1?'':'s'} <a href="${settings.routeMode==='simple'?'#train-race-settings':'#route-profile'}">${settings.routeMode==='simple'?'Adjust simple route':'Edit route'} ↗</a>`:'';
+    status.innerHTML=profile?`A→B · ${Number(distance.toFixed(3))} km · ${profile.length} segment${profile.length===1?'':'s'} <a href="${settings.routeMode==='simple'?'#train-race-settings':'#route-profile'}">${settings.routeMode==='simple'?'Adjust simple route':'Edit route'} →</a>`:'';
     $('composition-route-distance-control').hidden=custom;
     $('composition-gradient').hidden=custom;
     $('composition-route-speed-control').hidden=custom;

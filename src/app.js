@@ -337,7 +337,7 @@ function renderChart(kind, width) {
   if(studyBounded()&&view.startsWith('speed'))el('chart-help').textContent+=' Up to the route distance.';
   el('chart-help').textContent+=' Hover a curve for details.';
   const missingFreight=navigation.domain==='rail'&&comparisonCategory==='freight'&&!trainCandidates(Infinity).length;
-  el('empty').innerHTML=missingFreight?'No freight train yet. <a href="#configurator" data-economic-configure>Compose your freight train ↗</a>':'Select at least one vehicle to display the curves.';
+  el('empty').innerHTML=missingFreight?'No freight train yet. <a href="#configurator" data-economic-configure>Compose your freight train →</a>':'Select at least one vehicle to display the curves.';
   el('empty').hidden = !!ts.length; el('chart').hidden=!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
   const max = Math.max(1,...ts.map(t=>value(t,horizon,view)));
   const step = 10 ** Math.floor(Math.log10(max / 5));
@@ -653,7 +653,7 @@ function syncAnalysisView() {
   if(view==='trucks')document.querySelector('[data-analysis="economics"]').setAttribute('aria-current','page');
   const action=$('workspace-action');action.hidden=space==='data';
   action.href=space==='design'?'#compare':'#configurator';
-  action.textContent=space==='design'?'Compare results ↗':'Design a composition ↗';
+  action.textContent=space==='design'?'Compare results →':'Design a composition →';
   for(let disclosure=target?.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details'))disclosure.open=true;
   if(target&&['model','economic-method'].includes(target.id))target.querySelector('details').open=true;
   syncAnalysisPanels(document,view,{domain});renderCatalogue();

@@ -671,3 +671,15 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .advanced-analysis{margin:28px 0 8px;border:1px solid var(--line);border-radius:8px}.advanced-analysis>summary{display:grid;grid-template-columns:auto 1fr;column-gap:10px;padding:14px 16px;cursor:pointer;list-style:none}.advanced-analysis>summary::-webkit-details-marker{display:none}.advanced-analysis>summary::before{content:'▸';grid-row:span 2;color:var(--green);transition:transform .15s}.advanced-analysis[open]>summary::before{transform:rotate(90deg)}.advanced-title{font-weight:600;font-size:16px;color:var(--green)}.advanced-hint{font-size:13px;color:var(--muted)}.advanced-analysis[open]>summary{border-bottom:1px solid var(--line)}.advanced-analysis>.chart-panel{margin-left:16px;margin-right:16px}
 @media(prefers-reduced-motion:reduce){.advanced-analysis>summary::before{transition:none}}
 @media(max-width:700px){.app-header .guide-toggle{position:absolute;right:60px;bottom:7px;margin:0;padding:4px 10px}.app-header:has(.guide-toggle:not([hidden])) .workspace-nav{padding-right:124px}}
+/* Shared field style. Field outlines reach 3:1 against the page (WCAG 1.4.11); the
+   :not(#_) term lifts these few properties above the older per-view rules, which keep
+   their own widths and layout. Duration entries draw one frame around both parts. */
+:root{--field-line:#84928a;--field-bg:#fff}[data-theme=dark]{--field-line:#6f8478;--field-bg:var(--surface)}
+:is(input[type=text],input[type=search],input[type=number],select):not(#_):not(.duration-entry input){min-height:32px;padding:4px 8px;border:1px solid var(--field-line);border-radius:5px;background:var(--field-bg);color:inherit;font-size:13px;box-shadow:none}
+.duration-entry:not(#_){min-height:32px;padding:4px 8px;border-color:var(--field-line);border-radius:5px;background:var(--field-bg);font-size:13px}
+:is(input,select,button,summary,a):focus-visible{outline:2px solid var(--green);outline-offset:2px}
+/* Labels and segmented controls use one size everywhere. */
+.source-filters label,.source-filters .checkbox-row{font-size:12px;color:var(--muted)}.source-filters .checkbox-row{color:inherit;align-self:center}
+.optimizer-service-selectors .scale-toggle{font-size:12px}
+.phase-controls .scale-toggle label span,.phase-control-label{font-size:12px}
+@media(max-width:700px){.chart-toolbar,.chart-toolbar .chart-options{justify-content:flex-start;flex-wrap:wrap}}
