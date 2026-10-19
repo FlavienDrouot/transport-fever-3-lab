@@ -143,13 +143,13 @@ export function compositionChartSeries(analysis,view) {
     points:points.map(p=>({x:2*p.x,y:p.service.returnPeakSpeedKmh}))};
   const time={key:'time',name:'Round-trip time incl. handling',axis:'Time',unit:'m:ss',color:'#bd6b22',dash:'6 3',
     points:points.map(p=>({x:2*p.x,y:p.service.roundTripSeconds}))};
-  const cost={key:'cost',name:`Round-trip cost / ${UI_TERMS.capacityUnit}`,axis:'Cost',unit:'$',color:'#137968',dash:'2 2',
+  const cost={key:'cost',name:`Round-trip cost / ${UI_TERMS.capacityUnit}`,axis:'Cost',unit:`$/${UI_TERMS.capacityUnit}`,color:'#137968',dash:'2 2',
     points:points.map(p=>({x:2*p.x,y:p.service.maintenancePerUnit}))};
   if(view==='normalized'){
     const output={key:'transport-output',name:'Rate × distance / train',axis:'Rate × distance',unit:'capacity·km/year',
       color:'#bd6b22',dash:'6 3',reference:analysis.steady.transportOutputPerYear,points:points.map(p=>({x:2*p.x,
         y:(analysis.options.freight?p.service.deliveredPerYear:p.service.perDirectionJourneysPerYear)/p.service.trainCount*p.x}))};
-    const costPerKm={...cost,key:'cost-per-km',name:`Cost / ${UI_TERMS.capacityUnit} / km`,unit:'$/km',scaleMode:'log',reference:analysis.steady.costPerUnitKm,
+    const costPerKm={...cost,key:'cost-per-km',name:`Cost / ${UI_TERMS.capacityUnit} / km`,unit:`$/${UI_TERMS.capacityUnit}/km`,scaleMode:'log',reference:analysis.steady.costPerUnitKm,
       points:points.map(p=>({x:2*p.x,y:p.service.maintenancePerUnit===null?null:p.service.maintenancePerUnit/p.x}))};
     return [peak,output,costPerKm,...(graded?[back]:[])];
   }
@@ -206,46 +206,67 @@ export function renderCompositionSummary(root,analysis) {
   root.innerHTML=`<dl class="consist-totals">${rows.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
 }
 
+/** Round tick values: 1/2/5 steps on linear scales, decades on long logarithmic ranges. */
+export function chartTicks(scale,count=4){
+  if(scale.mode==='log'){
+    const decades=scale.ticks.filter(n=>Math.abs(Math.log10(n)-Math.round(Math.log10(n)))<1e-9);
+    return decades.length>=2?decades:scale.ticks;
+  }
+  const raw=scale.max/count,power=10**Math.floor(Math.log10(raw)),step=[1,2,5,10].find(m=>m*power>=raw*(1-1e-9))*power;
+  return Array.from({length:Math.floor(scale.max/step+1e-9)+1},(_,i)=>i*step);
+}
+/** A linear domain ending on a round tick keeps the top gridline labelled. */
+function roundedScale(scale,count=4){
+  if(scale.mode==='log')return scale;
+  const raw=scale.max/count,power=10**Math.floor(Math.log10(raw)),step=[1,2,5,10].find(m=>m*power>=raw*(1-1e-9))*power;
+  return createScale('linear',Math.ceil(scale.max/step-1e-9)*step);
+}
 export function renderCompositionChart(root,analysis,view) {
   const {series,curveIndices,mergedTimeCost}=compositionCurveLayout(analysis,view),normalized=view==='normalized',combined=view==='combined'||normalized;
   if(!series.some(s=>s.points.some(p=>Number.isFinite(p.y)))){
     root.textContent=view==='cost'&&analysis.service?'No transported units at zero utilization. Choose positive utilization to show running cost.':analysis.message||'Complete your composition to display this analysis.';return;
   }
-  const width=Math.max(300,root.clientWidth||900),height=width<600?300:340;
-  const left=combined?(width<600?43:65):70,right=combined?(width<600?115:155):20,top=combined?52:35,bottom=height-55;
+  const width=Math.max(300,root.clientWidth||900),narrow=width<600,height=narrow?320:380;
+  const left=combined?(narrow?43:65):70,right=combined?(narrow?128:190):20,top=combined?58:35,bottom=height-55;
   const maxDistance=view==='speed'?analysis.speedMaximumDistance:2*(normalized?analysis.normalizedMaximumDistance:analysis.maximumDistance);
   const selectedDistance=view==='speed'?analysis.distance:2*analysis.distance;
   const distanceLabel=view==='speed'?'Distance travelled':'Round-trip length';
-  const scales=compositionChartScales(series);
+  const scales=compositionChartScales(series).map(scale=>roundedScale(scale));
   const axisIndices=series.map((s,i)=>i).filter(i=>series.findIndex(s=>s.axis===series[i].axis)===i);
   const distanceScale=createScale(normalized?'log':'linear',maxDistance,normalized?series[0].points[0].x:1);
   const sx=x=>left+distanceScale.positionUnbounded(x)*(width-left-right);
   const formatDistance=x=>normalized&&x>0&&x<.001?x.toPrecision(2):formatNumber(x,3);
   const sy=(index,y)=>bottom-scales[index].position(y)*(bottom-top);
-  const formatY=(s,y)=>s.key==='time'?formatTime(y):s.key==='cost'||s.key==='cost-per-km'?`$${formatNumber(y,2)}${s.key==='cost-per-km'?'/km':''}`:
+  const formatY=(s,y)=>s.key==='time'?formatTime(y):s.key==='cost'||s.key==='cost-per-km'?`$${formatNumber(y,2)}/${UI_TERMS.capacityUnit}${s.key==='cost-per-km'?'/km':''}`:
     s.key==='transport-output'?`${formatNumber(y,1)} capacity·km/year${analysis.options.freight?'':'/direction'}`:`${formatNumber(y,1)} km/h`;
   const ordinate=normalized?'Peak speed, transport output per train and cost per kilometre':combined?'Peak speed, round-trip time and cost':view==='speed'?'Speed (km/h)':view==='time'?'Round-trip time incl. handling (m:ss)':`Round-trip cost / ${UI_TERMS.capacityUnit} ($)`;
   let svg=`<title>${escape(ordinate)} over ${distanceLabel.toLowerCase()}</title><desc>${view==='speed'?'Acceleration without final braking along A to B.':'A–B–A cycles with acceleration, braking and handling at both terminals. Peak speed is the maximum reached in the cycle. Costs count journeys or deliveries across both legs.'}${combined?' Each quantity uses its own coloured vertical scale.':''}${normalized?' Distance and cost use logarithmic scales. The window includes station-handling amortization and the approach to the fixed-utilization reference. Rate multiplied by one-way distance is per train, per direction for passengers and across loaded legs for freight. Cost is divided by one-way distance; speed includes final braking.':''}${mergedTimeCost?' At fixed utilization, time and cost are proportional and share one orange curve with two scales.':''}</desc><rect width="${width}" height="${height}" fill="white"/>`;
   if(!combined)svg+=`<text x="${left}" y="19">${escape(ordinate)}</text>`;
-  for(let tick=0;tick<=5;tick++){
-    const y=bottom-tick/5*(bottom-top);
-    svg+=`<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="#e4e8e4" stroke-dasharray="2 5"/>`;
-    axisIndices.forEach(index=>{
-      const s=series[index];
-      const x=!combined||index===0?left-8:index===1?width-right+10:width-48;
-      const anchor=!combined||index===0?'end':'start';
-      const value=scales[index].invert(tick/5);
-      const label=!s.points.some(p=>Number.isFinite(p.y))?'—':s.key==='time'?formatTime(value):value.toLocaleString('en-GB',{notation:combined?'compact':'standard',maximumFractionDigits:1});
-      svg+=`<text class="composition-axis" x="${x}" y="${y+4}" text-anchor="${anchor}" style="fill:${s.color};font-size:${combined?10:12}px">${label}</text>`;
-    });
-  }
-  if(combined)axisIndices.forEach(index=>{
-    const s=series[index];
-    const x=index===0?left-8:index===1?width-right+10:width-48,anchor=index===0?'end':'start';
-    svg+=`<line x1="${index===0?left:x-4}" x2="${index===0?left:x-4}" y1="${top}" y2="${bottom}" stroke="${s.color}" opacity=".5"/><text class="composition-axis" x="${x}" y="18" text-anchor="${anchor}" style="fill:${s.color};font-size:${normalized&&width<600?8:11}px;font-weight:600">${s.axis}${scales[index].mode==='log'?' (log)':''}</text><text class="composition-axis" x="${x}" y="33" text-anchor="${anchor}" style="fill:${s.color};font-size:${normalized&&width<600?8:10}px">${s.unit}</text>`;
+  // Gridlines follow the first scale; other scales mark their own round values on their axis line.
+  const axisX=index=>!combined||index===0?left-8:index===1?width-right+10:width-right+(narrow?70:100);
+  axisIndices.forEach((index,position)=>{
+    const s=series[index],x=axisX(index),anchor=!combined||index===0?'end':'start';
+    for(const value of chartTicks(scales[index])){
+      const y=sy(index,value);
+      if(!Number.isFinite(y))continue;
+      if(position===0)svg+=`<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="#e4e8e4" stroke-dasharray="2 5"/>`;
+      else svg+=`<line x1="${x-4}" x2="${x}" y1="${y}" y2="${y}" stroke="${s.color}" opacity=".7"/>`;
+      const label=!s.points.some(p=>Number.isFinite(p.y))?'—':s.key==='time'?formatTime(value):`${s.key.startsWith('cost')?'$':''}${value.toLocaleString('en-GB',{notation:combined?'compact':'standard',maximumSignificantDigits:3})}`;
+      svg+=`<text class="composition-axis" x="${position===0?x:x+3}" y="${y+4}" text-anchor="${anchor}" style="fill:${s.color};font-size:${combined?10:12}px">${label}</text>`;
+    }
   });
-  for(let i=0;i<=5;i++){const x=distanceScale.invert(i/5);svg+=`<text x="${sx(x)}" y="${bottom+23}" text-anchor="middle">${formatDistance(x)}</text>`;}
-  if(selectedDistance>=distanceScale.min&&selectedDistance<=maxDistance)svg+=`<line x1="${sx(selectedDistance)}" x2="${sx(selectedDistance)}" y1="${top}" y2="${bottom}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${Math.max(left,sx(selectedDistance)-4)}" y="${top-5}" text-anchor="${selectedDistance<maxDistance*.25?'start':'end'}">${formatNumber(selectedDistance,3)} km ${view==='speed'?'route':'round trip'}</text>`;
+  // Faint dashed lines mark the steady-cruise values approached on long routes.
+  for(const [index,s] of series.entries())if(Number.isFinite(s.reference)&&Number.isFinite(sy(index,s.reference)))
+    svg+=`<line x1="${left}" x2="${width-right}" y1="${sy(index,s.reference)}" y2="${sy(index,s.reference)}" stroke="${s.color}" stroke-dasharray="6 4" opacity=".45"/>`;
+  if(combined)axisIndices.forEach(index=>{
+    const s=series[index],x=axisX(index);
+    const unit=`${s.unit}${s.key==='transport-output'&&!analysis.options.freight?'/direction':''}`;
+    const lines=[...(narrow?[]:[s.axis]),...unit.split(/(?=\/(?:year|direction|km))/),...(scales[index].mode==='log'?['log scale']:[])];
+    svg+=`<line x1="${index===0?left:x-4}" x2="${index===0?left:x-4}" y1="${top}" y2="${bottom}" stroke="${s.color}" opacity=".5"/>`;
+    lines.forEach((line,i)=>{svg+=`<text class="composition-axis" x="${index===0?left:x-4}" y="${top-10-(lines.length-1-i)*12}" text-anchor="${index===0?'end':'start'}" style="fill:${s.color};font-size:${i||narrow?10:11}px;font-weight:${i||narrow?400:600}">${escape(line)}</text>`;});
+  });
+  for(const x of normalized?chartTicks(distanceScale):Array.from({length:6},(_,i)=>distanceScale.invert(i/5)))svg+=`<text x="${sx(x)}" y="${bottom+23}" text-anchor="middle">${x.toLocaleString('en-GB',{maximumSignificantDigits:3})}</text>`;
+  if(selectedDistance>=distanceScale.min&&selectedDistance<=maxDistance)svg+=`<line x1="${sx(selectedDistance)}" x2="${sx(selectedDistance)}" y1="${top}" y2="${bottom}" stroke="#8a5f2b" stroke-dasharray="6 5"/>${narrow&&combined?'':`<text x="${Math.max(left,sx(selectedDistance)-4)}" y="${top-5}" text-anchor="${selectedDistance<maxDistance*.25?'start':'end'}">${formatNumber(selectedDistance,3)} km ${view==='speed'?'route':'round trip'}</text>`}`;
   curveIndices.forEach(index=>{
     const s=series[index];
     let path='',pen=false;
