@@ -23,7 +23,7 @@ import {renderSteadyService} from './steady-service.js';
 import {renderRoadPhases} from './road-phases.js';
 import {mountTablePreviews,updateTablePreview} from './table-preview.js';
 import {syncAnalysisPanels,mountPanelDrawers} from './panels.js';
-import {mountVehicleSelector,selectAll,selectResults} from './vehicle-selector.js';
+import {mountVehicleSelector,selectResults} from './vehicle-selector.js';
 import {mountTransportCategory,mountFreightFilter} from './transport-category.js';
 import {renderServiceSummary} from './service-summary.js';
 import {styleVehicleCatalogues} from './vehicle-styles.js';
@@ -41,6 +41,7 @@ import {renderEconomicChart} from './economic-chart.js';
 import {serviceEligible} from './line.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
 import {economicCandidates,economicSelection,economicEmptyContent} from './economic-selection.js';
+import {RAIL_PASSENGER_STARTER,applyStarterSelection} from './starter-selection.js';
 import {withRoadModel} from './road-motion.js';
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
@@ -68,6 +69,8 @@ let consistEditor,compositionAnalysis,raceGradientControl,baseTrains,trainSelect
 let lightRailTrains=[],lightRailLoaded=false,lightRailLoading;
 let comparisonCategoryControl,optimizerControl;
 let selectedRoad=new Set(),knownCustom=new Set();
+// Each domain shows its newest vehicles until the player chooses a selection.
+let railStarter=true,roadStarter=true;
 let busDataset, tramDataset, includeTrams = false;
 let truckDataset, truckYear = 2035, truckCargo = 'all';
 let roadFlow=null,roadHeadway=null,roadFrequencyMode='maximum';
@@ -214,12 +217,36 @@ function active(view='') {
   return !studyBounded()&&view.startsWith('speed')?trains:trains.map(t=>withStudyDistance(t,raceStudyDistance(trains)));
 }
 function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.name} · ${formatTime(t.model.timeAt(raceStudyDistance()))}`;}
+// The answer comes first: the arrival winner, its lead and the conditions behind it.
+function renderRaceVerdict(ranking,studyDistance,blocked){
+  const root=$('race-summary'),[first,second]=ranking,road=navigation.domain==='road';
+  const conditions=road?'Road braking is omitted.':routeSelection.mode==='custom'?'Segment gradients and speed-limit braking are included; no stop at B.':`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`;
+  const blockedNote=blocked.length?` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>escape(t.name)).join(', ')}.`:'';
+  if(!first){root.innerHTML=`<p class="race-verdict-note">Select at least one vehicle to compare travel times.${blockedNote}</p>`;return;}
+  const km=fmtKm(studyDistance),bounded=studyBounded();
+  const label=bounded?`First at B · ${km} km`:ranking.length>1?'Fastest over long distances':'Travel time';
+  const lead=!second?'':bounded?`${formatTime(second.time-first.time)} ahead of ${escape(second.t.name)}.`:`First at every distance beyond ${km} km. <a href="#crossovers">See where the lead changes ↓</a>`;
+  root.innerHTML=`<div class="service-winner"><span class="service-winner-label">${label}</span><strong>${escape(first.t.name)}</strong>${lead?`<span class="race-verdict-lead">${lead}</span>`:''}</div><div class="service-winner-cost"><strong>${formatTime(first.time)}</strong><span>to ${bounded?'B':`reach ${km} km`}</span></div><p class="race-verdict-note">${conditions}${blockedNote}</p>`;
+}
 function renderSelectionCount() {trainSelector.updateCount();}
 const value=motionValue;
 function trainCandidates(year=catalogueYear) {return economicCandidates(trains,{...economicSelectionOptions(),year});}
 function visible() {return trainSelector.getVisible();}
+function starterNote(id,items,chosen){
+  const shown=items.filter(t=>chosen.has(t.id)).length,note=$(id);note.hidden=items.length<=shown;
+  if(!note.hidden)note.innerHTML=`Starter selection: ${shown} of ${items.length} vehicles. Tick others to add them, or <button type="button" data-starter-all>compare all ${items.length}</button>.`;
+}
+function syncStarterSelections(){
+  if(railStarter&&trains)applyStarterSelection(selected,trainCandidates(),{preferred:comparisonCategory==='passengers'?RAIL_PASSENGER_STARTER:[]});
+  if(roadStarter&&roadLoaded)applyStarterSelection(selectedRoad,roadCandidates());
+  const counted=(items,chosen)=>`${items.filter(t=>chosen.has(t.id)).length} / ${items.length}`;
+  if(trains)$('train-count').textContent=counted(trainCandidates(),selected);
+  if(roadLoaded)$('road-vehicle-count').textContent=counted(roadCandidates(),selectedRoad);
+  if(trains){if(railStarter)starterNote('rail-starter-note',trainCandidates(),selected);else $('rail-starter-note').hidden=true;}
+  if(roadLoaded){if(roadStarter)starterNote('road-starter-note',roadCandidates(),selectedRoad);else $('road-starter-note').hidden=true;}
+}
 function renderCatalogue() {
-  $('train-count').textContent = trainCandidates().length;
+  syncStarterSelections();
   $('catalogue-year-value').textContent = catalogueYear;
   $('catalogue-year').value = catalogueYear;
   $('year-previous').disabled = catalogueYear <= 1900;
@@ -232,7 +259,7 @@ function roadDatasets(selectedOnly=false){
   return selectedOnly?Object.fromEntries(Object.entries(sources).map(([key,items])=>[key,items.filter(t=>selectedRoad.has(t.id))])):sources;
 }
 function roadCandidates(){return selectRoadVehicles(roadDatasets(),{category:comparisonCategory,includeTrams,cargo:truckCargo,year:truckYear});}
-function renderRoadCatalogue(){$('road-vehicle-count').textContent=roadCandidates().length;roadSelector.render();}
+function renderRoadCatalogue(){syncStarterSelections();roadSelector.render();}
 function rebuildRailComparisons(){
   const custom=consistEditor?.getCompositions()??[];
   trains=[...baseTrains,...lightRailTrains,...(comparisonComposition?.carrier==='rail'?[comparisonComposition]:[]),...custom.filter(t=>t.carrier==='rail').map((t,i)=>({...t,color:['#147d64','#ad5a28','#9270b9','#3897a7'][i%4]}))];
@@ -342,7 +369,7 @@ function renderChart(kind, width) {
   content+=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#ccd4cc"/><text x="${(W+L-R)/2}" y="${H-6}" text-anchor="middle">${spec.x}${xScale.mode==='log' ? ' · log scale' : ''}</text>`;
   if (view === 'distance' && Number.isFinite(sy(studyDistance))) {
     const y = sy(studyDistance);
-    content += `<line class="distance-target" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${L+8}" y="${y-7}" style="fill:#8a5f2b">${fmtKm(studyDistance)} km target</text>`;
+    content += `<line class="distance-target" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${L+8}" y="${y-7}" style="fill:#8a5f2b">${fmtKm(studyDistance)} km${studyBounded()?' · B':' · lead settled'}</text>`;
   }
   for(const t of ts) {
     const d=sample(t,xScale,yScale,view,horizon).map(([x,y],i)=>`${i?'L':'M'}${sx(x).toFixed(2)},${sy(y).toFixed(2)}`).join(' ');
@@ -571,6 +598,17 @@ function updateStickyOffsets() {
     document.documentElement.style.setProperty('--app-header-offset', `${headerHeight}px`);
     document.documentElement.style.setProperty('--economic-controls-height', '0px');
 }
+const WELCOME_KEY='tf3-welcome-hidden';
+function welcomeHidden(){try{return localStorage.getItem(WELCOME_KEY)==='1';}catch{return false;}}
+function syncWelcome(){
+  const {space,domain,view}=navigation,hidden=welcomeHidden();
+  $('welcome').hidden=hidden||space!=='compare';$('welcome-open').hidden=!hidden;
+  for(const link of $('welcome').querySelectorAll('[data-welcome]')){
+    const race=link.dataset.welcome==='race';
+    link.href=race?(domain==='road'?'#road-race':'#race'):(domain==='road'?'#trucks':'#economics');
+    if(race?view==='race':['economics','trucks'].includes(view))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
+  }
+}
 function syncAnalysisView() {
   const target=document.getElementById(location.hash.slice(1));
   const owner=target?.closest('.analysis-view')?.id??(target?.closest('#configuration-sidebar')?'configurator':target?.closest('#profile-sidebar')?'route-profile':target?.closest('#road-sidebar')?'trucks':target?.closest('#line-capacity')?'economics':target?.closest('#train-race-settings')?'race':null);
@@ -620,7 +658,10 @@ function syncAnalysisView() {
   document.querySelector('.skip').textContent='Skip to content';document.querySelector('.skip').href=`#${destination}`;
   if(space==='compare'&&domain==='road')void ensureRoad();if(view==='configurator')void ensureConfigurator();if(view==='data')void ensureData();
   $('comparison-preview').hidden=space!=='compare'||!comparisonComposition||(domain==='rail')!==(comparisonComposition.carrier==='rail');
-  render();updateStickyOffsets();target?.scrollIntoView();
+  syncWelcome();
+  render();updateStickyOffsets();
+  // A whole view opens at its top rather than under the header; sections still scroll into view.
+  if(target?.matches('.analysis-view,[data-reference-pane]'))window.scrollTo({top:0});else target?.scrollIntoView();
 }
 function compareComposition(){
   if(!liveComposition)return;
@@ -648,6 +689,7 @@ function render() {
   if (!$('route-profile').hidden)return;
   if (!$('configurator').hidden){compositionAnalysis?.refresh();return;}
   if (!$('data').hidden){renderDataView(dataset,baseTrains,experiments??{experiments:[]});return;}
+  syncStarterSelections();
   if (!$('trucks').hidden) {
     if(!roadLoaded)return;
     const passenger=comparisonCategory==='passengers';
@@ -725,9 +767,8 @@ function render() {
   renderCrossoverCurves();
   const studyDistance=raceStudyDistance();
   const ranking=ts.map(t=>({t,time:t.model.timeAt(studyDistance)})).sort((a,b)=>a.time-b.time);
-  $('race-summary').textContent=ranking.length?`${ranking[0].t.name} arrives first at ${fmtKm(studyDistance)} km in ${formatTime(ranking[0].time)}${ranking.length>1?`; ${formatTime(ranking[1].time-ranking[0].time)} ahead of ${ranking[1].t.name}`:''}. ${navigation.domain==='road'?'Road braking is omitted.':routeSelection.mode==='custom'?'Segment gradients and speed-limit braking are included; no stop at B in Race.':`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`}`:'Select at least one vehicle to compare travel times.';
   const blocked=raceCandidates().filter(t=>!(railRouteProfile?withRailProfile(t,railRouteProfile).model.canStart:canClimbRail(t,railGradePercent)));
-  if(blocked.length)$('race-summary').textContent+=` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>t.name).join(', ')}.`;
+  renderRaceVerdict(ranking,studyDistance,blocked);
   $('ranking-caption').textContent=`Calculated arrival ranking at ${fmtKm(studyDistance)} km${studyBounded()?'':' · automatic study extent'}`;
   $('value-heading').textContent='Arrival time (m:ss)'; $('extra-heading').textContent='Speed at arrival (km/h)';
   $('ranking').innerHTML=ranking.map(({t,time},i)=>`<tr><td>${i+1}</td><td><span class="train-key" style="--train-color:${t.color}"></span>${escape(t.name)}</td><td>${formatTime(time)}</td><td>${fmt(t.model.stateAt(time).speedKmh)}</td></tr>`).join('');
@@ -823,7 +864,7 @@ function ensureOptimizer(){
         compareComposition();comparisonId=comparisonComposition.id;
       }
       if(request.routeProfile)applyOptimizerRoute(request.routeProfile);
-      truckYear=request.year;truckCargo=request.cargo;includeTrams=Boolean(proposal.definition);selectedRoad=new Set([comparisonId]);
+      truckYear=request.year;truckCargo=request.cargo;includeTrams=Boolean(proposal.definition);roadStarter=false;selectedRoad=new Set([comparisonId]);
       $('truck-year').value=truckYear;$('truck-year-value').textContent=truckYear;$('road-include-trams').checked=includeTrams;
       $('truck-cargo-specialization').querySelector(`input[value="${truckCargo}"]`).checked=true;
       $('road-enable-flow').checked=true;$('road-desired-flow').value=request.rate;
@@ -906,7 +947,7 @@ async function init() {
     getItems:trainCandidates,getSelected:()=>selected,
     describe:t=>`${t.massTonnes} t · ${fmt(t.powerCh * dataset.source.horsepowerWatts / 1000)} kW · ${fmt(t.tractionKgf*dataset.source.kgfNewtons,0)} N`,
     onHighlight:id=>setChartHighlight(document,'rail',id),
-    onChange:()=>{highlighted=undefined;render();},onEdit:editComposition
+    onChange:()=>{highlighted=undefined;render();},onEdit:editComposition,onSelect:()=>{railStarter=false;}
   });
   $('train-selector').querySelector('.selection-actions').append($('explore-history'));
   roadSelector=mountVehicleSelector($('road-selector'),{
@@ -914,7 +955,7 @@ async function init() {
     getItems:roadCandidates,getSelected:()=>selectedRoad,
     describe:t=>`${t.vehicleType} · ${t.passengerCapacity??t.cargoCapacity} ${UI_TERMS.capacityUnit} · $${fmt(t.economy.annualMaintenance,0)}/year`,
     onHighlight:id=>setChartHighlight(document,'road',id),
-    onChange:()=>{highlighted=undefined;render();},onEdit:editComposition
+    onChange:()=>{highlighted=undefined;render();},onEdit:editComposition,onSelect:()=>{roadStarter=false;}
   });
   updateRoadCategory=()=>{
     const passenger=comparisonCategory==='passengers';
@@ -974,9 +1015,21 @@ async function init() {
   observePhaseHighlight(document,'road',id=>{roadSelector.highlight(id);if(navigation.domain==='road')highlighted=id;for(const row of $('road-steady-readout').querySelectorAll('[data-train]'))row.classList.toggle('is-highlighted',row.dataset.train===id);});
   const setCatalogueYear = year => {catalogueYear=Math.max(Number($('catalogue-year').min),Math.min(Number($('catalogue-year').max),year));highlighted=undefined;renderCatalogue();render();};
   mountYearControl({range:$('catalogue-year'),output:$('catalogue-year-value'),previous:$('year-previous'),next:$('year-next'),onChange:setCatalogueYear});
-  $('explore-history').addEventListener('click',()=>{document.body.classList.add('history-exploration');selected=new Set(trains.map(t=>t.id));$('train-search').value='';setCatalogueYear(1900);});
-  $('reset').addEventListener('click',()=>{document.body.classList.remove('history-exploration');selectAll(selected,trains);trainSelector.clearSearch();catalogueYear=Number($('catalogue-year').max);highlighted=undefined;renderCatalogue();render();});
-  $('road-reset').addEventListener('click',()=>{selectAll(selectedRoad,Object.values(roadDatasets()).flat());roadSelector.clearSearch();$('truck-year').value=$('truck-year').max;updateTruckYear();});
+  $('explore-history').addEventListener('click',()=>{document.body.classList.add('history-exploration');railStarter=false;selected=new Set(trains.map(t=>t.id));$('train-search').value='';setCatalogueYear(1900);});
+  $('reset').addEventListener('click',()=>{document.body.classList.remove('history-exploration');railStarter=true;trainSelector.clearSearch();catalogueYear=Number($('catalogue-year').max);highlighted=undefined;renderCatalogue();render();});
+  $('road-reset').addEventListener('click',()=>{roadStarter=true;roadSelector.clearSearch();$('truck-year').value=$('truck-year').max;updateTruckYear();});
+  for(const [domain,root] of [['rail','rail-starter-note'],['road','road-starter-note']])$(root).addEventListener('click',event=>{
+    if(!event.target.closest('[data-starter-all]'))return;
+    if(domain==='rail'){railStarter=false;selectResults(selected,trainCandidates(),true);renderCatalogue();}
+    else{roadStarter=false;selectResults(selectedRoad,roadCandidates(),true);renderRoadCatalogue();}
+    highlighted=undefined;render();
+  });
+  $('welcome-close').addEventListener('click',()=>{try{localStorage.setItem(WELCOME_KEY,'1');}catch{}syncWelcome();$('welcome-open').focus();});
+  $('welcome-open').addEventListener('click',()=>{
+    try{localStorage.removeItem(WELCOME_KEY);}catch{}
+    if(navigation.space!=='compare'){location.hash='#race';return;}
+    syncWelcome();window.scrollTo({top:0});$('welcome-heading').focus();
+  });
   $('speed-orientation').addEventListener('change',()=>{speedView=$('speed-orientation').querySelector('input:checked').value;render();});
   $('race-orientation').addEventListener('change',e=>{
     const previous=raceView;raceView=e.target.value;highlighted=undefined;
@@ -1051,7 +1104,7 @@ async function init() {
     render();
   });
   $('economic-empty').addEventListener('click',event=>{
-    if(event.target.closest('#economic-empty-select')){selectResults(selected,economicCandidates(trains,economicSelectionOptions()),true);renderCatalogue();render();}
+    if(event.target.closest('#economic-empty-select')){railStarter=false;selectResults(selected,economicCandidates(trains,economicSelectionOptions()),true);renderCatalogue();render();}
   });
   document.addEventListener('click',async event=>{
     if(event.target.closest('[data-economic-configure]')){
@@ -1099,7 +1152,7 @@ async function init() {
   $('quick-races').addEventListener('click',event=>{
     const button=event.target.closest('[data-duel]');if(!button)return;
     setComparisonCategory('passengers');
-    selected=new Set(['avelia-liberty',button.dataset.duel]);highlighted=undefined;
+    railStarter=false;selected=new Set(['avelia-liberty',button.dataset.duel]);highlighted=undefined;
     catalogueYear=Math.max(catalogueYear,...trains.filter(t=>selected.has(t.id)).map(t=>t.year));
     trainSelector.clearSearch();renderCatalogue();render();
   });

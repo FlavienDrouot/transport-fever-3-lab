@@ -5,7 +5,7 @@ import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
 import {motionTransitions,renderMotionTransitions} from './motion-chart.js';
 import {mountChartInteractions} from './chart-interactions.js';
 import {mountControlHelp} from './control-help.js';
-import {escapeHtml as escape,formatNumber,formatTime,formatDuration} from './format.js';
+import {escapeHtml as escape,formatNumber,formatTime,formatDuration,formatSignificant} from './format.js';
 import {createScale} from './scales.js';
 import {speedDistanceHorizon} from './race.js';
 import {gradientAcceleration} from './gradient.js';
@@ -67,7 +67,7 @@ export function renderCompositionSteadySummary(root,analysis) {
     [`${UI_TERMS.rate} × distance`,s.transportOutputPerYear===null?'—':`${formatNumber(s.transportOutputPerYear,0)} ${UI_TERMS.capacityUnit}·km/year${s.freight?'':'/direction'}`,
       'Transport output at steady speed: doubling distance halves Rate, so Rate × distance stays constant.'],
     [`Cost / ${UI_TERMS.capacityUnit} / km`,
-      s.costPerUnitKm===null?'—':`$${formatNumber(s.costPerUnitKm,4)}`]
+      s.costPerUnitKm===null?'—':`$${formatSignificant(s.costPerUnitKm)}`]
   ];
   root.innerHTML=`<dl class="consist-totals">${rows.map(([label,value,help])=>`<div><dt>${label}${help?` <button class="control-info" type="button" title="${escape(help)}" aria-label="Help: Rate × distance">ⓘ</button>`:''}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
   if(root.ownerDocument)mountControlHelp(root.ownerDocument,root);

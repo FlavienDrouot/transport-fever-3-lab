@@ -21,7 +21,7 @@ export function vehicleRows(items, selected, describe, editable=false) {
     return edit?`<div ${attributes}><label class="train-row-main">${content}</label><button class="train-edit" type="button" data-edit-composition="${escape(t.id)}" title="Edit ${escape(t.name)}" aria-label="Edit ${escape(t.name)}"><span aria-hidden="true">✎</span></button></div>`:`<label ${attributes}>${content}</label>`;
   }).join('');
 }
-export function mountVehicleSelector(root, {ids, getItems, getSelected, describe, onChange, onEdit, onHighlight=()=>{}}) {
+export function mountVehicleSelector(root, {ids, getItems, getSelected, describe, onChange, onEdit, onHighlight=()=>{}, onSelect=()=>{}}) {
   root.classList.add('vehicle-selector');
   root.innerHTML = `<label class="search-label" for="${ids.search}">Find vehicles</label><input id="${ids.search}" type="search" placeholder="Search name or year" autocomplete="off"><div class="catalogue-tools"><span id="${ids.sort}-label">Sort</span><fieldset id="${ids.sort}" class="scale-toggle" aria-labelledby="${ids.sort}-label"><legend class="sr-only">Vehicle order</legend><label><input type="radio" name="${ids.sort}" value="name"><span>Name</span></label><label><input type="radio" name="${ids.sort}" value="speed"><span>Speed</span></label><label><input type="radio" name="${ids.sort}" value="year" checked><span>Year</span></label></fieldset></div><p id="${ids.count}" class="selection-count" role="status"></p><div class="selection-actions"><button id="${ids.select}" type="button">Select results</button><button id="${ids.clear}" type="button">Clear results</button></div><div id="${ids.list}" class="train-list"></div><p id="${ids.empty}" class="selector-empty" hidden>No vehicles match these filters.</p>`;
   const el = key => root.querySelector(`#${ids[key]}`);
@@ -49,6 +49,7 @@ export function mountVehicleSelector(root, {ids, getItems, getSelected, describe
   el('sort').addEventListener('change', changed);
   el('list').addEventListener('change', event => {
     if (!event.target.matches('input[type="checkbox"]')) return;
+    onSelect();
     selectResults(getSelected(), [{id:event.target.value}], event.target.checked);
     updateCount(); onChange();
   });
@@ -57,7 +58,7 @@ export function mountVehicleSelector(root, {ids, getItems, getSelected, describe
     if(button&&getItems().some(t=>t.id===button.dataset.editComposition))onEdit(button.dataset.editComposition);
   });
   for (const [key, choose] of [['select',true],['clear',false]]) el(key).addEventListener('click', () => {
-    selectResults(getSelected(), getVisible(), choose); changed();
+    onSelect(); selectResults(getSelected(), getVisible(), choose); changed();
   });
   const list=el('list'),targetId=target=>target?.closest?.('[data-train]')?.dataset.train;
   list.addEventListener('pointerover',event=>onHighlight(targetId(event.target)));
