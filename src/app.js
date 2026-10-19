@@ -1,4 +1,4 @@
-import {automaticRaceDistance,clipStudyStory,withStudyDistance,finiteStudyMotion,serviceStudyTargets,uniformServiceStudyOptions} from './comparison-study.js';
+import {automaticRaceDistance,clipStudyStory,withStudyDistance,finiteStudyMotion,serviceStudyTargets,uniformServiceStudyOptions,serviceSteadyDistance} from './comparison-study.js';
 import {durationSeconds,syncDurationInputs,enableDurationInputs} from './duration-controls.js';
 import {mountOptimizer} from './optimizer-controls.js';
 import {loadOptimizerCatalogue} from './optimizer-catalogue.js';
@@ -33,7 +33,7 @@ import {mountConsistEditor} from './consist-editor.js';
 import {mountCompositionAnalysis} from './composition-analysis-controls.js';
 import {renderTruckService, selectRoadVehicles} from './trucks.js';
 import {renderDataView} from './data-view.js';
-import {curveLabels, trainLegend} from './chart-labels.js';
+import {curveLabels, trainLegend, spreadDiagonalLabels} from './chart-labels.js';
 import {economicStory,yearRankingStory} from './economic-crossovers.js';
 import {withRailSpeedLimit,withRailGradient,withRailProfile} from './rail-motion.js';
 import {renderEconomicCrossovers} from './economic-crossover-chart.js';
@@ -327,8 +327,7 @@ function renderChart(kind, width) {
   const clipId = `${kind}-plot-clip`;
   const W = typeof width === 'number' ? width : Math.max(320, el('chart').clientWidth || 1000);
   const ts = active(view), spec = views[view],studyDistance=raceStudyDistance();
-  const labelSpace = view === 'distance' ? Math.max(120, Math.ceil(Math.max(0,...ts.map(t=>arrivalName(t, view).length))*7/Math.sqrt(2))+24) : 0;
-  const H = (W < 700 ? 430 : 610) + labelSpace, L = 65, R = W < 700 || view === 'distance' ? 18 : 220, T = 45 + labelSpace, B = 50;
+  const L = 65, R = W < 700 || view === 'distance' ? 18 : 220, B = 50;
   const horizon = chartHorizon(view, ts);
   el('chart-heading').textContent = spec.title;
   const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
@@ -345,12 +344,16 @@ function renderChart(kind, width) {
   const ymax = view.startsWith('speed') ? speedOrdinateMaximum(ts,horizon,view) : view === 'distance' ? studyDistance * 1.1 : Math.ceil(max / 5 / step) * step * 5;
   const xScale = createScale(scaleMode('x', kind), horizon, Math.min(spec.xFloor, horizon / 10));
   const yScale = createScale(scaleMode('y', kind), ymax, Math.min(spec.yFloor, ymax / 10));
+  const sx = x => L + xScale.position(x) * (W-L-R);
+  // Arrival names rise diagonally to the right above the finish line.
+  const arrivals = view === 'distance' ? spreadDiagonalLabels(ts.map(t => ({t, x: sx(t.model.timeAt(studyDistance)), text: arrivalName(t, view)})).filter(({x}) => Number.isFinite(x)), {left: L, right: W}) : null;
+  const labelSpace = arrivals ? Math.max(60, arrivals.height + 24) : 0;
+  const H = (W < 700 ? 430 : 610) + labelSpace, T = 45 + labelSpace;
   const notes = [];
   if (xScale.mode === 'log') notes.push(`X starts at ${tickLabel(xScale.min)} ${spec.unit}`);
   if (yScale.mode === 'log') notes.push(`Y starts at ${tickLabel(yScale.min)} ${spec.yUnit}`);
   el('scale-note').hidden = !notes.length;
   el('scale-note').textContent = `Small values are cropped on logarithmic axes. ${notes.join('; ')}. The readout and CSV retain the full values.`;
-  const sx = x => L + xScale.position(x) * (W-L-R);
   const sy = y => H-B-yScale.position(y) * (H-T-B);
   let content = `<title>${spec.title}</title><desc>Calculated curves. X axis: ${xScale.mode}; Y axis: ${yScale.mode}. Log domains: X starts at ${xScale.min} ${spec.unit}; Y starts at ${yScale.min} ${spec.yUnit}. Use the race readout for exact values, including zero.</desc><rect width="${W}" height="${H}" fill="white"/><defs><clipPath id="${clipId}"><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/></clipPath></defs><text x="${L}" y="20">${spec.y}${yScale.mode==='log' ? ' · log scale' : ''}</text>`;
   // Limit label density while retaining enough log ticks to expose multiplicative spacing.
@@ -378,15 +381,9 @@ function renderChart(kind, width) {
   }
   if (view === 'distance') {
     const y = sy(studyDistance);
-    const labelled = ts
-      .map(t => ({t, x: sx(t.model.timeAt(studyDistance))}))
-      .filter(({x}) => Number.isFinite(x)).sort((a,b) => a.x-b.x);
-    // Spread neighbouring names; markers keep the exact arrival position.
-    for (let i=0; i<labelled.length; i++) labelled[i].labelX=Math.max(labelled[i].x, arrivalName(labelled[i].t, view).length*7/Math.sqrt(2)+8, i ? labelled[i-1].labelX+20 : L+5);
-    for (let i=labelled.length-1; i>=0; i--) labelled[i].labelX=Math.min(labelled[i].labelX, i===labelled.length-1 ? W-R-5 : labelled[i+1].labelX-20);
-    for (const {t,x,labelX} of labelled) {
+    for (const {t,x,labelX} of arrivals.labels) {
       const opacity = !highlighted || highlighted === t.id ? 1 : .25;
-      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(45 ${labelX} ${T-16})" text-anchor="end" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t, view))}</text>`;
+      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(-45 ${labelX} ${T-16})" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t, view))}</text>`;
     }
   } else if(W>=700) {
     const labelled = ts.map(t=>{const end=motionCurveEnd(t,view,horizon);return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
@@ -483,11 +480,18 @@ function renderCrossoverCurves() {
   const bounds=p=>inverted?[times[phases.indexOf(p)],times[phases.indexOf(p)+1]]:[p.start,p.end];
   let content=`<title>Zoom on overtakes</title><desc>Real model curves with continuous piecewise-linear axes. Distance: ${distanceMode}. Time: ${timeMode}. ${inverted?'Higher':'Lower'} curves lead. Winning segments ${emphasize?'emphasized':'shown normally'}.</desc><text x="${L}" y="20">${yLabel} · ${yMode==='focus'?'phase focus':'linear'}</text>`;
   const ticks=axis=>Array.from({length:phases.length*4+1},(_,i)=>axis.invert(i/(phases.length*4)));
-  const majors=xKnots.map(sx);
+  const majors=xKnots.map(sx),last=xKnots.at(-1);
+  const endLabel=studyBounded()?(routeSelection.mode==='custom'?'B':fmtKm(end)+' km'):'Stable leader → ∞';
+  // Tick labels never collide: the end label reserves its width, others keep a minimum gap.
+  const endLeft=sx(last)-endLabel.length*6.6-12;
+  let labelRight=-Infinity;
   for(const x of [...new Set([...xKnots,...ticks(xAxis)])].sort((a,b)=>a-b)){
     const pos=sx(x),major=xKnots.includes(x);
-    content+=`<line x1="${pos}" x2="${pos}" y1="${T}" y2="${H-B}" stroke="${major && x>0 && x<xKnots.at(-1) && xMode==='focus'?'#aa6a22':major?'#c1ccc5':'#e5e9e4'}" stroke-dasharray="3 5"/>`;
-    if(major || majors.every(p=>Math.abs(p-pos)>65))content+=`<text x="${pos}" y="${H-B+24}" text-anchor="${x===0?'start':x===xKnots.at(-1)?'end':'middle'}">${x===xKnots.at(-1)?(studyBounded()?(routeSelection.mode==='custom'?'B':fmtKm(end)+' km'):'Stable leader → ∞'):xFormat(x)}</text>`;
+    content+=`<line x1="${pos}" x2="${pos}" y1="${T}" y2="${H-B}" stroke="${major && x>0 && x<last && xMode==='focus'?'#aa6a22':major?'#c1ccc5':'#e5e9e4'}" stroke-dasharray="3 5"/>`;
+    const text=x===last?endLabel:xFormat(x),half=text.length*3.3;
+    const left=x===0?pos:x===last?endLeft+12:pos-half,right=x===0?pos+2*half:x===last?pos:pos+half;
+    if(x!==last&&(right>endLeft||left<labelRight+8||(!major&&!majors.every(p=>Math.abs(p-pos)>65))))continue;
+    content+=`<text x="${pos}" y="${H-B+24}" text-anchor="${x===0?'start':x===last?'end':'middle'}">${text}</text>`;labelRight=right;
   }
   // Keep the vertical labels at phase boundaries, rather than filling every interval.
   const verticalTicks=phases.length===1 ? [0,yAxis.invert(.5),yKnots.at(-1)] : yKnots;
@@ -540,7 +544,6 @@ function renderEconomicControls() {
   $('economic-passenger-assumptions').hidden=freight;
   $('economic-freight-assumptions').hidden=!freight;
   $('economic-efficiency-scale').querySelector(':scope > span').textContent=`Running cost / ${UI_TERMS.capacityUnit}`;
-  $('economic-distance-help').textContent=`How the cost per ${unit} changes with route length. Lower is better.`;
   $('economic-curves-help').textContent='Each change of cheapest vehicle gets more room. The cheapest is emphasized; hover to compare.';
   $('economic-rank-help').textContent='Cheapest first, at each distance.';
 }
@@ -738,7 +741,11 @@ function render() {
     const drawEconomicCharts=()=>{
     const key=JSON.stringify([economicTrains.map(t=>[t.id,t.name,t.color,t.dash,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]),studyDistance,lineFill,targets,phaseAxis,catalogueYear]);
     if(key!==economicStoryKey){economicStoryKey=key;currentEconomicStory=economicStory(economicTrains,studyDistance,lineFill,targets,{axis:phaseAxis,year:catalogueYear});}
-    renderEconomicChart($('economic-efficiency-chart'), {trains:economic.eligible,distance:automatic?currentEconomicStory.end:routeDistance,...(automatic?{startDistance:currentEconomicStory.start,referenceDistance:null}:{}),fill:lineFill,targets,highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
+    // ∞ keeps the leadership window but extends the cost curves until every vehicle cruises.
+    const steadyEnd=automatic?serviceSteadyDistance(economic.eligible,targets):null;
+    const efficiencyEnd=automatic?Math.max(currentEconomicStory.end,Number.isFinite(steadyEnd)?steadyEnd:0):routeDistance;
+    $('economic-distance-help').textContent=`How the cost per ${UI_TERMS.capacityUnit} changes with route length. Lower is better.${automatic?` Beyond ${fmtKm(efficiencyEnd)} km every vehicle reaches cruising speed and costs grow in a straight line; the cheapest vehicle no longer changes.`:''}`;
+    renderEconomicChart($('economic-efficiency-chart'), {trains:economic.eligible,distance:efficiencyEnd,...(automatic?{startDistance:currentEconomicStory.start,referenceDistance:null}:{}),fill:lineFill,targets,highlighted,mode:document.querySelector('input[name="economic-efficiency-scale"]:checked').value});
     $('economic-rank-scale').querySelector(':scope > span').textContent=currentEconomicStory.label;
     const phaseValue=value=>phaseAxis==='year'?value:phaseAxis==='distance'?fmtKm(value):fmt(value,2);
     $('economic-phase-help').textContent=`${currentEconomicStory.label} varies over ${phaseValue(currentEconomicStory.start)}–${phaseValue(currentEconomicStory.end)}; other settings remain fixed. ${currentEconomicStory.automatic?'Automatic extent covers the last modeled leader change. ':studyScope==='auto'&&phaseAxis==='distance'&&routeSelection.mode!=='custom'&&(serviceTargets().demandPerYear!=null||serviceTargets().demandPerDirection!=null||serviceTargets().maxHeadwaySeconds!=null)?'Distance is bounded here: fleet targets can prevent a final stable leader. ':''}${automatic?'':'Dashed line: reference setting when inside the range. '}${phaseAxis==='demand'||phaseAxis==='headway'?'This target applies to these diagrams even if its service checkbox is off. ':''}Utilization is a ceiling when a rate target applies; demand is assumed, not predicted.`;
