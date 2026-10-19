@@ -221,73 +221,62 @@ function roundedScale(scale,count=4){
   const raw=scale.max/count,power=10**Math.floor(Math.log10(raw)),step=[1,2,5,10].find(m=>m*power>=raw*(1-1e-9))*power;
   return createScale('linear',Math.ceil(scale.max/step-1e-9)*step);
 }
-const PANEL_TITLES={'peak-speed':'Peak speed',speed:'Speed'};
-
 export function renderCompositionChart(root,analysis,view) {
-  const {series,curveIndices}=compositionCurveLayout(analysis,view),normalized=view==='normalized';
+  const {series,curveIndices,mergedTimeCost}=compositionCurveLayout(analysis,view),normalized=view==='normalized',combined=view==='combined'||normalized;
   if(!series.some(s=>s.points.some(p=>Number.isFinite(p.y)))){
     root.textContent=view==='cost'&&analysis.service?'No transported units at zero utilization. Choose positive utilization to show running cost.':analysis.message||'Complete your composition to display this analysis.';return;
   }
-  // One small chart per quantity, stacked over a shared distance axis, instead of several vertical scales on one plot.
-  const shared=compositionChartScales(series),panels=[];
-  series.forEach((s,i)=>{
-    const panel=panels.find(p=>p.axis===s.axis);
-    if(panel)panel.indices.push(i);else panels.push({axis:s.axis,indices:[i],scale:roundedScale(shared[i])});
-  });
-  const scaleOf=index=>panels.find(p=>p.indices.includes(index)).scale;
-  const width=Math.max(300,root.clientWidth||900),narrow=width<600;
-  const plotHeight=panels.length>1?(narrow?96:110):(narrow?220:260),titleHeight=24,gap=16;
-  const left=narrow?46:64,right=narrow?10:20;
-  panels.forEach((panel,i)=>{panel.top=8+i*(titleHeight+plotHeight+gap)+titleHeight;panel.bottom=panel.top+plotHeight;});
-  const top=panels[0].top,bottom=panels.at(-1).bottom,height=bottom+46;
+  const width=Math.max(300,root.clientWidth||900),narrow=width<600,height=narrow?320:380;
+  const left=combined?(narrow?43:65):70,right=combined?(narrow?128:190):20,top=combined?58:35,bottom=height-55;
   const maxDistance=view==='speed'?analysis.speedMaximumDistance:2*(normalized?analysis.normalizedMaximumDistance:analysis.maximumDistance);
   const selectedDistance=view==='speed'?analysis.distance:2*analysis.distance;
   const distanceLabel=view==='speed'?'Distance travelled':'Round-trip length';
+  const scales=compositionChartScales(series).map(scale=>roundedScale(scale));
+  const axisIndices=series.map((s,i)=>i).filter(i=>series.findIndex(s=>s.axis===series[i].axis)===i);
   const distanceScale=createScale(normalized?'log':'linear',maxDistance,normalized?series[0].points[0].x:1);
   const sx=x=>left+distanceScale.positionUnbounded(x)*(width-left-right);
   const formatDistance=x=>normalized&&x>0&&x<.001?x.toPrecision(2):formatNumber(x,3);
-  const sy=(index,y)=>{const panel=panels.find(p=>p.indices.includes(index));return panel.bottom-scaleOf(index).position(y)*(panel.bottom-panel.top);};
-  const perDirection=analysis.options.freight?'':'/direction';
+  const sy=(index,y)=>bottom-scales[index].position(y)*(bottom-top);
   const formatY=(s,y)=>s.key==='time'?formatTime(y):s.key==='cost'||s.key==='cost-per-km'?`$${formatNumber(y,2)}${s.key==='cost-per-km'?'/km':''}`:
-    s.key==='transport-output'?`${formatNumber(y,1)} capacity·km/year${perDirection}`:`${formatNumber(y,1)} km/h`;
-  const tickLabel=(s,value)=>s.key==='time'?formatTime(value):`${s.key.startsWith('cost')?'$':''}${value.toLocaleString('en-GB',{notation:'compact',maximumSignificantDigits:3})}`;
-  const ordinate=normalized?'Peak speed, transport output per train and cost per kilometre':panels.length>1?'Peak speed, round-trip time and cost':view==='speed'?'Speed (km/h)':view==='time'?'Round-trip time incl. handling (m:ss)':`Round-trip cost / ${UI_TERMS.capacityUnit} ($)`;
-  let svg=`<title>${escape(ordinate)} over ${distanceLabel.toLowerCase()}</title><desc>${view==='speed'?'Acceleration without final braking along A to B.':'A–B–A cycles with acceleration, braking and handling at both terminals. Peak speed is the maximum reached in the cycle. Costs count journeys or deliveries across both legs.'}${panels.length>1?' Each quantity has its own chart over the same distance axis.':''}${normalized?' Distance and cost use logarithmic scales. Dashed horizontal lines show the steady-cruise values approached on long routes.':''}</desc><rect width="${width}" height="${height}" fill="white"/>`;
-  for(const panel of panels){
-    const first=series[panel.indices[0]],log=panel.scale.mode==='log';
-    const title=`${PANEL_TITLES[first.key]??(panel.indices.length>1?first.axis:first.name)} · ${first.unit}${first.key==='transport-output'?perDirection:''}${log?' · log scale':''}`;
-    panel.titleLength=title.length;
-    svg+=`<text class="composition-axis composition-panel-title" x="${left}" y="${panel.top-8}" style="fill:${first.color}">${escape(title)}</text>`;
-    for(const value of chartTicks(panel.scale)){
-      const y=panel.bottom-panel.scale.position(value)*(panel.bottom-panel.top);
+    s.key==='transport-output'?`${formatNumber(y,1)} capacity·km/year${analysis.options.freight?'':'/direction'}`:`${formatNumber(y,1)} km/h`;
+  const ordinate=normalized?'Peak speed, transport output per train and cost per kilometre':combined?'Peak speed, round-trip time and cost':view==='speed'?'Speed (km/h)':view==='time'?'Round-trip time incl. handling (m:ss)':`Round-trip cost / ${UI_TERMS.capacityUnit} ($)`;
+  let svg=`<title>${escape(ordinate)} over ${distanceLabel.toLowerCase()}</title><desc>${view==='speed'?'Acceleration without final braking along A to B.':'A–B–A cycles with acceleration, braking and handling at both terminals. Peak speed is the maximum reached in the cycle. Costs count journeys or deliveries across both legs.'}${combined?' Each quantity uses its own coloured vertical scale.':''}${normalized?' Distance and cost use logarithmic scales. The window includes station-handling amortization and the approach to the fixed-utilization reference. Rate multiplied by one-way distance is per train, per direction for passengers and across loaded legs for freight. Cost is divided by one-way distance; speed includes final braking.':''}${mergedTimeCost?' At fixed utilization, time and cost are proportional and share one orange curve with two scales.':''}</desc><rect width="${width}" height="${height}" fill="white"/>`;
+  if(!combined)svg+=`<text x="${left}" y="19">${escape(ordinate)}</text>`;
+  // Gridlines follow the first scale; other scales mark their own round values on their axis line.
+  const axisX=index=>!combined||index===0?left-8:index===1?width-right+10:width-right+(narrow?70:100);
+  axisIndices.forEach((index,position)=>{
+    const s=series[index],x=axisX(index),anchor=!combined||index===0?'end':'start';
+    for(const value of chartTicks(scales[index])){
+      const y=sy(index,value);
       if(!Number.isFinite(y))continue;
-      svg+=`<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="#e4e8e4" stroke-dasharray="${Math.abs(y-panel.bottom)<1e-6?'':'2 5'}"/><text class="composition-axis" x="${left-6}" y="${y+4}" text-anchor="end" style="font-size:${narrow?10:11}px">${tickLabel(first,value)}</text>`;
+      if(position===0)svg+=`<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="#e4e8e4" stroke-dasharray="2 5"/>`;
+      else svg+=`<line x1="${x-4}" x2="${x}" y1="${y}" y2="${y}" stroke="${s.color}" opacity=".7"/>`;
+      const label=!s.points.some(p=>Number.isFinite(p.y))?'—':s.key==='time'?formatTime(value):`${s.key.startsWith('cost')?'$':''}${value.toLocaleString('en-GB',{notation:combined?'compact':'standard',maximumSignificantDigits:3})}`;
+      svg+=`<text class="composition-axis" x="${position===0?x:x+3}" y="${y+4}" text-anchor="${anchor}" style="fill:${s.color};font-size:${combined?10:12}px">${label}</text>`;
     }
-    for(const index of panel.indices){
-      const s=series[index],y=Number.isFinite(s.reference)?sy(index,s.reference):NaN;
-      if(Number.isFinite(y))svg+=`<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="${s.color}" stroke-dasharray="6 4" opacity=".55"/><text class="composition-axis" x="${width-right}" y="${y+(y-panel.top<14?13:-5)}" text-anchor="end" style="fill:${s.color};font-size:11px">Steady cruise</text>`;
-    }
-  }
-  const xTicks=normalized?chartTicks(distanceScale):Array.from({length:6},(_,i)=>distanceScale.invert(i/5));
-  for(const x of xTicks)svg+=`<line x1="${sx(x)}" x2="${sx(x)}" y1="${bottom}" y2="${bottom+5}" stroke="#9aa49f"/><text x="${sx(x)}" y="${bottom+20}" text-anchor="middle">${x.toLocaleString('en-GB',{maximumSignificantDigits:3})}</text>`;
-  if(selectedDistance>=distanceScale.min&&selectedDistance<=maxDistance){
-    // The route label sits in the first title row when it clears the title, otherwise inside the plot.
-    const x=sx(selectedDistance),label=`${formatNumber(selectedDistance,3)} km ${view==='speed'?'route':'round trip'}`;
-    const start=x+5+label.length*6<=width-right,clear=(start?x+5:x-5-label.length*6)>left+panels[0].titleLength*6.5+12;
-    svg+=`<line x1="${x}" x2="${x}" y1="${clear?top-20:top}" y2="${bottom}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${start?x+5:x-5}" y="${clear?top-8:top+12}" text-anchor="${start?'start':'end'}" style="font-size:11px">${label}</text>`;
-  }
+  });
+  // Faint dashed lines mark the steady-cruise values approached on long routes.
+  for(const [index,s] of series.entries())if(Number.isFinite(s.reference)&&Number.isFinite(sy(index,s.reference)))
+    svg+=`<line x1="${left}" x2="${width-right}" y1="${sy(index,s.reference)}" y2="${sy(index,s.reference)}" stroke="${s.color}" stroke-dasharray="6 4" opacity=".45"/>`;
+  if(combined)axisIndices.forEach(index=>{
+    const s=series[index],x=axisX(index);
+    const unit=`${s.unit}${s.key==='transport-output'&&!analysis.options.freight?'/direction':''}`;
+    const lines=[...(narrow?[]:[s.axis]),...unit.split(/(?=\/(?:year|direction))/),...(scales[index].mode==='log'?['log scale']:[])];
+    svg+=`<line x1="${index===0?left:x-4}" x2="${index===0?left:x-4}" y1="${top}" y2="${bottom}" stroke="${s.color}" opacity=".5"/>`;
+    lines.forEach((line,i)=>{svg+=`<text class="composition-axis" x="${index===0?left:x-4}" y="${top-10-(lines.length-1-i)*12}" text-anchor="${index===0?'end':'start'}" style="fill:${s.color};font-size:${i||narrow?10:11}px;font-weight:${i||narrow?400:600}">${escape(line)}</text>`;});
+  });
+  for(const x of normalized?chartTicks(distanceScale):Array.from({length:6},(_,i)=>distanceScale.invert(i/5)))svg+=`<text x="${sx(x)}" y="${bottom+23}" text-anchor="middle">${x.toLocaleString('en-GB',{maximumSignificantDigits:3})}</text>`;
+  if(selectedDistance>=distanceScale.min&&selectedDistance<=maxDistance)svg+=`<line x1="${sx(selectedDistance)}" x2="${sx(selectedDistance)}" y1="${top}" y2="${bottom}" stroke="#8a5f2b" stroke-dasharray="6 5"/>${narrow&&combined?'':`<text x="${Math.max(left,sx(selectedDistance)-4)}" y="${top-5}" text-anchor="${selectedDistance<maxDistance*.25?'start':'end'}">${formatNumber(selectedDistance,3)} km ${view==='speed'?'route':'round trip'}</text>`}`;
   curveIndices.forEach(index=>{
     const s=series[index];
     let path='',pen=false;
     const stepped=s.key==='cost'&&(analysis.options.demandPerYear!=null||analysis.options.demandPerDirection!=null);
     for(const p of s.points){if(!Number.isFinite(p.y)){pen=false;continue;}path+=`${pen?(stepped?'H':'L'):'M'}${sx(p.x).toFixed(2)}${pen&&stepped?' V':','}${sy(index,p.y).toFixed(2)} `;pen=true;}
-    const id=`${analysis.train.id}:${s.key}`,dash=s.key==='return-speed'?s.dash:'';
-    svg+=`<path class="train-curve" data-train="${escape(id)}" d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-dasharray="${dash}"/><path data-train="${escape(id)}" d="${path}" fill="none" stroke="transparent" stroke-width="14" tabindex="0" role="img" aria-label="${escape(s.name)}"><title>${escape(s.name)}</title></path>`;
+    const id=`${analysis.train.id}:${s.key}`;
+    svg+=`<path class="train-curve" data-train="${escape(id)}" d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-dasharray="${s.dash||''}"/><path data-train="${escape(id)}" d="${path}" fill="none" stroke="transparent" stroke-width="14" tabindex="0" role="img" aria-label="${escape(s.name)}"><title>${escape(s.name)}</title></path>`;
   });
-  svg+=`<text x="${(left+width-right)/2}" y="${height-6}" text-anchor="middle">${distanceLabel} (km${normalized?' · log scale':''})</text><g class="composition-inspection" pointer-events="none"></g><g class="motion-transition-overlay" pointer-events="none"></g>`;
-  // Panel titles name each curve; the legend only distinguishes curves that share a chart.
-  const legendItems=panels.filter(p=>p.indices.length>1).flatMap(p=>p.indices).filter(i=>curveIndices.includes(i)).map(i=>series[i]);
-  root.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escape(ordinate)} over ${distanceLabel.toLowerCase()}">${svg}</svg><div class="composition-chart-toolbar"><div class="composition-chart-legend train-legend">${legendItems.map(s=>`<span data-train="${escape(`${analysis.train.id}:${s.key}`)}" style="color:${s.color}"><i style="--train-color:${s.color};border-top-style:${s.key==='return-speed'?'dashed':'solid'}"></i>${s.name}</span>`).join('')}</div><output class="composition-chart-readout" aria-live="off"></output></div>${series.find(s=>s.axis==='Cost')?.points.every(p=>p.y===null)&&panels.length>1?'<p class="chart-help">Cost unavailable at zero utilization; other measures remain visible.</p>':''}`;
+  svg+=`<text x="${(left+width-right)/2}" y="${height-8}" text-anchor="middle">${distanceLabel} (km${normalized?' · log':''})</text><g class="composition-inspection" pointer-events="none"></g><g class="motion-transition-overlay" pointer-events="none"></g>`;
+  root.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escape(ordinate)} over ${distanceLabel.toLowerCase()}">${svg}</svg><div class="composition-chart-toolbar"><div class="composition-chart-legend train-legend">${curveIndices.map(i=>series[i]).map(s=>`<span data-train="${escape(`${analysis.train.id}:${s.key}`)}" style="color:${s.color}"><i style="--train-color:${s.color};border-top-style:${s.dash?'dashed':'solid'}"></i>${s.name}</span>`).join('')}</div><output class="composition-chart-readout" aria-live="off"></output></div>${combined&&series[2].points.every(p=>p.y===null)?'<p class="chart-help">Cost unavailable at zero utilization; other measures remain visible.</p>':''}`;
   const overlay=root.querySelector('.motion-transition-overlay');
   mountChartInteractions(root,{group:'composition',onHighlight:id=>{overlay.innerHTML=view==='speed'&&id?renderMotionTransitions(analysis.train,{view:'speed-distance',sx,sy:y=>sy(0,y),left,right:width-right,top,bottom}):'';overlay.parentNode.appendChild(root.querySelector('.composition-inspection'));overlay.parentNode.appendChild(overlay);}});
   const graph=root.querySelector('svg'),readout=root.querySelector('output'),inspection=root.querySelector('.composition-inspection');
