@@ -31,7 +31,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     <label><input id="composition-loaded-return" type="checkbox">Loaded return</label>
     ${['a','b'].map(stop=>`<fieldset class="service-option-group"><legend>Stop ${stop.toUpperCase()}</legend><label><input id="composition-terminal-${stop}" type="checkbox">Terminal ×2</label><label><input id="composition-warehouse-${stop}" type="checkbox">Warehouse ×2</label></fieldset>`).join('')}
     </div></details>
-    <details class="composition-help"><summary>Route assumptions</summary><p class="control-help">The route is shared with Race and Service. Running cost includes fleet maintenance; purchase cost, infrastructure, revenue and congestion are excluded. The return reverses the slope. Cargo mass is not added.</p></details>
+    <details class="composition-help"><summary>Route assumptions</summary><p class="control-help">The route is shared with Race and Service. Running cost includes fleet maintenance; purchase cost, infrastructure, revenue and congestion are excluded. The return reverses the slope. Cargo does not add weight, as in the game.</p></details>
     <p id="composition-tram-notice" class="control-help" hidden>Tram motion here uses the theoretical rail acceleration model, which has not been calibrated for trams. Road comparisons omit braking. These draft tram curves use the rail braking rate.</p>
     <p id="composition-road-warning" class="scale-note" hidden>${ROAD_TRAVEL_TIME_WARNING}</p>
     </div>`;

@@ -26,7 +26,7 @@ export function sourceRows(vehicles) {
       ['Kind',v.kind.replaceAll('_',' ')],['Category',v.category],
       ['Source years',`${fmtYear(d.year??v.availability.raw?.yearFrom)}${v.availability.raw?.yearTo>0?`–${fmtYear(v.availability.raw.yearTo)}`:''}`],
       ['Speed (km/h)',fmt(d.maxSpeedKmh??(v.topSpeed.value==null?null:v.topSpeed.value*3.6))],
-      ['Empty mass (t)',fmt(d.massTonnes??(v.emptyMass.value==null?null:v.emptyMass.value/1000))],
+      [`Empty ${UI_TERMS.weight.toLowerCase()} (t)`,fmt(d.massTonnes??(v.emptyMass.value==null?null:v.emptyMass.value/1000))],
       ['Power (kW)',fmt(power)],['Length (m)',fmt(d.lengthMetres??v.length.value)],['Capacity',fmt(capacity)],
       ['Purchase ($)',fmt(d.purchasePrice??cost(v.purchasePrice,v.derivedCosts?.purchase_price))],
       [`${UI_TERMS.runningCosts} ($/year)`,fmt(d.annualMaintenance??cost(v.annualMaintenance,v.derivedCosts?.annual_maintenance))],

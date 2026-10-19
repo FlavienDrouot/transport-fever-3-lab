@@ -32,7 +32,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   const floor=Math.min(upper/10,Math.max(upper/10000,finiteCosts.reduce((minimum,cost)=>Math.min(minimum,cost),Infinity)));
   const efficiencyScale=createScale(verticalMode,upper,floor);
   const sy=y=>rank ? T+(y-1)/Math.max(1,trains.length-1)*(H-T-B) : H-B-efficiencyScale.positionUnbounded(y)*(H-T-B);
-  const title=chartTitle??(rank?'Economic rank crossovers':'Running cost around crossovers');
+  const title=chartTitle??(rank?'Cost ranking by distance':'Zoom on changes of cheapest');
   let svg=`<title>${escape(title)}</title><desc>${escape(axisLabel)}: ${formatX(story.start)}–${formatX(story.end)}. Scale: ${escape(distanceMode)}.${story.sampled?' Fleet changes and crossovers are sampled.':''}</desc><text x="${L}" y="20">${escape(rank?rankTitle:ordinateTitle)}</text>`;
   const ticks=rank?Array.from({length:trains.length},(_,i)=>i+1):efficiencyScale.ticks;
   for(const tick of ticks)svg+=`<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#e4e8e4" stroke-dasharray="2 5"/><text x="${L-10}" y="${sy(tick)+4}" text-anchor="end">${rank?fmt(tick):escape(ordinateFormat(tick))}</text>`;

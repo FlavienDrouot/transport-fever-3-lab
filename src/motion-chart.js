@@ -37,7 +37,7 @@ export function motionTransitions(train,view) {
   });
   const traction=model.tractionEndSeconds,cap=model.speedCapSeconds;
   const hasPower=cap>traction+1e-9*Math.max(1,cap);
-  const events=hasPower?[{time:traction,label:'Traction → power'}]:[];
+  const events=hasPower?[{time:traction,label:'Power takes over'}]:[];
   events.push({time:model.asymptoticSpeed?model.speedViewSeconds:cap,
     label:model.asymptoticSpeed?'99% equilibrium':'Speed limit'});
   if(model.studyDistanceKm!=null){
@@ -57,7 +57,7 @@ export function motionTransitions(train,view) {
 export function renderModelTransitions(trains) {
   return trains.map(train=>{
     const model=train.model,end=motionTransitions(train,'speed').at(-1);
-    if(model.routeProfile||model.studyDistanceKm!=null){const first=motionTransitions(train,'speed').find(event=>event.label==='Traction → power');return `<tr><td>${escape(train.name)}</td><td>${first?formatTime(first.time):'—'}</td><td>${first?formatNumber(model.stateAt(first.time).distanceKm*1000,0):'—'}</td><td>${formatNumber(model.studyDistanceKm!=null?model.stateAt(model.timeAt(model.studyDistanceKm)).speedKmh:model.effectiveMaxSpeedKmh,1)}</td><td>${formatTime(model.studyDistanceKm!=null?model.timeAt(model.studyDistanceKm):model.speedCapSeconds)}</td><td>${formatNumber(model.studyDistanceKm??model.routeDistanceKm,2)}</td></tr>`;}
+    if(model.routeProfile||model.studyDistanceKm!=null){const first=motionTransitions(train,'speed').find(event=>event.label==='Power takes over');return `<tr><td>${escape(train.name)}</td><td>${first?formatTime(first.time):'—'}</td><td>${first?formatNumber(model.stateAt(first.time).distanceKm*1000,0):'—'}</td><td>${formatNumber(model.studyDistanceKm!=null?model.stateAt(model.timeAt(model.studyDistanceKm)).speedKmh:model.effectiveMaxSpeedKmh,1)}</td><td>${formatTime(model.studyDistanceKm!=null?model.timeAt(model.studyDistanceKm):model.speedCapSeconds)}</td><td>${formatNumber(model.studyDistanceKm??model.routeDistanceKm,2)}</td></tr>`;}
     if(!end)return '';
     const maximum=model.effectiveMaxSpeedKmh??model.stateAt(model.speedCapSeconds).speedKmh;
     return `<tr><td>${escape(train.name)}</td><td>${formatTime(model.tractionEndSeconds)}</td><td>${formatNumber(model.stateAt(model.tractionEndSeconds).distanceKm*1000,0)}</td><td>${formatNumber(maximum,1)}</td><td>${formatTime(end.time)}</td><td>${formatNumber(model.stateAt(end.time).distanceKm,2)}</td></tr>`;

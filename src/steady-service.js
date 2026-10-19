@@ -33,7 +33,7 @@ export function renderSteadyService({summary,table,body,caption},vehicles,settin
   table.querySelector('thead tr').innerHTML=headings.map(([label,unit],index)=>`<th scope="col"${detail(index)}>${label}${unit?`<span class="table-unit">${unit}</span>`:''}</th>`).join('');
   renderServiceSummary(summary,{names:best.map(row=>row.vehicle.name),cost:best[0]?.steady.costPerUnitKm,unit:`${UI_TERMS.capacityUnit} / km`,significant:4,
     explanation:'Steady-running cost per transported capacity per one-way kilometre, including both directions. Speed limits, gradients and Utilization apply; acceleration, braking and terminal handling are excluded.',
-    emptyMessage:vehicles.length?'No steady-running ranking at this Utilization or gradient.':'Select vehicles to compare their steady-running costs.'});
+    emptyMessage:vehicles.length?'No ranking at cruising speed for this Utilization or gradient.':'Select vehicles to compare their Running costs at cruising speed.'});
   caption.textContent=`Steady running · one ${per} per row · normal-difficulty running costs. Speed limits and gradients apply; acceleration, braking and terminal handling are excluded.`;
   body.innerHTML=rows.map(({vehicle,steady,capacity,rank})=>{
     const cells=[rank??'—',`<span class="train-key" style="--train-color:${vehicle.color}"></span>${escape(vehicle.name)}`,
