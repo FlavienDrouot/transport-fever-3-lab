@@ -20,7 +20,7 @@ import {mountChartInteractions,setChartHighlight} from './chart-interactions.js'
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {renderPhaseDiagram,rankPhaseSegments,observePhaseHighlight} from './phase-diagram.js';
 import {renderSteadyService} from './steady-service.js';
-import {renderRoadPhases} from './road-phases.js';
+import {renderRoadPhases,automaticRoadCostStory} from './road-phases.js';
 import {mountTablePreviews,updateTablePreview} from './table-preview.js';
 import {syncAnalysisPanels,mountPanelDrawers} from './panels.js';
 import {mountVehicleSelector,selectResults} from './vehicle-selector.js';
@@ -31,7 +31,7 @@ import {mountSourceCatalogue} from './source-catalogue.js';
 import {tramComponents,railComponents,lightRailComponents,lightRailComparisonVehicles} from './consists.js';
 import {mountConsistEditor} from './consist-editor.js';
 import {mountCompositionAnalysis} from './composition-analysis-controls.js';
-import {renderTruckService, selectRoadVehicles} from './trucks.js';
+import {renderTruckService, selectRoadVehicles, roadRouteSpeeds, analyseTruckService, analysePassengerRoadService} from './trucks.js';
 import {renderDataView} from './data-view.js';
 import {curveLabels, trainLegend, spreadDiagonalLabels} from './chart-labels.js';
 import {economicStory,yearRankingStory} from './economic-crossovers.js';
@@ -718,6 +718,30 @@ function compareComposition(){
 }
 
 let roadPhaseTimer,economicProfileTimer;
+// Road Running cost over distance mirrors Rail: ∞ extends until every vehicle cruises and the leader is settled.
+let roadEfficiencyKey,roadEfficiencyExtent;
+function renderRoadEfficiency(vehicles,options){
+  const automatic=!studyBounded(),base=automatic?uniformServiceStudyOptions({...options,distanceKm:1},true):options;
+  const eligible=vehicles.filter(v=>roadRouteSpeeds(v,base).eligible);
+  $('road-efficiency').hidden=!eligible.length;
+  if(!eligible.length){$('road-efficiency-chart').replaceChildren();return;}
+  let extent={distance:routeDistance};
+  if(automatic){
+    const key=JSON.stringify([eligible.map(v=>v.id),base]);
+    if(key!==roadEfficiencyKey){
+      const story=automaticRoadCostStory(eligible,base),steady=serviceSteadyDistance(eligible,base,true);
+      roadEfficiencyExtent={startDistance:story.start,referenceDistance:null,distance:Math.max(story.end,Number.isFinite(steady)?steady:0)};
+      roadEfficiencyKey=key;
+    }
+    extent=roadEfficiencyExtent;
+  }
+  const analyse=options.passenger?analysePassengerRoadService:analyseTruckService;
+  $('road-distance-help').textContent=`How the cost per ${UI_TERMS.capacityUnit} changes with route length. Lower is better.${automatic?` Beyond ${fmtKm(extent.distance)} km every vehicle reaches cruising speed and costs grow in a straight line; the cheapest vehicle no longer changes.`:''}`;
+  renderEconomicChart($('road-efficiency-chart'),{trains:eligible,...extent,fill:base.fillRatio??1,targets:base,highlighted,
+    mode:document.querySelector('input[name="road-efficiency-scale"]:checked').value,analysisKey:[eligible.map(v=>[v.id,v.color,v.dash]),base],
+    costAt:(v,x)=>analyse([v],{...base,distanceKm:x})[0]?.costPerCargo??null});
+}
+
 function render() {
   if (!$('optimizer').hidden){optimizerControl?.refresh();return;}
   if (!$('route-profile').hidden)return;
@@ -742,6 +766,7 @@ function render() {
       renderSteadyService({summary:$('road-steady-summary'),table:$('road-steady-table'),body:$('road-steady-readout'),caption:$('road-steady-caption')},vehicles,uniformServiceStudyOptions(options,true),{road:true,highlighted});
       updateTablePreview(document,'road-steady-readout');
     }
+    renderRoadEfficiency(vehicles,options);
     clearTimeout(roadPhaseTimer);
     const phasePanel=$('road-phases');
     if(options.demandPerYear!==null){
@@ -1043,7 +1068,7 @@ async function init() {
   });
   const updateTruckYear=mountYearControl({range:$('truck-year'),output:$('truck-year-value'),previous:$('truck-year-previous'),next:$('truck-year-next'),onChange:year=>{truckYear=year;render();}});
   for(const id of ['truck-utilization','truck-loaded-return','truck-specialized-terminal','truck-specialized-warehouse','truck-specialized-terminal-b','truck-specialized-warehouse-b'])$(id).addEventListener('input',updateTruckService);
-  for(const id of ['road-phase-axis','road-cost-scale','road-rank-scale','race-phase-axis','economic-phase-axis'])$(id).addEventListener('change',render);
+  for(const id of ['road-efficiency-scale','road-phase-axis','road-cost-scale','road-rank-scale','race-phase-axis','economic-phase-axis'])$(id).addEventListener('change',render);
   renderCatalogue();mountPanelDrawers(document,window.matchMedia('(max-width:700px)'));
   observePhaseHighlight(document,'rail',id=>{
     highlighted=id;trainSelector.highlight(id);

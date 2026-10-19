@@ -44,6 +44,8 @@ test('specified distance clips speed, arrival curves, transition rows and CSV sa
 test('automatic affine cost exploration includes distant tail crossings and isolates constrained fleets',()=>{
   const cost=(id,d)=>id==='a'?d:500+.5*d;
   assert.ok(automaticCostDistance([{id:'a'},{id:'b'}],cost,10)>1000);
+  // Steady costs per km within 0.1% are a tie: their remote crossing does not stretch the study.
+  assert.equal(automaticCostDistance([{id:'a'},{id:'b'}],(id,d)=>id==='a'?d:500+.9999*d,10),12);
   assert.equal(automaticCostStudyAllowed({studyScope:'auto'}),true);
   for(const options of [{studyCustomRoute:true},{demandPerDirection:1000},{demandPerYear:1000},{maxHeadwaySeconds:300}])assert.equal(automaticCostStudyAllowed({studyScope:'auto',...options}),false);
 });
