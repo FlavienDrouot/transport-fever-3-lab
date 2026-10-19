@@ -70,10 +70,10 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
       $('composition-summary').innerHTML=`<dl class="consist-totals">${[
         [UI_TERMS.capacity,`${fmt(preview.passengerCapacity??preview.cargoCapacity)} ${UI_TERMS.capacityUnit}`],
         ['Length',`${fmt(preview.lengthMetres)} m`],['Maximum speed',`${fmt(preview.maxSpeedKmh)} km/h`],
-        ['Empty mass',`${fmt(preview.massTonnes)} t`],['Power',`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],
-        ['Power / mass',`${fmt(preview.powerCh*units.horsepowerWatts/massKg)} W/kg`],
-        ['Traction',`${fmt(preview.tractionKgf*units.kgfNewtons,0)} N`],
-        ['Traction / mass',`${fmt(preview.tractionKgf*units.kgfNewtons/massKg)} N/kg`],
+        [`Empty ${UI_TERMS.weight.toLowerCase()}`,`${fmt(preview.massTonnes)} t`],[UI_TERMS.power,`${fmt(preview.powerCh*units.horsepowerWatts/1000)} kW`],
+        [`${UI_TERMS.power} / ${UI_TERMS.weight.toLowerCase()}`,`${fmt(preview.powerCh*units.horsepowerWatts/massKg)} W/kg`],
+        [UI_TERMS.tractionForce,`${fmt(preview.tractionKgf*units.kgfNewtons,0)} N`],
+        [`${UI_TERMS.tractionForce} / ${UI_TERMS.weight.toLowerCase()}`,`${fmt(preview.tractionKgf*units.kgfNewtons/massKg)} N/kg`],
         ['Handling',`${preview.handlingRate.toLocaleString('en-GB',{maximumFractionDigits:4})} ${UI_TERMS.capacityUnit}/s`],
         ['Purchase',`$${fmt(preview.economy.purchasePrice)}`],[UI_TERMS.runningCosts,`$${fmt(preview.economy.annualMaintenance)}/year`]
       ].map(([key,value])=>`<div><dt>${key}</dt><dd>${value}</dd></div>`).join('')}</dl>`;

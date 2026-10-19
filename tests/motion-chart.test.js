@@ -53,7 +53,7 @@ test('Transition coordinates follow all four axis layouts, and traction-only cap
   const train=trains.find(t=>t.id==='avelia-liberty');
   for(const view of ['speed','speed-distance','distance','time']){
     const points=motionTransitions(train,view);assert.equal(points.length,2);
-    assert.deepEqual(points.map(p=>p.label),['Traction → power','Speed limit']);
+    assert.deepEqual(points.map(p=>p.label),['Power takes over','Speed limit']);
     close(points[0].time,train.model.tractionEndSeconds);close(points[1].time,train.model.speedCapSeconds);
     for(const p of points)close(motionValue(train,p.x,view),p.y);
   }

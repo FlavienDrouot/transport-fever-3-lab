@@ -8,4 +8,8 @@ export const UI_TERMS=Object.freeze({
   rate:'Rate',
   runningCosts:'Running costs',
   industry:'Industry',
+  // Vehicle stats as named in the game; Weight is shown as Empty weight (cargo adds none).
+  tractionForce:'Traction force',
+  power:'Power',
+  weight:'Weight',
 });

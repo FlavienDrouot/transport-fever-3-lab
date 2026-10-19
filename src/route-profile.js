@@ -159,7 +159,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
     const threshold=power/force;
     if(speed<threshold-1e-7&&next>=threshold){
       const fraction=(threshold-speed)/(next-speed);
-      events.push({time:time+step*fraction,distanceKm:(position+travelled*fraction)/1000,label:'Traction → power'});
+      events.push({time:time+step*fraction,distanceKm:(position+travelled*fraction)/1000,label:'Power takes over'});
     }
     if(travelled<1e-10){stalled=true;break;}
     position=Math.min(routeMetres,position+travelled);time+=step;speed=next;
