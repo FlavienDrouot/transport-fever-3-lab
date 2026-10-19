@@ -1,3 +1,4 @@
+import {automaticCostStudyAllowed,automaticCostTail,serviceSteadyDistance,clipStudyStory,uniformServiceStudyOptions} from './comparison-study.js';
 import {roadRoundTripMotion} from './road-motion.js';
 import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
@@ -10,7 +11,7 @@ import {fixedRateFleetCount} from './service-fleet.js';
 import {styleVehicleCatalogues} from './vehicle-styles.js';
 const fmt=n=>formatNumber(n,2);
 
-export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5}={}){
+export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5,rankingOptions={}}={}){
   if(!['distance','year','utilization'].includes(axis))throw new RangeError('Unsupported road phase axis');
   const rows=(options.passenger?analysePassengerRoadService:analyseTruckService)(vehicles,options);
   vehicles=vehicles.filter(v=>rows.some(r=>r.truck.id===v.id));
@@ -35,7 +36,7 @@ export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5
     if(axis==='year')return c.row.truck.year<=x?c.row.costPerCargo:null;
     return axis==='distance'?c.factor*(2*travel+c.row.loadingSeconds+c.row.unloadingSeconds+2*c.row.terminalDelaySeconds):c.handling+c.fixed*(options.fillRatio??1)/(x/100);
   };
-  if(axis!=='year')return {...rankingStory(vehicles.map(v=>v.id),(id,x)=>{const cost=valueAt(id,x);return cost===null?null:-cost;},start,end),valueAt};
+  if(axis!=='year')return {...rankingStory(vehicles.map(v=>v.id),(id,x)=>{const cost=valueAt(id,x);return cost===null?null:-cost;},start,end,true,512,rankingOptions),valueAt};
   if(!Number.isInteger(start)||!Number.isInteger(end)||end<=start)throw new RangeError('Invalid year domain');
   const knots=[...new Set([start,...vehicles.map(v=>v.year).filter(y=>y>start&&y<end),end])].sort((a,b)=>a-b);
   const intervals=[],phases=[];
@@ -107,26 +108,46 @@ function phaseChart(container,vehicles,story,{axis,label,current,mode,rank,stepp
   }
   let overlay='';
   for(const v of vehicles)if(axis==='year'&&v.year===story.end)overlay+=`<circle cx="${sx(story.end)}" cy="${sy(rank?story.endRanks[v.id]:story.valueAt(v.id,story.end))}" r="3" fill="${v.color}"><title>${escape(v.name)} · introduced ${v.year}</title></circle>`;
-  overlay+=`<line class="phase-current-setting" style="${current>=story.start&&current<=story.end?'':'display:none'}" x1="${sx(current)}" x2="${sx(current)}" y1="${T}" y2="${H-B}" stroke="currentColor" stroke-dasharray="6 4"><title>Current setting: ${axis==='year'?String(Math.round(current)):fmt(current)}</title></line>`;
+  if(Number.isFinite(current))overlay+=`<line class="phase-current-setting" style="${current>=story.start&&current<=story.end?'':'display:none'}" x1="${sx(current)}" x2="${sx(current)}" y1="${T}" y2="${H-B}" stroke="currentColor" stroke-dasharray="6 4"><title>Current setting: ${axis==='year'?String(Math.round(current)):fmt(current)}</title></line>`;
   overlay+=`<text x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">${escape(label)} · ${mode==='linear'?'linear':rank?'all rank changes':'leader phase focus'}</text>`;
   renderPhaseDiagram(container,{trains:vehicles,segments:paths,frame:svg,overlay,width:W,height:H,left:L,right:R,top:T,bottom:B,title:`${label}: ${rank?'vehicle rank changes':'running cost phases'}`,group:'road',
     endpoints:vehicles.map(t=>{const value=rank?(story.endRanks?.[t.id]??story.intervals.at(-1).ranks[t.id]):story.valueAt(t.id,story.end);return {t,y:value==null?NaN:sy(value),winner:story.endRanks?story.endRanks[t.id]===1:story.phases.at(-1).leaders.includes(t.id)};}),
     bands:story.phases.map(p=>({leaders:p.leaders,width:scale.position(p.end)-scale.position(p.start)}))});
   layouts.set(container,{story,width:W,mode,rank,axis,stepped,sx});
 }
+/** Uniform automatic cost studies never use the retained route length. */
+export function automaticRoadCostStory(vehicles,options){
+  const uniform=uniformServiceStudyOptions({...options,distanceKm:1},true);
+  const probe=roadPhaseStory(vehicles,uniform,{start:.01,end:1});
+  if(!vehicles.length)return probe;
+  const steady=serviceSteadyDistance(vehicles,uniform,true),tail=automaticCostTail(vehicles,probe.valueAt,steady);
+  if(tail==null)return probe;
+  const story=roadPhaseStory(vehicles,uniform,{start:.01,end:tail.end,rankingOptions:{knownRoots:tail.roots,absoluteTolerance:tail.absoluteTolerance}});
+  const last=story.phases.at(-1);
+  if(!last)return story;
+  last.unbounded=true;
+  return clipStudyStory(story,story.phases.length>1?last.start*1.15:Math.max(1,serviceSteadyDistance(vehicles.filter(v=>last.leaders.includes(v.id)),uniform,true)),{unbounded:true});
+}
 let cacheKey,cached;
 export function renderRoadPhases(document,datasets,selection,options){
   const node=id=>document.getElementById(id),axis=node('road-phase-axis').querySelector('input:checked').value;
+  const automatic=axis==='distance'&&automaticCostStudyAllowed(options);
+  if(automatic)options=uniformServiceStudyOptions({...options,distanceKm:1},true);
   let vehicles=selectRoadVehicles(styleVehicleCatalogues(datasets),{...selection,year:axis==='year'?2035:selection.year});
   vehicles=vehicles.filter(v=>roadRouteSpeeds(v,options).eligible);
-  const domain=axis==='year'?{start:1900,end:2035}:axis==='utilization'?{start:1,end:100}:{start:.01,end:Math.max(5,options.distanceKm)};
-  const current=axis==='year'?selection.year:axis==='utilization'?options.fillRatio*100:options.distanceKm;
+  const domain=axis==='year'?{start:1900,end:2035}:axis==='utilization'?{start:1,end:100}:{start:automatic ? .01 : Math.min(.01,options.distanceKm/10),end:automatic?1:options.studyScope?options.distanceKm:Math.max(5,options.distanceKm)};
+  const current=automatic?null:axis==='year'?selection.year:axis==='utilization'?options.fillRatio*100:options.distanceKm;
   const label=axis==='year'?'Game year':axis==='utilization'?'Utilization (%)':'One-way distance (km)';
   // The swept parameter belongs to the marker, not to the curve cache.
   const phaseOptions={...options,...(axis==='distance'?{distanceKm:1}:axis==='utilization'?{fillRatio:1}:{})};
   const key=JSON.stringify([vehicles,phaseOptions,axis,domain]);
-  if(key!==cacheKey){cached=roadPhaseStory(vehicles,phaseOptions,{axis,...domain});cacheKey=key;}
-  node('road-phase-help').textContent=`${label} varies over ${axis==='year'?String(domain.start):fmt(domain.start)}–${axis==='year'?String(domain.end):fmt(domain.end)}; other settings remain fixed. Dashed line: current setting. ${axis==='distance'&&options.routeProfile?'All segment lengths scale together; their gradients and speed limits remain fixed. ':''}${axis==='year'?'Vehicles enter at their introduction year; retirement dates are not applied.':''}`;
+  if(key!==cacheKey){
+    cached=automatic?automaticRoadCostStory(vehicles,phaseOptions):roadPhaseStory(vehicles,phaseOptions,{axis,...domain});
+    cacheKey=key;
+  }
+  if(automatic)domain.end=cached.end;
+
+  node('road-phase-help').textContent=`${label} varies over ${axis==='year'?String(domain.start):fmt(domain.start)}–${axis==='year'?String(domain.end):fmt(domain.end)}; other settings remain fixed. ${automatic?'Automatic extent covers the last modeled leader change. ':options.studyScope==='auto'&&!options.studyCustomRoute&&axis==='distance'?'Distance is bounded here: fleet targets can prevent a final stable leader. ':''}${automatic?'':'Dashed line: reference distance when inside the explored range. '}${axis==='distance'&&options.routeProfile?'All segment lengths scale together; their gradients and speed limits remain fixed. ':''}${axis==='year'?'Vehicles enter at their introduction year; retirement dates are not applied.':''}`;
   phaseChart(node('road-cost-phases-chart'),vehicles,cached,{axis,label,current,mode:node('road-cost-scale').querySelector('input:checked').value,rank:false,stepped:options.demandPerYear!=null});
   phaseChart(node('road-rank-phases-chart'),vehicles,cached,{axis,label,current,mode:node('road-rank-scale').querySelector('input:checked').value,rank:true});
 }

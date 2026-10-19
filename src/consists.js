@@ -38,6 +38,18 @@ export function lightRailComponents(vehicles) {
   return poweredVehicleComponents(vehicles.filter(item=>item.lightRailCompatible===true),{carrier:'rail',catalogue:'light-rail'});
 }
 
+/** Built-in Rail comparison units, distinct from saved custom compositions and Road IDs. */
+export function lightRailComparisonVehicles(vehicles,units) {
+  const catalogue=lightRailComponents(vehicles);
+  return catalogue.map(component=>{
+    const category=component.cargoCapacity>0?'freight':'passengers';
+    const definition={schemaVersion:1,id:component.id,name:component.name,carrier:'rail',category,
+      ...(category==='freight'?{cargo:component.freightSpecialization==='general'?'all':component.freightSpecialization}:{}),
+      components:[{componentId:component.id,quantity:1}]};
+    return {...component,...buildConsist(definition,catalogue,units),isCustomConsist:false,automaticCouplingAllowed:true};
+  });
+}
+
 /** Build one complete formation. Missing mechanical/economic values stay unknown. */
 export function buildConsist(definition, catalogue, units) {
   if(definition?.schemaVersion!==1)throw new RangeError('Unsupported consist schema');

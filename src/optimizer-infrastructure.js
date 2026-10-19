@@ -1,6 +1,8 @@
 import {UI_TERMS as T} from './ui-terms.js';
 
 export const MAX_TERMINAL_CONFIGURATIONS=8;
+// Editable planning default, not a measured capacity or a game maximum.
+export const DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY=800;
 // Maximum Rail platform length reported in-game by Flavien.
 export const RAIL_PLATFORM_MAX_LENGTH=840;
 // Annual tariffs reported by Flavien: Rail per 40 m, Road per 10 m (initial 20 m).
@@ -205,7 +207,7 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
     if(existingSpecializedWarehouse&&warehouseSpecialization==='generic')throw new RangeError('A reused specialized warehouse cannot be downgraded.');
     const factoryTerminals=Object.hasOwn(site,'factoryTerminals')?site.factoryTerminals:2;
     if(site.type==='factory'&&category==='freight'&&domain!=='rail'&&![2,3].includes(factoryTerminals))throw new RangeError('Choose 2 or 3 parallel Road industry terminals.');
-    const inputStorageCapacity=Object.hasOwn(site,'inputStorageCapacity')?site.inputStorageCapacity:100,outputStorageCapacity=Object.hasOwn(site,'outputStorageCapacity')?site.outputStorageCapacity:100;
+    const inputStorageCapacity=Object.hasOwn(site,'inputStorageCapacity')?site.inputStorageCapacity:100,outputStorageCapacity=Object.hasOwn(site,'outputStorageCapacity')?site.outputStorageCapacity:DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY;
     if(site.type==='factory'&&category==='freight'&&![inputStorageCapacity,outputStorageCapacity].every(n=>Number.isSafeInteger(n)&&n>=100&&n%100===0))throw new RangeError('Industry storage capacities must be positive whole 100 capacity sections.');
     result.sites[stop]={type:site.type,warehouseSpecialization:existingSpecializedWarehouse?'specialized':warehouseSpecialization,warehouseCapacity,maxWarehouseCapacity,existingSpecializedWarehouse,
       ...(site.type==='factory'?{factoryTerminals,...(category==='freight'?{inputStorageCapacity,outputStorageCapacity}:{})}:{})};

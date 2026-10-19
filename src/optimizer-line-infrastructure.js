@@ -17,16 +17,16 @@ export function validateLineInfrastructure(value){
   return {};
 }
 
-/** Preset maxima describe a tier; other values remain hard speed constraints. */
+/** A configured tier is a ceiling; arbitrary values remain curve speed constraints. */
 export function segmentLineTiers(part,domain,year){
   const tiers=domain==='rail'?railLineTiers(year):roadLineTiers(year);
   const speed=domain==='rail'?(part.railSpeedConstraintKmh??part.speedLimitKmh):(part.roadSpeedConstraintKmh??part.roadSpeedLimitKmh??part.speedLimitKmh);
   const city=domain==='road'&&(speed===50||(part.roadCity??(year<1940&&speed===40)));
   const preset=domain==='rail'?RAIL_LINE_TIERS:tiers;
-  const hardLimit=city||!preset.some(tier=>tier.speed===speed)?speed:Infinity;
+  const configuredTier=preset.some(tier=>tier.speed===speed),hardLimit=speed;
   const lanes=part.roadLanes??2;
   const trackCount=part.railTracks??1;
-  return tiers.filter(tier=>domain==='rail'||tier.lanes.includes(lanes)&&Boolean(tier.city)===city).map(tier=>({
+  return tiers.filter(tier=>(!configuredTier||tier.speed<=speed)&&(domain==='rail'||tier.lanes.includes(lanes)&&Boolean(tier.city)===city)).map(tier=>({
     tierSpeedKmh:tier.speed,speedLimitKmh:Math.min(tier.speed,hardLimit),speedConstraintKmh:speed,
     ...(domain==='road'?{roadLanes:lanes,city}:{trackCount}),distanceKm:part.distanceKm,
     annualMaintenance:part.distanceKm*tier.maintenance*(domain==='rail'?trackCount:lanes===4&&tier.speed!==120?2:1)
@@ -41,7 +41,7 @@ export function segmentTramTiers(part,request){
   const speed=part.roadSpeedConstraintKmh??part.roadSpeedLimitKmh??part.speedLimitKmh;
   const configured=part.roadSpeedLimitKmh??part.speedLimitKmh,kind=part.tramInfrastructure??'auto';
   const city=speed===50||(part.roadCity??(request.year<1940&&speed===40));
-  const hardLimit=city||!roadLineTiers(request.year).some(tier=>tier.speed===speed)?speed:Infinity;
+  const hardLimit=speed;
   let road=kind==='dedicated'?[]:segmentLineTiers(part,'road',request.year).filter(tier=>tier.tierSpeedKmh<100).map(tier=>({...tier,tramInfrastructure:'road'}));
   if(!request.lineInfrastructure){
     road=road.filter(()=>speed!==100&&speed!==120).map(tier=>({...tier,speedLimitKmh:Math.min(tier.speedLimitKmh,configured),annualMaintenance:0}));

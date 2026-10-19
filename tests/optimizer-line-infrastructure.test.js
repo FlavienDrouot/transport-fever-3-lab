@@ -31,9 +31,19 @@ test('city tiers remain fixed and arbitrary curve limits cannot be raised',()=>{
   assert.deepEqual(segmentLineTiers({...part,roadSpeedLimitKmh:90},'road',2035).map(t=>t.speedLimitKmh),[80,90]);
   assert.deepEqual(segmentLineTiers({...part,roadSpeedLimitKmh:60},'road',2035).map(t=>t.speedLimitKmh),[60,60]);
   assert.deepEqual(segmentLineTiers({...part,speedLimitKmh:130},'rail',2035).map(t=>t.speedLimitKmh),[100,130,130]);
-  assert.ok(segmentLineTiers({...part,roadSpeedLimitKmh:80},'road',2035).some(t=>t.speedLimitKmh===100));
+  assert.deepEqual(segmentLineTiers({...part,roadSpeedLimitKmh:80},'road',2035).map(t=>t.tierSpeedKmh),[80]);
   const modern40=segmentLineTiers({...part,roadSpeedLimitKmh:40},'road',2035);
   assert.ok(modern40.every(t=>!t.city&&t.speedLimitKmh===40));
+});
+
+test('selected Rail and Road tiers cap upgrades while leaving cheaper tiers available',()=>{
+  for(const [cap,expected] of [[100,[100]],[160,[100,160]],[350,[100,160,350]]]){
+    const tiers=segmentLineTiers({...part,speedLimitKmh:cap},'rail',2035);
+    assert.deepEqual(tiers.map(t=>t.tierSpeedKmh),expected);assert.ok(tiers.every(t=>t.speedLimitKmh<=cap));
+  }
+  assert.deepEqual(segmentLineTiers({...part,roadSpeedLimitKmh:100},'road',2035).map(t=>t.tierSpeedKmh),[80,100]);
+  const inherited=lineInfrastructurePlan([{...part,speedLimitKmh:160}],'rail',[segmentLineTiers({...part,speedLimitKmh:160},'rail',2035)[0]]);
+  assert.deepEqual(segmentLineTiers(inherited.routeProfile[0],'rail',2035).map(t=>t.tierSpeedKmh),[100,160]);
 });
 
 test('opening and reversing preserve original constraints; manual speed edits replace them',()=>{
@@ -56,6 +66,18 @@ test('opening and reversing preserve original constraints; manual speed edits re
 const [trains,buses,trucks]=await Promise.all(['trains','buses','trucks'].map(async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)))));
 const catalogue={units:trains.source,trains:trains.trains.filter(v=>v.id==='ice-1'),locomotives:[],passengerWagons:[],freightWagons:[],
   buses:buses.buses.filter(v=>v.id==='king-long-merry-combo'),trucks:trucks.trucks.filter(v=>v.id==='tesla-semi')};
+test('a delivery bound cannot upgrade a selected 160 km/h segment to the 350 tier',()=>{
+  const make=cap=>optimizerRequest({domain:'rail',rate:100,maxTrainLength:400,routeProfile:[{...part,distanceKm:24,speedLimitKmh:cap}]});
+  const candidate=optimizerCandidates(catalogue,make(160)).next().value;
+  const slow=evaluateOptimizerCandidate(candidate,catalogue,make(160)).result;
+  const fast=evaluateOptimizerCandidate(candidate,catalogue,make(350)).result;
+  assert.ok(slow.outboundLegSeconds>fast.outboundLegSeconds);
+  const deadline=(slow.outboundLegSeconds+fast.outboundLegSeconds)/2;
+  const capped=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...make(160),lineInfrastructure:{},maxOutboundLegSeconds:deadline}));
+  assert.equal(capped.result,undefined);assert.ok(capped.limitingConstraints.includes('maxOutboundLegSeconds'));
+  const allowed=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...make(350),lineInfrastructure:{},maxOutboundLegSeconds:deadline})).result;
+  assert.ok(allowed);assert.equal(allowed.routeInfrastructure.segments[0].tierSpeedKmh,350);
+});
 function* plans(route,domain,year,index=0,chosen=[]){
   if(index===route.length){yield lineInfrastructurePlan(route,domain,[...chosen]);return;}
   for(const tier of segmentLineTiers(route[index],domain,year)){chosen[index]=tier;yield* plans(route,domain,year,index+1,chosen);}
