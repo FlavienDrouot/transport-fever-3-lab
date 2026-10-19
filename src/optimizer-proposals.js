@@ -121,3 +121,15 @@ export function toggleOptimizerProposalRows(root,button){
 export function optimizerProposalAt(answer,{domain,group,wagon,result}){
   return group!==undefined?answer.groups?.[domain]?.[Number(group)]?.wagons[Number(wagon)]?.variants[Number(result)]:answer.best[domain]?.[Number(result)];
 }
+
+const domainName=(domain,request)=>domain==='rail'?'Rail':request.includeTrams?'Road + Tram':'Road';
+/** The answer first: the cheapest proposal overall and how it compares with the other domain. */
+export function renderOptimizerVerdict(answer){
+  const domains=answer.request.domain==='both'?['rail','road']:[answer.request.domain];
+  const best=domains.map(domain=>({domain,r:optimizerProposalAt(answer,{domain,group:answer.groups?.[domain]?'0':undefined,wagon:'0',result:'0'})})).filter(({r})=>r).sort((a,b)=>a.r.cost-b.r.cost);
+  if(!best.length)return '';
+  const [{domain,r},other]=best,unit=domain==='rail'?'train':'vehicle';
+  const label=domains.length>1?'Cheapest way to meet your service':`Cheapest ${domainName(domain,answer.request)} option`;
+  const comparison=other?`${fmt((other.r.cost-r.cost)/other.r.cost*100,0)}% less than the best ${domainName(other.domain,answer.request)} option, ${escapeHtml(other.r.name)} (${money(other.r.cost)}/year)`:'';
+  return `<div class="line-summary optimizer-verdict" role="status"><div class="service-winner"><span class="service-winner-label">${label}</span><strong>${escapeHtml(r.name)} · ${domainName(domain,answer.request)}</strong><span>${fmt(r.fleet,0)} ${unit}${r.fleet===1?'':'s'} of ${escapeHtml(configuration(r))} · ${T.frequency} ${formatDuration(r.frequency)}</span></div><div class="service-winner-cost"><strong>${money(r.cost)}/year</strong><span>${T.runningCosts}</span></div>${comparison?`<p class="optimizer-verdict-note">${comparison}.</p>`:''}</div>`;
+}
