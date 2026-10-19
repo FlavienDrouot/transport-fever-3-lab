@@ -20,3 +20,8 @@ export function formatNumber(value, digits = 0, fixed = false) {
     minimumFractionDigits: fixed ? digits : 0, maximumFractionDigits: digits,
   }) : 'Unknown';
 }
+
+/** Readable magnitudes for costs that range from cents to thousands. */
+export function formatSignificant(value, digits = 4) {
+  return Number.isFinite(value) ? value.toLocaleString('en-GB', {maximumSignificantDigits: digits}) : 'Unknown';
+}

@@ -1,7 +1,7 @@
 import {compositionSteadyRunning} from './composition-analysis.js';
 import {withRoadModel} from './road-motion.js';
 import {UI_TERMS} from './ui-terms.js';
-import {escapeHtml as escape,formatNumber} from './format.js';
+import {escapeHtml as escape,formatNumber,formatSignificant} from './format.js';
 import {renderServiceSummary} from './service-summary.js';
 
 /** The Composition steady reference, applied to one selected train or Road vehicle. */
@@ -31,13 +31,13 @@ export function renderSteadyService({summary,table,body,caption},vehicles,settin
     ['Maximum speed','km/h · vehicle limit'],['Steady speed A→B / B→A','km/h'],[UI_TERMS.utilization,'%']];
   const detail=index=>!road&&index>=7?' class="service-detail"':'';
   table.querySelector('thead tr').innerHTML=headings.map(([label,unit],index)=>`<th scope="col"${detail(index)}>${label}${unit?`<span class="table-unit">${unit}</span>`:''}</th>`).join('');
-  renderServiceSummary(summary,{names:best.map(row=>row.vehicle.name),cost:best[0]?.steady.costPerUnitKm,unit:`${UI_TERMS.capacityUnit} / km`,precision:4,
+  renderServiceSummary(summary,{names:best.map(row=>row.vehicle.name),cost:best[0]?.steady.costPerUnitKm,unit:`${UI_TERMS.capacityUnit} / km`,significant:4,
     explanation:'Steady-running cost per transported capacity per one-way kilometre, including both directions. Speed limits, gradients and Utilization apply; acceleration, braking and terminal handling are excluded.',
     emptyMessage:vehicles.length?'No steady-running ranking at this Utilization or gradient.':'Select vehicles to compare their steady-running costs.'});
   caption.textContent=`Steady running · one ${per} per row · normal-difficulty running costs. Speed limits and gradients apply; acceleration, braking and terminal handling are excluded.`;
   body.innerHTML=rows.map(({vehicle,steady,capacity,rank})=>{
     const cells=[rank??'—',`<span class="train-key" style="--train-color:${vehicle.color}"></span>${escape(vehicle.name)}`,
-      steady.costPerUnitKm===null?'—':formatNumber(steady.costPerUnitKm,4),steady.transportOutputPerYear===null?'—':formatNumber(steady.transportOutputPerYear,0),
+      steady.costPerUnitKm===null?'—':formatSignificant(steady.costPerUnitKm),steady.transportOutputPerYear===null?'—':formatNumber(steady.transportOutputPerYear,0),
       formatNumber(capacity,0),`$${formatNumber(vehicle.economy.annualMaintenance,0)}`,formatNumber(vehicle.maxSpeedKmh,1),
       `${formatNumber(steady.outboundSpeedKmh,1)} / ${formatNumber(steady.returnSpeedKmh,1)}`,`${formatNumber((settings.fillRatio??1)*100,1)}%`];
     return `<tr data-train="${escape(vehicle.id)}" class="${vehicle.id===highlighted?'is-highlighted':''}">${cells.map((cell,index)=>`<td${detail(index)}>${cell}</td>`).join('')}</tr>`;
