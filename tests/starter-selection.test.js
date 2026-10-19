@@ -15,9 +15,10 @@ test('without a curated cast the starter selection keeps the newest catalogue ve
   assert.deepEqual(starterIds(items),['b','d','c','a']);
 });
 
-test('a curated cast keeps its available vehicles and falls back when fewer than two remain',()=>{
-  assert.deepEqual(starterIds(items,{preferred:['c','a','missing']}),['c','a']);
-  assert.deepEqual(starterIds(items,{preferred:['a','missing'],size:2}),['b','d']);
+test('missing curated vehicles are replaced by the newest vehicles not yet shown',()=>{
+  assert.deepEqual(starterIds(items,{preferred:['c','a','missing'],size:3}),['c','a','b']);
+  assert.deepEqual(starterIds(items,{preferred:['b','a','missing'],size:4}),['b','a','d','c']);
+  assert.deepEqual(starterIds(items,{preferred:['missing'],size:2}),['b','d']);
 });
 
 test('the Rail passenger cast exists in the Rail and light-rail catalogues',async()=>{
