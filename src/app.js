@@ -56,10 +56,10 @@ const fmt = (n, digits = 1) => formatNumber(n,digits,true);
 const fmtKm = n => formatNumber(n,n<.01?4:n<.1?3:n<1?2:1);
 const scaleMode = (axis, kind = 'race') => document.querySelector(`input[name="${kind === 'speed' ? 'speed-' : ''}${axis}-scale"]:checked`).value;
 const views = {
-  distance: {title: 'Distance over time', x: 'Time since departure (m:ss)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve shows the leading vehicle.'},
-  speed: {title: 'Speed over time', x: 'Time since departure (m:ss)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'The curves show how each vehicle accelerates to its top speed.'},
+  distance: {title: 'Distance over time', x: 'Time since departure (m:ss)', y: 'Distance travelled (km)', unit: 's', xFloor: 10, yFloor: .1, yUnit: 'km', help: 'The highest curve is ahead.'},
+  speed: {title: 'Speed over time', x: 'Time since departure (m:ss)', y: 'Speed (km/h)', unit: 's', xFloor: 10, yFloor: 10, yUnit: 'km/h', help: 'How quickly each vehicle reaches its top speed.'},
   'speed-distance': {title:'Speed over distance',x:'Distance travelled (km)',y:'Speed (km/h)',unit:'km',xFloor:.1,yFloor:10,yUnit:'km/h',help:'The curves show how each vehicle accelerates along the route.'},
-  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (m:ss)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve shows the vehicle that reaches the distance first.'}
+  time: {title: 'Time over distance', x: 'Distance travelled (km)', y: 'Time since departure (m:ss)', unit: 'km', xFloor: .1, yFloor: 10, yUnit: 's', help: 'The lowest curve reaches each distance first.'}
 };
 let speedView='speed',studyScope='auto';
 const studyBounded=()=>studyScope==='distance'||routeSelection.mode==='custom';
@@ -92,7 +92,7 @@ function syncStudyControls(){
   $('comparison-route-choice').hidden=comparing;
   $('comparison-study-scope').hidden=$('comparison-study-note').hidden=!comparing;
   $('comparison-study-scope').querySelector(`input[value=${custom?'custom':studyScope}]`).checked=true;
-  $('comparison-study-note').textContent=custom?'Distance studies end at B.':studyScope==='auto'?'Axes adapt to the last modeled leader change.':'Distance studies stop at the defined distance.';
+  $('comparison-study-note').textContent=custom?'Charts end at B.':studyScope==='auto'?'∞ · no fixed distance: charts extend until the lead stops changing.':'Charts stop at this distance.';
   $('route-distance').closest('.horizon-control').hidden=custom||automatic;
   $('race-profile-status').hidden=automatic;
   $('distance-note').hidden=automatic;
@@ -334,9 +334,9 @@ function renderChart(kind, width) {
   const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
   el('chart-help').textContent = speedUsesProfile()&&view.startsWith('speed')?(navigation.domain==='road'?'Speed follows the route to B; lower limits apply instantly. Road braking is omitted.':'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.'):view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited vehicles approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
-  if(view.startsWith('speed')&&!speedUsesProfile()&&!studyBounded())el('chart-help').textContent+=' This acceleration window is independent of route length.';
-  if(studyBounded()&&view.startsWith('speed'))el('chart-help').textContent+=' Limited to the defined route distance.';
-  el('chart-help').textContent+=' Hover or focus a vehicle to see transitions and coordinates.';
+  if(view.startsWith('speed')&&!speedUsesProfile()&&!studyBounded())el('chart-help').textContent+=' Shown until every vehicle reaches top speed.';
+  if(studyBounded()&&view.startsWith('speed'))el('chart-help').textContent+=' Up to the route distance.';
+  el('chart-help').textContent+=' Hover a curve for details.';
   const missingFreight=navigation.domain==='rail'&&comparisonCategory==='freight'&&!trainCandidates(Infinity).length;
   el('empty').innerHTML=missingFreight?'No freight train yet. <a href="#configurator" data-economic-configure>Compose your freight train ↗</a>':'Select at least one vehicle to display the curves.';
   el('empty').hidden = !!ts.length; el('chart').hidden=!ts.length; el('csv').disabled = el('svg').disabled = !ts.length;
@@ -435,7 +435,7 @@ function renderCrossovers() {
   $('rank-scale-note').textContent=mode==='linear'?`Distance uses a uniform linear scale. Crossovers below ${fmtKm(minimum)} km are omitted.`:studyBounded()?`From ${fmtKm(minimum)} km, crossovers are shown up to the defined distance.`:`From ${fmtKm(minimum)} km, each crossover between any selected trains gets an equally spaced position. Real distances are shown at the ticks. The display stops after the last leader change; lower ranks can still change farther away.`;
   const sx=distance=>L+phaseAxis.position(distance)*(W-L-R);
   const sy=rank=>T+(rank-1)*(H-T-B)/Math.max(1,ts.length-1);
-  let content=`<title>Rank crossovers</title><desc>Arrival ranking by distance. Axis: ${mode}. Rank crossovers from ${fmtKm(minimum)} kilometres are included, even when the leading train stays the same. ${studyBounded()?'The study ends at the defined distance.':'The final leader is stable; lower ranks may still change beyond the display.'}</desc><text x="${L}" y="20">Arrival rank · first place at the top</text>`;
+  let content=`<title>Ranking by distance</title><desc>Arrival ranking by distance. Axis: ${mode}. Rank crossovers from ${fmtKm(minimum)} kilometres are included, even when the leading train stays the same. ${studyBounded()?'The study ends at the defined distance.':'The final leader is stable; lower ranks may still change beyond the display.'}</desc><text x="${L}" y="20">Arrival rank · first place at the top</text>`;
   phases.forEach((p,i)=>{
     const x=sx(p.start);
     content+=`<line x1="${x}" x2="${x}" y1="${T-15}" y2="${H-B+10}" stroke="#ccd4cc" stroke-dasharray="3 5"/>`;
@@ -467,7 +467,7 @@ function renderCrossoverCurves() {
   const timeMode=document.querySelector('input[name="focus-time"]:checked').value;
   const inverted=document.querySelector('input[name="crossover-orientation"]:checked').value==='distance';
   const emphasize=$('emphasize-leaders').checked;
-  $('crossover-curves-help').textContent=inverted?'The highest curve leads the race.':'The lowest curve arrives first.';
+  $('crossover-curves-help').textContent=`Each overtake gets more room, so close finishes are easy to see. ${inverted?'The highest curve is ahead.':'The lowest curve arrives first.'}`;
   // Keep the explanation in the flow while the year changes.
   $('crossover-axis-note').hidden=false;
   const distanceAxis=createPhaseScale(distanceMode==='focus'?distances:[0,end],distanceMode==='focus'?leadershipWeights(phases.length):[1]);
@@ -481,7 +481,7 @@ function renderCrossoverCurves() {
   const sx=x=>L+xAxis.position(x)*(W-L-R),sy=y=>H-B-yAxis.position(y)/1.12*(H-T-B);
   const value=(t,x)=>inverted?t.model.stateAt(x).distanceKm:t.model.timeAt(x);
   const bounds=p=>inverted?[times[phases.indexOf(p)],times[phases.indexOf(p)+1]]:[p.start,p.end];
-  let content=`<title>Arrival curves around crossovers</title><desc>Real model curves with continuous piecewise-linear axes. Distance: ${distanceMode}. Time: ${timeMode}. ${inverted?'Higher':'Lower'} curves lead. Winning segments ${emphasize?'emphasized':'shown normally'}.</desc><text x="${L}" y="20">${yLabel} · ${yMode==='focus'?'phase focus':'linear'}</text>`;
+  let content=`<title>Zoom on overtakes</title><desc>Real model curves with continuous piecewise-linear axes. Distance: ${distanceMode}. Time: ${timeMode}. ${inverted?'Higher':'Lower'} curves lead. Winning segments ${emphasize?'emphasized':'shown normally'}.</desc><text x="${L}" y="20">${yLabel} · ${yMode==='focus'?'phase focus':'linear'}</text>`;
   const ticks=axis=>Array.from({length:phases.length*4+1},(_,i)=>axis.invert(i/(phases.length*4)));
   const majors=xKnots.map(sx);
   for(const x of [...new Set([...xKnots,...ticks(xAxis)])].sort((a,b)=>a-b)){
@@ -533,16 +533,16 @@ function renderEconomicControls() {
   $('economic-flow-unit').textContent=`${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`;
   $('desired-flow').setAttribute('aria-label',`Target rate in ${UI_TERMS.capacityUnit} per game year${freight?'':' per direction'}`);
   $('service-targets-description').previousElementSibling.title=freight?'Optional: size a fleet for the total delivered cargo per year, or an interval between trains.':'Optional: choose a passenger rate per direction or interval target to size a fleet.';
-  $('economic-metric-help').textContent=studyBounded()?`Running cost per ${unit} — lower is better.`:`Steady-running cost per ${unit} per km — lower is better.`;
+  $('economic-metric-help').textContent=studyBounded()?`Running costs per ${unit} carried on the A–B line. Lower is better.`:`Running costs per ${unit} carried 1 km at cruising speed. Lower is better.`;
   $('economic-cost-formula').textContent=freight?'Cost per capacity = fleet running costs / capacity transported per game year. Empty return trips still incur running costs.':'Cost per capacity = fleet running costs / capacity transported per game year. Each boarding counts once: A→B and B→A are separate journeys.';
   $('economic-calendar-help').textContent=freight?'Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. A target rate counts all cargo delivered, including both directions when loaded return is enabled.':'Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. Per-direction throughput is half the total A–B–A throughput.';
   $('economic-passenger-revenue').hidden=freight;
   $('economic-passenger-assumptions').hidden=freight;
   $('economic-freight-assumptions').hidden=!freight;
   $('economic-efficiency-scale').querySelector(':scope > span').textContent=`Running cost / ${UI_TERMS.capacityUnit}`;
-  $('economic-distance-help').textContent=`Running cost per ${unit}. Lower is better; values do not depend on the selected competitors.`;
-  $('economic-curves-help').textContent='Cheapest train emphasized in each phase; hover to compare.';
-  $('economic-rank-help').textContent=`Ranking by running cost per ${unit}; first place at the top.`;
+  $('economic-distance-help').textContent=`How the cost per ${unit} changes with route length. Lower is better.`;
+  $('economic-curves-help').textContent='Each change of cheapest vehicle gets more room. The cheapest is emphasized; hover to compare.';
+  $('economic-rank-help').textContent='Cheapest first, at each distance.';
 }
 function renderLineAnalysis() {
   renderEconomicControls();
@@ -555,7 +555,7 @@ function renderLineAnalysis() {
   $('line-fill-value').textContent = `${Math.round(lineFill * 100)}%`;
   const selection=economicSelection(trains,selected,economicSelectionOptions());
   $('line-results').hidden=false;
-  $('line-results-heading').textContent=studyBounded()?'Service ranking':'Steady-running ranking';
+  $('line-results-heading').textContent=studyBounded()?'Service ranking':'Ranking at cruising speed';
   if(!studyBounded()){
     renderSteadyService({summary:$('line-summary'),table:$('service-table'),body:$('line-readout'),caption:$('line-caption')},selection.eligible,{...targets,fillRatio:lineFill},{highlighted});
     updateTablePreview(document,'line-readout');
@@ -960,7 +960,7 @@ async function init() {
   updateRoadCategory=()=>{
     const passenger=comparisonCategory==='passengers';
     const targets=roadTargets(),roadFlow=targets.demandPerYear===null?null:targets.demandPerYear/(passenger?2:1),roadHeadway=targets.maxHeadwaySeconds;
-    $('road-metric-help').textContent=studyBounded()?`Running cost per ${UI_TERMS.capacityUnit} — lower is better.`:`Steady-running cost per ${UI_TERMS.capacityUnit} per km — lower is better.`;
+    $('road-metric-help').textContent=studyBounded()?`Running costs per ${UI_TERMS.capacityUnit} carried on the A–B line. Lower is better.`:`Running costs per ${UI_TERMS.capacityUnit} carried 1 km at cruising speed. Lower is better.`;
     $('road-intro').textContent=passenger?`Compare buses${includeTrams?' and passenger trams':''} on A–B–A, with equal utilization in both directions. Fixed passenger handling factor: 1.`:`Compare trucks${includeTrams?' and freight trams':''} on A–B–A. Fixed freight handling factor: 0.0625 (1/16).`;
     for(const id of ['road-freight-filter','road-return-control','road-freight-facilities'])$(id).hidden=passenger;
     $('road-passenger-warning').hidden=!passenger;
@@ -1024,6 +1024,7 @@ async function init() {
     else{roadStarter=false;selectResults(selectedRoad,roadCandidates(),true);renderRoadCatalogue();}
     highlighted=undefined;render();
   });
+  for(const id of ['race-advanced','economic-advanced','road-advanced'])$(id).addEventListener('toggle',event=>{if(event.target.open)render();});
   $('welcome-close').addEventListener('click',()=>{try{localStorage.setItem(WELCOME_KEY,'1');}catch{}syncWelcome();$('welcome-open').focus();});
   $('welcome-open').addEventListener('click',()=>{
     try{localStorage.removeItem(WELCOME_KEY);}catch{}
