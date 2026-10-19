@@ -41,7 +41,7 @@ import {renderEconomicChart} from './economic-chart.js';
 import {serviceEligible} from './line.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
 import {economicCandidates,economicSelection,economicEmptyContent} from './economic-selection.js';
-import {STARTER_SIZE,applyStarterSelection} from './starter-selection.js';
+import {RAIL_PASSENGER_STARTER,applyStarterSelection} from './starter-selection.js';
 import {withRoadModel} from './road-motion.js';
 import {createModel} from './model.js';
 import {createScale} from './scales.js';
@@ -232,18 +232,18 @@ function renderSelectionCount() {trainSelector.updateCount();}
 const value=motionValue;
 function trainCandidates(year=catalogueYear) {return economicCandidates(trains,{...economicSelectionOptions(),year});}
 function visible() {return trainSelector.getVisible();}
-function starterNote(id,{active,shown,total,year}){
-  const note=$(id);note.hidden=!active||total<=shown;
-  if(!note.hidden)note.innerHTML=`Showing the ${shown} newest vehicles available in ${year}. Tick others to add them, or <button type="button" data-starter-all>compare all ${total}</button>.`;
+function starterNote(id,items,chosen){
+  const shown=items.filter(t=>chosen.has(t.id)).length,note=$(id);note.hidden=items.length<=shown;
+  if(!note.hidden)note.innerHTML=`Starter selection: ${shown} of ${items.length} vehicles. Tick others to add them, or <button type="button" data-starter-all>compare all ${items.length}</button>.`;
 }
 function syncStarterSelections(){
-  if(railStarter&&trains)applyStarterSelection(selected,trainCandidates());
+  if(railStarter&&trains)applyStarterSelection(selected,trainCandidates(),{preferred:comparisonCategory==='passengers'?RAIL_PASSENGER_STARTER:[]});
   if(roadStarter&&roadLoaded)applyStarterSelection(selectedRoad,roadCandidates());
   const counted=(items,chosen)=>`${items.filter(t=>chosen.has(t.id)).length} / ${items.length}`;
   if(trains)$('train-count').textContent=counted(trainCandidates(),selected);
   if(roadLoaded)$('road-vehicle-count').textContent=counted(roadCandidates(),selectedRoad);
-  if(trains)starterNote('rail-starter-note',{active:railStarter,shown:Math.min(STARTER_SIZE,trainCandidates().length),total:trainCandidates().length,year:catalogueYear});
-  if(roadLoaded)starterNote('road-starter-note',{active:roadStarter,shown:Math.min(STARTER_SIZE,roadCandidates().length),total:roadCandidates().length,year:truckYear});
+  if(trains){if(railStarter)starterNote('rail-starter-note',trainCandidates(),selected);else $('rail-starter-note').hidden=true;}
+  if(roadLoaded){if(roadStarter)starterNote('road-starter-note',roadCandidates(),selectedRoad);else $('road-starter-note').hidden=true;}
 }
 function renderCatalogue() {
   syncStarterSelections();
