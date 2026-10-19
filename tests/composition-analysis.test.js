@@ -335,3 +335,12 @@ test('Profile service retains exact segment distance and caps while references s
     assert.doesNotMatch(root.innerHTML,/NaN|undefined/);
   }
 });
+
+test('composition charts use round ticks',async()=>{
+  const {chartTicks}=await import('../src/composition-analysis.js');
+  const {createScale}=await import('../src/scales.js');
+  assert.deepEqual(chartTicks(createScale('linear',300)),[0,100,200,300]);
+  assert.deepEqual(chartTicks(createScale('linear',6000)),[0,2000,4000,6000]);
+  assert.deepEqual(chartTicks(createScale('log',1852,.01)),[.01,.1,1,10,100,1000]);
+  assert.deepEqual(chartTicks(createScale('log',400,60)),[100,200]);
+});
