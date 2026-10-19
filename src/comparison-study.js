@@ -46,6 +46,7 @@ export function serviceSteadyDistance(trains,options={},road=false){
   return end*1.01;
 }
 /** Cover every possible steady-tail cost crossing, without an arbitrary kilometre cutoff. */
+export const NEAR_TIE=1e-3;
 export function automaticCostTail(items,costAt,steadyDistance){
   if(!Number.isFinite(steadyDistance)||steadyDistance<=0)return null;
   const step=Math.max(1,steadyDistance),lines=items.map(item=>{
@@ -56,7 +57,8 @@ export function automaticCostTail(items,costAt,steadyDistance){
   let end=steadyDistance;
   for(let i=0;i<lines.length;i++)for(let j=i+1;j<lines.length;j++){
     const slope=lines[i].slope-lines[j].slope;
-    if(Math.abs(slope)<=Math.max(lines[i].slope,lines[j].slope)*1e-12)continue;
+    // Steady costs per km within 0.1% are a tie: their remote crossing is not a meaningful leader change.
+    if(Math.abs(slope)<=Math.max(lines[i].slope,lines[j].slope)*NEAR_TIE)continue;
     for(const tolerance of [-absoluteTolerance,0,absoluteTolerance]){
       const crossing=steadyDistance-(lines[i].value-lines[j].value-tolerance)/slope;
       if(Number.isFinite(crossing)&&crossing>steadyDistance){roots.push(crossing);end=Math.max(end,crossing);}

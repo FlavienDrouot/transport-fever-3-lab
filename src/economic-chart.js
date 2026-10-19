@@ -8,21 +8,22 @@ import {mountChartInteractions} from './chart-interactions.js';
 const fmt = n => formatNumber(n, 1);
 const fmtKm = n => formatNumber(n,n<.01?4:n<.1?3:n<1?2:1);
 // Hover changes presentation only; reuse service calculations until inputs change.
-let cachedKey, cachedSeries;
-export function renderEconomicChart(container, {trains, distance, fill, mode, highlighted, targets = {}, startDistance=Math.min(.5,distance/10), referenceDistance=distance}) {
+const caches = new WeakMap();
+const railCost = (t, x, fill, targets) => analyseLine(t, {distanceKm:x, fillRatio:fill, ...targets}).maintenancePerUnit;
+/** Running cost per capacity over one-way distance. Road passes its own `costAt` and `analysisKey`. */
+export function renderEconomicChart(container, {trains, distance, fill, mode, highlighted, targets = {}, startDistance=Math.min(.5,distance/10), referenceDistance=distance, costAt, analysisKey}) {
   const unit=UI_TERMS.capacityUnit;
   const maxDistance = distance, minDistance = startDistance;
-  const key = JSON.stringify([trains.map(t=>[t.id,t.name,t.color,t.dash,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]), minDistance, maxDistance, fill, targets]);
-  if (key !== cachedKey) {
-    cachedKey = key;
-    const samples=targets.routeProfile?40:160;
-    cachedSeries = trains.map(t => ({t, points: Array.from({length: samples+1}, (_,i) => {
+  const key = analysisKey !== undefined ? JSON.stringify([analysisKey, minDistance, maxDistance]) : JSON.stringify([trains.map(t=>[t.id,t.name,t.color,t.dash,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh,t.lengthMetres,t.passengerCapacity,t.cargoCapacity,t.carCount,t.loadingUnloadingSpeedMultiplier,t.formationLoadingUnloadingSpeedMultiplier,t.economy]), minDistance, maxDistance, fill, targets]);
+  if (caches.get(container)?.key !== key) {
+    const samples=targets.routeProfile?40:160,cost=costAt??((t,x)=>railCost(t,x,fill,targets));
+    caches.set(container, {key, series: trains.map(t => ({t, points: Array.from({length: samples+1}, (_,i) => {
       const x = minDistance + (maxDistance - minDistance) * i / samples;
-      return {x, ...analyseLine(t, {distanceKm:x, fillRatio:fill,...targets})};
-    })}));
+      return {x, y: cost(t, x) ?? null};
+    })}))});
   }
-  if (!trains.length) {container.textContent = 'Select at least one train to display the economic curves.'; return;}
-  const series = cachedSeries.map(({t,points}) => ({t, points: points.map(p => ({x:p.x,y:p.maintenancePerUnit}))}));
+  if (!trains.length) {container.textContent = 'Select at least one vehicle to display the cost curves.'; return;}
+  const {series} = caches.get(container);
   const W = Math.max(320, container.clientWidth || 1000), H = W < 700 ? 430 : 520;
   const L = 70, R = W>=700?220:20, T = 40, B = 55;
   const maxValue = Math.max(1, ...series.flatMap(s => s.points.map(p=>p.y || 0)));
@@ -43,7 +44,7 @@ export function renderEconomicChart(container, {trains, distance, fill, mode, hi
     const opacity = highlighted && t.id!==highlighted ? .15 : 1;
     svg += `<path class="train-curve" data-train="${escape(t.id)}" d="${path}" fill="none" stroke="${t.color}" stroke-width="${t.id===highlighted?4:2}" stroke-dasharray="${t.dash || ''}" opacity="${opacity}"/><path class="curve-hit" data-train="${escape(t.id)}" d="${path}" fill="none" stroke="transparent" stroke-width="12"><title>${escape(t.name)}</title></path>`;
   }
-  svg += curveLabels(series.map(({t,points})=>({t,y:sy(points.at(-1).y)})),{width:W,right:R,top:T,bottom:H-B,highlighted});
+  svg += curveLabels(series.map(({t,points})=>({t,y:sy(points.at(-1).y??NaN)})),{width:W,right:R,top:T,bottom:H-B,highlighted});
   svg += `<text x="${(W+L-R)/2}" y="${H-8}" text-anchor="middle">One-way distance (km)</text>`;
   container.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title} over distance">${svg}</svg>${trainLegend(trains,W,highlighted)}${!fill?`<p class="chart-help">Zero utilization: no transported ${UI_TERMS.capacityUnit}. Choose positive utilization to compare trains.</p>`:''}`;
   mountChartInteractions(container, {highlighted});

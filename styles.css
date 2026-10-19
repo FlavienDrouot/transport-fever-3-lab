@@ -702,3 +702,4 @@ button.primary-action:not(:disabled){background:var(--green);color:var(--surface
 .composition-start{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 /* Sortable headers: the whole label is the button; the active column shows its direction */
 th[data-sort]{padding:0}th[data-sort] .sort-button{display:block;width:100%;height:100%;padding:10px 12px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}th[data-sort] .sort-button:hover{color:var(--green)}th[aria-sort=ascending],th[aria-sort=descending]{color:var(--green)}.sort-indicator{margin-left:4px;font-size:10px}
+#road-efficiency .chart-toolbar{font-size:12px;color:var(--muted)}#road-efficiency{scroll-margin-top:80px}
