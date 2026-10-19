@@ -22,6 +22,7 @@ import {renderPhaseDiagram,rankPhaseSegments,observePhaseHighlight} from './phas
 import {renderSteadyService} from './steady-service.js';
 import {renderRoadPhases,automaticRoadCostStory} from './road-phases.js';
 import {mountTablePreviews,updateTablePreview} from './table-preview.js';
+import {mountChartToolbars} from './chart-toolbar.js';
 import {syncAnalysisPanels,mountPanelDrawers} from './panels.js';
 import {mountVehicleSelector,selectResults} from './vehicle-selector.js';
 import {mountTransportCategory,mountFreightFilter} from './transport-category.js';
@@ -1001,6 +1002,7 @@ async function init() {
   mountServiceControls(document,'road',{onSelectRoute:onSelectServiceRoute});
   for(const [id,name] of [['rail-cargo','rail-cargo'],['truck-cargo-specialization','truck-cargo'],['configuration-cargo','configuration-cargo']])mountFreightFilter($(id),{name});
   mountTablePreviews(document);
+  mountChartToolbars(document);
   mountControlHelp(document);
   dataset=await loadData('trains');
   baseTrains=dataset.trains.map(t=>({...t,model:createModel(t,dataset.source)}));trains=[...baseTrains];selected=new Set(trains.map(t=>t.id));
