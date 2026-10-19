@@ -1,5 +1,6 @@
 import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
+import {sortRows,nextSort,mountSortHeaders} from './table-sort.js';
 import {buildConsist} from './consists.js';
 import {vehicleThumbnail} from './vehicle-thumbnails.js';
 import {matchesFreightFilter} from './trucks.js';
@@ -54,9 +55,14 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
   const available=()=>compatibleComponents(catalogue,context);
   const radio=(name,value)=>{$(name).querySelector(`input[value="${value}"]`).checked=true;};
   const readRadio=name=>$(name).querySelector('input:checked').value;
+  // Newest first until the player clicks another column header.
+  const CATALOGUE_COLUMNS={name:t=>t.name,year:t=>t.year,capacity:t=>t.passengerCapacity??t.cargoCapacity,speed:t=>t.maxSpeedKmh,
+    handling:t=>t.loadingUnloadingSpeedMultiplier,length:t=>t.lengthMetres,power:t=>t.powerCh,cost:t=>t.economy?.annualMaintenance};
+  let catalogueSort={key:'year',dir:'desc'};
+  mountSortHeaders($('component-catalogue')?.querySelector?.('thead'),()=>catalogueSort,key=>{catalogueSort=nextSort(catalogueSort,key,{name:'asc',cost:'asc'});drawCatalogue();});
   function drawCatalogue(){
     const query=$('configuration-search').value.trim().toLowerCase(),role=readRadio('configuration-role');
-    const choices=available().filter(item=>(role==='all'||item.role===role)&&`${item.name} ${item.sourceName??''} ${item.year}`.toLowerCase().includes(query)).sort((a,b)=>b.year-a.year||a.name.localeCompare(b.name));
+    const choices=sortRows(available().filter(item=>(role==='all'||item.role===role)&&`${item.name} ${item.sourceName??''} ${item.year}`.toLowerCase().includes(query)),catalogueSort,CATALOGUE_COLUMNS);
     $('component-count').textContent=`${choices.length} vehicles · ${context.carrier==='rail'?'Rail':'Tram'} · ${context.category==='passengers'?'Passengers':context.cargo==='all'?'All freight':context.cargo}`;
     $('component-catalogue-body').innerHTML=choices.map(item=>`<tr><th scope="row">${escape(item.name)}<small>${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':item.lightRailCompatible?'Tram · Rail compatible':context.carrier==='rail'?'Multiple unit':'Powered tram'}</small></th><td class="component-thumbnail-cell">${vehicleThumbnail(item,thumbnails,{headOnly:item.carrier==='rail'&&item.role==='powered-carriage'})}</td><td>${item.year}</td><td>${fmt(item.passengerCapacity??item.cargoCapacity)}</td><td>${fmt(item.maxSpeedKmh)}</td><td>${item.loadingUnloadingSpeedMultiplier==null?'—':`${fmt(item.loadingUnloadingSpeedMultiplier)}×`}</td><td>${fmt(item.lengthMetres)}</td><td>${item.powerCh==null?'—':fmt(item.powerCh*units.horsepowerWatts/1000)}</td><td>$${fmt(item.economy.annualMaintenance)}</td><td><button type="button" data-add="${escape(item.id)}" aria-label="Add ${escape(item.name)}">+ Add</button></td></tr>`).join('')||'<tr><td colspan="10">No vehicles match these filters.</td></tr>';
   }
