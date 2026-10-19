@@ -17,10 +17,28 @@ test('Invalid domains fail rather than produce misleading coordinates',()=>{
  for(const args of [['log',300,0],['log',300,300],['linear',0],['linear',NaN],['unknown',10]])assert.throws(()=>createScale(...args),RangeError);
 });
 
-test('Linear ceiling ticks stay in the domain despite decimal rounding', () => {
+test('Linear ticks are round values inside the domain', () => {
+ assert.deepEqual(createScale('linear', 19.1).ticks, [0, 5, 10, 15]);
+ assert.deepEqual(createScale('linear', 300).ticks, [0, 50, 100, 150, 200, 250, 300]);
+ assert.deepEqual(createScale('linear', 130).ticks, [0, 20, 40, 60, 80, 100, 120]);
  for (const max of [.55, 18.7, 100 * 1.1]) {
   const scale = createScale('linear', max);
-  assert.equal(scale.ticks.at(-1), max);
+  assert.ok(scale.ticks.at(-1) <= max && scale.ticks.length >= 3);
   for (const tick of scale.ticks) assert.ok(Number.isFinite(scale.position(tick)));
  }
+});
+
+test('Bounded axes keep their ends and round values between them', async () => {
+ const {roundTicks, boundedTicks} = await import('../src/scales.js');
+ assert.deepEqual(roundTicks(.1, 19.4), [5, 10, 15]);
+ assert.deepEqual(boundedTicks(.1, 19.4), [.1, 5, 10, 15, 19.4]);
+ assert.deepEqual(boundedTicks(1900, 2035), [1900, 1920, 1940, 1960, 1980, 2000, 2020, 2035]);
+ assert.deepEqual(roundTicks(0, .3), [0, .05, .1, .15, .2, .25, .3]);
+});
+
+test('Time axes step in clock units', async () => {
+ const {timeTicks} = await import('../src/scales.js');
+ assert.deepEqual(timeTicks(283), [0, 60, 120, 180, 240]);
+ assert.deepEqual(timeTicks(566), [0, 120, 240, 360, 480]);
+ assert.deepEqual(timeTicks(40), [0, 10, 20, 30, 40]);
 });

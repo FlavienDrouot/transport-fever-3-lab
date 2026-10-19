@@ -9,6 +9,7 @@ import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-
 import {GAME_YEAR_SECONDS} from './line.js';
 import {fixedRateFleetCount} from './service-fleet.js';
 import {styleVehicleCatalogues} from './vehicle-styles.js';
+import {roundTicks,boundedTicks} from './scales.js';
 const fmt=n=>formatNumber(n,2);
 
 export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5,rankingOptions={}}={}){
@@ -85,9 +86,9 @@ function phaseChart(container,vehicles,story,{axis,label,current,mode,rank,stepp
   const lo=0,hi=winningValueCeiling(winningValues);
   const sy=y=>pixel(T+(rank?(y-1)/Math.max(1,vehicles.length-1):(hi-y)/(hi-lo))*(H-T-B));
   let svg=`<title>${rank?'Rank changes':'Running cost phases'}</title><desc>${escape(label)} varies; other settings remain fixed. Lower costs are better.</desc><text x="${L}" y="18">${rank?'Rank · first place at the top':`Running cost / ${UI_TERMS.capacityUnit} ($)`}</text>`;
-  const ticks=rank?Array.from({length:vehicles.length},(_,i)=>i+1):Array.from({length:5},(_,i)=>lo+(hi-lo)*i/4);
+  const ticks=rank?Array.from({length:vehicles.length},(_,i)=>i+1):roundTicks(lo,hi,4);
   for(const tick of ticks)svg+=`<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#ccd4cc" opacity=".5" stroke-dasharray="2 5"/><text x="${L-8}" y="${sy(tick)+4}" text-anchor="end">${rank?tick:tick.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1})}</text>`;
-  const xticks=mode==='linear'?Array.from({length:6},(_,i)=>story.start+(story.end-story.start)*i/5):knots;
+  const xticks=mode==='linear'?boundedTicks(story.start,story.end):knots;
   const spacing=Math.max(1,Math.ceil(xticks.length/Math.max(2,(W-L-R)/85)));
   xticks.forEach((x,i)=>{if(i%spacing===0||i===xticks.length-1)svg+=`<text x="${sx(x)}" y="${H-B+22}" text-anchor="${i===0?'start':i===xticks.length-1?'end':'middle'}">${axis==='year'?String(Math.round(x)):fmt(x)}</text>`;if(mode!=='linear'&&i>0&&i<xticks.length-1)svg+=`<line x1="${sx(x)}" x2="${sx(x)}" y1="${T}" y2="${H-B}" stroke="#aa6a22" opacity=".5" stroke-dasharray="3 5"/>`;});
   const paths=rank?rankPhaseSegments(vehicles,story.phases,story.intervals,sx,sy):[];
