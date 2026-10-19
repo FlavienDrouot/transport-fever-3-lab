@@ -14,18 +14,12 @@ export function trainLegend(trains,width,highlighted){
   return trains.length > 10 ? `<details class="legend-disclosure"><summary>Vehicle legend · ${trains.length} names</summary>${legend}</details>` : legend;
 }
 /**
- * Horizontal arrival labels stacked in rows above a finish line: each label starts at its
- * marker (or ends there near the right edge) and takes the lowest row where it fits.
+ * Arrival names rising at 45° to the right from the finish line. Neighbours keep a minimum
+ * horizontal gap; each name is pulled left only as far as needed to stay inside the chart.
  */
-export function stackArrivalLabels(items,{left,right,charWidth=6.6,gap=10}){
-  const rowEnds=[];
-  const placed=[...items].sort((a,b)=>a.x-b.x).map(item=>{
-    const width=item.text.length*charWidth,anchor=item.x+width>right?'end':'start';
-    const start=Math.max(left,anchor==='end'?item.x-width:item.x);
-    let row=rowEnds.findIndex(end=>start>=end+gap);
-    if(row<0){row=rowEnds.length;rowEnds.push(0);}
-    rowEnds[row]=start+width;
-    return {...item,anchor,row,labelX:anchor==='end'?item.x:start};
-  });
-  return {labels:placed,rows:rowEnds.length};
+export function spreadDiagonalLabels(items,{left,right,charWidth=7,gap=22}){
+  const slant=Math.SQRT1_2,labels=[...items].sort((a,b)=>a.x-b.x).map(item=>({...item,reach:item.text.length*charWidth*slant}));
+  labels.forEach((label,i)=>{label.labelX=Math.max(label.x,left+5,i?labels[i-1].labelX+gap:-Infinity);});
+  for(let i=labels.length-1;i>=0;i--)labels[i].labelX=Math.min(labels[i].labelX,right-5-labels[i].reach,i<labels.length-1?labels[i+1].labelX-gap:Infinity);
+  return {labels,height:Math.max(0,...labels.map(label=>label.reach))};
 }

@@ -33,7 +33,7 @@ import {mountConsistEditor} from './consist-editor.js';
 import {mountCompositionAnalysis} from './composition-analysis-controls.js';
 import {renderTruckService, selectRoadVehicles} from './trucks.js';
 import {renderDataView} from './data-view.js';
-import {curveLabels, trainLegend, stackArrivalLabels} from './chart-labels.js';
+import {curveLabels, trainLegend, spreadDiagonalLabels} from './chart-labels.js';
 import {economicStory,yearRankingStory} from './economic-crossovers.js';
 import {withRailSpeedLimit,withRailGradient,withRailProfile} from './rail-motion.js';
 import {renderEconomicCrossovers} from './economic-crossover-chart.js';
@@ -345,9 +345,9 @@ function renderChart(kind, width) {
   const xScale = createScale(scaleMode('x', kind), horizon, Math.min(spec.xFloor, horizon / 10));
   const yScale = createScale(scaleMode('y', kind), ymax, Math.min(spec.yFloor, ymax / 10));
   const sx = x => L + xScale.position(x) * (W-L-R);
-  // Arrival names sit horizontally in as many rows as needed above the finish line.
-  const arrivals = view === 'distance' ? stackArrivalLabels(ts.map(t => ({t, x: sx(t.model.timeAt(studyDistance)), text: arrivalName(t, view)})).filter(({x}) => Number.isFinite(x)), {left: L, right: W-R}) : null;
-  const labelSpace = arrivals ? arrivals.rows*18 + 14 : 0;
+  // Arrival names rise diagonally to the right above the finish line.
+  const arrivals = view === 'distance' ? spreadDiagonalLabels(ts.map(t => ({t, x: sx(t.model.timeAt(studyDistance)), text: arrivalName(t, view)})).filter(({x}) => Number.isFinite(x)), {left: L, right: W}) : null;
+  const labelSpace = arrivals ? Math.max(60, arrivals.height + 24) : 0;
   const H = (W < 700 ? 430 : 610) + labelSpace, T = 45 + labelSpace;
   const notes = [];
   if (xScale.mode === 'log') notes.push(`X starts at ${tickLabel(xScale.min)} ${spec.unit}`);
@@ -381,9 +381,9 @@ function renderChart(kind, width) {
   }
   if (view === 'distance') {
     const y = sy(studyDistance);
-    for (const {t,x,labelX,anchor,row} of arrivals.labels) {
-      const opacity = !highlighted || highlighted === t.id ? 1 : .25, labelY = T - 12 - row*18;
-      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${x}" y2="${labelY+3}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${labelY}" text-anchor="${anchor}" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t, view))}</text>`;
+    for (const {t,x,labelX} of arrivals.labels) {
+      const opacity = !highlighted || highlighted === t.id ? 1 : .25;
+      content += `<circle class="arrival-marker" data-train="${escape(t.id)}" cx="${x}" cy="${y}" r="3" fill="${t.color}" opacity="${opacity}"/><line x1="${x}" y1="${y}" x2="${labelX}" y2="${T-12}" stroke="${t.color}" opacity=".35"/><text class="arrival-label end-label" data-train="${escape(t.id)}" x="${labelX}" y="${T-16}" transform="rotate(-45 ${labelX} ${T-16})" style="fill:${t.color}" opacity="${opacity}">${escape(arrivalName(t, view))}</text>`;
     }
   } else if(W>=700) {
     const labelled = ts.map(t=>{const end=motionCurveEnd(t,view,horizon);return {t,x:sx(end),y:sy(Math.min(ymax,value(t,end,view)))};}).filter(t=>Number.isFinite(t.y)).sort((a,b)=>a.y-b.y);
