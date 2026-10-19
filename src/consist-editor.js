@@ -1,5 +1,6 @@
 import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
+import {sortRows,nextSort,mountSortHeaders} from './table-sort.js';
 import {buildConsist} from './consists.js';
 import {vehicleThumbnail} from './vehicle-thumbnails.js';
 import {matchesFreightFilter} from './trucks.js';
@@ -54,15 +55,20 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
   const available=()=>compatibleComponents(catalogue,context);
   const radio=(name,value)=>{$(name).querySelector(`input[value="${value}"]`).checked=true;};
   const readRadio=name=>$(name).querySelector('input:checked').value;
+  // Newest first until the player clicks another column header.
+  const CATALOGUE_COLUMNS={name:t=>t.name,year:t=>t.year,capacity:t=>t.passengerCapacity??t.cargoCapacity,speed:t=>t.maxSpeedKmh,
+    handling:t=>t.loadingUnloadingSpeedMultiplier,length:t=>t.lengthMetres,power:t=>t.powerCh,cost:t=>t.economy?.annualMaintenance};
+  let catalogueSort={key:'year',dir:'desc'};
+  mountSortHeaders($('component-catalogue')?.querySelector?.('thead'),()=>catalogueSort,key=>{catalogueSort=nextSort(catalogueSort,key,{name:'asc',cost:'asc'});drawCatalogue();});
   function drawCatalogue(){
     const query=$('configuration-search').value.trim().toLowerCase(),role=readRadio('configuration-role');
-    const choices=available().filter(item=>(role==='all'||item.role===role)&&`${item.name} ${item.sourceName??''} ${item.year}`.toLowerCase().includes(query)).sort((a,b)=>a.year-b.year||a.name.localeCompare(b.name));
+    const choices=sortRows(available().filter(item=>(role==='all'||item.role===role)&&`${item.name} ${item.sourceName??''} ${item.year}`.toLowerCase().includes(query)),catalogueSort,CATALOGUE_COLUMNS);
     $('component-count').textContent=`${choices.length} vehicles · ${context.carrier==='rail'?'Rail':'Tram'} · ${context.category==='passengers'?'Passengers':context.cargo==='all'?'All freight':context.cargo}`;
     $('component-catalogue-body').innerHTML=choices.map(item=>`<tr><th scope="row">${escape(item.name)}<small>${item.role==='locomotive'?'Locomotive':item.role==='wagon'?'Wagon':item.lightRailCompatible?'Tram · Rail compatible':context.carrier==='rail'?'Multiple unit':'Powered tram'}</small></th><td class="component-thumbnail-cell">${vehicleThumbnail(item,thumbnails,{headOnly:item.carrier==='rail'&&item.role==='powered-carriage'})}</td><td>${item.year}</td><td>${fmt(item.passengerCapacity??item.cargoCapacity)}</td><td>${fmt(item.maxSpeedKmh)}</td><td>${item.loadingUnloadingSpeedMultiplier==null?'—':`${fmt(item.loadingUnloadingSpeedMultiplier)}×`}</td><td>${fmt(item.lengthMetres)}</td><td>${item.powerCh==null?'—':fmt(item.powerCh*units.horsepowerWatts/1000)}</td><td>$${fmt(item.economy.annualMaintenance)}</td><td><button type="button" data-add="${escape(item.id)}" aria-label="Add ${escape(item.name)}">+ Add</button></td></tr>`).join('')||'<tr><td colspan="10">No vehicles match these filters.</td></tr>';
   }
   function updatePreview(){
     preview=null;$('composition-save').disabled=true;
-    if(!entries.length){$('composition-summary').textContent='Add vehicles from the catalogue to start your composition.';onPreview(null);return;}
+    if(!entries.length){$('composition-summary').innerHTML=`<p class="composition-start">Start with a ${draftContext.carrier==='rail'?'locomotive or a multiple unit':'powered tram or tram locomotive'}, then add wagons. <button type="button" data-show-role="locomotive">Show locomotives</button> <button type="button" data-show-role="powered-carriage">Show multiple units</button></p>`;onPreview(null);return;}
     try {
       preview=buildConsist({schemaVersion:1,id:editing??`custom:${draftContext.carrier}:${crypto.randomUUID()}`,name:$('composition-name').value,carrier:draftContext.carrier,category:draftContext.category,cargo:draftContext.cargo,components:entries},catalogue,units);
       if(!preview.serviceReady)throw new RangeError(`Missing data: ${preview.missing.join(', ')}`);
@@ -126,6 +132,11 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
   });
   $('configuration-search').addEventListener('input',drawCatalogue);
   $('configuration-role').addEventListener('change',drawCatalogue);
+  $('composition-summary').addEventListener('click',event=>{
+    const role=event.target.closest('[data-show-role]')?.dataset.showRole;if(!role)return;
+    const input=$('configuration-role').querySelector(`input[value="${role}"]`);input.checked=true;drawCatalogue();
+    $('component-catalogue').scrollIntoView({block:'start'});
+  });
   $('component-catalogue-body').addEventListener('click',event=>{
     const button=event.target.closest('[data-add]');if(!button)return;
     if(entries.length>=100){$('composition-message').textContent='Limit: 100 component rows. Use quantities for repeated vehicles.';return;}
@@ -142,6 +153,9 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
     if(first&&Boolean(first.lightRailCompatible)!==Boolean(item.lightRailCompatible)&&(first.lightRailCompatible||item.lightRailCompatible)){$('composition-message').textContent='Rail-compatible trams can only be coupled with other Rail-compatible trams. Start a new composition for other stock.';return;}
     if(!canAddComponent(item,nextContext)){$('composition-message').textContent='This vehicle is incompatible with the current composition. Use New composition to build a different transport type.';return;}
     draftContext=nextContext;
+    // Adding the same vehicle again extends the last card instead of repeating it.
+    const last=entries.at(-1);
+    if(last?.componentId===button.dataset.add&&last.quantity<1000){last.quantity+=1;$('composition-message').textContent=`${item.name} × ${last.quantity}`;drawComposition();return;}
     entries.push({componentId:button.dataset.add,quantity:1});$('composition-message').textContent='';drawComposition();
   });
   $('composition-components').addEventListener('input',()=>{

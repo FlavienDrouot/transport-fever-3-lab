@@ -160,16 +160,16 @@
     </div>
     <div id="configurator" class="analysis-view" hidden><p id="configuration-load-status" class="load-status" role="status">Loading composition data…</p><button id="configuration-retry" type="button" hidden>Retry</button>
       <section hidden id="component-catalogue" class="chart-panel" aria-labelledby="configurator-heading">
-        <div class="panel-top"><h2 id="configurator-heading">Vehicle configurator</h2><p class="chart-help">Choose vehicles, assemble a composition, then compare it.</p></div>
+        <div class="panel-top"><h2 id="configurator-heading">Build your own train</h2><p class="chart-help">1 · Add a locomotive or a multiple unit. 2 · Add wagons. 3 · Compare it in Race and Service.</p></div>
         <p id="component-count" class="chart-help" role="status"></p>
-        <div class="table-scroll component-table"><table><caption class="sr-only">Available composition components</caption><thead><tr><th scope="col">Vehicle</th><th scope="col"><span class="sr-only">Thumbnail</span></th><th scope="col">Year</th><th scope="col">Capacity</th><th scope="col">Speed<br><span class="table-unit">km/h</span></th><th scope="col">Handling</th><th scope="col">Length<br><span class="table-unit">m</span></th><th scope="col">Power<br><span class="table-unit">kW</span></th><th scope="col">Running costs<br><span class="table-unit">$/year</span></th><th scope="col"><span class="sr-only">Add vehicle</span></th></tr></thead><tbody id="component-catalogue-body"></tbody></table></div>
+        <div class="table-scroll component-table"><table><caption class="sr-only">Available composition components</caption><thead><tr><th scope="col" data-sort="name">Vehicle</th><th scope="col"><span class="sr-only">Thumbnail</span></th><th scope="col" data-sort="year">Year</th><th scope="col" data-sort="capacity">Capacity</th><th scope="col" data-sort="speed">Speed<br><span class="table-unit">km/h</span></th><th scope="col" data-sort="handling">Handling</th><th scope="col" data-sort="length">Length<br><span class="table-unit">m</span></th><th scope="col" data-sort="power">Power<br><span class="table-unit">kW</span></th><th scope="col" data-sort="cost">Running costs<br><span class="table-unit">$/year</span></th><th scope="col"><span class="sr-only">Add vehicle</span></th></tr></thead><tbody id="component-catalogue-body"></tbody></table></div>
       </section>
       <section hidden id="composition-builder" class="composition-builder" aria-labelledby="composition-heading">
         <div class="panel-top"><h2 id="composition-heading">Your composition</h2><p id="composition-context" class="chart-help"></p></div>
         <form id="composition-form">
           <div class="composition-toolbar">
             <div class="composition-name-field"><label class="search-label" for="composition-name">Composition name</label><input id="composition-name" type="text" maxlength="120" value="Custom train" required></div>
-            <div class="consist-actions"><button id="composition-compare" type="button" disabled>Compare composition →</button><button id="composition-save" type="submit" disabled>Save composition</button><button id="composition-new" type="button">New composition</button></div>
+            <div class="consist-actions"><button id="composition-compare" class="primary-action" type="button" disabled>Compare composition →</button><button id="composition-save" type="submit" disabled>Save composition</button><button id="composition-new" type="button">New composition</button></div>
           </div>
           <ol id="composition-components" class="composition-strip"></ol>
           <div id="composition-summary" role="status" aria-live="polite"></div>
@@ -191,7 +191,7 @@
           <p id="composition-analysis-help" class="chart-help"></p>
         </details>
         <section class="composition-analysis-block composition-normalized-block" aria-labelledby="composition-normalized-heading">
-          <h3 id="composition-normalized-heading">Approach to steady running</h3>
+          <h3 id="composition-normalized-heading">From standstill to cruising speed</h3>
           <div id="composition-normalized-chart" class="chart"></div>
         </section>
         </details>

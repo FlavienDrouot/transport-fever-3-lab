@@ -696,3 +696,9 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .optimizer-verdict{margin:0;flex-wrap:wrap}.optimizer-verdict .service-winner-cost{align-items:flex-end}.optimizer-verdict-note{flex-basis:100%;margin:0;font-size:12px;color:var(--muted)}
 .optimizer-result-visibility:not(#_){font-size:12px}.optimizer-result-heading{margin-top:8px}
 @media(max-width:700px){.optimizer-verdict .service-winner-cost{align-items:flex-start}}
+/* Composition: one primary next step, an actionable empty state, one segmented size */
+.scale-toggle label>span{font-size:12px}
+button.primary-action:not(:disabled){background:var(--green);color:var(--surface,#fff);border-color:var(--green);font-weight:600}button.primary-action:not(:disabled):hover{filter:brightness(1.1)}
+.composition-start{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* Sortable headers: the whole label is the button; the active column shows its direction */
+th[data-sort]{padding:0}th[data-sort] .sort-button{display:block;width:100%;height:100%;padding:10px 12px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}th[data-sort] .sort-button:hover{color:var(--green)}th[aria-sort=ascending],th[aria-sort=descending]{color:var(--green)}.sort-indicator{margin-left:4px;font-size:10px}
