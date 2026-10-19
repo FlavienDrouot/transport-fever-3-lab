@@ -3,7 +3,7 @@ import {escapeHtml as escape, formatNumber} from './format.js';
 import {renderPhaseDiagram,rankPhaseSegments,winningValueCeiling} from './phase-diagram.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
-import {createScale} from './scales.js';
+import {createScale,boundedTicks} from './scales.js';
 const fmt = x => formatNumber(x,2);
 
 export function renderEconomicCrossovers(container, {trains,story,fill,kind,distanceMode,verticalMode='linear',highlighted,targets={},ordinateTitle=`Running cost / ${UI_TERMS.capacityUnit} ($)`,ordinateFormat=value=>value.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1}),chartTitle,rankTitle='Efficiency rank · first place at the top',emphasize=true,group='rail'}) {
@@ -36,7 +36,7 @@ export function renderEconomicCrossovers(container, {trains,story,fill,kind,dist
   let svg=`<title>${escape(title)}</title><desc>${escape(axisLabel)}: ${formatX(story.start)}–${formatX(story.end)}. Scale: ${escape(distanceMode)}.${story.sampled?' Fleet changes and crossovers are sampled.':''}</desc><text x="${L}" y="20">${escape(rank?rankTitle:ordinateTitle)}</text>`;
   const ticks=rank?Array.from({length:trains.length},(_,i)=>i+1):efficiencyScale.ticks;
   for(const tick of ticks)svg+=`<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#e4e8e4" stroke-dasharray="2 5"/><text x="${L-10}" y="${sy(tick)+4}" text-anchor="end">${rank?fmt(tick):escape(ordinateFormat(tick))}</text>`;
-  const xTicks=distanceMode==='linear'?Array.from({length:6},(_,i)=>story.start+(story.end-story.start)*i/5):knots;
+  const xTicks=distanceMode==='linear'?boundedTicks(story.start,story.end):knots;
   const spacing=Math.max(1,Math.ceil(xTicks.length/Math.max(2,(W-L-R)/85)));
   xTicks.forEach((x,i)=>{
     const boundary=i>0 && i<xTicks.length-1 && distanceMode!=='linear';

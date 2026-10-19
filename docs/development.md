@@ -77,6 +77,10 @@ A valid composition draft can enter Compare without saving, as a session-only ve
 
 Use the existing vanilla JavaScript patterns. Keep the physical model independent of rendering. Add a train with a unique ID, positive physical parameters, an introduction year, a distinguishable colour/dash and documented provenance. Do not publish game screenshots without permission. The catalogue is not virtualized; revisit that choice only if a substantially larger real catalogue shows measurable slowdowns.
 
+## Chart axes
+
+Linear chart axes label round values from `src/scales.js`: `roundTicks` picks the 1, 2 or 5 × 10ⁿ step closest to the requested interval count, `boundedTicks` keeps both meaningful ends of a distance or year study with round values between them, and `timeTicks` steps clock axes in 5 s to 2 h units (0:30, 1:00, 5:00…). Logarithmic axes keep 1/2/5 ticks per decade. The ranking at cruising speed uses the same table in Rail and Road; Steady speed and Utilization sit behind **Show calculation details**.
+
 ## Shared comparison study extent
 
 `src/comparison-study.js` owns story clipping, immutable per-vehicle motion display bounds, the automatic Race extent cache and uniform fixed-load Service steady-tail bounds. The shared `comparison-study-scope` form replaces the separate route/extent toggles in Compare with `auto` (∞, default), `distance` (Simple distance) and `custom` (Custom). Automatic mode hides distance entry, its slider and the finite-route summary while retaining speed/gradient controls. The original Simple/Custom switch is shown when the existing route form moves to Optimizer. Distance edits select `distance`; Custom route bounds exploration at B while preserving the Simple preference and values. Comparison display policy is separate from physical geometry and saved route/logistics state.

@@ -2,7 +2,7 @@ import {UI_TERMS} from './ui-terms.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
 import {curveLabels, trainLegend} from './chart-labels.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
-import {createScale} from './scales.js';
+import {createScale,boundedTicks} from './scales.js';
 import {mountChartInteractions} from './chart-interactions.js';
 
 const fmt = n => formatNumber(n, 1);
@@ -34,7 +34,7 @@ export function renderEconomicChart(container, {trains, distance, fill, mode, hi
   const title = `Running cost per ${unit} · lower is better`;
   let svg = `<title>${title}</title><desc>A–B–A service with braking and terminal handling, at ${fmt(fill*100)}% utilization. ${targets.demandPerYear!=null||targets.demandPerDirection!=null?'A fixed rate sizes the fleet.':'Demand is assumed sufficient.'} ${mode} vertical scale.</desc><rect width="${W}" height="${H}" fill="white"/><text x="${L}" y="20">Running cost / ${UI_TERMS.capacityUnit} ($)</text>`;
   for (const tick of scale.ticks) svg += `<line x1="${L}" x2="${W-R}" y1="${sy(tick)}" y2="${sy(tick)}" stroke="#e4e8e4" stroke-dasharray="2 5"/><text x="${L-10}" y="${sy(tick)+4}" text-anchor="end">${tick.toLocaleString('en-GB',{notation:'compact',maximumFractionDigits:1})}</text>`;
-  for (let i=0;i<=5;i++) {const x=minDistance+(maxDistance-minDistance)*i/5;svg+=`<text x="${sx(x)}" y="${H-B+22}" text-anchor="middle">${fmtKm(x)}</text>`;}
+  for (const x of boundedTicks(minDistance,maxDistance)) {svg+=`<text x="${sx(x)}" y="${H-B+22}" text-anchor="middle">${fmtKm(x)}</text>`;}
   if(Number.isFinite(referenceDistance)&&referenceDistance>=minDistance&&referenceDistance<=maxDistance)svg += `<line x1="${sx(referenceDistance)}" x2="${sx(referenceDistance)}" y1="${T}" y2="${H-B}" stroke="#8a5f2b" stroke-dasharray="6 5"/><text x="${sx(referenceDistance)}" y="${T-8}" text-anchor="${referenceDistance>maxDistance*.8?'end':'start'}" style="fill:#8a5f2b">${fmtKm(referenceDistance)} km route</text>`;
   const ordered = [...series].sort((a,b)=>Number(a.t.id===highlighted)-Number(b.t.id===highlighted));
   for (const {t,points} of ordered) {

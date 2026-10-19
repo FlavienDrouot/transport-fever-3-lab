@@ -45,7 +45,7 @@ import {RAIL_PASSENGER_STARTER,applyStarterSelection} from './starter-selection.
 import {encodeShareState,decodeShareState} from './share-state.js';
 import {withRoadModel} from './road-motion.js';
 import {createModel} from './model.js';
-import {createScale} from './scales.js';
+import {createScale,timeTicks} from './scales.js';
 import {createPhaseScale, leadershipWeights} from './phase-scale.js';
 import {crossoverStory, leaderCurveWindow, rankWindow} from './crossovers.js';
 import {formatTime} from './format.js';
@@ -387,13 +387,13 @@ function renderChart(kind, width) {
   let content = `<title>${spec.title}</title><desc>Calculated curves. X axis: ${xScale.mode}; Y axis: ${yScale.mode}. Log domains: X starts at ${xScale.min} ${spec.unit}; Y starts at ${yScale.min} ${spec.yUnit}. Use the race readout for exact values, including zero.</desc><rect width="${W}" height="${H}" fill="white"/><defs><clipPath id="${clipId}"><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/></clipPath></defs><text x="${L}" y="20">${spec.y}${yScale.mode==='log' ? ' · log scale' : ''}</text>`;
   // Limit label density while retaining enough log ticks to expose multiplicative spacing.
   let lastY = -Infinity;
-  for(const y of [...yScale.ticks].reverse()) {
+  for(const y of [...(view === 'time' && yScale.mode === 'linear' ? timeTicks(ymax) : yScale.ticks)].reverse()) {
     const pos = sy(y);
     if(pos-lastY < 23) continue; lastY=pos;
     content+=`<line x1="${L}" x2="${W-R}" y1="${pos}" y2="${pos}" stroke="#e5e9e4" stroke-dasharray="2 5"/><text x="${L-12}" y="${pos+4}" text-anchor="end">${view === 'time' ? formatTime(y) : tickLabel(y)}</text>`;
   }
   let lastX=-Infinity;
-  for(const x of xScale.ticks) {
+  for(const x of view !== 'time' && view !== 'speed-distance' && xScale.mode === 'linear' ? timeTicks(horizon) : xScale.ticks) {
     const pos=sx(x);
     if(pos-lastX < 42) continue; lastX=pos;
     content+=`<text x="${pos}" y="${H-B+23}" text-anchor="middle">${view === 'time'||view==='speed-distance' ? tickLabel(x) : formatTime(x)}</text>`;
@@ -1147,9 +1147,10 @@ async function init() {
   for(const id of ['enable-flow','enable-frequency','frequency-mode','allow-multiple-units','enable-platform-limit'])$(id).addEventListener('change',updateTargets);
   for(const id of ['desired-flow','desired-headway','desired-headway-seconds','platform-length'])$(id).addEventListener('input',updateTargets);
   $('show-service-details').addEventListener('change',e=>{
-    document.querySelector('.line-table').classList.toggle('show-details',e.target.checked);
+    $('service-table').closest('.line-table').classList.toggle('show-details',e.target.checked);
     renderLineAnalysis();
   });
+  $('road-steady-details').addEventListener('change',e=>$('road-steady-table').closest('.line-table').classList.toggle('show-details',e.target.checked));
   $('rail-cargo').addEventListener('change',()=>{
     economicCargo=$('rail-cargo').querySelector('input:checked').value;
     highlighted=undefined;renderCatalogue();render();

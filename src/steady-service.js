@@ -29,7 +29,7 @@ export function renderSteadyService({summary,table,body,caption},vehicles,settin
     [`${UI_TERMS.rate} × distance`,`${UI_TERMS.capacityUnit}·km/year${freight?'':'/direction'} / ${per}`],
     [UI_TERMS.capacity,`${UI_TERMS.capacityUnit} / ${per}`],[UI_TERMS.runningCosts,`$/year / ${per}`],
     ['Maximum speed','km/h · vehicle limit'],['Steady speed A→B / B→A','km/h'],[UI_TERMS.utilization,'%']];
-  const detail=index=>!road&&index>=7?' class="service-detail"':'';
+  const detail=index=>index>=7?' class="service-detail"':'';
   table.querySelector('thead tr').innerHTML=headings.map(([label,unit],index)=>`<th scope="col"${detail(index)}>${label}${unit?`<span class="table-unit">${unit}</span>`:''}</th>`).join('');
   renderServiceSummary(summary,{names:best.map(row=>row.vehicle.name),cost:best[0]?.steady.costPerUnitKm,unit:`${UI_TERMS.capacityUnit} / km`,significant:4,
     explanation:'Steady-running cost per transported capacity per one-way kilometre, including both directions. Speed limits, gradients and Utilization apply; acceleration, braking and terminal handling are excluded.',
