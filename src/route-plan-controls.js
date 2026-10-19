@@ -196,6 +196,8 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   return {
     get plan(){return structuredClone(plan);},
     validateSegmentEdit(segments,edit){routePlanFlows(updateRoutePlanSegments(read(),segments,edit));},
+    /** Start a fresh draft from shared geometry; saved routes are untouched. */
+    replaceDraft(segments,draftName='Shared route'){plan=createRoutePlan(segments,draftName);draw();onChange(structuredClone(plan));},
     setSegments(segments,edit=null){const next=updateRoutePlanSegments(plan,segments,edit);if(JSON.stringify(next)===JSON.stringify(plan))return;plan=next;drawAssets();drawStops();drawSummary();refreshStatus();onChange(structuredClone(plan));},
     savedRoutes(){return [...library.values()].map(r=>structuredClone(r));}
   };

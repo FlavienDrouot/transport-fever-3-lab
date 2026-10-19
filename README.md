@@ -26,6 +26,8 @@ Optimizer setup follows **Service → Route → Infrastructure → Year & search
 
 The default Optimizer configuration is precalculated during the site build and reused on the first search. Other configurations run normally; an unavailable or incompatible cache falls back to calculation.
 
+**Copy link** in the bar above Compare shares exactly the current comparison: Rail/Road view, Passengers/Freight, route mode with its distance, gradient and speed limits (or every custom segment), game years, freight filters, Include trams, Utilization and the chosen vehicles. The address bar updates as you change settings, so it can also be bookmarked. Saved compositions, service targets (Rate/Frequency) and route declarations stay in your browser and are not part of links.
+
 Hover or focus a curve, label or vehicle to identify it across the page. Linear/log axes and **Phase focus** make different parts of the comparisons easier to inspect. Invalid numeric settings retain the last valid calculation and show a message. Download CSV or SVG from the speed and distance/time sections. The theme, the hidden guide and saved compositions persist locally; Simple/Custom routes last only for the current session. There is no sign-in. Optimizer settings and proposals are temporary; only saving a composition writes it to browser storage.
 
 ## What the comparisons mean
