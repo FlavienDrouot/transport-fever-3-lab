@@ -10,7 +10,7 @@ import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransiti
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profile-control.js';
 import {mountRoutePlanControls} from './route-plan-controls.js';
-import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs} from './route-plan-service.js';
+import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs,declaredFreightService,declaredFreightGoods} from './route-plan-service.js';
 import {routeProfileForDomain} from './route-profile.js';
 import {createRouteSelection,mountRouteChoice} from './route-selection.js';
 import {canClimbRail} from './gradient.js';
@@ -90,7 +90,7 @@ function setComparisonCategory(category){
   comparisonCategory=category;
   comparisonCategoryControl?.setValue(category);
   updateRoadCategory?.();
-  syncDeclaredLocks();
+  syncDeclaredLocks();syncRouteDeclarationNotice();
 }
 function syncStudyControls(){
   const comparing=navigation.space==='compare',custom=routeSelection.mode==='custom';
@@ -166,12 +166,16 @@ function syncRouteSelection({restore=false}={}){
   syncRouteDeclarationNotice();syncDeclaredLocks();
   crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();
 }
+const FREIGHT_SERVICE_VIEWS=['economics','trucks','configurator'];
 function syncRouteDeclarationNotice(){
   const note=$('route-declaration-analysis-note'),view=navigation.view,plan=declaredPlan();
-  const report=plan&&routeHasDeclarations&&!['route-profile','data'].includes(view)?declarationReport(plan,{includeTrams}):null;
-  const used=report?.used.filter(item=>item.views.includes(view)).map(item=>item.text)??[],unused=view==='race'?[]:report?.issues??[];
-  note.hidden=!used.length&&!unused.length;
-  note.innerHTML=`${used.length?`<strong>From the route declaration:</strong> ${escape(used.join('; '))}. `:''}${unused.length?`Not used: ${escape(unused.join(' '))} `:''}<a href="#route-profile">Review the route &amp; expected service →</a>`;
+  const shown=plan&&routeHasDeclarations&&!['route-profile','data'].includes(view);
+  const report=shown?declarationReport(plan,{includeTrams}):null;
+  const used=report?.used.filter(item=>item.views.includes(view)&&(!item.freight||comparisonCategory==='freight')).map(item=>item.text)??[],unused=view==='race'?[]:report?.issues??[];
+  // Compare keeps its own category: a freight declaration never switches it on its own.
+  const goods=shown&&comparisonCategory!=='freight'&&FREIGHT_SERVICE_VIEWS.includes(view)&&declaredFreightService(plan).status!=='none'?declaredFreightGoods(plan):[];
+  note.hidden=!used.length&&!unused.length&&!goods.length;
+  note.innerHTML=`${goods.length?`The route declares freight for ${escape(goods.join(', '))}, but Compare is on Passengers, so the declared service is not used. <button type="button" data-switch-category="freight">Switch to Freight</button><br>`:''}${used.length?`<strong>From the route declaration:</strong> ${escape(used.join('; '))}. `:''}${unused.length?`Not used: ${escape(unused.join(' '))} `:''}<a href="#route-profile">Review the route &amp; expected service →</a>`;
 }
 const declaredLocks=new Map();
 /** While the custom route declares them, these service inputs show the declared value and cannot be edited; their previous values return afterwards. */
@@ -202,9 +206,12 @@ function syncDeclaredLocks(){
   for(const [id,type] of [['enable-flow','change'],['rail-loaded-return','change'],['road-enable-flow','change']])$(id).dispatchEvent(new Event(type,{bubbles:true}));
   compositionAnalysis?.refresh();
 }
-function scheduleDeclarationSync(){
-  const key=JSON.stringify(routePlan&&[routePlan.goods,routePlan.stops,routePlan.segmentAssets]);
+const declarationSignature=plan=>JSON.stringify(plan&&[plan.goods,plan.stops,plan.segmentAssets]);
+/** Any change to the declaration (not the name) puts the custom route in use, like a geometry edit; merely opening the page does not. */
+function declarationEdited(plan){
+  const key=declarationSignature(plan);
   if(key===declarationKey)return;declarationKey=key;
+  if(routeSelection.mode!=='custom'){routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});return;}
   clearTimeout(declarationTimer);declarationTimer=setTimeout(()=>{if(routeSelection.mode==='custom')syncRouteSelection();},150);
 }
 function updateSimpleRoute(part){
@@ -1204,11 +1211,12 @@ async function init() {
   routePlanControl=mountRoutePlanControls($('route-plan-control'),{initialSegments:railRouteProfile,storage:routeStorage,
     onSelectSegment:index=>profileControl.selectSegment(index),
     onLoad:plan=>{routePlan=plan;profileControl.setSegments(plan.segments);routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});},
-    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.operations.length||s.infrastructure.length||s.buildings.some(b=>b.type!=='none'||b.storage.length||b.recipe.inputs.length||b.recipe.outputs.length));profileControl.setStops(plan.stops);routePlan=plan;scheduleDeclarationSync();syncRouteDeclarationNotice();}
+    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.operations.length||s.infrastructure.length||s.buildings.some(b=>b.type!=='none'||b.storage.length||b.recipe.inputs.length||b.recipe.outputs.length));profileControl.setStops(plan.stops);routePlan=plan;declarationEdited(plan);syncRouteDeclarationNotice();}
   });
-  routePlan=routePlanControl.plan;declarationKey=JSON.stringify([routePlan.goods,routePlan.stops,routePlan.segmentAssets]);
+  routePlan=routePlanControl.plan;declarationKey=declarationSignature(routePlan);
   profileControl.setStops(routePlanControl.plan.stops);
   mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});
+  $('route-declaration-analysis-note').addEventListener('click',event=>{if(!event.target.closest('[data-switch-category]'))return;setComparisonCategory('freight');highlighted=undefined;renderCatalogue();render();});
   $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');syncRouteSelection({restore:true});});
   syncRouteSelection();
   $('route-speed-input').addEventListener('input',()=>{if(validateRace())updateSimpleRoute({[routeSpeedField()]:$('route-speed-input').valueAsNumber});});

@@ -57,6 +57,17 @@ export function mergeUndeclaredLineChoices(raw,emitted,input){
 const operations=plan=>plan.stops.flatMap(stop=>stop.operations.map(op=>({...op,stopId:stop.id}))).filter(op=>op.quantity.value>0);
 const serviceGoodIds=plan=>[...new Set(operations(plan).map(op=>op.cargoId))];
 
+/** A–B–A ends at B: whatever is still onboard there is delivered, so the return leg carries only what the return direction loads. */
+function deliveredAtTerminus(plan){
+  const last=plan.stops.at(-1);
+  return {...plan,stops:plan.stops.map(stop=>stop===last?{...stop,operations:[...stop.operations,
+    ...plan.goods.map(good=>({id:`terminus:${good.id}`,cargoId:good.id,buildingId:null,direction:'outbound',action:'unload',quantity:{mode:'percent',value:100}}))]}:stop)};
+}
+const legLoads=(flows,goodId)=>['outbound','return'].map(direction=>flows.sections.find(s=>s.direction===direction).load[goodId]);
+
+/** The goods a declaration moves, for messages that name them. */
+export const declaredFreightGoods=input=>{const plan=validateRoutePlan(input);return serviceGoodIds(plan).map(id=>plan.goods.find(g=>g.id===id).name);};
+
 /** One good on an A–B–A service: annual quantities become the Rate; return freight means a loaded return. */
 export function declaredFreightService(input){
   const plan=validateRoutePlan(input),goodIds=serviceGoodIds(plan);
@@ -65,9 +76,9 @@ export function declaredFreightService(input){
   if(plan.stops.length>2)issues.push('Intermediate stops are not modelled: services run A–B–A, so the declared freight flows are not used.');
   if(goodIds.length>1)issues.push('Several goods share this service, but each calculator carries one good per service.');
   if(issues.length)return {status:'unsupported',issues};
-  const good=plan.goods.find(g=>g.id===goodIds[0]),flows=routePlanFlows(plan);
-  const [out,back]=['outbound','return'].map(direction=>flows.sections.find(s=>s.direction===direction).load[good.id]);
-  const base={goodId:good.id,goodName:good.name};
+  const good=plan.goods.find(g=>g.id===goodIds[0]),[out,back]=legLoads(routePlanFlows(deliveredAtTerminus(plan)),good.id),[,carried]=legLoads(routePlanFlows(plan),good.id);
+  // Freight still onboard at B in the general flows is what this service delivers there.
+  const base={goodId:good.id,goodName:good.name,deliveredAtB:carried.year>back.year+EPSILON};
   if(out.visit>EPSILON||back.visit>EPSILON)issues.push(`Quantities per visit cannot become a ${T.rate} without a ${T.frequency}; only annual quantities are used.`);
   if(out.year<=EPSILON&&back.year<=EPSILON)return {...base,status:'unsupported',issues};
   if(out.year<=EPSILON)return {...base,status:'unsupported',issues:[...issues,'Freight is declared on the B → A leg only; the calculators load at A and deliver at B.']};
@@ -158,13 +169,13 @@ export function declarationReport(input,{includeTrams=false}={}){
   const used=[];
   if(count('rail')||count('road'))used.push({views:['race','economics','trucks','configurator','optimizer'],text:`speed ceilings from declared tiers (${[count('rail')&&`Rail ${segments(count('rail'))}`,count('road')&&`Road ${segments(count('road'))}`].filter(Boolean).join(', ')})`});
   if(count('railTracks')||count('roadLanes')||count('tram'))used.push({views:['optimizer'],text:`fixed Rail tracks, Road lanes and Tram infrastructure (${segments(Math.max(count('railTracks'),count('roadLanes'),count('tram')))})`});
-  if(service.status==='applied')used.push({views:['economics','trucks','configurator','optimizer'],text:`${service.goodName}: ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return (Freight)`});
+  if(service.status==='applied')used.push({freight:true,views:['economics','trucks','configurator','optimizer'],text:`${service.goodName}: ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return (Freight)${service.deliveredAtB?'; freight still onboard at B is delivered there, not carried back':''}`});
   const length=declaredPlatformLength(plan);
   if(length)used.push({views:['economics','configurator'],text:`maximum train length ${length} m (Rail platforms)`});
   const handling=['rail','road'].map(domain=>declaredHandling(plan,{domain,includeTrams}));
-  if(handling.some(h=>h.stopA.specializedTerminal||h.stopB.specializedTerminal))used.push({views:['economics','trucks','configurator'],text:'specialized terminals at the endpoints (Freight)'});
+  if(handling.some(h=>h.stopA.specializedTerminal||h.stopB.specializedTerminal))used.push({freight:true,views:['economics','trucks','configurator'],text:'specialized terminals at the endpoints (Freight)'});
   const model=declaredEndpointModel(plan,{category:service.status==='applied'?'freight':'passengers',loadedReturn:service.loadedReturn,includeTrams});
-  if(model){used.push({views:['optimizer'],text:`endpoint buildings, storage and reusable terminals (with infrastructure ${T.runningCosts})`});issues.push(...model.issues);}
+  if(model){used.push({views:['optimizer'],text:`endpoint buildings, storage and reusable terminals (constraints; their ${T.runningCosts} are counted when infrastructure ${T.runningCosts} is included)`});issues.push(...model.issues);}
   for(const [i,asset] of plan.segmentAssets.entries())if(asset.railTier!==null&&asset.railTracks===1)issues.push(`Segment ${i+1}: a single existing Rail track cannot be fixed; the calculator sizes tracks from the fleet.`);
   if(plan.stops.some(stop=>stop.buildings.some(b=>b.recipe.inputs.length||b.recipe.outputs.length)))issues.push('Industry recipes are summarised on the Route page only.');
   if(plan.stops.length>2&&service.status!=='unsupported')issues.push('Intermediate stops are ignored by A–B–A calculations.');

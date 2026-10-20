@@ -47,7 +47,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
         <div id="optimizer-reusable-infrastructure"></div><p id="optimizer-infrastructure-retained" class="chart-help" hidden></p>
         <p id="optimizer-infrastructure-empty" class="chart-help"></p>
       </section>
-      <section id="optimizer-declared-infrastructure" class="optimizer-infra-section" hidden><h4>Declared in Route</h4><div data-declared-summary></div><p class="chart-help">These stops and facilities come from the custom route declaration, so they are not edited here. <a href="#route-profile">Edit them in Design → Route →</a></p></section>
+      <section id="optimizer-declared-infrastructure" class="optimizer-infra-section" hidden><h4>Declared in Route</h4><div data-declared-summary></div><p class="chart-help" data-declared-costs-help>They constrain the search either way; check Include infrastructure Running costs to count their upkeep and upgrades.</p><p class="chart-help">These stops and facilities come from the custom route declaration, so they are not edited here. <a href="#route-profile">Edit them in Design → Route →</a></p></section>
       <details id="optimizer-new-infrastructure" class="panel-group optimizer-infra-section"><summary>New infrastructure · limits</summary><div class="panel-group-body optimizer-infra-stops">${stops.map(stop=>{
         const attrs=`data-infrastructure-bound="${stop}"`;
         return `<fieldset data-new-terminal="${stop}"><legend>${title(stop)}</legend><div data-new-rail-length>${numeric(attrs,'maxTrainLength','Maximum allowed Rail platform length',RAIL_PLATFORM_MAX_LENGTH,40,RAIL_PLATFORM_MAX_LENGTH,40,'m')}${numeric(attrs,'maxPlatformTracks','Maximum allowed platform tracks',2,1,100,1)}</div>
@@ -66,9 +66,11 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
       </div></details>
     </div></div></details>`;
   const $=selector=>root.querySelector(selector),enabled=$('#optimizer-include-infrastructure'),list=$('#optimizer-reusable-infrastructure');
-  const active=(entry,scope)=>scope.domain==='both'||entry.domain===scope.domain;
+  // A declaration constrains the search whether or not its Running costs are counted.
+  const active=()=>enabled.checked||!!declared;
+  const inScope=(entry,scope)=>scope.domain==='both'||entry.domain===scope.domain;
   const factoryTerminal=(stop,kind,scope)=>scope.category==='freight'&&kind==='road'&&sites[stop]?.type==='factory';
-  const matching=(stop,kind,scope)=>entries.filter(entry=>active(entry,scope)&&entry.stop===stop&&entry.domain===kind&&entry.kind);
+  const matching=(stop,kind,scope)=>entries.filter(entry=>inScope(entry,scope)&&entry.stop===stop&&entry.domain===kind&&entry.kind);
   const selectedKinds=scope=>scope.domain==='both'?kinds:[scope.domain];
   function renderEntries(){
     const opened=new Map([...list.querySelectorAll('[data-reusable-entry]')].map(node=>[node.dataset.reusableEntry,node.open]));
@@ -106,7 +108,8 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
   function refresh(){
     const scope=getScope(),freight=scope.category==='freight';
     useDeclaration(getDeclared(scope));
-    $('#optimizer-infrastructure-body').hidden=!enabled.checked;
+    $('#optimizer-infrastructure-body').hidden=!active();
+    $('[data-declared-costs-help]').hidden=!declared;
     $('[data-storage-policy]').hidden=!freight;
     $('#optimizer-storage-policy-help').hidden=$('#optimizer-limit-vehicle-capacity').checked;
     $('#optimizer-infrastructure-sites').hidden=!freight||!!declared;
@@ -132,7 +135,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
       if(!entry.domain&&scope.domain!=='both'){
         entry.domain=scope.domain;$(`[data-infrastructure-entry="${entry.id}"][data-infrastructure-field=domain][value="${scope.domain}"]`).checked=true;
       }
-      const node=$(`[data-reusable-entry="${entry.id}"]`);node.hidden=!active(entry,scope);if(node.hidden)continue;
+      const node=$(`[data-reusable-entry="${entry.id}"]`);node.hidden=!inScope(entry,scope);if(node.hidden)continue;
       visible++;
       const factory=factoryTerminal(entry.stop,entry.domain,scope)&&!scope.includeTrams;
       node.querySelector('[data-entry-summary]').textContent=[entry.stop?title(entry.stop):`Existing infrastructure ${manualEntries.indexOf(entry)+1}`,entry.domain==='rail'?'Rail':entry.domain==='road'?'Road':'',factory?`${T.industry} terminals included`:entry.kind==='station'?'Station only':entry.kind==='platform'?'Station + platform':entry.kind==='busStop'?'Bus stop':''].filter(Boolean).join(' · ');
@@ -186,9 +189,9 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
       control.setCustomValidity('');
       let hidden=false;
       for(let parent=control.parentElement;parent&&parent!==root;parent=parent.parentElement)if(parent.hidden){hidden=true;break;}
-      control.disabled=!enabled.checked||hidden;
+      control.disabled=!active()||hidden;
     }
-    for(const entry of manualEntries)if(entry.kind==='busStop'&&active(entry,scope)&&(!factoryTerminal(entry.stop,entry.domain,scope)||scope.includeTrams)&&!busStopAllowed(entry.domain,scope.category,entry.stop,manualSites[entry.stop]?.type,scope.loadedReturn)){
+    for(const entry of manualEntries)if(entry.kind==='busStop'&&inScope(entry,scope)&&(!factoryTerminal(entry.stop,entry.domain,scope)||scope.includeTrams)&&!busStopAllowed(entry.domain,scope.category,entry.stop,manualSites[entry.stop]?.type,scope.loadedReturn)){
       $(`[data-infrastructure-entry="${entry.id}"][data-infrastructure-field=kind][value=busStop]`).setCustomValidity('Bus stops serve passengers or unload freight at industrial destination B without a loaded return.');
     }
   }
@@ -223,7 +226,7 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
     if(remove){manualEntries.splice(manualEntries.findIndex(entry=>entry.id===remove.dataset.removeInfrastructure),1);renderEntries();$('#optimizer-add-infrastructure').focus();onChange();}
   });
   refresh();
-  return {refresh,isEnabled:()=>enabled.checked,reportValidity(){
+  return {refresh,isActive:active,reportValidity(){
     const scope=getScope();
     for(const kind of selectedKinds(scope))for(const stop of stops){
       const factory=factoryTerminal(stop,kind,scope),group=factory&&!scope.includeTrams?[]:matching(stop,kind,scope);
@@ -236,8 +239,8 @@ export function mountOptimizerInfrastructure(root,{getScope,onChange,getDeclared
     const invalid=[...root.querySelectorAll('input')].find(control=>!control.disabled&&!control.checkValidity());
     return invalid?invalid.reportValidity():true;
   },getValue(){
-    if(!enabled.checked)return null;
+    if(!active())return null;
     const scope=getScope();
-    return optimizerInfrastructureValue({limitVehicleCapacity:$('#optimizer-limit-vehicle-capacity').checked,sites,bounds,entries,scope});
+    return optimizerInfrastructureValue({limitVehicleCapacity:$('#optimizer-limit-vehicle-capacity').checked,countRunningCosts:enabled.checked,sites,bounds,entries,scope});
   }};
 }

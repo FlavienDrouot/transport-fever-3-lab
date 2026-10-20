@@ -8,7 +8,7 @@ import {renderFreightFacilities} from './service-controls.js';
 import {mountOptimizerInfrastructure} from './optimizer-infrastructure-controls.js';
 import {mountOptimizerLineInfrastructure} from './optimizer-line-controls.js';
 import {optimizerProposalRequest} from './optimizer-infrastructure.js';
-import {declaredFreightService,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
+import {declaredFreightGoods,declaredFreightService,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
 import {renderOptimizerConstraints} from './optimizer-constraints.js';
 import {routeProfileSketch} from './route-profile-control.js';
 import {optimizerExclusionSummary} from './optimizer-diagnostics.js';
@@ -50,7 +50,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   const buttons=Object.fromEntries(['find','cancel','previous'].map(action=>[action,[...new Set([...root.querySelectorAll(`[data-optimizer-action="${action}"]`),...sidebar.querySelectorAll(`[data-optimizer-action="${action}"]`)])]]));
   let category='passengers',worker=null,job=0,completed=null,stale=false,infrastructureControl=null,lineControl=null,routeKey=JSON.stringify(getRoute()),declaredKey='',serviceLock=null;
   const planKey=()=>{const plan=getPlan();return JSON.stringify(plan&&[plan.goods,plan.stops,plan.segmentAssets]);};
-  mountTransportCategory($('optimizer-category'),{value:category,onChange:value=>{category=value;syncCategory();invalidate();}});
+  const categoryControl=mountTransportCategory($('optimizer-category'),{value:category,onChange:value=>{category=value;syncCategory();invalidate();}});
   mountFreightFilter($('optimizer-cargo'));syncCategory();
   const stopValues=stop=>({specializedTerminal:$(`optimizer-terminal-${stop}`).checked,specializedWarehouse:$(`optimizer-warehouse-${stop}`).checked});
   infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getDeclared:scope=>{const plan=getPlan();return plan&&declaredEndpointModel(plan,scope);},getScope:()=>({domain:field('domain').value,category,includeTrams:lineControl?.includeTrams()??false,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
@@ -67,10 +67,18 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
       rate.value=serviceLock.rate;rate.readOnly=false;loaded.checked=serviceLock.loadedReturn;loaded.disabled=false;serviceLock=null;
     }
     const lines=!service||service.status==='none'?[]:[
-      ...(service.status==='applied'?[category==='freight'?`From the Route declaration: ${service.goodName}, ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return.`:`The Route declares a freight service (${service.goodName}). Choose Freight to use it.`]:[]),
+      ...(category!=='freight'?[`The Route declares freight for ${declaredFreightGoods(plan).join(', ')}. Choose Freight to use it.`]:service.status==='applied'?[`From the Route declaration: ${service.goodName}, ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return.${service.deliveredAtB?' Freight still onboard at B is delivered there, not carried back.':''}`]:[]),
       ...service.issues.map(issue=>`Not used from the Route declaration: ${issue}`)];
     note.hidden=!lines.length;note.textContent=lines.join(' ');
+    if(service&&service.status!=='none'&&category!=='freight'){
+      const button=note.ownerDocument.createElement('button');button.type='button';button.dataset.declaredSwitch='freight';button.textContent='Switch to Freight';
+      note.append(' ',button);
+    }
   }
+  root.addEventListener('click',event=>{
+    if(!event.target.closest('[data-declared-switch]'))return;
+    category='freight';categoryControl.setValue(category);syncCategory();invalidate();
+  });
   function syncCategory(){
     root.querySelector('.optimizer-leg-help').textContent=category==='freight'?'Freight leg time includes loading, travel, estimated waiting at the destination and unloading. An empty return includes travel only. Maneuvering and operation/departure pauses are excluded.':'Passenger leg time includes acceleration and any modeled braking; stop handling is excluded.';
     for(const id of ['optimizer-cargo','optimizer-cargo-help','optimizer-loaded-return'])$(id).hidden=category!=='freight';
@@ -81,8 +89,8 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   function syncInfrastructure(){
     infrastructureControl?.refresh();
     lineControl?.refresh();
-    $('optimizer-handling').hidden=category!=='freight'||(infrastructureControl?.isEnabled()??false);
-    const infrastructureEnabled=infrastructureControl?.isEnabled()??false;
+    $('optimizer-handling').hidden=category!=='freight'||(infrastructureControl?.isActive()??false);
+    const infrastructureEnabled=infrastructureControl?.isActive()??false;
     for(const label of form.querySelectorAll('[data-optimizer-rail-bound]')){label.hidden=field('domain').value==='road'&&!lineControl?.includeTrams();label.querySelector('input').disabled=label.hidden;}
     const length=field('maxTrainLength');length.closest('label').hidden=field('domain').value==='road'||infrastructureEnabled;length.disabled=length.closest('label').hidden;
     const coupling=field('identicalMUsOnly');coupling.disabled=field('domain').value==='road'&&!lineControl?.includeTrams();$('optimizer-mu-coupling').hidden=coupling.disabled;$('optimizer-mu-coupling-help').hidden=coupling.disabled;
@@ -118,7 +126,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   function request(){
     const domain=field('domain').value;
     const values=Object.fromEntries(['rate','year',...railBounds,'maxRoadTramLength','maxFleet'].map(name=>[name,field(name).disabled?OPTIMIZER_DEFAULTS[name]:Number(field(name).value)]));
-    if(domain!=='road'&&infrastructureControl.isEnabled())values.maxTrainLength=OPTIMIZER_MAX_TRAIN_LENGTH;
+    if(domain!=='road'&&infrastructureControl.isActive())values.maxTrainLength=OPTIMIZER_MAX_TRAIN_LENGTH;
     return optimizerRequest({...values,domain,identicalMUsOnly:field('identicalMUsOnly').disabled?OPTIMIZER_DEFAULTS.identicalMUsOnly:field('identicalMUsOnly').checked,includeTrams:lineControl.includeTrams(),ignoreRetirements:field('ignoreRetirements').checked,category,cargo:$('optimizer-cargo').querySelector('input:checked').value,
       minHeadwaySeconds:field('enableMinimumFrequency').checked?durationSeconds(field('minMinutes'),field('minMinutesSeconds')):null,
       maxOutboundLegSeconds:field('enableMaxOutboundLeg').checked?durationSeconds(field('outboundMinutes'),field('outboundMinutesSeconds')):null,
@@ -139,7 +147,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     const hasProposals=domains.some(domain=>answer.best[domain].length);
     if(hasProposals&&(answer.request.minHeadwaySeconds!==null||answer.request.maxOutboundLegSeconds!==null||answer.request.maxReturnLegSeconds!==null))results.insertAdjacentHTML('beforeend','<p class="chart-help optimizer-result-note">The minimum interval and directional leg time limits are search constraints. Recheck them after editing a proposal in Compare or Composition.</p>');
     if(hasProposals&&(answer.request.lineInfrastructure||domains.some(domain=>answer.best[domain].some(r=>r.routeInfrastructure))))results.insertAdjacentHTML('beforeend','<p class="chart-help optimizer-result-note">Opening a proposal applies its selected segment speed limits. Route upkeep is included only when enabled; Compare and Composition show vehicle costs only.</p>');
-    if(hasProposals&&answer.request.infrastructure)results.insertAdjacentHTML('beforeend',`<p class="chart-help optimizer-result-note">Infrastructure costs include only new installations and allowed upgrades. Existing upkeep is excluded. Rail platform tracks and Road geometry are chosen within your limits. ${answer.request.domain!=='rail'?'Road throughput and mean waiting assume regular arrivals and independent parallel accesses; cycle time includes waiting and 5 s maneuvering per visit. Traffic and queue propagation between stops are not simulated. ':''}Opening a proposal applies its handling bonuses, train length limit and storage-based Utilization ceiling; Compare and Composition show vehicle costs only and do not enforce terminal throughput or Road waiting estimates. Recheck terminal and storage constraints after editing.</p>`);
+    if(hasProposals&&answer.request.infrastructure)results.insertAdjacentHTML('beforeend',`<p class="chart-help optimizer-result-note">${answer.request.infrastructure.countRunningCosts===false?`Declared stops constrain the search, but their ${T.runningCosts} are not counted.`:'Infrastructure costs include only new installations and allowed upgrades. Existing upkeep is excluded.'} Rail platform tracks and Road geometry are chosen within your limits. ${answer.request.domain!=='rail'?'Road throughput and mean waiting assume regular arrivals and independent parallel accesses; cycle time includes waiting and 5 s maneuvering per visit. Traffic and queue propagation between stops are not simulated. ':''}Opening a proposal applies its handling bonuses, train length limit and storage-based Utilization ceiling; Compare and Composition show vehicle costs only and do not enforce terminal throughput or Road waiting estimates. Recheck terminal and storage constraints after editing.</p>`);
     results.scrollIntoView({block:'start'});
   }
   root.addEventListener('input',event=>{if(event.target.closest('#optimizer-route-slot'))invalidate();});

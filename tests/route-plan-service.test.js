@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createRoutePlan,newRouteStop,newRouteBuilding,validateRoutePlan} from '../src/route-plan.js';
-import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredFreightService,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
+import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredFreightService,declaredFreightGoods,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
 import {optimizerRequest,optimizerCandidates,evaluateOptimizerCandidate} from '../src/optimizer.js';
-import {optimizerInfrastructureValue,optimizerTrainLengthLimit} from '../src/optimizer-infrastructure.js';
+import {optimizerInfrastructureValue,optimizerTrainLengthLimit,validateOptimizerInfrastructure} from '../src/optimizer-infrastructure.js';
 
 const segment={distanceKm:2,gradePercent:1,speedLimitKmh:350,roadSpeedLimitKmh:120};
 const coal={id:'good:coal',name:'Coal'},grain={id:'good:grain',name:'Grain'};
@@ -201,4 +201,68 @@ test('the declared route profile is a valid Optimizer route with Road lanes and 
   const request=optimizerRequest({routeProfile:declaredRouteProfile(plan.segments,plan),domain:'road',category:'passengers',lineInfrastructure:{}});
   assert.deepEqual([request.routeProfile[0].roadLanes,request.routeProfile[0].tramInfrastructure,request.routeProfile[0].roadSpeedLimitKmh],[4,'dedicated',80]);
   assert.deepEqual(validateRoutePlan(plan).segmentAssets[0].roadLanes,4);
+});
+
+test('A–B–A delivers everything onboard at B: only return-direction loading makes a loaded return',()=>{
+  const bare=createRoutePlan([segment,segment]);bare.goods=[coal];operation(bare.stops[0],coal.id,'load',1000);
+  const service=declaredFreightService(bare);
+  assert.deepEqual([service.status,service.rate,service.loadedReturn],['applied',1000,false]);
+  assert.equal(service.deliveredAtB,true);assert.deepEqual(service.issues,[]);
+  assert.match(declarationReport(bare).used.find(item=>/Coal/.test(item.text)).text,/still onboard at B is delivered there/);
+  assert.deepEqual(declaredServiceInputs(bare,{category:'freight'}).loadedReturn,false);
+  const partial=createRoutePlan([segment,segment]);partial.goods=[coal];operation(partial.stops[0],coal.id,'load',1000);operation(partial.stops[1],coal.id,'unload',400);
+  assert.deepEqual([declaredFreightService(partial).rate,declaredFreightService(partial).loadedReturn],[1000,false]);
+  const loaded=createRoutePlan([segment,segment]);loaded.goods=[coal];operation(loaded.stops[0],coal.id,'load',1000);operation(loaded.stops[1],coal.id,'load',1000,{direction:'return'});
+  const back=declaredFreightService(loaded);
+  assert.deepEqual([back.status,back.rate,back.loadedReturn],['applied',2000,true]);
+  assert.equal(back.deliveredAtB,true);
+});
+
+test('freight carried over from A never fills an unequal return',()=>{
+  const plan=createRoutePlan([segment,segment]);plan.goods=[coal];operation(plan.stops[0],coal.id,'load',1000);operation(plan.stops[1],coal.id,'load',500,{direction:'return'});
+  const service=declaredFreightService(plan);
+  assert.equal(service.status,'unsupported');assert.match(service.issues.at(-1),/A → B \(1,000\) and B → A \(500\)/);
+});
+
+test('freight services name their goods, including unsupported ones',()=>{
+  assert.deepEqual(declaredFreightGoods(createRoutePlan([segment])),[]);
+  const plan=freightPlan();plan.goods.push(grain);operation(plan.stops[0],grain.id,'load',500);
+  assert.deepEqual(declaredFreightGoods(plan),['Coal','Grain']);
+});
+
+test('infrastructure Running costs are optional while declared stops still constrain the search',()=>{
+  const plan=freightPlan();
+  plan.stops[0].infrastructure=[{id:'a-road',kind:'roadPlatform',length:20,platforms:1,specialized:true}];
+  const scope={domain:'road',category:'freight',loadedReturn:false,includeTrams:false},model=declaredEndpointModel(plan,scope);
+  const evaluate=countRunningCosts=>{
+    const request=optimizerRequest({routeProfile:declaredRouteProfile(plan.segments,plan),domain:'road',category:'freight',rate:50,infrastructure:optimizerInfrastructureValue({countRunningCosts,sites:model.sites,bounds,entries:model.entries,scope})});
+    return evaluateOptimizerCandidate([...optimizerCandidates(data,request)][0],data,request).result;
+  };
+  const counted=evaluate(true),free=evaluate(false);
+  assert.ok(counted.terminalRunningCosts>0);
+  // B declares nothing, so it is a new stop; A is the declared platform in both cases.
+  for(const result of [counted,free]){assert.equal(result.infrastructure.stopA.existing,true);assert.equal(result.infrastructure.stopA.platformLengths[0],20);}
+  assert.equal(free.infrastructureCostsCounted,false);
+  assert.equal(free.terminalRunningCosts,0);assert.equal(free.cost,free.vehicleRunningCosts);assert.equal(free.cost,counted.cost-counted.terminalRunningCosts);
+  assert.equal(free.uncountedTerminalRunningCosts,counted.terminalRunningCosts);
+  assert.equal(free.unitCost<counted.unitCost,true);
+});
+
+test('a declared warehouse stays the stop with or without counted Running costs',()=>{
+  const plan=freightPlan();plan.stops[0].buildings=[{...newRouteBuilding('Depot','warehouse'),warehouseCapacity:1000}];
+  const scope={domain:'road',category:'freight',loadedReturn:false,includeTrams:false},model=declaredEndpointModel(plan,scope);
+  for(const countRunningCosts of [true,false]){
+    const request=optimizerRequest({routeProfile:declaredRouteProfile(plan.segments,plan),domain:'road',category:'freight',rate:50,infrastructure:optimizerInfrastructureValue({countRunningCosts,sites:model.sites,bounds,entries:model.entries,scope})});
+    const result=evaluateOptimizerCandidate([...optimizerCandidates(data,request)][0],data,request).result;
+    assert.equal(request.infrastructure.countRunningCosts,countRunningCosts);
+    assert.equal(result.infrastructure.stopA.warehouseCapacity,1000);assert.equal(result.infrastructure.stopA.warehouseExpanded,false);
+  }
+});
+
+test('the infrastructure request counts Running costs unless told otherwise',()=>{
+  const value=optimizerInfrastructureValue({sites:{stopA:{type:'industrial'},stopB:{type:'industrial'}},bounds,entries:[],scope:{domain:'road',category:'passengers',loadedReturn:false,includeTrams:false}});
+  assert.equal(value.countRunningCosts,true);
+  assert.equal(validateOptimizerInfrastructure(value,'road','passengers').countRunningCosts,true);
+  assert.equal(validateOptimizerInfrastructure({...value,countRunningCosts:false},'road','passengers').countRunningCosts,false);
+  assert.throws(()=>validateOptimizerInfrastructure({...value,countRunningCosts:'no'},'road','passengers'),/counted/);
 });

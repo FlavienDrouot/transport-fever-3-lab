@@ -191,7 +191,10 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
   if(typeof input!=='object'||Array.isArray(input))throw new RangeError('Choose valid terminal configurations.');
   const limitVehicleCapacity=Object.hasOwn(input,'limitVehicleCapacity')?input.limitVehicleCapacity:true;
   if(typeof limitVehicleCapacity!=='boolean')throw new RangeError('Choose a valid full vehicle Capacity storage limit.');
-  const result={limitVehicleCapacity};
+  // Constraints and costs are separate: false keeps the stops as constraints but leaves their Running costs out of the ranking.
+  const countRunningCosts=Object.hasOwn(input,'countRunningCosts')?input.countRunningCosts:true;
+  if(typeof countRunningCosts!=='boolean')throw new RangeError('Choose whether infrastructure Running costs are counted.');
+  const result={limitVehicleCapacity,countRunningCosts};
   result.sites={};
   for(const stop of ['stopA','stopB']){
     const site=input.sites?.[stop]??{type:'industrial',warehouseSpecialization:'optimize'};
@@ -265,11 +268,11 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
 }
 
 /** Optimizer `infrastructure` request from endpoint sites, reusable terminals and new-terminal bounds; shared by the manual controls and the Route declaration. */
-export function optimizerInfrastructureValue({limitVehicleCapacity=true,sites,bounds,entries,scope}){
+export function optimizerInfrastructureValue({limitVehicleCapacity=true,countRunningCosts=true,sites,bounds,entries,scope}){
   const stops=['stopA','stopB'],kinds=scope.domain==='both'?['rail','road']:[scope.domain],freight=scope.category==='freight';
   const factoryTerminal=(stop,kind)=>freight&&kind==='road'&&sites[stop]?.type==='factory';
   const matching=(stop,kind)=>entries.filter(entry=>(scope.domain==='both'||entry.domain===scope.domain)&&entry.stop===stop&&entry.domain===kind&&entry.kind);
-  return {limitVehicleCapacity,sites:Object.fromEntries(stops.map(stop=>{
+  return {limitVehicleCapacity,countRunningCosts,sites:Object.fromEntries(stops.map(stop=>{
     const site=sites[stop];
     return [stop,!freight?{type:'industrial'}:{type:site.type,warehouseCapacity:site.warehouseCapacity,
       ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals,
