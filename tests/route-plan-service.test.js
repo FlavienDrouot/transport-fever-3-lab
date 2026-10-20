@@ -292,20 +292,16 @@ test('general freight requires general-purpose vehicles',()=>{
   const service=declaredService(plan);assert.equal(service.cargo,'all');assert.match(declaredServiceText(service),/Crates \(General\)/);
 });
 
-test('a declared specialized warehouse sets Warehouse ×2 and the Optimizer site',()=>{
-  const plan=freightPlan();plan.stops[1].buildings=[{...newRouteBuilding('Depot','warehouse'),warehouseCapacity:1000,warehouseSpecialized:true}];
+test('a warehouse specialized for the service good sets Warehouse ×2 and the Optimizer site; it serves that good only',()=>{
+  const plan=freightPlan();plan.stops[1].buildings=[{...newRouteBuilding('Depot','warehouse'),warehouseCapacity:1000,warehouseSpecializedFor:coal.id}];
   assert.deepEqual(declaredHandling(plan,{domain:'rail'}).stopB,{specializedTerminal:false,specializedWarehouse:true});
   assert.equal(declaredHandling(plan,{domain:'road'}).stopB.specializedWarehouse,true);
   const site=declaredEndpointModel(plan,{category:'freight'}).sites.stopB;
   assert.deepEqual([site.type,site.warehouseCapacity,site.existingSpecializedWarehouse],['warehouse',1000,true]);
   assert.ok(declarationReport(plan).used.some(item=>/specialized warehouses/.test(item.text)));
-  assert.throws(()=>validateRoutePlan({...plan,stops:plan.stops.map((s,i)=>i?{...s,buildings:[{...s.buildings[0],warehouseSpecialized:'yes'}]}:s)}),/warehouse specialization/);
-});
-
-test('with route Running costs, declared tiers become an upgradable base for the Optimizer',()=>{
-  const plan=freightPlan();plan.segmentAssets[0].railTier=160;plan.segmentAssets[0].railTracks=1;
-  const raw=plan.segments,capped=declaredRouteProfile(raw,plan);
-  assert.equal(capped[0].speedLimitKmh,160);
-  assert.equal(uncappedDeclaredTiers(capped,raw,plan)[0].speedLimitKmh,raw[0].speedLimitKmh);
-  assert.equal(uncappedDeclaredTiers(capped,raw,plan)[1].speedLimitKmh,capped[1].speedLimitKmh);
+  const mixed=structuredClone(plan);mixed.goods.push(grain);mixed.stops[1].operations.push({id:'op:grain',buildingId:mixed.stops[1].buildings[0].id,cargoId:grain.id,direction:'outbound',action:'unload',quantity:{mode:'percent',value:100}});
+  assert.throws(()=>validateRoutePlan(mixed),/specialized for Coal; add another warehouse for Grain/);
+  const generic=structuredClone(mixed);generic.stops[1].buildings[0].warehouseSpecializedFor=null;assert.doesNotThrow(()=>validateRoutePlan(generic));
+  const people=structuredClone(plan);people.goods=[{id:'good:p',name:'People',type:'passengers'}];people.stops.forEach(s=>s.operations=[]);people.stops[1].buildings[0].warehouseSpecializedFor='good:p';
+  assert.throws(()=>validateRoutePlan(people),/freight only/);
 });

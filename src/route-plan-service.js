@@ -156,14 +156,14 @@ export function declaredEndpointModel(input,{category='passengers',loadedReturn=
     if(ambiguous)issues.push(`${label} serves several buildings for this service, so none is applied. Assign its operations to a single building.`);
     if(building){
       site.type=building.type;
-      if(building.type==='warehouse')Object.assign(site,{warehouseCapacity:building.warehouseCapacity,maxWarehouseCapacity:building.warehouseCapacity,existingSpecializedWarehouse:building.warehouseSpecialized});
+      if(building.type==='warehouse')Object.assign(site,{warehouseCapacity:building.warehouseCapacity,maxWarehouseCapacity:building.warehouseCapacity,existingSpecializedWarehouse:goods.length===1&&building.warehouseSpecializedFor===goods[0]});
       const stock=goods.length===1?building.storage.find(s=>s.cargoId===goods[0]):null;
       if(building.type==='factory'){
         site.factoryTerminals=building.industryTerminals;
         if(stock)Object.assign(site,{inputStorageCapacity:stock.inputCapacity,outputStorageCapacity:stock.outputCapacity});
         else if(building.storage.length)issues.push(`${label}: storage is declared for other goods; default storage is used for this service.`);
       }
-      lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}${building.warehouseSpecialized?' · specialized':''}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
+      lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}${building.warehouseSpecializedFor?` · specialized for ${plan.goods.find(g=>g.id===building.warehouseSpecializedFor).name}`:''}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
     }else lines.push(`${label} · building not specified`);
     sites[key]=site;
     const group=new Map();
@@ -184,13 +184,16 @@ export function declaredPlatformLength(input){
   return lengths.length?Math.min(...lengths):null;
 }
 
+/** A warehouse specialized for the one good this service moves. */
+const specializedFor=(plan,stop)=>{const goods=serviceGoodIds(plan),building=endpointBuilding(stop).building;return building?.type==='warehouse'&&goods.length===1&&building.warehouseSpecializedFor===goods[0];};
+
 /** Specialized Truck/platform terminals and specialized warehouses already present at an endpoint (the ×2 handling flags). Industry terminals serve trucks only. */
 export function declaredHandling(input,{domain,includeTrams=false}){
   const plan=validateRoutePlan(input);
   return Object.fromEntries(endpoints(plan).map((stop,index)=>[STOPS[index],{specializedTerminal:
     stop.infrastructure.some(e=>e.specialized&&e.kind===(domain==='rail'?'railPlatform':'roadPlatform'))||
     domain==='road'&&!includeTrams&&endpointBuilding(stop).building?.type==='factory',
-    specializedWarehouse:endpointBuilding(stop).building?.type==='warehouse'&&endpointBuilding(stop).building.warehouseSpecialized}]));
+    specializedWarehouse:specializedFor(plan,stop)}]));
 }
 
 /** What the analyses take from the declaration, and what remains descriptive until the calculators support it. */
