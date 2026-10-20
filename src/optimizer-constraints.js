@@ -36,9 +36,9 @@ export function renderOptimizerConstraints(root,settings){
     ...(settings.includeTrams?[row('Road tram length · at most',`${fmt(settings.maxRoadTramLength)} m · practical limit`)]:[]),
     ...(domain!=='road'?[...(!infrastructure?[row('Train length · at most',`${fmt(settings.maxTrainLength)} m`)]:[]),row('Locomotives per train · at most',fmt(settings.maxLocomotives,0)),row('Wagons per train · at most',fmt(settings.maxWagons,0))]:[])
   ]));
-  html+=section('Tracks & roads',settings.lineInfrastructure?`<p>Segment tiers optimized; route ${T.runningCosts} included.</p><ol>${route.map(segment=>`<li>${escapeHtml(`${fmt(segment.distanceKm,4)} km · ${domains.map(kind=>{
-    const tiers=segmentLineTiers(segment,kind,settings.year),cap=tiers[0]?.speedConstraintKmh;
-    return `${kind==='rail'?'Rail':'Road'}: ${tiers.map(tier=>tier.tierSpeedKmh).join('/')} km/h tiers${kind==='road'?` · ${segment.roadLanes??2} lanes`:segment.railTracks===2?' · 2 tracks required':' · track count: Auto'}${tiers.some(tier=>tier.speedLimitKmh<tier.tierSpeedKmh)?` · fixed limit ${fmt(cap)} km/h`:''}${tiers[0]?.city?' · City':''}`;
+  html+=section('Tracks & roads',settings.lineInfrastructure?`<p>Segment tiers optimized; route ${T.runningCosts} included.</p><ol>${route.map((segment,i)=>`<li>${escapeHtml(`${fmt(segment.distanceKm,4)} km · ${domains.map(kind=>{
+    const tiers=segmentLineTiers(segment,kind,settings.year,settings.lineInfrastructure.existing?.[i]),cap=tiers[0]?.speedConstraintKmh;
+    return `${kind==='rail'?'Rail':'Road'}: ${tiers.map(tier=>tier.tierSpeedKmh).join('/')} km/h tiers${tiers[0]?.existingTierKmh?` (existing ${tiers[0].existingTierKmh})`:''}${kind==='road'?` · ${segment.roadLanes??2} lanes`:segment.railTracks===2?' · 2 tracks required':' · track count: Auto'}${tiers.some(tier=>tier.speedLimitKmh<tier.tierSpeedKmh)?` · fixed limit ${fmt(cap)} km/h`:''}${tiers[0]?.city?' · City':''}`;
   }).join(' · ')}`)}</li>`).join('')}</ol>`:`<p>Route ${T.runningCosts} excluded; configured speed limits retained.</p>`);
   if(settings.includeTrams)html+=section('Tram access',`<ol>${route.map((segment,i)=>`<li>Segment ${i+1} · ${{auto:'Road / dedicated tracks optimized',road:'Road tram tracks required',dedicated:'Dedicated tram tracks required'}[segment.tramInfrastructure??'auto']}</li>`).join('')}</ol><p>Dedicated upkeep covers both directions. Highway tiers 100/120 do not accept tram tracks.</p>`);
   if(!infrastructure){

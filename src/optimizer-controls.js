@@ -8,7 +8,7 @@ import {renderFreightFacilities} from './service-controls.js';
 import {mountOptimizerInfrastructure} from './optimizer-infrastructure-controls.js';
 import {mountOptimizerLineInfrastructure} from './optimizer-line-controls.js';
 import {optimizerProposalRequest} from './optimizer-infrastructure.js';
-import {declaredLoadNames,declaredService,declaredServiceText,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
+import {declaredLoadNames,declaredService,declaredServiceText,uncappedDeclaredTiers,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
 import {renderOptimizerConstraints} from './optimizer-constraints.js';
 import {routeProfileSketch} from './route-profile-control.js';
 import {optimizerExclusionSummary} from './optimizer-diagnostics.js';
@@ -16,7 +16,7 @@ import {loadDefaultOptimizerResult} from './optimizer-cache.js';
 import {renderOptimizerVerdict,renderOptimizerProposals,renderSelectedOptimizerProposal,toggleOptimizerProposalRows,showMoreOptimizerProposals,optimizerProposalAt,mountStickyOptimizerHeaders} from './optimizer-proposals.js';
 
 /** `getPlan` returns the custom route's declaration while that route is active, otherwise null (Simple route keeps the manual inputs). */
-export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,onRouteChange,getPlan=()=>null}){
+export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,onRouteChange,getPlan=()=>null,getStoredRoute=getRoute}){
   bindDurationInputs(root.ownerDocument);
   const railBounds=['maxTrainLength','maxLocomotives','maxWagons'];
   const actions=(suffix='')=>`<button type="submit" form="optimizer-form" id="optimizer-find${suffix}" data-optimizer-action="find" class="optimizer-primary">Find solutions</button><button type="button" id="optimizer-cancel${suffix}" data-optimizer-action="cancel" hidden>Cancel</button><button type="button" id="optimizer-previous${suffix}" data-optimizer-action="previous" aria-controls="optimizer-results" hidden>Show previous results</button>`;
@@ -116,7 +116,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   }
   function updateConstraints(){
     renderOptimizerConstraints($('optimizer-constraints-summary'),{
-      domain:field('domain').value,includeTrams:lineControl?.includeTrams()??false,category,cargo:$('optimizer-cargo').querySelector('input:checked').value,route:lineControl?.getRoute()??getRoute(),lineInfrastructure:lineControl?.getValue(),
+      domain:field('domain').value,includeTrams:lineControl?.includeTrams()??false,category,cargo:$('optimizer-cargo').querySelector('input:checked').value,...(lineControl?(({routeProfile,lineInfrastructure})=>({route:routeProfile,lineInfrastructure}))(lineRequest()):{route:getRoute(),lineInfrastructure:undefined}),
       ...Object.fromEntries(['rate','utilization','year',...railBounds,'maxRoadTramLength','maxFleet'].map(name=>[name,field(name).valueAsNumber])),
       maxHeadwaySeconds:field('enableFrequency').checked?durationSeconds(field('minutes'),field('minutesSeconds')):null,
       minHeadwaySeconds:field('enableMinimumFrequency').checked?durationSeconds(field('minMinutes'),field('minMinutesSeconds')):null,
@@ -132,6 +132,11 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     const preview=$('optimizer-route-preview');
     if(preview)preview.innerHTML=routeProfileSketch(getRoute(),{scale:'linear',compact:true,availableWidth:preview.clientWidth||400});
   }
+  /** Declared tiers are a base the search may upgrade when route Running costs count; otherwise they stay speed limits. */
+  function lineRequest(){
+    const line=lineControl.getValue(),plan=getPlan(),route=lineControl.getRoute();
+    return line&&plan?{lineInfrastructure:{existing:plan.segmentAssets},routeProfile:uncappedDeclaredTiers(route,getStoredRoute(),plan)}:{lineInfrastructure:line,routeProfile:route};
+  }
   function request(){
     const domain=field('domain').value;
     const values=Object.fromEntries(['rate','year',...railBounds,'maxRoadTramLength','maxFleet'].map(name=>[name,field(name).disabled?OPTIMIZER_DEFAULTS[name]:Number(field(name).value)]));
@@ -141,7 +146,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
       maxOutboundLegSeconds:field('enableMaxOutboundLeg').checked?durationSeconds(field('outboundMinutes'),field('outboundMinutesSeconds')):null,
       maxReturnLegSeconds:field('enableMaxReturnLeg').checked?durationSeconds(field('returnMinutes'),field('returnMinutesSeconds')):null,
       maxHeadwaySeconds:field('enableFrequency').checked?durationSeconds(field('minutes'),field('minutesSeconds')):null,fillRatio:Number(field('utilization').value)/100,
-      loadedReturn:field('loadedReturn').checked,stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),lineInfrastructure:lineControl.getValue(),routeProfile:lineControl.getRoute()});
+      loadedReturn:field('loadedReturn').checked,stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),...lineRequest()});
   }
   const fmt=(n,d=1)=>formatNumber(n,d,true);
   function show(answer){

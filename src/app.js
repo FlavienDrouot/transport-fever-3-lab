@@ -217,6 +217,8 @@ function syncDeclaredLocks(){
   for(const ids of [['enable-platform-limit','platform-length'],['composition-platform-enabled','composition-platform']])pair(ids,inputs?.platformLengthMetres);
   for(const [domain,ids] of [['rail',{stopA:['rail-terminal-a','composition-terminal-a'],stopB:['rail-terminal-b','composition-terminal-b']}],['road',{stopA:['truck-specialized-terminal'],stopB:['truck-specialized-terminal-b']}]])
     for(const [stop,names] of Object.entries(ids))for(const id of names)lock(id,inputs?.specializedTerminals[domain]?.[stop].specializedTerminal?true:null);
+  for(const [stop,ids] of [['stopA',['rail-warehouse-a','composition-warehouse-a','truck-specialized-warehouse']],['stopB',['rail-warehouse-b','composition-warehouse-b','truck-specialized-warehouse-b']]])
+    for(const id of ids)lock(id,inputs?.specializedTerminals.rail?.[stop].specializedWarehouse?true:null);
   if(!changed)return;
   if(trainSelector)renderCatalogue();
   for(const [id,type] of [['enable-flow','change'],['rail-loaded-return','change'],['road-enable-flow','change']])$(id).dispatchEvent(new Event(type,{bubbles:true}));
@@ -978,7 +980,7 @@ function ensureOptimizer(){
     if(routeSelection.mode==='custom'){profileControl?.setSegments(segments);routePlanControl?.setSegments(segments);}
     syncRouteSelection({restore:true});
   };
-  optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:currentRoute,getPlan:declaredPlan,onRouteChange:segments=>applyOptimizerRoute(declaredPlan()?mergeUndeclaredLineChoices(routeSelection.segments,segments,declaredPlan()):segments),getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent,action)=>{
+  optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:currentRoute,getStoredRoute:()=>routeSelection.segments,getPlan:declaredPlan,onRouteChange:segments=>applyOptimizerRoute(declaredPlan()?mergeUndeclaredLineChoices(routeSelection.segments,segments,declaredPlan()):segments),getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent,action)=>{
     // Apply the route and targets only after explicitly choosing a current proposal.
     if(proposal.domain==='rail'||proposal.definition&&action==='composition'){
       await ensureConfigurator();if(!isCurrent())return;if(!consistEditor)throw new Error('Composition catalogue is unavailable.');

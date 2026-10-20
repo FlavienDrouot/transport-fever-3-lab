@@ -10,10 +10,11 @@ const whole=(value,label,min,max,step=1)=>{number(value,label,min,max);if(!Numbe
 const list=(value,label,max)=>{if(!Array.isArray(value)||value.length>max)throw new RangeError(`${label}: at most ${max} entries.`);return value;};
 const identities=(items,label)=>{const ids=new Set();for(const item of items){const id=identity(item?.id,`${label} ID`);if(ids.has(id))throw new RangeError(`Duplicate ${label} ID.`);ids.add(id);}return ids;};
 const choice=(value,values,label)=>{if(!values.includes(value))throw new RangeError(`Choose a valid ${label}.`);return value;};
+const flag=(value,label)=>{if(typeof value!=='boolean')throw new RangeError(`Choose a valid ${label}.`);return value;};
 const ratio=value=>{number(value,'Recipe ratio',0,1e9);if(value===0)throw new RangeError('Recipe ratio must be positive.');return value;};
 /** Passengers or a freight group. General freight needs general-purpose vehicles; a specific group also admits them. */
 export const LOAD_TYPES=Object.freeze(['passengers','general','bulk','goods','flatbed','liquid']);
-export const newRouteBuilding=(name='Building 1',type='none')=>({id:routeId('building'),name,type,warehouseCapacity:500,industryTerminals:2,storage:[],recipe:{inputs:[],outputs:[]}});
+export const newRouteBuilding=(name='Building 1',type='none')=>({id:routeId('building'),name,type,warehouseCapacity:500,warehouseSpecialized:false,industryTerminals:2,storage:[],recipe:{inputs:[],outputs:[]}});
 export const newRouteStop=(boundary,name)=>({id:routeId('stop'),boundary,name,buildings:[],infrastructure:[],operations:[]});
 export function createRoutePlan(segments,name='Custom route'){
   const profile=validateRouteProfile(segments);
@@ -63,7 +64,7 @@ export function validateRoutePlan(input){
         if(new Set(items.map(r=>r.cargoId)).size!==items.length)throw new RangeError(`Declare each good once in ${key} for this building.`);
       }
       return {id:identity(building.id,'Building ID'),name:text(building.name,'Building name'),type,
-        warehouseCapacity:whole(building.warehouseCapacity,'Warehouse Capacity',500,100000,500),industryTerminals:choice(building.industryTerminals,[2,3],'parallel industry terminals'),storage,recipe};
+        warehouseCapacity:whole(building.warehouseCapacity,'Warehouse Capacity',500,100000,500),warehouseSpecialized:flag(building.warehouseSpecialized??false,'warehouse specialization'),industryTerminals:choice(building.industryTerminals,[2,3],'parallel industry terminals'),storage,recipe};
     });
     const buildingIds=identities(buildings,'building');
     if(new Set(buildings.map(b=>b.name.toLocaleLowerCase('en'))).size!==buildings.length)throw new RangeError('Building names must be distinct within a stop.');

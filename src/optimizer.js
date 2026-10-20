@@ -37,7 +37,7 @@ export function optimizerRequest(input){
       const value=facilities[key]??false;if(typeof value!=='boolean')throw new RangeError('Choose valid facilities.');return [key,value];
     }));
   }
-  return {...request,lineInfrastructure:validateLineInfrastructure(request.lineInfrastructure),infrastructure:validateOptimizerInfrastructure(request.infrastructure,request.domain,request.category,{loadedReturn:request.loadedReturn}),distanceKm:routeProfileDistance(request.routeProfile)};
+  return {...request,lineInfrastructure:validateLineInfrastructure(request.lineInfrastructure,request.routeProfile.length),infrastructure:validateOptimizerInfrastructure(request.infrastructure,request.domain,request.category,{loadedReturn:request.loadedReturn}),distanceKm:routeProfileDistance(request.routeProfile)};
 }
 
 function railCatalogue(data){return [...railComponents({locomotives:data.locomotives??[],passengerWagons:data.passengerWagons??[],freightWagons:data.freightWagons??[],multipleUnits:data.trains??[]}),...lightRailComponents([...(data.trams??[]),...(data.freightTrams??[])])];}
