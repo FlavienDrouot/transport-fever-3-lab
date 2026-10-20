@@ -77,7 +77,7 @@ function validateDeclaration(input,withTrips){
       const storage=list(building.storage,'Storage',50).map(s=>withTrips?(()=>{
         if(type==='warehouse'||type==='none')throw new RangeError(type==='warehouse'?'A warehouse has one shared capacity; declare it instead of storage by good.':'Choose the building type before declaring storage.');
         const side=choice(s.side,type==='industrial'?['input']:['input','output'],type==='industrial'?'storage side (an industrial building only accepts goods)':'storage side');
-        return {...row(stocked(s)),side,capacity:whole(s.capacity,side==='input'?'Input storage':'Output storage',100,Number.MAX_SAFE_INTEGER,100)};
+        return {...row(stocked(s)),side,capacity:type==='industrial'?whole(s.capacity,'Input limit',1,Number.MAX_SAFE_INTEGER):whole(s.capacity,side==='input'?'Input storage':'Output storage',100,Number.MAX_SAFE_INTEGER,100)};
       })():{...row(stocked(s)),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)});
       const recipe=Object.fromEntries(['inputs','outputs'].map(key=>[key,list(building.recipe?.[key],`Recipe ${key}`,50).map(r=>({...row(stocked(r)),ratio:ratio(r.ratio)}))]));
       for(const [key,items] of Object.entries({storage,...recipe})){

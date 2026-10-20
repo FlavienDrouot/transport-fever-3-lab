@@ -218,6 +218,8 @@ test('storage follows the building role: Industry input or output per good, indu
   assert.throws(()=>validateRoutePlan(twice),/each good once/);
   const accepting=structuredClone(plan);accepting.stops[0].buildings[0].type='industrial';
   assert.throws(()=>validateRoutePlan(accepting),/only accepts goods/);
+  accepting.stops[0].buildings[0].storage=[{id:'s1',cargoId:'good:a',side:'input',capacity:137}];
+  assert.equal(validateRoutePlan(accepting).stops[0].buildings[0].storage[0].capacity,137);
   const depot=structuredClone(plan);depot.stops[0].buildings[0].type='warehouse';
   assert.throws(()=>validateRoutePlan(depot),/one shared capacity/);
   const legacy={...structuredClone(plan),schemaVersion:4};legacy.stops[0].buildings=[{...newRouteBuilding('Hall','warehouse'),storage:[{id:'old',cargoId:'good:a',inputCapacity:100,outputCapacity:100}]}];

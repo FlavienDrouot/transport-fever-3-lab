@@ -803,3 +803,14 @@ th[data-sort]{padding:0}th[data-sort] .sort-button{display:block;width:100%;heig
 span.rp-op{cursor:default}
 .rp-panel .road-inline-check{font-size:12px;align-self:center}
 .rp-panel-trips{background:none;padding:0}
+.rp-carries.rp-start{padding:10px 12px;border:2px solid var(--green);border-radius:8px;background:var(--tint,#edf4ef);align-self:flex-start}
+.rp-step{display:inline-block;margin-right:4px;padding:1px 7px;border-radius:999px;background:var(--green);color:var(--surface,#fff);font-size:11px}
+.rp-start-help{margin:0;font-size:12px;font-weight:600;color:var(--green)}
+@keyframes rp-flash{0%,100%{box-shadow:0 0 0 0 transparent}30%{box-shadow:0 0 0 6px color-mix(in srgb,var(--green) 45%,transparent)}}
+.rp-flash{animation:rp-flash .9s ease 2}
+.rp-item-summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px}
+.rp-item-summary>span{color:var(--muted);flex:1 1 200px}
+.rp-item-summary .rp-edit{margin-left:auto}
+.rp-item-actions{border-bottom:0}
+.rp-done{border-color:var(--green);color:var(--green);font-weight:600}
+@media(prefers-reduced-motion:reduce){.rp-flash{animation:none}}
