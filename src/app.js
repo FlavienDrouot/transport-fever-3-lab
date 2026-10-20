@@ -10,6 +10,7 @@ import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransiti
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profile-control.js';
 import {mountRoutePlanControls} from './route-plan-controls.js';
+import {loadedReturnValue} from './service-fleet.js';
 import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs,declaredService,declaredLoadNames} from './route-plan-service.js';
 import {routeProfileForDomain} from './route-profile.js';
 import {createRouteSelection,mountRouteChoice} from './route-selection.js';
@@ -205,7 +206,11 @@ function syncDeclaredLocks(){
   };
   const pair=(ids,value)=>{lock(ids[0],value===null||value===undefined?null:true);lock(ids[1],value);};
   for(const ids of [['enable-flow','desired-flow'],['composition-flow-enabled','composition-flow'],['road-enable-flow','road-desired-flow']])pair(ids,inputs?.rate);
-  for(const id of ['rail-loaded-return','composition-loaded-return','truck-loaded-return'])lock(id,inputs?.loadedReturn);
+  // A partial return keeps the box ticked and carries its share for the calculators.
+  for(const id of ['rail-loaded-return','composition-loaded-return','truck-loaded-return']){
+    const el=$(id),share=typeof inputs?.loadedReturn==='number'?inputs.loadedReturn:null;lock(id,inputs?.loadedReturn==null?null:inputs.loadedReturn!==false&&inputs.loadedReturn!==0);
+    if(el&&String(share??'')!==(el.dataset.share??'')){if(share===null)delete el.dataset.share;else{el.dataset.share=share;el.closest('.declared-lock')?.setAttribute('title',`Set by the route declaration · return load ${Math.round(share*100)}% of the busier leg`);}changed=true;}
+  }
   // The declared freight group selects the vehicles: specific groups also admit general-purpose vehicles.
   for(const [id,name] of [['rail-cargo','economic'],['truck-cargo-specialization','truck']]){
     const group=$(id),saved=declaredLocks.get(id),value=inputs?.cargo??null,checked=()=>group.querySelector('input:checked')?.value;
@@ -1128,7 +1133,7 @@ async function init() {
       roadFrequencyMode=$('road-frequency-mode').querySelector('input:checked').value;
     }
     $('truck-utilization-value').textContent=`${Math.round(fillRatio*100)}%`;
-    truckService={distanceKm,fillRatio,loadedReturn:$('truck-loaded-return').checked,stopA:{specializedTerminal:$('truck-specialized-terminal').checked,specializedWarehouse:$('truck-specialized-warehouse').checked},stopB:{specializedTerminal:$('truck-specialized-terminal-b').checked,specializedWarehouse:$('truck-specialized-warehouse-b').checked}};
+    truckService={distanceKm,fillRatio,loadedReturn:loadedReturnValue($('truck-loaded-return')),stopA:{specializedTerminal:$('truck-specialized-terminal').checked,specializedWarehouse:$('truck-specialized-warehouse').checked},stopB:{specializedTerminal:$('truck-specialized-terminal-b').checked,specializedWarehouse:$('truck-specialized-warehouse-b').checked}};
     updateRoadCategory();render();
   };
   for(const id of ['road-enable-flow','road-enable-frequency','road-frequency-mode'])$(id).addEventListener('change',updateTruckService);
@@ -1260,7 +1265,7 @@ async function init() {
     highlighted=undefined;renderCatalogue();render();
   });
   for(const id of ['rail-loaded-return','rail-terminal-a','rail-warehouse-a','rail-terminal-b','rail-warehouse-b'])$(id).addEventListener('change',()=>{
-    railFreight={loadedReturn:$('rail-loaded-return').checked,
+    railFreight={loadedReturn:loadedReturnValue($('rail-loaded-return')),
       stopA:{specializedTerminal:$('rail-terminal-a').checked,specializedWarehouse:$('rail-warehouse-a').checked},
       stopB:{specializedTerminal:$('rail-terminal-b').checked,specializedWarehouse:$('rail-warehouse-b').checked}};
     render();

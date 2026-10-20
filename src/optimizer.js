@@ -27,7 +27,7 @@ export function optimizerRequest(input){
   // Older callers may supply one bound for both directions. Explicit null disables a direction.
   for(const key of ['maxOutboundLegSeconds','maxReturnLegSeconds'])if(!Object.hasOwn(input,key))request[key]=request.maxLegSeconds;
   if(typeof request.ignoreRetirements!=='boolean')throw new RangeError('Choose a valid retirement setting.');
-  if(typeof request.loadedReturn!=='boolean')throw new RangeError('Choose a valid return load.');
+  if(typeof request.loadedReturn!=='boolean'&&!(Number.isFinite(request.loadedReturn)&&request.loadedReturn>=0&&request.loadedReturn<=1))throw new RangeError('Choose a valid return load.');
   if(typeof request.includeTrams!=='boolean')throw new RangeError('Choose a valid tram setting.');
   if(typeof request.identicalMUsOnly!=='boolean')throw new RangeError('Choose a valid MU coupling setting.');
   for(const stop of ['stopA','stopB']){

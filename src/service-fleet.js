@@ -27,3 +27,14 @@ export function sizeFleet({cycleSeconds,transferSeconds,unitsPerCycle,yearSecond
   }
   return {count,loadScale};
 }
+
+/** Return load as a share of the busier leg's load: false/true keep the empty/equal cases. */
+export function returnShare(loadedReturn){
+  if(loadedReturn===true)return 1;
+  if(loadedReturn===false||loadedReturn==null)return 0;
+  if(!Number.isFinite(loadedReturn)||loadedReturn<0||loadedReturn>1)throw new RangeError('Return load must be a share between 0 and 1.');
+  return loadedReturn;
+}
+
+/** A Loaded return checkbox, or the return share a route declaration placed on it. */
+export const loadedReturnValue=input=>input.dataset?.share===undefined?input.checked:Number(input.dataset.share);

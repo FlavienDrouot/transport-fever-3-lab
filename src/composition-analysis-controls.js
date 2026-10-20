@@ -1,3 +1,4 @@
+import {loadedReturnValue} from './service-fleet.js';
 import {durationInputs,durationSeconds,syncDurationInputs,enableDurationInputs,bindDurationInputs} from './duration-controls.js';
 import {speedPresets} from './transport-category.js';
 import {UI_TERMS} from './ui-terms.js';
@@ -50,7 +51,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
       desiredFlow:$('composition-flow').disabled?null:$('composition-flow').valueAsNumber,
       maxHeadwaySeconds:$('composition-headway').disabled?null:durationSeconds($('composition-headway'),$('composition-headway-seconds')),
       frequencyMode:$('composition-frequency-mode').querySelector('input:checked').value,platformLengthMetres:$('composition-platform').disabled?null:$('composition-platform').valueAsNumber,
-      loadedReturn:$('composition-loaded-return').checked,
+      loadedReturn:loadedReturnValue($('composition-loaded-return')),
       stopA:{specializedTerminal:$('composition-terminal-a').checked,specializedWarehouse:$('composition-warehouse-a').checked},
       stopB:{specializedTerminal:$('composition-terminal-b').checked,specializedWarehouse:$('composition-warehouse-b').checked}});
   }

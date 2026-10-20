@@ -84,46 +84,57 @@ export const declaredLoadNames=input=>{const plan=validateRoutePlan(input);retur
 const LOAD_LABELS={passengers:'Passengers',general:'General',bulk:'Bulk',goods:'Goods',flatbed:'Flatbed',liquid:'Liquid'};
 export const loadTypeLabel=type=>LOAD_LABELS[type]??'type not chosen';
 
-/** One load on an A–B–A service. Freight: annual quantities become the delivered Rate, return freight a loaded return. Passengers: the Rate per direction, equal both ways. */
+/** One good per direction on an A–B–A service. Freight: the delivered Rate counts both legs; the lighter leg carries a share of the busier leg's load. Passengers: the busier direction sets the Rate per direction. */
 export function declaredService(input){
   const plan=validateRoutePlan(input),goodIds=serviceGoodIds(plan);
   if(!goodIds.length)return {status:'none',issues:[]};
-  const good=plan.goods.find(g=>g.id===goodIds[0]),passengers=good.type==='passengers',noun=passengers?'passenger':'freight';
-  const issues=[],base={goodId:good.id,goodName:good.name,category:passengers?'passengers':'freight',cargo:passengers?null:good.type==='general'?'all':good.type};
+  const flows=routePlanFlows(deliveredAtTerminus(plan)),load=Object.fromEntries(['outbound','return'].map(d=>[d,flows.sections.find(s=>s.direction===d).load]));
+  const moving=d=>goodIds.filter(id=>load[d][id].year>EPSILON),good=id=>plan.goods.find(g=>g.id===id);
+  const [outIds,backIds]=[moving('outbound'),moving('return')],passengers=good(goodIds[0]).type==='passengers',noun=passengers?'passenger':'freight';
+  const types=[...new Set([...outIds,...backIds].map(id=>good(id).type))];
+  const leg=(ids,direction)=>ids.length===1?{goodId:ids[0],goodName:good(ids[0]).name,rate:load[direction][ids[0]].year}:null;
+  const outbound=leg(outIds,'outbound'),back=leg(backIds,'return');
+  const base={goodId:(outbound??back)?.goodId??goodIds[0],goodName:[...new Set([outbound,back].filter(Boolean).map(l=>l.goodName))].join(' / ')||good(goodIds[0]).name,
+    category:passengers?'passengers':'freight',cargo:passengers?null:types.length===1&&types[0]&&types[0]!=='general'?types[0]:'all',outbound,return:back,issues:[]};
+  const issues=base.issues;
   if(plan.stops.length>2)issues.push(`Intermediate stops are not modelled: services run A–B–A, so the declared ${noun} flows are not used.`);
-  if(goodIds.length>1)issues.push('Several goods share this service, but each calculator carries one good per service.');
-  if(!passengers&&!good.type)issues.push(`Choose a type for ${good.name} (General, Bulk, Goods, Flatbed or Liquid): it decides which vehicles can carry it.`);
-  if(issues.length)return {...base,status:'unsupported',issues};
-  const [out,back]=legLoads(routePlanFlows(deliveredAtTerminus(plan)),good.id),[,carried]=legLoads(routePlanFlows(plan),good.id);
-  // A load still onboard at B in the general flows is what this service delivers there.
-  base.deliveredAtB=carried.year>back.year+EPSILON;
-  if(out.year<=EPSILON&&back.year<=EPSILON)return {...base,status:'unsupported',issues};
-  const differ=out.year>EPSILON&&back.year>EPSILON&&Math.abs(out.year-back.year)>1e-6*Math.max(out.year,back.year);
+  if(outIds.length>1||backIds.length>1)issues.push('Several goods travel in the same direction, but the calculators carry one good per direction.');
+  for(const id of goodIds)if(!passengers&&!good(id).type)issues.push(`Choose a type for ${good(id).name} (General, Bulk, Goods, Flatbed or Liquid): it decides which vehicles can carry it.`);
+  if(issues.length||!outbound&&!back)return {...base,status:'unsupported'};
+  const qOut=outbound?.rate??0,qBack=back?.rate??0,busier=Math.max(qOut,qBack);
   if(passengers){
-    if(differ)return {...base,status:'unsupported',issues:[...issues,`A → B (${fmt(out.year)}) and B → A (${fmt(back.year)}) ${T.capacityUnit}/year differ; passenger calculations use one ${T.rate} in both directions.`]};
-    const rate=Math.ceil(Math.max(out.year,back.year)-EPSILON);
-    if(rate>1e9)return {...base,status:'unsupported',issues:[...issues,`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
-    return {...base,status:'applied',rate:Math.max(1,rate),bothDirectionsDeclared:out.year>EPSILON&&back.year>EPSILON,issues};
+    const rate=Math.ceil(busier-EPSILON);
+    if(rate>1e9)return {...base,status:'unsupported',issues:[`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
+    return {...base,status:'applied',rate:Math.max(1,rate),bothDirectionsDeclared:qOut>EPSILON&&qBack>EPSILON};
   }
-  if(out.year<=EPSILON)return {...base,status:'unsupported',issues:[...issues,'Freight is declared on the B → A leg only; the calculators load at A and deliver at B.']};
-  if(differ)return {...base,status:'unsupported',issues:[...issues,`A → B (${fmt(out.year)}) and B → A (${fmt(back.year)}) ${T.capacityUnit}/year differ; a loaded return carries equal loads in both directions.`]};
-  const rate=Math.ceil(out.year+back.year-EPSILON);
-  if(rate>1e9)return {...base,status:'unsupported',issues:[...issues,`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
-  return {...base,status:'applied',rate:Math.max(1,rate),loadedReturn:back.year>EPSILON,issues};
+  if(qOut<=EPSILON)return {...base,status:'unsupported',issues:['Freight is declared on the B → A leg only; the calculators load at A first. Declare the route from the loading stop.']};
+  const rate=Math.ceil(qOut+qBack-EPSILON);
+  if(rate>1e9)return {...base,status:'unsupported',issues:[`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
+  const share=qBack>EPSILON?Math.min(qOut,qBack)/busier:0;
+  return {...base,status:'applied',rate:Math.max(1,rate),loadedReturn:share===1?true:share===0?false:share,returnShare:share};
 }
 
 /** One sentence describing an applied service, shared by every view. */
 export function declaredServiceText(service){
-  if(service.category==='passengers')return `${service.goodName}: ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year in each direction${service.bothDirectionsDeclared?'':' (the same Rate is used B → A)'}`;
-  return `${service.goodName} (${service.cargo==='all'?'General':loadTypeLabel(service.cargo)}): ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return${service.deliveredAtB?'; freight still onboard at B is delivered there, not carried back':''}`;
+  const leg=(l,label)=>l?`${l.goodName} ${label} ${formatNumber(l.rate,0)}/yr`:'';
+  if(service.category==='passengers'){
+    const uneven=service.outbound&&service.return&&Math.abs(service.outbound.rate-service.return.rate)>EPSILON;
+    return `${service.goodName}: ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year in each direction${!service.bothDirectionsDeclared?' (the same Rate is used both ways)':uneven?` (${leg(service.outbound,'A → B')}, ${leg(service.return,'B → A')}; the busier direction sets the fleet)`:''}`;
+  }
+  const kind=service.cargo==='all'?(service.outbound&&service.return&&service.outbound.goodId!==service.return.goodId?'general-purpose vehicles carry both goods':'General'):loadTypeLabel(service.cargo);
+  return `${[leg(service.outbound,'A → B'),service.return?leg(service.return,'B → A'):'empty return'].join(', ')} (${kind}): ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year${service.returnShare>0&&service.returnShare<1?`; the lighter leg carries ${formatNumber(service.returnShare*100,0)}% of the busier leg's load`:''}`;
 }
 
-/** The building a stop contributes to the service: the one its operations name, else its only typed building. */
+/** The buildings a stop contributes: the one that loads and the one that receives, named by its trips (else its only typed building). The busier of the two sets the stop's handling. */
 function endpointBuilding(stop){
-  const named=[...new Set(stop.operations.filter(op=>op.quantity.value>0&&op.buildingId).map(op=>op.buildingId))];
-  const candidates=named.length?named.map(id=>stop.buildings.find(b=>b.id===id)):stop.buildings.filter(b=>b.type!=='none');
-  if(candidates.length>1)return {building:null,ambiguous:true};
-  return {building:candidates[0]&&candidates[0].type!=='none'?candidates[0]:null,ambiguous:false};
+  const ops=stop.operations.filter(op=>op.quantity.value>0),typed=stop.buildings.filter(b=>b.type!=='none'),find=id=>stop.buildings.find(b=>b.id===id);
+  const role=action=>{const ids=[...new Set(ops.filter(op=>op.action===action&&op.buildingId).map(op=>op.buildingId))];return ids.length>1?{ambiguous:true}:{building:ids.length?find(ids[0]):ops.some(op=>op.action===action)&&typed.length===1?typed[0]:null};};
+  const sender=role('load'),receiver=role('unload');
+  if(sender.ambiguous||receiver.ambiguous)return {building:null,ambiguous:true};
+  const volume=action=>ops.filter(op=>op.action===action).reduce((n,op)=>n+op.quantity.value,0);
+  const busier=volume('load')>=volume('unload')?sender.building??receiver.building:receiver.building??sender.building;
+  const building=busier??(typed.length===1?typed[0]:null);
+  return {building:building?.type==='none'?null:building,sender:sender.building??building,receiver:receiver.building??building,ambiguous:false};
 }
 
 const SITE_DEFAULTS={type:'industrial',factoryTerminals:2,inputStorageCapacity:100,outputStorageCapacity:DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY,existingSpecializedWarehouse:false,
@@ -147,22 +158,25 @@ const entryLine=(label,entry)=>`${label} · ${{railPlatform:`Rail station + plat
 
 /** Endpoint buildings and reusable terminals in the Optimizer's own site/entry shape, or null when the endpoints declare nothing. */
 export function declaredEndpointModel(input,{category='passengers',loadedReturn=false,includeTrams=false}={}){
-  const plan=validateRoutePlan(input),ends=endpoints(plan);
+  const plan=validateRoutePlan(input),ends=endpoints(plan),service=declaredService(plan);
   if(!ends.some(stop=>stop.infrastructure.length||stop.buildings.some(b=>b.type!=='none')))return null;
-  const goods=serviceGoodIds(plan),sites={},entries=[],lines=[],issues=[];
+  const goods=serviceGoodIds(plan),sites={},entries=[],lines=[],issues=[],notes=[];
   ends.forEach((stop,index)=>{
-    const key=STOPS[index],label=LABELS[key],{building,ambiguous}=endpointBuilding(stop),site={...SITE_DEFAULTS};
-    if(ambiguous)issues.push(`${label} serves several buildings for this service, so none is applied. Assign its operations to a single building.`);
+    const key=STOPS[index],label=LABELS[key],{building,sender,receiver,ambiguous}=endpointBuilding(stop),site={...SITE_DEFAULTS};
+    if(ambiguous)issues.push(`${label}: several buildings load (or receive) the same direction, so none is applied. Use one building per direction.`);
+    if(sender&&receiver&&sender!==receiver)notes.push(`${label}: ${sender.name} loads and ${receiver.name} receives; their storage applies to each, and ${building.name}'s handling (the busier direction) applies to both.`);
     if(building){
       site.type=building.type;
-      if(building.type==='warehouse')Object.assign(site,{warehouseCapacity:building.warehouseCapacity,maxWarehouseCapacity:building.warehouseCapacity,existingSpecializedWarehouse:goods.length===1&&building.warehouseSpecializedFor===goods[0]});
-      const stock=goods.length===1?building.storage.find(s=>s.cargoId===goods[0]):null;
-      if(building.type==='factory'){
-        site.factoryTerminals=building.industryTerminals;
-        if(stock)site[stock.side==='input'?'inputStorageCapacity':'outputStorageCapacity']=stock.capacity;
-        else if(building.storage.length)issues.push(`${label}: storage is declared for other goods; default storage is used for this service.`);
+      if(building.type==='warehouse')Object.assign(site,{warehouseCapacity:building.warehouseCapacity,maxWarehouseCapacity:building.warehouseCapacity,existingSpecializedWarehouse:specializedFor(plan,stop)});
+      // A loads the A → B good and receives the B → A good; B does the opposite.
+      const sends=index===0?service.outbound?.goodId:service.return?.goodId,receives=index===0?service.return?.goodId:service.outbound?.goodId;
+      const owner=side=>side==='output'?sender:receiver,stock=side=>owner(side)?.type==='factory'?owner(side).storage.find(s=>s.cargoId===(side==='output'?sends:receives)&&s.side===side):null;
+      if(building.type==='factory')site.factoryTerminals=building.industryTerminals;
+      if([sender,receiver].some(b=>b?.type==='factory')){
+        for(const side of ['input','output'])if(stock(side))site[`${side}StorageCapacity`]=stock(side).capacity;
+        if([sender,receiver].some(b=>b?.type==='factory'&&b.storage.length)&&!stock('input')&&!stock('output'))issues.push(`${label}: storage is declared for other goods; default storage is used for this service.`);
       }
-      if(building.type==='industrial'&&building.storage.length)issues.push(`${label}: storage at an industrial building is descriptive; the calculators do not limit it.`);
+      if([sender,receiver].some(b=>b?.type==='industrial'&&b.storage.length))issues.push(`${label}: storage at an industrial building is descriptive; the calculators do not limit it.`);
       lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}${building.warehouseSpecializedFor?` · specialized for ${plan.goods.find(g=>g.id===building.warehouseSpecializedFor).name}`:''}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
     }else lines.push(`${label} · building not specified`);
     sites[key]=site;
@@ -175,7 +189,7 @@ export function declaredEndpointModel(input,{category='passengers',loadedReturn=
       kept.push(declared);group.set(declared.domain,kept);entries.push(declared);lines.push(entryLine(label,entry));
     }
   });
-  return {sites,entries,lines,issues};
+  return {sites,entries,lines,issues,notes};
 }
 
 /** Hard bound on conventional Rail trains: the shortest of the longest declared Rail platform at each endpoint that declares one. */
@@ -185,7 +199,7 @@ export function declaredPlatformLength(input){
 }
 
 /** A warehouse specialized for the one good this service moves. */
-const specializedFor=(plan,stop)=>{const goods=serviceGoodIds(plan),building=endpointBuilding(stop).building;return building?.type==='warehouse'&&goods.length===1&&building.warehouseSpecializedFor===goods[0];};
+const specializedFor=(plan,stop)=>{const building=endpointBuilding(stop).building,handled=stop.operations.filter(op=>op.buildingId===building?.id||op.buildingId==null).map(op=>op.cargoId);return building?.type==='warehouse'&&!!building.warehouseSpecializedFor&&handled.length>0&&handled.every(id=>id===building.warehouseSpecializedFor);};
 
 /** Specialized Truck/platform terminals and specialized warehouses already present at an endpoint (the ×2 handling flags). Industry terminals serve trucks only. */
 export function declaredHandling(input,{domain,includeTrams=false}){
@@ -210,7 +224,7 @@ export function declarationReport(input,{includeTrams=false}={}){
   if(handling.some(h=>h.stopA.specializedTerminal||h.stopB.specializedTerminal))used.push({category:'freight',views:['economics','trucks','configurator'],text:'specialized terminals at the endpoints (Freight)'});
   if(handling[0].stopA.specializedWarehouse||handling[0].stopB.specializedWarehouse)used.push({category:'freight',views:['economics','trucks','configurator'],text:'specialized warehouses at the endpoints (Freight)'});
   const model=declaredEndpointModel(plan,{category:service.category??'passengers',loadedReturn:service.loadedReturn,includeTrams});
-  if(model){used.push({views:['optimizer'],text:`endpoint buildings, storage and reusable terminals (constraints; their ${T.runningCosts} are counted when infrastructure ${T.runningCosts} is included)`});issues.push(...model.issues);}
+  if(model){used.push({views:['optimizer'],text:`endpoint buildings, storage and reusable terminals (constraints; their ${T.runningCosts} are counted when infrastructure ${T.runningCosts} is included)`});issues.push(...model.issues);if(model.notes.length)used.push({views:['optimizer'],text:model.notes.join(' ')});}
   for(const [i,asset] of plan.segmentAssets.entries())if(asset.railTier!==null&&asset.railTracks===1)notes.push(`Segment ${i+1}: one existing Rail track serves a single train; with route ${T.runningCosts}, more trains add a second track at its full maintenance. Passing loops are not modelled.`);
   if(plan.stops.some(stop=>stop.buildings.some(b=>b.recipe.inputs.length||b.recipe.outputs.length)))issues.push('Industry recipes are summarised on the Route page only.');
   if(plan.stops.length>2&&service.status!=='unsupported')issues.push('Intermediate stops are ignored by A–B–A calculations.');

@@ -1,6 +1,6 @@
 import {analyseService, GAME_YEAR_SECONDS, serviceEligible, roundTripMotion} from './line.js';
 import {withRailSpeedLimit} from './rail-motion.js';
-import {sizeFleet} from './service-fleet.js';
+import {sizeFleet,returnShare} from './service-fleet.js';
 
 import {FREIGHT_LOAD_SPEED_FACTOR} from './trucks.js';
 
@@ -25,7 +25,6 @@ export function analyseFreightService(train, options) {
   }
   if (!Number.isInteger(train.carCount) || train.carCount <= 0) throw new RangeError('Car count must be a positive integer');
   if (!Number.isFinite(fillRatio) || fillRatio < 0 || fillRatio > 1) throw new RangeError('Fill ratio must be between zero and one');
-  if (typeof loadedReturn !== 'boolean') throw new RangeError('Loaded return must be boolean');
   for (const [name,value] of Object.entries({demandPerYear,maxHeadwaySeconds})) {
     if (value !== null && (!Number.isFinite(value) || value <= 0)) throw new RangeError(`${name} must be positive or null`);
   }
@@ -38,10 +37,11 @@ export function analyseFreightService(train, options) {
   const vehicle = infrastructureSpeedKmh === null ? train : withRailSpeedLimit(train, infrastructureSpeedKmh);
   const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0,routeProfile:options.routeProfile??null});
   if(motion.eligible===false)return {eligible:false,efficiency:0,maintenancePerUnit:null};
-  const returns = Number(loadedReturn);
-  // A loads the outbound cargo and unloads the return; B performs the inverse.
+  // The busier leg carries the full load and the other leg a share of it. Motion uses
+  // empty mass, so which direction is busier does not change the cycle.
+  const returns = returnShare(loadedReturn);
   // Each configured operation has a 2 s pause, followed by 2 s before departure.
-  const pauseSeconds = loadedReturn ? 6 : 4;
+  const pauseSeconds = returns > 0 ? 6 : 4;
   const cycleFor = cargoPerLeg => {
     const loadingSeconds = cargoPerLeg / handlingRateA + returns * cargoPerLeg / handlingRateB;
     const unloadingSeconds = cargoPerLeg / handlingRateB + returns * cargoPerLeg / handlingRateA;

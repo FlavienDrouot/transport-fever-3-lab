@@ -1,5 +1,5 @@
 import {validateRouteProfile} from './route-profile.js';
-import {sizeFleet} from './service-fleet.js';
+import {sizeFleet,returnShare} from './service-fleet.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {RAIL_MOTION,gradientAcceleration,MOTION_UNITS} from './gradient.js';
 import {optimizerStorageCapacity} from './optimizer-infrastructure.js';
@@ -135,7 +135,7 @@ export function searchLineInfrastructure(request,domain,vehicle,choice,evaluate,
   // Even infinite speed cannot deliver more than this load per departure at the requested Rate.
   const capacity=request.category==='freight'?vehicle.cargoCapacity:vehicle.passengerCapacity;
   const fill=Math.min(request.fillRatio,request.category==='freight'?optimizerStorageCapacity(choice.stopA,choice.stopB)/capacity:Infinity);
-  const deliveries=request.category==='freight'&&request.loadedReturn?2:1;
+  const deliveries=request.category==='freight'?1+returnShare(request.loadedReturn):1;
   if(request.minHeadwaySeconds!==null&&capacity*fill*deliveries*GAME_YEAR_SECONDS/request.rate<request.minHeadwaySeconds-1e-7)return {result:best,rejections};
   const chosen=[];
   const visit=(index,cost)=>{

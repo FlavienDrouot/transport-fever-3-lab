@@ -2,7 +2,7 @@ import {roadRoundTripMotion} from './road-motion.js';
 import {UI_TERMS} from './ui-terms.js';
 import {roadGradientSpeeds,validateGradient} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
-import {sizeFleet} from './service-fleet.js';
+import {sizeFleet,returnShare} from './service-fleet.js';
 import {sizeRoadTerminalFleet,ROAD_MANEUVER_SECONDS} from './road-terminal-service.js';
 import {updateTablePreview} from './table-preview.js';
 import {GAME_YEAR_SECONDS} from './line.js';
@@ -90,7 +90,7 @@ export function selectRoadVehicles(datasets,{category='freight',includeTrams=fal
 /** A–B–A cycle with optional motion and sequential handling of delivered capacity. */
 function analyseRoadService(trucks, {distanceKm, fillRatio = 1, loadedReturn = false, roadSpeedLimit = null, gradePercent = 0, routeProfile = null, motion = false, specializedTerminal = false, specializedWarehouse = false, stopA, stopB, maneuverSeconds=0}, baseRate) {
   if(!Number.isFinite(maneuverSeconds)||maneuverSeconds<0)throw new RangeError('Road maneuver time must be nonnegative.');
-  const terminalDelaySeconds = ROAD_OPERATION_DELAY_SECONDS * (loadedReturn ? 3 : 2)+maneuverSeconds;
+  const share=returnShare(loadedReturn),terminalDelaySeconds = ROAD_OPERATION_DELAY_SECONDS * (share>0 ? 3 : 2)+maneuverSeconds;
   for (const [name,value] of Object.entries({distanceKm,baseRate})) {
     if (!Number.isFinite(value)||value<=0) throw new RangeError(`${name} must be positive and finite`);
   }
@@ -102,22 +102,21 @@ function analyseRoadService(trucks, {distanceKm, fillRatio = 1, loadedReturn = f
   const handlingMultiplierA=(a.specializedTerminal?2:1)*(a.specializedWarehouse?2:1);
   const handlingMultiplierB=(b.specializedTerminal?2:1)*(b.specializedWarehouse?2:1);
   const handlingMultiplier=2/(1/handlingMultiplierA+1/handlingMultiplierB);
-  if (typeof loadedReturn!=='boolean') throw new TypeError('Loaded return must be boolean');
   const rows=rankTrucks(trucks,roadSpeedLimit,gradePercent,routeProfile,{motion,distanceKm}).map(row=>{
     const multiplier=row.truck.formationLoadingUnloadingSpeedMultiplier!==undefined?row.truck.formationLoadingUnloadingSpeedMultiplier:row.truck.loadingUnloadingSpeedMultiplier;
     if (!Number.isFinite(multiplier)||multiplier<=0) throw new RangeError('Handling multiplier must be positive and finite');
     const cargoPerLeg=row.truck.cargoCapacity*fillRatio;
-    const deliveredPerCycle=cargoPerLeg*(loadedReturn?2:1);
+    const deliveredPerCycle=cargoPerLeg*(1+share);
     // Mean leg speeds include acceleration when enabled; Road braking is omitted.
     // Handling remains independent of travel; profiles scale to this distance.
     const travelSeconds=distanceKm/row.effectiveSpeedKmh*3600;
     const outboundTravelSeconds=distanceKm/row.outboundSpeedKmh*3600,returnTravelSeconds=distanceKm/row.returnSpeedKmh*3600;
     const transferA=cargoPerLeg/(baseRate*multiplier*handlingMultiplierA);
     const transferB=cargoPerLeg/(baseRate*multiplier*handlingMultiplierB);
-    const loadingSeconds=transferA+(loadedReturn?transferB:0);
-    const unloadingSeconds=transferB+(loadedReturn?transferA:0);
-    const stationSecondsA=transferA*(loadedReturn?2:1)+terminalDelaySeconds;
-    const stationSecondsB=transferB*(loadedReturn?2:1)+terminalDelaySeconds;
+    const loadingSeconds=transferA+share*transferB;
+    const unloadingSeconds=transferB+share*transferA;
+    const stationSecondsA=transferA*(1+share)+terminalDelaySeconds;
+    const stationSecondsB=transferB*(1+share)+terminalDelaySeconds;
     const roundTripSeconds=2*travelSeconds+loadingSeconds+unloadingSeconds+2*terminalDelaySeconds;
     const cargoPerYear=deliveredPerCycle/roundTripSeconds*GAME_YEAR_SECONDS;
     const costPerCargo=row.truck.economy.annualMaintenance/cargoPerYear;
