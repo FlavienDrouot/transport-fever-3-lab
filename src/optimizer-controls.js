@@ -8,7 +8,7 @@ import {renderFreightFacilities} from './service-controls.js';
 import {mountOptimizerInfrastructure} from './optimizer-infrastructure-controls.js';
 import {mountOptimizerLineInfrastructure} from './optimizer-line-controls.js';
 import {optimizerProposalRequest} from './optimizer-infrastructure.js';
-import {declaredFreightGoods,declaredFreightService,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
+import {declaredLoadNames,declaredService,declaredServiceText,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
 import {renderOptimizerConstraints} from './optimizer-constraints.js';
 import {routeProfileSketch} from './route-profile-control.js';
 import {optimizerExclusionSummary} from './optimizer-diagnostics.js';
@@ -58,26 +58,35 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   syncDeclaredService();syncInfrastructure();
   /** The declared Rate and return load replace the manual inputs while they apply; the manual values come back afterwards. */
   function syncDeclaredService(){
-    const plan=getPlan(),service=plan?declaredFreightService(plan):null,note=$('optimizer-declared-service'),rate=field('rate'),loaded=field('loadedReturn');
-    const apply=service?.status==='applied'&&category==='freight';
+    const plan=getPlan(),service=plan?declaredService(plan):null,note=$('optimizer-declared-service'),rate=field('rate'),loaded=field('loadedReturn'),cargo=$('optimizer-cargo');
+    const matches=service&&service.status!=='none'&&service.category===category,apply=matches&&service.status==='applied',freight=apply&&category==='freight';
     if(apply){
-      serviceLock??={rate:rate.value,loadedReturn:loaded.checked};
-      rate.value=service.rate;rate.readOnly=true;loaded.checked=service.loadedReturn;loaded.disabled=true;
+      serviceLock??={rate:rate.value,loadedReturn:loaded.checked,cargo:cargo.querySelector('input:checked').value};
+      rate.value=service.rate;rate.readOnly=true;
+      loaded.checked=freight?service.loadedReturn:serviceLock.loadedReturn;loaded.disabled=freight;
+      cargo.querySelector(`input[value="${freight?service.cargo:serviceLock.cargo}"]`).checked=true;cargo.inert=freight;
     }else if(serviceLock){
-      rate.value=serviceLock.rate;rate.readOnly=false;loaded.checked=serviceLock.loadedReturn;loaded.disabled=false;serviceLock=null;
+      rate.value=serviceLock.rate;rate.readOnly=false;loaded.checked=serviceLock.loadedReturn;loaded.disabled=false;
+      cargo.querySelector(`input[value="${serviceLock.cargo}"]`).checked=true;cargo.inert=false;serviceLock=null;
     }
     const lines=!service||service.status==='none'?[]:[
-      ...(category!=='freight'?[`The Route declares freight for ${declaredFreightGoods(plan).join(', ')}. Choose Freight to use it.`]:service.status==='applied'?[`From the Route declaration: ${service.goodName}, ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return.${service.deliveredAtB?' Freight still onboard at B is delivered there, not carried back.':''}`]:[]),
+      ...(!matches?[`The Route declares ${service.category==='passengers'?'passengers':`freight for ${declaredLoadNames(plan).join(', ')}`}. Choose ${service.category==='passengers'?'Passengers':'Freight'} to use it.`]:apply?[`From the Route declaration: ${declaredServiceText(service)}.`]:[]),
       ...service.issues.map(issue=>`Not used from the Route declaration: ${issue}`)];
     note.hidden=!lines.length;note.textContent=lines.join(' ');
-    if(service&&service.status!=='none'&&category!=='freight'){
-      const button=note.ownerDocument.createElement('button');button.type='button';button.dataset.declaredSwitch='freight';button.textContent='Switch to Freight';
+    if(service&&service.status!=='none'&&!matches){
+      const button=note.ownerDocument.createElement('button');button.type='button';button.dataset.declaredSwitch=service.category;button.textContent=`Switch to ${service.category==='passengers'?'Passengers':'Freight'}`;
       note.append(' ',button);
     }
   }
+  /** A declared load selects the matching category, as in Compare; a later manual choice stands until the declaration changes. */
+  function followDeclaration(){
+    const plan=getPlan(),service=plan&&declaredService(plan);
+    if(!service||service.status==='none'||service.category===category)return false;
+    category=service.category;categoryControl.setValue(category);syncCategory();return true;
+  }
   root.addEventListener('click',event=>{
-    if(!event.target.closest('[data-declared-switch]'))return;
-    category='freight';categoryControl.setValue(category);syncCategory();invalidate();
+    const button=event.target.closest('[data-declared-switch]');if(!button)return;
+    category=button.dataset.declaredSwitch;categoryControl.setValue(category);syncCategory();invalidate();
   });
   function syncCategory(){
     root.querySelector('.optimizer-leg-help').textContent=category==='freight'?'Freight leg time includes loading, travel, estimated waiting at the destination and unloading. An empty return includes travel only. Maneuvering and operation/departure pauses are excluded.':'Passenger leg time includes acceleration and any modeled braking; stop handling is excluded.';
@@ -232,9 +241,9 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   };
   mobile?.addEventListener('change',syncSidebar);syncSidebar();
   updateConstraints();
-  declaredKey=planKey();
+  declaredKey=planKey();followDeclaration();
   return {refresh(){
     lineControl.refresh();const next=JSON.stringify(getRoute()),declared=planKey();
-    if(next!==routeKey||declared!==declaredKey){routeKey=next;declaredKey=declared;syncDeclaredService();syncInfrastructure();invalidate();}else updateConstraints();
-  },cancel:stop};
+    if(next!==routeKey||declared!==declaredKey){routeKey=next;declaredKey=declared;followDeclaration();syncDeclaredService();syncInfrastructure();invalidate();}else updateConstraints();
+  },followDeclaration(){if(followDeclaration())invalidate();},cancel:stop};
 }

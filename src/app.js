@@ -10,7 +10,7 @@ import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransiti
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profile-control.js';
 import {mountRoutePlanControls} from './route-plan-controls.js';
-import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs,declaredFreightService,declaredFreightGoods} from './route-plan-service.js';
+import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs,declaredService,declaredLoadNames} from './route-plan-service.js';
 import {routeProfileForDomain} from './route-profile.js';
 import {createRouteSelection,mountRouteChoice} from './route-selection.js';
 import {canClimbRail} from './gradient.js';
@@ -171,11 +171,18 @@ function syncRouteDeclarationNotice(){
   const note=$('route-declaration-analysis-note'),view=navigation.view,plan=declaredPlan();
   const shown=plan&&routeHasDeclarations&&!['route-profile','data'].includes(view);
   const report=shown?declarationReport(plan,{includeTrams}):null;
-  const used=report?.used.filter(item=>item.views.includes(view)&&(!item.freight||comparisonCategory==='freight')).map(item=>item.text)??[],unused=view==='race'?[]:report?.issues??[];
-  // Compare keeps its own category: a freight declaration never switches it on its own.
-  const goods=shown&&comparisonCategory!=='freight'&&FREIGHT_SERVICE_VIEWS.includes(view)&&declaredFreightService(plan).status!=='none'?declaredFreightGoods(plan):[];
-  note.hidden=!used.length&&!unused.length&&!goods.length;
-  note.innerHTML=`${goods.length?`The route declares freight for ${escape(goods.join(', '))}, but Compare is on Passengers, so the declared service is not used. <button type="button" data-switch-category="freight">Switch to Freight</button><br>`:''}${used.length?`<strong>From the route declaration:</strong> ${escape(used.join('; '))}. `:''}${unused.length?`Not used: ${escape(unused.join(' '))} `:''}<a href="#route-profile">Review the route &amp; expected service →</a>`;
+  const used=report?.used.filter(item=>item.views.includes(view)&&(!item.category||item.category===comparisonCategory)).map(item=>item.text)??[],unused=view==='race'?[]:report?.issues??[];
+  const service=shown&&FREIGHT_SERVICE_VIEWS.includes(view)?declaredService(plan):null,mismatch=service&&service.status!=='none'&&service.category!==comparisonCategory;
+  note.hidden=!used.length&&!unused.length&&!mismatch;
+  const declared=mismatch?(service.category==='passengers'?'passengers':`freight for ${declaredLoadNames(plan).join(', ')}`):'',label=service?.category==='passengers'?'Passengers':'Freight';
+  note.innerHTML=`${mismatch?`The route declares ${escape(declared)}, but Compare is on ${comparisonCategory==='freight'?'Freight':'Passengers'}, so the declared service is not used. <button type="button" data-switch-category="${service.category}">Switch to ${label}</button><br>`:''}${used.length?`<strong>From the route declaration:</strong> ${escape(used.join('; '))}. `:''}${unused.length?`Not used: ${escape(unused.join(' '))} `:''}<a href="#route-profile">Review the route &amp; expected service →</a>`;
+}
+/** Entering a view with a custom route that declares a load switches Compare to that service; a later manual choice stands until the next view or declaration change. */
+function applyDeclaredCategory(){
+  optimizerControl?.followDeclaration();
+  const plan=declaredPlan(),service=plan&&declaredService(plan);
+  if(!service||service.status==='none'||service.category===comparisonCategory)return;
+  setComparisonCategory(service.category);highlighted=undefined;if(trainSelector)renderCatalogue();
 }
 const declaredLocks=new Map();
 /** While the custom route declares them, these service inputs show the declared value and cannot be edited; their previous values return afterwards. */
@@ -199,10 +206,19 @@ function syncDeclaredLocks(){
   const pair=(ids,value)=>{lock(ids[0],value===null||value===undefined?null:true);lock(ids[1],value);};
   for(const ids of [['enable-flow','desired-flow'],['composition-flow-enabled','composition-flow'],['road-enable-flow','road-desired-flow']])pair(ids,inputs?.rate);
   for(const id of ['rail-loaded-return','composition-loaded-return','truck-loaded-return'])lock(id,inputs?.loadedReturn);
+  // The declared freight group selects the vehicles: specific groups also admit general-purpose vehicles.
+  for(const [id,name] of [['rail-cargo','economic'],['truck-cargo-specialization','truck']]){
+    const group=$(id),saved=declaredLocks.get(id),value=inputs?.cargo??null,checked=()=>group.querySelector('input:checked')?.value;
+    if(value===null){if(saved===undefined)continue;declaredLocks.delete(id);group.querySelector(`input[value="${saved}"]`).checked=true;group.inert=false;group.classList.remove('declared-lock');group.removeAttribute('title');}
+    else{if(saved===undefined)declaredLocks.set(id,checked());if(checked()===value&&group.inert)continue;group.querySelector(`input[value="${value}"]`).checked=true;group.inert=true;group.classList.add('declared-lock');group.title='Set by the route declaration';}
+    if(name==='economic')economicCargo=checked();else truckCargo=checked();
+    changed=true;highlighted=undefined;
+  }
   for(const ids of [['enable-platform-limit','platform-length'],['composition-platform-enabled','composition-platform']])pair(ids,inputs?.platformLengthMetres);
   for(const [domain,ids] of [['rail',{stopA:['rail-terminal-a','composition-terminal-a'],stopB:['rail-terminal-b','composition-terminal-b']}],['road',{stopA:['truck-specialized-terminal'],stopB:['truck-specialized-terminal-b']}]])
     for(const [stop,names] of Object.entries(ids))for(const id of names)lock(id,inputs?.specializedTerminals[domain]?.[stop].specializedTerminal?true:null);
   if(!changed)return;
+  if(trainSelector)renderCatalogue();
   for(const [id,type] of [['enable-flow','change'],['rail-loaded-return','change'],['road-enable-flow','change']])$(id).dispatchEvent(new Event(type,{bubbles:true}));
   compositionAnalysis?.refresh();
 }
@@ -211,6 +227,7 @@ const declarationSignature=plan=>JSON.stringify(plan&&[plan.goods,plan.stops,pla
 function declarationEdited(plan){
   const key=declarationSignature(plan);
   if(key===declarationKey)return;declarationKey=key;
+  applyDeclaredCategory();
   if(routeSelection.mode!=='custom'){routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});return;}
   clearTimeout(declarationTimer);declarationTimer=setTimeout(()=>{if(routeSelection.mode==='custom')syncRouteSelection();},150);
 }
@@ -696,7 +713,9 @@ function syncWelcome(){
 function syncAnalysisView() {
   const target=document.getElementById(location.hash.slice(1));
   const owner=target?.closest('.analysis-view')?.id??(target?.closest('#configuration-sidebar')?'configurator':target?.closest('#road-sidebar')?'trucks':target?.closest('#line-capacity')?'economics':target?.closest('#train-race-settings')?'race':null);
+  const priorView=navigation.view;
   navigation=resolveNavigation(navigation,{hash:location.hash,owner,dataSection:target?.closest('[data-reference-pane]')?.dataset.referencePane});
+  if(navigation.view!==priorView)applyDeclaredCategory();
   syncRouteDeclarationNotice();
   const {view,space,domain,dataView}=navigation;
   for(const name of ANALYSIS_VIEWS)$(name).hidden=name!==view;
@@ -1215,9 +1234,9 @@ async function init() {
   });
   routePlan=routePlanControl.plan;declarationKey=declarationSignature(routePlan);
   profileControl.setStops(routePlanControl.plan.stops);
-  mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});
-  $('route-declaration-analysis-note').addEventListener('click',event=>{if(!event.target.closest('[data-switch-category]'))return;setComparisonCategory('freight');highlighted=undefined;renderCatalogue();render();});
-  $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');syncRouteSelection({restore:true});});
+  mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);applyDeclaredCategory();syncRouteSelection({restore:true});}});
+  $('route-declaration-analysis-note').addEventListener('click',event=>{const button=event.target.closest('[data-switch-category]');if(!button)return;setComparisonCategory(button.dataset.switchCategory);highlighted=undefined;renderCatalogue();render();});
+  $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');applyDeclaredCategory();syncRouteSelection({restore:true});});
   syncRouteSelection();
   $('route-speed-input').addEventListener('input',()=>{if(validateRace())updateSimpleRoute({[routeSpeedField()]:$('route-speed-input').valueAsNumber});});
   $('race-infrastructure-speed').addEventListener('change',()=>{

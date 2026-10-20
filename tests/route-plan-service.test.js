@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createRoutePlan,newRouteStop,newRouteBuilding,validateRoutePlan} from '../src/route-plan.js';
-import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredFreightService,declaredFreightGoods,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
+import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredService,declaredLoadNames,declaredServiceText,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
 import {optimizerRequest,optimizerCandidates,evaluateOptimizerCandidate} from '../src/optimizer.js';
 import {optimizerInfrastructureValue,optimizerTrainLengthLimit,validateOptimizerInfrastructure} from '../src/optimizer-infrastructure.js';
 
 const segment={distanceKm:2,gradePercent:1,speedLimitKmh:350,roadSpeedLimitKmh:120};
-const coal={id:'good:coal',name:'Coal'},grain={id:'good:grain',name:'Grain'};
+const coal={id:'good:coal',name:'Coal',type:'bulk'},grain={id:'good:grain',name:'Grain',type:'bulk'};
 const operation=(stop,cargoId,action,value,{mode='year',direction='outbound',building=null}={})=>stop.operations.push({id:`operation:${stop.operations.length}-${stop.id}`,buildingId:building?.id??null,cargoId,action,direction,quantity:{mode,value}});
 function freightPlan({back=0,backMode='year'}={}){
   const plan=createRoutePlan([segment,segment],'Coal');plan.goods=[coal];
@@ -55,29 +55,29 @@ test('line choices made elsewhere never copy declared values into the stored rou
 });
 
 test('annual flows become a Rate, and freight coming back means a loaded return',()=>{
-  assert.equal(declaredFreightService(createRoutePlan([segment])).status,'none');
-  const outbound=declaredFreightService(freightPlan());
+  assert.equal(declaredService(createRoutePlan([segment])).status,'none');
+  const outbound=declaredService(freightPlan());
   assert.deepEqual([outbound.status,outbound.rate,outbound.loadedReturn,outbound.goodName],['applied',6000,false,'Coal']);
-  const loaded=declaredFreightService(freightPlan({back:6000}));
+  const loaded=declaredService(freightPlan({back:6000}));
   assert.deepEqual([loaded.status,loaded.rate,loaded.loadedReturn],['applied',12000,true]);
   const percent=freightPlan();percent.stops[0].operations[0].quantity.value=1000.2;
-  assert.equal(declaredFreightService(percent).rate,1001);
+  assert.equal(declaredService(percent).rate,1001);
 });
 
 test('unsupported service shapes are reported instead of guessed',()=>{
-  const asymmetric=declaredFreightService(freightPlan({back:2000}));
+  const asymmetric=declaredService(freightPlan({back:2000}));
   assert.equal(asymmetric.status,'unsupported');assert.match(asymmetric.issues[0],/equal loads/);
   const reverse=freightPlan();reverse.stops[0].operations=[];reverse.stops[1].operations=[];
   operation(reverse.stops[1],coal.id,'load',500,{direction:'return'});operation(reverse.stops[0],coal.id,'unload',100,{mode:'percent',direction:'return'});
-  assert.match(declaredFreightService(reverse).issues[0],/B → A leg only/);
+  assert.match(declaredService(reverse).issues[0],/B → A leg only/);
   const visits=freightPlan();visits.stops[0].operations[0].quantity={mode:'visit',value:20};
-  const visit=declaredFreightService(visits);assert.equal(visit.status,'unsupported');assert.match(visit.issues[0],/per visit/);
+  const visit=declaredService(visits);assert.equal(visit.status,'unsupported');assert.match(visit.issues[0],/per visit/);
   const mixed=freightPlan();operation(mixed.stops[0],coal.id,'load',20,{mode:'visit'});
-  const kept=declaredFreightService(mixed);assert.equal(kept.status,'applied');assert.match(kept.issues[0],/per visit/);
+  const kept=declaredService(mixed);assert.equal(kept.status,'applied');assert.match(kept.issues[0],/per visit/);
   const intermediate=freightPlan();intermediate.stops.splice(1,0,newRouteStop(1,'Halt'));
-  assert.match(declaredFreightService(intermediate).issues[0],/Intermediate stops/);
+  assert.match(declaredService(intermediate).issues[0],/Intermediate stops/);
   const several=freightPlan();several.goods.push(grain);operation(several.stops[0],grain.id,'load',500);
-  assert.match(declaredFreightService(several).issues[0],/Several goods/);
+  assert.match(declaredService(several).issues[0],/Several goods/);
 });
 
 test('a building is the one an endpoint operation names; several candidates are not guessed',()=>{
@@ -156,7 +156,7 @@ test('the declared platform length and specialized terminals feed the service co
 
 test('Compare and Composition receive the Rate and return only for Freight',()=>{
   const plan=freightPlan({back:6000});
-  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:12000,loadedReturn:true,platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false},stopB:{specializedTerminal:false}},road:{stopA:{specializedTerminal:false},stopB:{specializedTerminal:false}}}});
+  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:12000,loadedReturn:true,cargo:'bulk',platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false},stopB:{specializedTerminal:false}},road:{stopA:{specializedTerminal:false},stopB:{specializedTerminal:false}}}});
   const passengers=declaredServiceInputs(plan,{category:'passengers'});
   assert.deepEqual([passengers.rate,passengers.loadedReturn,passengers.specializedTerminals.rail],[null,null,null]);
 });
@@ -205,29 +205,29 @@ test('the declared route profile is a valid Optimizer route with Road lanes and 
 
 test('A–B–A delivers everything onboard at B: only return-direction loading makes a loaded return',()=>{
   const bare=createRoutePlan([segment,segment]);bare.goods=[coal];operation(bare.stops[0],coal.id,'load',1000);
-  const service=declaredFreightService(bare);
+  const service=declaredService(bare);
   assert.deepEqual([service.status,service.rate,service.loadedReturn],['applied',1000,false]);
   assert.equal(service.deliveredAtB,true);assert.deepEqual(service.issues,[]);
   assert.match(declarationReport(bare).used.find(item=>/Coal/.test(item.text)).text,/still onboard at B is delivered there/);
   assert.deepEqual(declaredServiceInputs(bare,{category:'freight'}).loadedReturn,false);
   const partial=createRoutePlan([segment,segment]);partial.goods=[coal];operation(partial.stops[0],coal.id,'load',1000);operation(partial.stops[1],coal.id,'unload',400);
-  assert.deepEqual([declaredFreightService(partial).rate,declaredFreightService(partial).loadedReturn],[1000,false]);
+  assert.deepEqual([declaredService(partial).rate,declaredService(partial).loadedReturn],[1000,false]);
   const loaded=createRoutePlan([segment,segment]);loaded.goods=[coal];operation(loaded.stops[0],coal.id,'load',1000);operation(loaded.stops[1],coal.id,'load',1000,{direction:'return'});
-  const back=declaredFreightService(loaded);
+  const back=declaredService(loaded);
   assert.deepEqual([back.status,back.rate,back.loadedReturn],['applied',2000,true]);
   assert.equal(back.deliveredAtB,true);
 });
 
 test('freight carried over from A never fills an unequal return',()=>{
   const plan=createRoutePlan([segment,segment]);plan.goods=[coal];operation(plan.stops[0],coal.id,'load',1000);operation(plan.stops[1],coal.id,'load',500,{direction:'return'});
-  const service=declaredFreightService(plan);
+  const service=declaredService(plan);
   assert.equal(service.status,'unsupported');assert.match(service.issues.at(-1),/A → B \(1,000\) and B → A \(500\)/);
 });
 
 test('freight services name their goods, including unsupported ones',()=>{
-  assert.deepEqual(declaredFreightGoods(createRoutePlan([segment])),[]);
+  assert.deepEqual(declaredLoadNames(createRoutePlan([segment])),[]);
   const plan=freightPlan();plan.goods.push(grain);operation(plan.stops[0],grain.id,'load',500);
-  assert.deepEqual(declaredFreightGoods(plan),['Coal','Grain']);
+  assert.deepEqual(declaredLoadNames(plan),['Coal','Grain']);
 });
 
 test('infrastructure Running costs are optional while declared stops still constrain the search',()=>{
@@ -265,4 +265,24 @@ test('the infrastructure request counts Running costs unless told otherwise',()=
   assert.equal(validateOptimizerInfrastructure(value,'road','passengers').countRunningCosts,true);
   assert.equal(validateOptimizerInfrastructure({...value,countRunningCosts:false},'road','passengers').countRunningCosts,false);
   assert.throws(()=>validateOptimizerInfrastructure({...value,countRunningCosts:'no'},'road','passengers'),/counted/);
+});
+
+test('declared loads carry their category and freight group; untyped legacy goods are not guessed',()=>{
+  const typed=declaredService(freightPlan());assert.equal(typed.category,'freight');assert.equal(typed.cargo,'bulk');
+  const untyped=freightPlan();untyped.goods=[{...coal,type:null}];
+  const service=declaredService(untyped);assert.equal(service.status,'unsupported');assert.match(service.issues[0],/Choose a type for Coal/);
+  assert.equal(declaredServiceInputs(freightPlan(),{category:'freight'}).cargo,'bulk');
+  assert.equal(declaredServiceInputs(freightPlan(),{category:'passengers'}).rate,null);
+});
+
+test('declared passengers become a Rate per direction, equal both ways',()=>{
+  const people={id:'good:people',name:'Passengers',type:'passengers'};
+  const plan=createRoutePlan([segment,segment]);plan.goods=[people];operation(plan.stops[0],people.id,'load',5000);
+  const service=declaredService(plan);
+  assert.deepEqual([service.status,service.category,service.rate,service.bothDirectionsDeclared],['applied','passengers',5000,false]);
+  assert.match(declaredServiceText(service),/in each direction \(the same Rate is used B → A\)/);
+  assert.equal(declaredServiceInputs(plan,{category:'passengers'}).rate,5000);assert.equal(declaredServiceInputs(plan,{category:'passengers'}).loadedReturn,null);
+  operation(plan.stops[1],people.id,'load',5000,{direction:'return'});assert.equal(declaredService(plan).bothDirectionsDeclared,true);
+  const uneven=createRoutePlan([segment,segment]);uneven.goods=[people];operation(uneven.stops[0],people.id,'load',5000);operation(uneven.stops[1],people.id,'load',3000,{direction:'return'});
+  assert.match(declaredService(uneven).issues.at(-1),/one Rate in both directions/);
 });

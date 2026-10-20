@@ -116,7 +116,7 @@ test('declaration validation rejects dangling goods, duplicate boundaries and un
   const plan=example();
   const withChange=change=>{const draft=structuredClone(plan);change(draft);return ()=>validateRoutePlan(draft);};
   assert.throws(withChange(p=>p.goods.push({id:'good:z',name:'a'})),/names must be distinct/);
-  assert.throws(withChange(p=>p.stops[0].operations[0].cargoId='good:unknown'),/declared good/);
+  assert.throws(withChange(p=>p.stops[0].operations[0].cargoId='good:unknown'),/declared load/);
   assert.throws(withChange(p=>p.stops[1].boundary=0),/Two stops/);
   assert.throws(withChange(p=>p.stops[1].id='stop:"unsafe'),/unsupported characters/);
   assert.throws(withChange(p=>p.stops[1].buildings[0].recipe.inputs[0].ratio=0),/Recipe ratio/);
@@ -175,9 +175,22 @@ test('version 1 saved routes migrate their single building and retain explicit s
   });
   const before=JSON.stringify(legacy),restored=restoreRoutePlans(JSON.stringify({schemaVersion:1,routes:[legacy]}));
   assert.equal(restored.skipped,0);assert.equal(JSON.stringify(legacy),before);
-  const migrated=restored.routes[0];assert.equal(migrated.schemaVersion,2);
+  const migrated=restored.routes[0];assert.equal(migrated.schemaVersion,3);assert.ok(migrated.goods.every(g=>g.type===null));
   assert.equal(migrated.stops[1].buildings[0].type,'factory');assert.equal(migrated.stops[1].buildings[0].storage[0].outputCapacity,100);
   for(const stop of migrated.stops)assert.ok(stop.operations.every(op=>op.buildingId===stop.buildings[0].id));
   assert.deepEqual(routePlanFlows(migrated).production[0].required.year,{'good:a':600,'good:b':300});
   assert.deepEqual(validateRoutePlan(migrated),migrated);
+});
+
+test('loads are passengers or a freight group; passengers are declared once and never mixed with freight yet',()=>{
+  const plan=createRoutePlan([segment]);plan.goods=[{id:'good:p',name:'Passengers',type:'passengers'}];
+  plan.stops[0].operations=[operation('good:p','load',5000)];
+  assert.equal(validateRoutePlan(plan).goods[0].type,'passengers');
+  assert.throws(()=>validateRoutePlan({...plan,goods:[...plan.goods,{id:'good:c',name:'Coal',type:'bulk'}]}),/passengers or freight/);
+  assert.throws(()=>validateRoutePlan({...plan,goods:[...plan.goods,{id:'good:q',name:'Commuters',type:'passengers'}]}),/passengers once/);
+  assert.throws(()=>validateRoutePlan({...plan,goods:[{id:'good:x',name:'X',type:'grain'}]}),/load type/);
+  const stocked=structuredClone(plan);stocked.stops[0].buildings=[{...newRouteBuilding('Hall','warehouse'),storage:[{id:'s',cargoId:'good:p',inputCapacity:100,outputCapacity:100}]}];
+  assert.throws(()=>validateRoutePlan(stocked),/freight only/);
+  const legacy={...structuredClone(plan),schemaVersion:2,goods:[{id:'good:c',name:'Coal'}]};legacy.stops[0].operations=[operation('good:c','load',1000)];
+  const migrated=validateRoutePlan(legacy);assert.equal(migrated.schemaVersion,3);assert.equal(migrated.goods[0].type,null);
 });
