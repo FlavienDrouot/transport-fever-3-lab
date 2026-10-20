@@ -16,6 +16,7 @@ const directions={outbound:'A → B',return:'B → A'};
 /** Saved geometry and logistics stay separate from vehicle selection and simulation. Trips declare who goes where; the grid shows the resulting boarding and flows. */
 export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad,onChange=()=>{},onSelectSegment=()=>{}}){
   let plan=createRoutePlan(initialSegments),message='',invalid=false,panel=null;
+  const openSections=new Set();
   const library=new Map();let restored;
   try{restored=restoreRoutePlans(storage?.getItem(ROUTE_STORAGE_KEY));}catch{restored={routes:[],skipped:1};}
   for(const route of restored.routes)library.set(route.id,route);
@@ -100,15 +101,15 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   }
   function buildingBody(building,i,j){
     const base=`stops.${i}.buildings.${j}`,freight=freightGoods();
-    const stocks=building.storage.map((stock,k)=>{const p=`${base}.storage.${k}`;return `<div class="route-plan-row">${choice(`${p}.cargoId`,'Good',stock.cargoId,goodOptions(true))}${field(`${p}.inputCapacity`,`Input storage ${T.capacity}`,stock.inputCapacity,{min:100,step:100})}${field(`${p}.outputCapacity`,`Output storage ${T.capacity}`,stock.outputCapacity,{min:100,step:100})}${remove(p)}</div>`;}).join('');
+    const stocks=building.storage.map((stock,k)=>{const p=`${base}.storage.${k}`;return `<div class="route-plan-row">${choice(`${p}.cargoId`,'Good',stock.cargoId,goodOptions(true))}${building.type==='factory'?choice(`${p}.side`,'Storage',stock.side,[['input','Input'],['output','Output']]):''}${field(`${p}.capacity`,`${stock.side==='input'?'Input':'Output'} storage ${T.capacity}`,stock.capacity,{min:100,step:100})}${remove(p)}</div>`;}).join('');
     const recipe=['inputs','outputs'].map(key=>`<h5>${key==='inputs'?'Inputs':'Outputs'}</h5>${building.recipe[key].map((r,k)=>{const p=`${base}.recipe.${key}.${k}`;return `<div class="route-plan-row">${choice(`${p}.cargoId`,'Good',r.cargoId,goodOptions(true))}${field(`${p}.ratio`,'Recipe ratio',r.ratio,{min:0,max:1e9})}${remove(p)}</div>`;}).join('')}<button type="button" data-route-action="add-recipe" data-stop="${i}" data-building="${j}" data-side="${key}"${freight.length?'':' disabled'}>Add ${key==='inputs'?'input':'output'}</button>`).join('');
     const production=terminusFlows(plan).production.find(p=>p.buildingId===building.id);
     const needs=production&&!production.incomplete&&Object.keys(production.required.year).length?`<ul class="chart-help">${Object.entries(production.required.year).map(([id,n])=>`<li>${escape(`${goodName(id)}: ${fmt(n)} ${T.capacityUnit}/year required; ${fmt(production.incoming.year[id]??0)} delivered by this route`)}</li>`).join('')}</ul>`:'';
     return `<article class="rp-building"><div class="route-plan-row">${field(`${base}.name`,'Building name',building.name,{type:'text'})}${choice(`${base}.type`,'Building type',building.type,buildings)}<button type="button" data-route-action="remove-building" data-stop="${i}" data-building="${j}">Remove building</button></div>
       ${building.type==='factory'?`<div class="route-plan-row">${choice(`${base}.industryTerminals`,'Included parallel Truck terminals',building.industryTerminals,{'2':'2','3':'3'})}</div>`:''}
       ${building.type==='warehouse'?`<div class="route-plan-row">${field(`${base}.warehouseCapacity`,`Shared warehouse ${T.capacity}`,building.warehouseCapacity,{min:500,max:100000,step:500})}${choice(`${base}.warehouseSpecializedFor`,'Specialization',building.warehouseSpecializedFor??'',[['','All goods'],...freight.filter(g=>g.type!=='general').map(g=>[g.id,`${g.name} only`])])}</div>`:''}
-      <details class="panel-group"><summary>Storage by good${building.storage.length?` · ${building.storage.length}`:''}</summary><div class="panel-group-body">${stocks}<button type="button" data-route-action="add-storage" data-stop="${i}" data-building="${j}"${freight.length?'':' disabled'}>Add storage</button><p class="chart-help">Storage belongs to this building. Industry values use multiples of 100.</p></div></details>
-      ${building.type==='factory'?`<details class="panel-group"${building.recipe.inputs.length||building.recipe.outputs.length?' open':''}><summary>Industry recipe</summary><div class="panel-group-body">${recipe}${needs}<p class="chart-help">Ratios describe one production cycle, for example 2 A + 1 B → 3 C. Only operations assigned to this Industry enter its requirements.</p></div></details>`:''}
+      ${['factory','industrial'].includes(building.type)?`<details class="panel-group" data-keep="storage:${escape(building.id)}"><summary>${building.type==='factory'?'Storage by good':'Input storage by good'}${building.storage.length?` · ${building.storage.length}`:''}</summary><div class="panel-group-body">${stocks}<button type="button" data-route-action="add-storage" data-stop="${i}" data-building="${j}"${freight.length>building.storage.length?'':' disabled'}>Add storage</button><p class="chart-help">${building.type==='factory'?'Each good is stored either as an input or as an output of this Industry.':'An industrial building only accepts goods.'} Capacities use multiples of 100.</p></div></details>`:''}
+      ${building.type==='factory'?`<details class="panel-group" data-keep="recipe:${escape(building.id)}"${building.recipe.inputs.length||building.recipe.outputs.length?' open':''}><summary>Industry recipe</summary><div class="panel-group-body">${recipe}${needs}<p class="chart-help">Ratios describe one production cycle, for example 2 A + 1 B → 3 C. Only operations assigned to this Industry enter its requirements.</p></div></details>`:''}
     </article>`;
   }
   function infrastructureRow(entry,i,j){
@@ -156,7 +157,10 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   /** Redraw everything below the toolbar while keeping the focused control. */
   function drawBody(){
     const active=root.ownerDocument.activeElement,path=active?.dataset?.planPath,action=active?.dataset?.routeAction,key=active?.dataset?.op??active?.dataset?.stop??active?.dataset?.index;
+    const kept=new Map([...root.querySelectorAll('details[data-keep]')].map(el=>[el.dataset.keep,el.open]));
     drawLoads();drawGrid();drawPanel();drawSummary();
+    for(const el of root.querySelectorAll('details[data-keep]'))if(kept.has(el.dataset.keep)||openSections.has(el.dataset.keep))el.open=kept.get(el.dataset.keep)||openSections.has(el.dataset.keep);
+    openSections.clear();
     if(path)(root.querySelector(`[data-plan-path="${path}"]:checked`)??(active.type==='radio'?null:root.querySelector(`[data-plan-path="${path}"]`)))?.focus();
     else if(action)root.querySelector(`[data-route-action="${action}"]${key==null?'':`[data-${active.dataset.op?'op':active.dataset.stop?'stop':'index'}="${key}"]`}`)?.focus();
   }
@@ -198,6 +202,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     if(!input.checkValidity()){refreshStatus(new RangeError(input.validationMessage));return;}
     const candidate=read(),path=input.dataset.planPath.split('.');
     for(const asset of candidate.segmentAssets)if(asset.roadTier===100)asset.roadLanes=2;else if(asset.roadTier===120)asset.roadLanes=4;
+    if(path[2]==='buildings'&&path.at(-1)==='type'){const building=candidate.stops[Number(path[1])].buildings[Number(path[3])];building.storage=building.type==='factory'?building.storage:building.type==='industrial'?building.storage.map(row=>({...row,side:'input'})):[];}
     if(path.at(-1)==='kind'){const i=Number(path[1]),j=Number(path[3]);candidate.stops[i].infrastructure[j]={...newInfrastructure(input.value),id:plan.stops[i].infrastructure[j].id};}
     if(path.at(-1)==='tracks'){const entry=candidate.stops[Number(path[1])].infrastructure[Number(path[3])];entry.platforms=Math.max(Math.ceil(entry.tracks/2),Math.min(entry.platforms,entry.tracks));}
     if(path[0]==='trips'&&['from','to'].includes(path.at(-1))){const trip=candidate.trips[Number(path[1])];trip[`${path.at(-1)}BuildingId`]=null;if(trip.from===trip.to){const other=plan.trips[Number(path[1])][path.at(-1)==='from'?'from':'to'];trip[path.at(-1)==='from'?'to':'from']=other;}}
@@ -250,11 +255,12 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     }else if(action==='add-storage'){
       const building=candidate.stops[i].buildings[Number(button.dataset.building)],unused=candidate.goods.find(g=>g.type!=='passengers'&&!building.storage.some(r=>r.cargoId===g.id));
       if(!unused){refreshStatus(new RangeError('All goods already have storage in this building.'));return;}
-      building.storage.push({id:routeId('stock'),cargoId:unused.id,inputCapacity:100,outputCapacity:building.type==='factory'?DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY:100});
+      const output=building.type==='factory'&&(candidate.trips.some(t=>t.cargoId===unused.id&&t.fromBuildingId===building.id)||building.recipe.outputs.some(r=>r.cargoId===unused.id));
+      building.storage.push({id:routeId('stock'),cargoId:unused.id,side:output?'output':'input',capacity:output?DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY:100});openSections.add(`storage:${building.id}`);
     }else if(action==='add-recipe'){
       const building=candidate.stops[i].buildings[Number(button.dataset.building)],side=button.dataset.side,unused=candidate.goods.find(g=>g.type!=='passengers'&&!building.recipe[side].some(r=>r.cargoId===g.id));
       if(!unused){refreshStatus(new RangeError('Each good can appear once on this side of this building recipe.'));return;}
-      building.recipe[side].push({id:routeId('recipe'),cargoId:unused.id,ratio:1});
+      building.recipe[side].push({id:routeId('recipe'),cargoId:unused.id,ratio:1});openSections.add(`recipe:${building.id}`);
     }else if(action==='remove-row'){const parts=button.dataset.path.split('.'),index=Number(parts.pop());let rows=candidate;for(const p of parts)rows=rows[p];if(rows[index]?.id===panel?.id)panel=null;rows.splice(index,1);}
     else return;
     if(accept(candidate)){if(panel&&action==='add-stop'){$('[data-route-panel]').scrollIntoView({block:'nearest'});$('[data-route-panel] input:not([type=radio])')?.focus({preventScroll:true});}if(action==='add-trip'){$('[data-route-panel]').scrollIntoView({block:'nearest'});$('[data-route-panel] [data-plan-path$=".rate"]')?.focus({preventScroll:true});}}

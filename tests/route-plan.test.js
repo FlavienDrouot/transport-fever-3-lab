@@ -173,8 +173,8 @@ test('version 1 saved routes migrate their single building and retain explicit s
   });
   const before=JSON.stringify(legacy),restored=restoreRoutePlans(JSON.stringify({schemaVersion:1,routes:[legacy]}));
   assert.equal(restored.skipped,0);assert.equal(JSON.stringify(legacy),before);
-  const migrated=restored.routes[0];assert.equal(migrated.schemaVersion,4);assert.ok(migrated.goods.every(g=>g.type===null));
-  assert.equal(migrated.stops[1].buildings[0].type,'factory');assert.equal(migrated.stops[1].buildings[0].storage[0].outputCapacity,100);
+  const migrated=restored.routes[0];assert.equal(migrated.schemaVersion,5);assert.ok(migrated.goods.every(g=>g.type===null));
+  assert.equal(migrated.stops[1].buildings[0].type,'factory');assert.deepEqual(migrated.stops[1].buildings[0].storage,[{id:'legacy:stock',cargoId:'good:c',side:'output',capacity:100}]);
   for(const stop of migrated.stops)assert.ok(stop.operations.every(op=>op.buildingId===stop.buildings[0].id));
   assert.deepEqual(routePlanFlows(migrated).production[0].required.year,{'good:a':600,'good:b':300});
   assert.deepEqual(validateRoutePlan(migrated),migrated);
@@ -190,7 +190,7 @@ test('loads are passengers or a freight group; passengers are declared once and 
   const stocked=structuredClone(plan);stocked.stops[0].buildings=[{...newRouteBuilding('Hall','warehouse'),storage:[{id:'s',cargoId:'good:p',inputCapacity:100,outputCapacity:100}]}];
   assert.throws(()=>validateRoutePlan(stocked),/freight only/);
   const legacy={...structuredClone(plan),schemaVersion:2,goods:[{id:'good:c',name:'Coal'}]};legacy.stops[0].operations=[operation('good:c','load',1000)];
-  const migrated=validateRoutePlan(legacy);assert.equal(migrated.schemaVersion,4);assert.equal(migrated.goods[0].type,null);
+  const migrated=validateRoutePlan(legacy);assert.equal(migrated.schemaVersion,5);assert.equal(migrated.goods[0].type,null);
 });
 
 test('trips in both directions keep an exchanging passenger line balanced',()=>{
@@ -207,4 +207,19 @@ test('trips in both directions keep an exchanging passenger line balanced',()=>{
   assert.deepEqual(reversed.stops[2].operations.map(op=>[op.direction,op.action]),[['return','load']]);
   for(const [change,error] of [[t=>({...t,to:t.from}),/two different stops/],[t=>({...t,rate:0}),/positive Rate/],[t=>({...t,from:'stop:missing'}),/start and end stops/],[t=>({...t,fromBuildingId:'building:missing'}),/Choose a building/]])
     assert.throws(()=>validateRoutePlan({...plan,trips:[change(plan.trips[0])]}),error);
+});
+
+test('storage follows the building role: Industry input or output per good, industrial input only, warehouses one shared capacity',()=>{
+  const plan=createTripPlan([segment]);plan.goods=[{...goods[0],type:'bulk'},{...goods[1],type:'bulk'}];
+  const works={...newRouteBuilding('Works','factory'),storage:[{id:'s1',cargoId:'good:a',side:'input',capacity:400},{id:'s2',cargoId:'good:b',side:'output',capacity:800}]};
+  plan.stops[0].buildings=[works];
+  assert.deepEqual(validateRoutePlan(plan).stops[0].buildings[0].storage.map(s=>[s.side,s.capacity]),[['input',400],['output',800]]);
+  const twice=structuredClone(plan);twice.stops[0].buildings[0].storage.push({id:'s3',cargoId:'good:a',side:'output',capacity:100});
+  assert.throws(()=>validateRoutePlan(twice),/each good once/);
+  const accepting=structuredClone(plan);accepting.stops[0].buildings[0].type='industrial';
+  assert.throws(()=>validateRoutePlan(accepting),/only accepts goods/);
+  const depot=structuredClone(plan);depot.stops[0].buildings[0].type='warehouse';
+  assert.throws(()=>validateRoutePlan(depot),/one shared capacity/);
+  const legacy={...structuredClone(plan),schemaVersion:4};legacy.stops[0].buildings=[{...newRouteBuilding('Hall','warehouse'),storage:[{id:'old',cargoId:'good:a',inputCapacity:100,outputCapacity:100}]}];
+  assert.deepEqual(validateRoutePlan(legacy).stops[0].buildings[0].storage,[]);
 });

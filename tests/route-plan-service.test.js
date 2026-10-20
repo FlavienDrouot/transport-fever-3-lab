@@ -89,7 +89,9 @@ test('a building is the one an endpoint operation names; several candidates are 
   const depot=newRouteBuilding('Depot','warehouse');depot.warehouseCapacity=1500;
   plan.stops[0].buildings=[mine];plan.stops[1].buildings=[depot];
   const model=declaredEndpointModel(plan,{category:'freight'});
-  assert.deepEqual([model.sites.stopA.type,model.sites.stopA.factoryTerminals,model.sites.stopA.outputStorageCapacity,model.sites.stopA.inputStorageCapacity],['factory',3,1600,200]);
+  assert.deepEqual([model.sites.stopA.type,model.sites.stopA.factoryTerminals,model.sites.stopA.outputStorageCapacity,model.sites.stopA.inputStorageCapacity],['factory',3,1600,100]);
+  // The mine loads coal, so its legacy storage becomes output storage only.
+  assert.deepEqual(validateRoutePlan(plan).stops[0].buildings[0].storage,[{id:'stock:coal',cargoId:coal.id,side:'output',capacity:1600}]);
   assert.deepEqual([model.sites.stopB.type,model.sites.stopB.warehouseCapacity,model.sites.stopB.maxWarehouseCapacity,model.sites.stopB.existingSpecializedWarehouse,model.sites.stopB.allowWarehouseSpecialization],['warehouse',1500,1500,false,true]);
   assert.deepEqual(model.issues,[]);
   plan.stops[0].buildings.push(newRouteBuilding('Second mine','factory'));

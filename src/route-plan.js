@@ -17,12 +17,12 @@ export const newRouteBuilding=(name='Building 1',type='none')=>({id:routeId('bui
 export const newRouteStop=(boundary,name)=>({id:routeId('stop'),boundary,name,buildings:[],infrastructure:[],operations:[]});
 export function createRoutePlan(segments,name='Custom route'){
   const profile=validateRouteProfile(segments);
-  return {schemaVersion:4,id:routeId('route'),name,segments:profile,segmentAssets:profile.map(newSegmentAssets),goods:[],stops:[newRouteStop(0,'A'),newRouteStop(profile.length,'B')],trips:[]};
+  return {schemaVersion:5,id:routeId('route'),name,segments:profile,segmentAssets:profile.map(newSegmentAssets),goods:[],stops:[newRouteStop(0,'A'),newRouteStop(profile.length,'B')],trips:[]};
 }
 
 /** Version 1's single building owns its existing storage, recipe and operations. */
 function currentDefinition(input){
-  if(input?.schemaVersion===3||input?.schemaVersion===4)return input;
+  if([3,4,5].includes(input?.schemaVersion))return input;
   // Version 2 goods had no type; the user chooses one instead of a guess.
   if(input?.schemaVersion===2)return {...input,schemaVersion:3,goods:list(input.goods,'Goods',50).map(g=>({...g,type:null}))};
   if(input?.schemaVersion!==1)throw new RangeError('Unsupported route schema.');
@@ -36,9 +36,21 @@ function currentDefinition(input){
 /** A service declaration, not a vehicle definition or a cached simulation. Version 4 declares trips; stop operations are derived from them. */
 export function validateRoutePlan(input){
   input=currentDefinition(input);
-  if(input.schemaVersion===4)return validateDeclaration(input,true);
+  if(input.schemaVersion===5)return validateDeclaration(input,true);
+  if(input.schemaVersion===4)return validateDeclaration(storageByRole(input),true);
   const legacy=validateDeclaration(input,false);
-  return validateDeclaration({...legacy,schemaVersion:4,trips:tripsFromOperations(legacy)},true);
+  return validateDeclaration(storageByRole({...legacy,trips:tripsFromOperations(legacy)}),true);
+}
+
+/** Before version 5 every building stored each good in and out. An Industry stores a good either as input or output, an industrial building only accepts goods, and a warehouse has one shared capacity. */
+function storageByRole(plan){
+  return {...plan,schemaVersion:5,stops:list(plan.stops,'Stops',25).map(stop=>({...stop,buildings:list(stop.buildings,'Buildings at a stop',20).map(building=>{
+    const only=stop.buildings.filter(b=>b.type!=='none').length===1;
+    const loads=cargoId=>(stop.operations??[]).some(op=>(op.buildingId===building.id||op.buildingId==null&&only)&&op.cargoId===cargoId&&op.action==='load')||building.recipe?.outputs?.some(r=>r.cargoId===cargoId);
+    const storage=building.type==='factory'?(building.storage??[]).map(row=>{const side=loads(row.cargoId)?'output':'input';return {id:row.id,cargoId:row.cargoId,side,capacity:side==='output'?row.outputCapacity:row.inputCapacity};})
+      :building.type==='industrial'?(building.storage??[]).map(row=>({id:row.id,cargoId:row.cargoId,side:'input',capacity:row.inputCapacity})):[];
+    return {...building,storage};
+  })}))};
 }
 
 function validateDeclaration(input,withTrips){
@@ -62,7 +74,11 @@ function validateDeclaration(input,withTrips){
   const stops=list(input.stops,'Stops',25).map(stop=>{
     const buildings=list(stop.buildings,'Buildings at a stop',20).map(building=>{
       const type=choice(building.type,['none','factory','warehouse','industrial'],'building');
-      const storage=list(building.storage,'Storage',50).map(s=>({...row(stocked(s)),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)}));
+      const storage=list(building.storage,'Storage',50).map(s=>withTrips?(()=>{
+        if(type==='warehouse'||type==='none')throw new RangeError(type==='warehouse'?'A warehouse has one shared capacity; declare it instead of storage by good.':'Choose the building type before declaring storage.');
+        const side=choice(s.side,type==='industrial'?['input']:['input','output'],type==='industrial'?'storage side (an industrial building only accepts goods)':'storage side');
+        return {...row(stocked(s)),side,capacity:whole(s.capacity,side==='input'?'Input storage':'Output storage',100,Number.MAX_SAFE_INTEGER,100)};
+      })():{...row(stocked(s)),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)});
       const recipe=Object.fromEntries(['inputs','outputs'].map(key=>[key,list(building.recipe?.[key],`Recipe ${key}`,50).map(r=>({...row(stocked(r)),ratio:ratio(r.ratio)}))]));
       for(const [key,items] of Object.entries({storage,...recipe})){
         identities(items,key);
@@ -121,7 +137,7 @@ function validateDeclaration(input,withTrips){
     const other=[...stop.operations.filter(op=>op.buildingId===building.id),...building.storage].find(row=>row.cargoId!==building.warehouseSpecializedFor);
     if(other)throw new RangeError(`${building.name} is specialized for ${goods.find(g=>g.id===building.warehouseSpecializedFor).name}; add another warehouse for ${goods.find(g=>g.id===other.cargoId).name}.`);
   }
-  return {schemaVersion:withTrips?4:3,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops,...(trips?{trips}:{})};
+  return {schemaVersion:withTrips?5:3,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops,...(trips?{trips}:{})};
 }
 
 /** Version 3 described loading and unloading. Each unloading takes its share of every parcel onboard; what is left at the terminus is delivered there. Per-visit quantities had no Rate and are dropped. */

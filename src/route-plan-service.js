@@ -159,9 +159,10 @@ export function declaredEndpointModel(input,{category='passengers',loadedReturn=
       const stock=goods.length===1?building.storage.find(s=>s.cargoId===goods[0]):null;
       if(building.type==='factory'){
         site.factoryTerminals=building.industryTerminals;
-        if(stock)Object.assign(site,{inputStorageCapacity:stock.inputCapacity,outputStorageCapacity:stock.outputCapacity});
+        if(stock)site[stock.side==='input'?'inputStorageCapacity':'outputStorageCapacity']=stock.capacity;
         else if(building.storage.length)issues.push(`${label}: storage is declared for other goods; default storage is used for this service.`);
       }
+      if(building.type==='industrial'&&building.storage.length)issues.push(`${label}: storage at an industrial building is descriptive; the calculators do not limit it.`);
       lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}${building.warehouseSpecializedFor?` · specialized for ${plan.goods.find(g=>g.id===building.warehouseSpecializedFor).name}`:''}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
     }else lines.push(`${label} · building not specified`);
     sites[key]=site;
