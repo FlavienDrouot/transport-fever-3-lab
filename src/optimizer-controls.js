@@ -1,3 +1,4 @@
+import {loadedReturnValue} from './service-fleet.js';
 import {durationInputs,durationSeconds,enableDurationInputs,bindDurationInputs} from './duration-controls.js';
 import {OPTIMIZER_DEFAULTS,OPTIMIZER_MAX_TRAIN_LENGTH,optimizerRequest} from './optimizer.js';
 import {UI_TERMS as T} from './ui-terms.js';
@@ -63,10 +64,11 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     if(apply){
       serviceLock??={rate:rate.value,loadedReturn:loaded.checked,cargo:cargo.querySelector('input:checked').value};
       rate.value=service.rate;rate.readOnly=true;
-      loaded.checked=freight?service.loadedReturn:serviceLock.loadedReturn;loaded.disabled=freight;
+      loaded.checked=freight?service.loadedReturn!==false:serviceLock.loadedReturn;loaded.disabled=freight;
+      if(freight&&typeof service.loadedReturn==='number')loaded.dataset.share=service.loadedReturn;else delete loaded.dataset.share;
       cargo.querySelector(`input[value="${freight?service.cargo:serviceLock.cargo}"]`).checked=true;cargo.inert=freight;
     }else if(serviceLock){
-      rate.value=serviceLock.rate;rate.readOnly=false;loaded.checked=serviceLock.loadedReturn;loaded.disabled=false;
+      rate.value=serviceLock.rate;rate.readOnly=false;loaded.checked=serviceLock.loadedReturn;loaded.disabled=false;delete loaded.dataset.share;
       cargo.querySelector(`input[value="${serviceLock.cargo}"]`).checked=true;cargo.inert=false;serviceLock=null;
     }
     const lines=!service||service.status==='none'?[]:[
@@ -122,7 +124,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
       minHeadwaySeconds:field('enableMinimumFrequency').checked?durationSeconds(field('minMinutes'),field('minMinutesSeconds')):null,
       maxOutboundLegSeconds:field('enableMaxOutboundLeg').checked?durationSeconds(field('outboundMinutes'),field('outboundMinutesSeconds')):null,
       maxReturnLegSeconds:field('enableMaxReturnLeg').checked?durationSeconds(field('returnMinutes'),field('returnMinutesSeconds')):null,
-      identicalMUsOnly:field('identicalMUsOnly').checked,ignoreRetirements:field('ignoreRetirements').checked,loadedReturn:field('loadedReturn').checked,
+      identicalMUsOnly:field('identicalMUsOnly').checked,ignoreRetirements:field('ignoreRetirements').checked,loadedReturn:loadedReturnValue(field('loadedReturn')),
       stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),
       incompleteInfrastructure:[...root.querySelectorAll('[data-reusable-entry]')].filter(entry=>!entry.hidden&&(['stop','domain'].some(key=>!entry.querySelector(`[data-infrastructure-field=${key}]:checked`))||!entry.querySelector('[data-entry-type]').hidden&&!entry.querySelector('[data-infrastructure-field=kind]:checked'))).length
     });
@@ -146,7 +148,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
       maxOutboundLegSeconds:field('enableMaxOutboundLeg').checked?durationSeconds(field('outboundMinutes'),field('outboundMinutesSeconds')):null,
       maxReturnLegSeconds:field('enableMaxReturnLeg').checked?durationSeconds(field('returnMinutes'),field('returnMinutesSeconds')):null,
       maxHeadwaySeconds:field('enableFrequency').checked?durationSeconds(field('minutes'),field('minutesSeconds')):null,fillRatio:Number(field('utilization').value)/100,
-      loadedReturn:field('loadedReturn').checked,stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),...lineRequest()});
+      loadedReturn:loadedReturnValue(field('loadedReturn')),stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),...lineRequest()});
   }
   const fmt=(n,d=1)=>formatNumber(n,d,true);
   function show(answer){

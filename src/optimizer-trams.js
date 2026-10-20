@@ -1,5 +1,5 @@
 import {GAME_YEAR_SECONDS} from './line.js';
-import {sizeFleet} from './service-fleet.js';
+import {sizeFleet,returnShare} from './service-fleet.js';
 import {segmentLineTiers,segmentTramTiers} from './optimizer-line-infrastructure.js';
 
 /** Safe whole-fleet upkeep floor for Rail MU/wagon and Road tram formations. */
@@ -9,9 +9,9 @@ export function formationVehicleCostBound(request,domain){
   return ({capacity,multiplier,speed,maintenance})=>{
     if(caps.some(cap=>cap<=0))return Infinity;
     const trip=request.routeProfile.reduce((seconds,part,i)=>seconds+part.distanceKm*7200/Math.min(speed,caps[i]),0);
-    const freight=request.category==='freight',load=capacity*request.fillRatio,deliveries=freight?request.loadedReturn?2:1:2;
-    const transferSeconds=freight?load*(request.loadedReturn?4:2)/(multiplier*.0625*4):4*load/multiplier;
-    const pauses=freight?(request.loadedReturn?12:8):12;
+    const freight=request.category==='freight',load=capacity*request.fillRatio,deliveries=freight?1+returnShare(request.loadedReturn):2;
+    const transferSeconds=freight?load*2*(1+returnShare(request.loadedReturn))/(multiplier*.0625*4):4*load/multiplier;
+    const pauses=freight?(returnShare(request.loadedReturn)>0?12:8):12;
     return maintenance*sizeFleet({cycleSeconds:trip+pauses+transferSeconds,transferSeconds,unitsPerCycle:load*deliveries},
       {demandPerYear:request.rate*(freight?1:2),maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
   };
@@ -29,7 +29,7 @@ export function* mixedLightRailFormations(items,request,maxLength,costCeiling=()
     request.lineInfrastructure?Math.max(...segmentLineTiers(part,'rail',request.year).map(tier=>tier.speedLimitKmh)):part.speedLimitKmh);
   if(caps.some(cap=>cap<=0))return;
   const minimumTrip=speed=>request.routeProfile.reduce((seconds,part,i)=>seconds+part.distanceKm*7200/Math.min(speed,caps[i]),0);
-  const deliveryFactor=request.category==='passengers'?2:request.loadedReturn?2:1;
+  const deliveryFactor=request.category==='passengers'?2:1+returnShare(request.loadedReturn);
   const flow=request.rate*(request.category==='passengers'?2:1)/GAME_YEAR_SECONDS;
   const parts=[];
   function* visit(index,left,length,maintenance,capacity,multiplier,speed){
@@ -40,8 +40,8 @@ export function* mixedLightRailFormations(items,request,maxLength,costCeiling=()
       const freight=request.category==='freight',load=capacity*request.fillRatio;
       // Instant acceleration/braking, fastest legal segment tiers and best possible
       // freight handling bonuses give an optimistic lower bound on fleet upkeep.
-      const transferSeconds=freight?load*(request.loadedReturn?4:2)/(multiplier*.0625*4):4*load/multiplier;
-      const pauses=freight?(request.loadedReturn?12:8):12;
+      const transferSeconds=freight?load*2*(1+returnShare(request.loadedReturn))/(multiplier*.0625*4):4*load/multiplier;
+      const pauses=freight?(returnShare(request.loadedReturn)>0?12:8):12;
       const fleet=sizeFleet({cycleSeconds:tripMinimum+pauses+transferSeconds,transferSeconds,unitsPerCycle:load*deliveryFactor},
         {demandPerYear:request.rate*(freight?1:2),maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
       if(fleet<=request.maxFleet&&maintenance*fleet<=costCeiling()+1e-7)yield parts.map(part=>({...part}));

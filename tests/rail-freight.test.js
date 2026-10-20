@@ -162,3 +162,17 @@ test('Economic dispatcher preserves passenger output and aliases its annual unit
   const excluded = analyseEconomicService(train,{distanceKm:1,platformLengthMetres:59});
   assert.equal(excluded.eligible,false);assert.equal(excluded.maintenancePerUnit,null);
 });
+
+test('a partial return share scales return handling and deliveries between empty and loaded returns',async()=>{
+  const {analyseTruckService}=await import('../src/trucks.js');
+  const [empty,half,full]=[false,.5,true].map(loadedReturn=>analyseFreightService(train,{distanceKm:1,loadedReturn}));
+  assert.equal(half.deliveredPerCycle,half.cargoPerLeg*1.5);
+  assert.ok(Math.abs(half.loadingSeconds+half.unloadingSeconds-(empty.loadingSeconds+empty.unloadingSeconds+full.loadingSeconds+full.unloadingSeconds)/2)<1e-9);
+  assert.equal(half.stationSecondsA-half.cargoPerLeg*1.5/half.handlingRateA,full.stationSecondsA-full.cargoPerLeg*2/full.handlingRateA);
+  assert.deepEqual(analyseFreightService(train,{distanceKm:1,loadedReturn:1}),full);
+  assert.throws(()=>analyseFreightService(train,{distanceKm:1,loadedReturn:1.5}),/share between 0 and 1/);
+  const truck={...train,name:'Truck',year:2000,maxSpeedKmh:80,loadingUnloadingSpeedMultiplier:1,economy:{annualMaintenance:10000}};
+  const [roadEmpty,roadHalf,roadFull]=[false,.5,true].map(loadedReturn=>analyseTruckService([truck],{distanceKm:1,loadedReturn})[0]);
+  assert.equal(roadHalf.deliveredPerCycle,roadHalf.cargoPerLeg*1.5);
+  assert.ok(Math.abs(roadHalf.loadingSeconds-(roadEmpty.loadingSeconds+roadFull.loadingSeconds)/2)<1e-9);
+});
