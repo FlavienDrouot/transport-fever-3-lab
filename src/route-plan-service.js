@@ -36,6 +36,18 @@ export function declaredRouteProfile(segments,input){
   }));
 }
 
+/** With route Running costs, the Optimizer treats a declared tier as a base it may upgrade: restore the stored geometry speeds on those segments. */
+export function uncappedDeclaredTiers(profile,raw,input){
+  const plan=validateRoutePlan(input),route=validateRouteProfile(profile),stored=validateRouteProfile(raw);
+  if(route.length!==stored.length||stored.length!==plan.segmentAssets.length)return route;
+  return validateRouteProfile(route.map((part,i)=>{
+    const asset=plan.segmentAssets[i],next={...part};
+    for(const [tier,keys] of [[asset.railTier,['speedLimitKmh','railSpeedConstraintKmh']],[asset.roadTier,['roadSpeedLimitKmh','roadSpeedConstraintKmh']]])
+      if(tier!==null)for(const key of keys){if(stored[i][key]==null)delete next[key];else next[key]=stored[i][key];}
+    return next;
+  }));
+}
+
 /** Drop the line choices a declaration fixes from a profile that carries them, restoring the stored route's own values. */
 export function withoutDeclaredLineChoices(profile,raw,input){
   const fields=declaredSegmentFields(input);
@@ -144,14 +156,14 @@ export function declaredEndpointModel(input,{category='passengers',loadedReturn=
     if(ambiguous)issues.push(`${label} serves several buildings for this service, so none is applied. Assign its operations to a single building.`);
     if(building){
       site.type=building.type;
-      if(building.type==='warehouse')Object.assign(site,{warehouseCapacity:building.warehouseCapacity,maxWarehouseCapacity:building.warehouseCapacity});
+      if(building.type==='warehouse')Object.assign(site,{warehouseCapacity:building.warehouseCapacity,maxWarehouseCapacity:building.warehouseCapacity,existingSpecializedWarehouse:goods.length===1&&building.warehouseSpecializedFor===goods[0]});
       const stock=goods.length===1?building.storage.find(s=>s.cargoId===goods[0]):null;
       if(building.type==='factory'){
         site.factoryTerminals=building.industryTerminals;
         if(stock)Object.assign(site,{inputStorageCapacity:stock.inputCapacity,outputStorageCapacity:stock.outputCapacity});
         else if(building.storage.length)issues.push(`${label}: storage is declared for other goods; default storage is used for this service.`);
       }
-      lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
+      lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}${building.warehouseSpecializedFor?` · specialized for ${plan.goods.find(g=>g.id===building.warehouseSpecializedFor).name}`:''}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
     }else lines.push(`${label} · building not specified`);
     sites[key]=site;
     const group=new Map();
@@ -172,31 +184,37 @@ export function declaredPlatformLength(input){
   return lengths.length?Math.min(...lengths):null;
 }
 
-/** Specialized Truck/platform terminals already present at an endpoint (the ×2 handling flag). Industry terminals serve trucks only. */
+/** A warehouse specialized for the one good this service moves. */
+const specializedFor=(plan,stop)=>{const goods=serviceGoodIds(plan),building=endpointBuilding(stop).building;return building?.type==='warehouse'&&goods.length===1&&building.warehouseSpecializedFor===goods[0];};
+
+/** Specialized Truck/platform terminals and specialized warehouses already present at an endpoint (the ×2 handling flags). Industry terminals serve trucks only. */
 export function declaredHandling(input,{domain,includeTrams=false}){
   const plan=validateRoutePlan(input);
   return Object.fromEntries(endpoints(plan).map((stop,index)=>[STOPS[index],{specializedTerminal:
     stop.infrastructure.some(e=>e.specialized&&e.kind===(domain==='rail'?'railPlatform':'roadPlatform'))||
-    domain==='road'&&!includeTrams&&endpointBuilding(stop).building?.type==='factory'}]));
+    domain==='road'&&!includeTrams&&endpointBuilding(stop).building?.type==='factory',
+    specializedWarehouse:specializedFor(plan,stop)}]));
 }
 
 /** What the analyses take from the declaration, and what remains descriptive until the calculators support it. */
 export function declarationReport(input,{includeTrams=false}={}){
   const plan=validateRoutePlan(input),fields=declaredSegmentFields(plan),service=declaredService(plan),issues=[...service.issues];
   const count=key=>fields.filter(f=>f[key]).length,segments=n=>`${n} segment${n===1?'':'s'}`;
-  const used=[];
-  if(count('rail')||count('road'))used.push({views:['race','economics','trucks','configurator','optimizer'],text:`speed ceilings from declared tiers (${[count('rail')&&`Rail ${segments(count('rail'))}`,count('road')&&`Road ${segments(count('road'))}`].filter(Boolean).join(', ')})`});
+  const used=[],notes=[];
+  if(count('rail')||count('road'))used.push({views:['race','economics','trucks','configurator','optimizer'],text:`existing tiers as speed limits; with route ${T.runningCosts}, the Optimizer may upgrade them and pays only the maintenance difference (${[count('rail')&&`Rail ${segments(count('rail'))}`,count('road')&&`Road ${segments(count('road'))}`].filter(Boolean).join(', ')})`});
   if(count('railTracks')||count('roadLanes')||count('tram'))used.push({views:['optimizer'],text:`fixed Rail tracks, Road lanes and Tram infrastructure (${segments(Math.max(count('railTracks'),count('roadLanes'),count('tram')))})`});
   if(service.status==='applied')used.push({category:service.category,views:['economics','trucks','configurator','optimizer'],text:declaredServiceText(service)});
   const length=declaredPlatformLength(plan);
   if(length)used.push({views:['economics','configurator'],text:`maximum train length ${length} m (Rail platforms)`});
   const handling=['rail','road'].map(domain=>declaredHandling(plan,{domain,includeTrams}));
   if(handling.some(h=>h.stopA.specializedTerminal||h.stopB.specializedTerminal))used.push({category:'freight',views:['economics','trucks','configurator'],text:'specialized terminals at the endpoints (Freight)'});
+  if(handling[0].stopA.specializedWarehouse||handling[0].stopB.specializedWarehouse)used.push({category:'freight',views:['economics','trucks','configurator'],text:'specialized warehouses at the endpoints (Freight)'});
   const model=declaredEndpointModel(plan,{category:service.category??'passengers',loadedReturn:service.loadedReturn,includeTrams});
   if(model){used.push({views:['optimizer'],text:`endpoint buildings, storage and reusable terminals (constraints; their ${T.runningCosts} are counted when infrastructure ${T.runningCosts} is included)`});issues.push(...model.issues);}
-  for(const [i,asset] of plan.segmentAssets.entries())if(asset.railTier!==null&&asset.railTracks===1)issues.push(`Segment ${i+1}: a single existing Rail track cannot be fixed; the calculator sizes tracks from the fleet.`);
+  for(const [i,asset] of plan.segmentAssets.entries())if(asset.railTier!==null&&asset.railTracks===1)notes.push(`Segment ${i+1}: one existing Rail track serves a single train; with route ${T.runningCosts}, more trains add a second track at its full maintenance. Passing loops are not modelled.`);
   if(plan.stops.some(stop=>stop.buildings.some(b=>b.recipe.inputs.length||b.recipe.outputs.length)))issues.push('Industry recipes are summarised on the Route page only.');
   if(plan.stops.length>2&&service.status!=='unsupported')issues.push('Intermediate stops are ignored by A–B–A calculations.');
+  if(notes.length)used.push({views:['optimizer'],text:notes.join(' ')});
   return {service,used,issues:[...new Set(issues)]};
 }
 

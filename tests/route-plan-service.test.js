@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createRoutePlan,newRouteStop,newRouteBuilding,validateRoutePlan} from '../src/route-plan.js';
-import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredService,declaredLoadNames,declaredServiceText,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
+import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredService,declaredLoadNames,declaredServiceText,uncappedDeclaredTiers,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
 import {optimizerRequest,optimizerCandidates,evaluateOptimizerCandidate} from '../src/optimizer.js';
 import {optimizerInfrastructureValue,optimizerTrainLengthLimit,validateOptimizerInfrastructure} from '../src/optimizer-infrastructure.js';
 
@@ -146,8 +146,8 @@ test('the declared platform length and specialized terminals feed the service co
   assert.equal(declaredPlatformLength(plan),400);
   plan.stops[1].infrastructure=[{id:'b1',kind:'railPlatform',length:120,tracks:1,platforms:1,specialized:false},{id:'b2',kind:'roadPlatform',length:20,platforms:1,specialized:true}];
   assert.equal(declaredPlatformLength(plan),120);
-  assert.deepEqual(declaredHandling(plan,{domain:'rail'}),{stopA:{specializedTerminal:true},stopB:{specializedTerminal:false}});
-  assert.deepEqual(declaredHandling(plan,{domain:'road'}),{stopA:{specializedTerminal:false},stopB:{specializedTerminal:true}});
+  assert.deepEqual(declaredHandling(plan,{domain:'rail'}),{stopA:{specializedTerminal:true,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}});
+  assert.deepEqual(declaredHandling(plan,{domain:'road'}),{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:true,specializedWarehouse:false}});
   const works=freightPlan();works.stops[0].buildings=[newRouteBuilding('Mine','factory')];
   assert.equal(declaredHandling(works,{domain:'road'}).stopA.specializedTerminal,true);
   assert.equal(declaredHandling(works,{domain:'road',includeTrams:true}).stopA.specializedTerminal,false);
@@ -156,7 +156,7 @@ test('the declared platform length and specialized terminals feed the service co
 
 test('Compare and Composition receive the Rate and return only for Freight',()=>{
   const plan=freightPlan({back:6000});
-  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:12000,loadedReturn:true,cargo:'bulk',platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false},stopB:{specializedTerminal:false}},road:{stopA:{specializedTerminal:false},stopB:{specializedTerminal:false}}}});
+  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:12000,loadedReturn:true,cargo:'bulk',platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}},road:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}}}});
   const passengers=declaredServiceInputs(plan,{category:'passengers'});
   assert.deepEqual([passengers.rate,passengers.loadedReturn,passengers.specializedTerminals.rail],[null,null,null]);
 });
@@ -166,9 +166,9 @@ test('the report lists what analyses use and what remains descriptive',()=>{
   plan.segmentAssets[0].railTier=100;plan.segmentAssets[0].railTracks=1;
   plan.stops[0].buildings=[Object.assign(newRouteBuilding('Mine','factory'),{recipe:{inputs:[{id:'r1',cargoId:coal.id,ratio:1}],outputs:[{id:'r2',cargoId:coal.id,ratio:1}]}})];
   const report=declarationReport(plan);
-  assert.ok(report.used.some(item=>/speed ceilings/.test(item.text)));
+  assert.ok(report.used.some(item=>/existing tiers as speed limits/.test(item.text)));
   assert.ok(report.used.some(item=>/Rate 6,000/.test(item.text)&&item.views.includes('optimizer')));
-  assert.ok(report.issues.some(issue=>/single existing Rail track/.test(issue)));
+  assert.ok(report.used.some(item=>/one existing Rail track serves a single train/.test(item.text)&&item.views.includes('optimizer')));
   assert.ok(report.issues.some(issue=>/recipes/.test(issue)));
   assert.deepEqual(declarationReport(createRoutePlan([segment])),{service:{status:'none',issues:[]},used:[],issues:[]});
   const halt=freightPlan();halt.stops.splice(1,0,newRouteStop(1,'Halt'));
@@ -290,4 +290,18 @@ test('declared passengers become a Rate per direction, equal both ways',()=>{
 test('general freight requires general-purpose vehicles',()=>{
   const plan=freightPlan();plan.goods=[{...coal,name:'Crates',type:'general'}];
   const service=declaredService(plan);assert.equal(service.cargo,'all');assert.match(declaredServiceText(service),/Crates \(General\)/);
+});
+
+test('a warehouse specialized for the service good sets Warehouse ×2 and the Optimizer site; it serves that good only',()=>{
+  const plan=freightPlan();plan.stops[1].buildings=[{...newRouteBuilding('Depot','warehouse'),warehouseCapacity:1000,warehouseSpecializedFor:coal.id}];
+  assert.deepEqual(declaredHandling(plan,{domain:'rail'}).stopB,{specializedTerminal:false,specializedWarehouse:true});
+  assert.equal(declaredHandling(plan,{domain:'road'}).stopB.specializedWarehouse,true);
+  const site=declaredEndpointModel(plan,{category:'freight'}).sites.stopB;
+  assert.deepEqual([site.type,site.warehouseCapacity,site.existingSpecializedWarehouse],['warehouse',1000,true]);
+  assert.ok(declarationReport(plan).used.some(item=>/specialized warehouses/.test(item.text)));
+  const mixed=structuredClone(plan);mixed.goods.push(grain);mixed.stops[1].operations.push({id:'op:grain',buildingId:mixed.stops[1].buildings[0].id,cargoId:grain.id,direction:'outbound',action:'unload',quantity:{mode:'percent',value:100}});
+  assert.throws(()=>validateRoutePlan(mixed),/specialized for Coal; add another warehouse for Grain/);
+  const generic=structuredClone(mixed);generic.stops[1].buildings[0].warehouseSpecializedFor=null;assert.doesNotThrow(()=>validateRoutePlan(generic));
+  const people=structuredClone(plan);people.goods=[{id:'good:p',name:'People',type:'passengers'}];people.stops.forEach(s=>s.operations=[]);people.stops[1].buildings[0].warehouseSpecializedFor='good:p';
+  assert.throws(()=>validateRoutePlan(people),/freight only/);
 });

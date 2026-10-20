@@ -401,3 +401,17 @@ test('directional leg time limits can differ and be enabled independently',()=>{
   assert.equal(legacy.maxOutboundLegSeconds,null);assert.equal(legacy.maxReturnLegSeconds,600);
   assert.deepEqual(optimizerRequest(legacy),legacy);
 });
+
+test('existing line infrastructure is kept for free, upgraded for the maintenance difference, and extra tracks cost in full',async()=>{
+  const {segmentLineTiers,sizeRailLineTracks,validateLineInfrastructure}=await import('../src/optimizer-line-infrastructure.js');
+  const part={distanceKm:10,gradePercent:0,speedLimitKmh:350,roadSpeedLimitKmh:120,roadLanes:4},existing={railTier:160,railTracks:1,roadTier:80,roadLanes:4,tramTracks:'none'};
+  const rail=segmentLineTiers(part,'rail',2000,existing);
+  assert.deepEqual(rail.map(t=>[t.tierSpeedKmh,t.annualMaintenance]),[[160,0],[350,600000]]);
+  const plan=tier=>({domain:'rail',routeProfile:[part],segments:[tier]});
+  assert.deepEqual([sizeRailLineTracks(plan(rail[0]),1).annualMaintenance,sizeRailLineTracks(plan(rail[0]),2).annualMaintenance],[0,300000]);
+  assert.equal(sizeRailLineTracks(plan(rail[1]),2).annualMaintenance,1500000);
+  assert.deepEqual(segmentLineTiers(part,'road',2000,existing).map(t=>[t.tierSpeedKmh,t.annualMaintenance]),[[80,0],[120,600000]]);
+  assert.deepEqual(segmentLineTiers(part,'rail',1900,{...existing,railTier:350}).map(t=>t.tierSpeedKmh),[350]);
+  assert.throws(()=>validateLineInfrastructure({existing:[existing]},2),/each route segment/);
+  assert.deepEqual(segmentLineTiers(part,'rail',2000).map(t=>t.annualMaintenance),[100000,300000,900000]);
+});

@@ -11,43 +11,64 @@ export const roadLineTiers=year=>year<1940
   ?[{speed:40,maintenance:15000,lanes:[2,4],city:true},{speed:60,maintenance:15000,lanes:[2,4]}]
   :[{speed:50,maintenance:30000,lanes:[2,4],city:true},{speed:80,maintenance:30000,lanes:[2,4]},{speed:100,maintenance:60000,lanes:[2]},{speed:120,maintenance:120000,lanes:[4]}];
 
-export function validateLineInfrastructure(value){
+/** `existing` lists what each segment already has: kept for free, upgraded for the maintenance difference, extra Rail tracks at full cost. */
+export function validateLineInfrastructure(value,segments=null){
   if(value==null)return null;
   if(typeof value!=='object'||Array.isArray(value))throw new RangeError('Choose valid route infrastructure.');
-  return {};
+  if(value.existing==null)return {};
+  if(!Array.isArray(value.existing)||segments!==null&&value.existing.length!==segments)throw new RangeError('Declare existing infrastructure for each route segment.');
+  return {existing:value.existing.map(asset=>{
+    if(![null,...RAIL_LINE_TIERS.map(t=>t.speed)].includes(asset?.railTier)||![1,2].includes(asset.railTracks)||![null,...Object.keys(ROAD_TIER_MAINTENANCE).map(Number)].includes(asset.roadTier)||![2,4].includes(asset.roadLanes)||!['none','road','dedicated'].includes(asset.tramTracks))
+      throw new RangeError('Choose valid existing route infrastructure.');
+    return {railTier:asset.railTier,railTracks:asset.railTracks,roadTier:asset.roadTier,roadLanes:asset.roadLanes,tramTracks:asset.tramTracks};
+  })};
 }
+const ROAD_TIER_MAINTENANCE=Object.fromEntries([...roadLineTiers(1939),...roadLineTiers(1940)].map(tier=>[tier.speed,tier.maintenance]));
+const roadMaintenance=(speed,lanes,distanceKm)=>distanceKm*ROAD_TIER_MAINTENANCE[speed]*(lanes===4&&speed!==120?2:1);
+/** Existing tracks cost only their upgrade; tracks beyond them are new. */
+export const railTrackMaintenance=({distanceKm,tierMaintenance,existingMaintenance=0,existingTracks=0},tracks)=>
+  distanceKm*(Math.min(tracks,existingTracks)*Math.max(0,tierMaintenance-existingMaintenance)+Math.max(0,tracks-existingTracks)*tierMaintenance);
 
 /** A configured tier is a ceiling; arbitrary values remain curve speed constraints. */
-export function segmentLineTiers(part,domain,year){
-  const tiers=domain==='rail'?railLineTiers(year):roadLineTiers(year);
+export function segmentLineTiers(part,domain,year,existing=null){
+  const base=domain==='rail'?existing?.railTier??null:existing?.roadTier??null;
+  let tiers=domain==='rail'?railLineTiers(year):roadLineTiers(year);
+  // What already exists stays available whatever the year; nothing slower than it is worth choosing.
+  if(base!==null){
+    const own=(domain==='rail'?RAIL_LINE_TIERS:[...roadLineTiers(1939),...roadLineTiers(1940)]).find(tier=>tier.speed===base);
+    tiers=[own,...tiers.filter(tier=>tier.speed>base&&tier!==own)];
+  }
   const speed=domain==='rail'?(part.railSpeedConstraintKmh??part.speedLimitKmh):(part.roadSpeedConstraintKmh??part.roadSpeedLimitKmh??part.speedLimitKmh);
   const city=domain==='road'&&(speed===50||(part.roadCity??(year<1940&&speed===40)));
   const preset=domain==='rail'?RAIL_LINE_TIERS:tiers;
   const configuredTier=preset.some(tier=>tier.speed===speed),hardLimit=speed;
   const lanes=part.roadLanes??2;
   const trackCount=part.railTracks??1;
-  return tiers.filter(tier=>(!configuredTier||tier.speed<=speed)&&(domain==='rail'||tier.lanes.includes(lanes)&&Boolean(tier.city)===city)).map(tier=>({
-    tierSpeedKmh:tier.speed,speedLimitKmh:Math.min(tier.speed,hardLimit),speedConstraintKmh:speed,
-    ...(domain==='road'?{roadLanes:lanes,city}:{trackCount}),distanceKm:part.distanceKm,
-    annualMaintenance:part.distanceKm*tier.maintenance*(domain==='rail'?trackCount:lanes===4&&tier.speed!==120?2:1)
-  }));
+  const existingTracks=base===null?0:existing.railTracks,existingMaintenance=base===null?0:domain==='rail'?RAIL_LINE_TIERS.find(t=>t.speed===base).maintenance:roadMaintenance(base,lanes,part.distanceKm);
+  return tiers.filter(tier=>(!configuredTier||tier.speed<=speed||tier.speed===base)&&(domain==='rail'||tier.lanes.includes(lanes)&&(Boolean(tier.city)===city||tier.speed===base))).map(tier=>{
+    const result={tierSpeedKmh:tier.speed,speedLimitKmh:Math.min(tier.speed,hardLimit),speedConstraintKmh:speed,
+      ...(domain==='road'?{roadLanes:lanes,city}:{trackCount}),distanceKm:part.distanceKm,...(base===null?{}:{existingTierKmh:base})};
+    if(domain==='rail')Object.assign(result,{tierMaintenance:tier.maintenance,existingMaintenance,existingTracks});
+    result.annualMaintenance=domain==='rail'?railTrackMaintenance(result,trackCount):Math.max(0,roadMaintenance(tier.speed,lanes,part.distanceKm)-existingMaintenance);
+    return result;
+  });
 }
 
 /** Trams cannot use highway tiers, even when a curve lowers their effective speed.
  * Dedicated track upkeep already includes two tracks. With route upkeep disabled,
  * retain the configured speed cap; still enforce physical tram access.
  */
-export function segmentTramTiers(part,request){
+export function segmentTramTiers(part,request,existing=null){
   const speed=part.roadSpeedConstraintKmh??part.roadSpeedLimitKmh??part.speedLimitKmh;
   const configured=part.roadSpeedLimitKmh??part.speedLimitKmh,kind=part.tramInfrastructure??'auto';
   const city=speed===50||(part.roadCity??(request.year<1940&&speed===40));
   const hardLimit=speed;
-  let road=kind==='dedicated'?[]:segmentLineTiers(part,'road',request.year).filter(tier=>tier.tierSpeedKmh<100).map(tier=>({...tier,tramInfrastructure:'road'}));
+  let road=kind==='dedicated'?[]:segmentLineTiers(part,'road',request.year,existing).filter(tier=>tier.tierSpeedKmh<100).map(tier=>({...tier,tramInfrastructure:'road'}));
   if(!request.lineInfrastructure){
     road=road.filter(()=>speed!==100&&speed!==120).map(tier=>({...tier,speedLimitKmh:Math.min(tier.speedLimitKmh,configured),annualMaintenance:0}));
   }
   const dedicated=kind==='road'?[]:[{tierSpeedKmh:100,speedLimitKmh:Math.min(100,hardLimit,...(request.lineInfrastructure?[]:[configured])),speedConstraintKmh:speed,
-    distanceKm:part.distanceKm,tramInfrastructure:'dedicated',trackCount:2,annualMaintenance:request.lineInfrastructure?part.distanceKm*DEDICATED_TRAM_TRACKS.maintenance:0}];
+    distanceKm:part.distanceKm,tramInfrastructure:'dedicated',trackCount:2,annualMaintenance:request.lineInfrastructure&&existing?.tramTracks!=='dedicated'?part.distanceKm*DEDICATED_TRAM_TRACKS.maintenance:0}];
   return [...road,...dedicated];
 }
 
@@ -65,7 +86,7 @@ export function sizeRailLineTracks(plan,fleet){
   if(plan.domain!=='rail')return plan;
   const segments=plan.segments.map((part,i)=>{
     const trackCount=plan.routeProfile[i].railTracks??(fleet>1?2:1);
-    return {...part,trackCount,annualMaintenance:part.annualMaintenance/(part.trackCount??1)*trackCount};
+    return {...part,trackCount,annualMaintenance:part.tierMaintenance===undefined?part.annualMaintenance/(part.trackCount??1)*trackCount:railTrackMaintenance(part,trackCount)};
   });
   return {...plan,segments,annualMaintenance:segments.reduce((total,part)=>total+part.annualMaintenance,0)};
 }
@@ -88,8 +109,9 @@ function optimisticLegSeconds(route,tiers,vehicle,reverse=false){
 
 /** Exact search using optimistic motion and fleet-cost bounds, without a heuristic cutoff. */
 export function searchLineInfrastructure(request,domain,vehicle,choice,evaluate,compare){
-  const options=request.routeProfile.map(part=>{
-    const alternatives=domain==='road'&&vehicle.vehicleType==='Tram'?segmentTramTiers(part,request):segmentLineTiers(part,domain,request.year),unique=new Map();
+  const options=request.routeProfile.map((part,i)=>{
+    const existing=request.lineInfrastructure?.existing?.[i]??null;
+    const alternatives=domain==='road'&&vehicle.vehicleType==='Tram'?segmentTramTiers(part,request,existing):segmentLineTiers(part,domain,request.year,existing),unique=new Map();
     for(const tier of alternatives){
       const effective=Math.min(vehicle.maxSpeedKmh,tier.speedLimitKmh),previous=unique.get(effective);
       if(!previous||tier.annualMaintenance<previous.annualMaintenance)unique.set(effective,tier);
