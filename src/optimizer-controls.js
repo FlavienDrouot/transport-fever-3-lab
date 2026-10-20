@@ -8,13 +8,15 @@ import {renderFreightFacilities} from './service-controls.js';
 import {mountOptimizerInfrastructure} from './optimizer-infrastructure-controls.js';
 import {mountOptimizerLineInfrastructure} from './optimizer-line-controls.js';
 import {optimizerProposalRequest} from './optimizer-infrastructure.js';
+import {declaredFreightService,declaredEndpointModel,declaredSegmentFields} from './route-plan-service.js';
 import {renderOptimizerConstraints} from './optimizer-constraints.js';
 import {routeProfileSketch} from './route-profile-control.js';
 import {optimizerExclusionSummary} from './optimizer-diagnostics.js';
 import {loadDefaultOptimizerResult} from './optimizer-cache.js';
 import {renderOptimizerVerdict,renderOptimizerProposals,renderSelectedOptimizerProposal,toggleOptimizerProposalRows,showMoreOptimizerProposals,optimizerProposalAt,mountStickyOptimizerHeaders} from './optimizer-proposals.js';
 
-export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,onRouteChange}){
+/** `getPlan` returns the custom route's declaration while that route is active, otherwise null (Simple route keeps the manual inputs). */
+export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,onRouteChange,getPlan=()=>null}){
   bindDurationInputs(root.ownerDocument);
   const railBounds=['maxTrainLength','maxLocomotives','maxWagons'];
   const actions=(suffix='')=>`<button type="submit" form="optimizer-form" id="optimizer-find${suffix}" data-optimizer-action="find" class="optimizer-primary">Find solutions</button><button type="button" id="optimizer-cancel${suffix}" data-optimizer-action="cancel" hidden>Cancel</button><button type="button" id="optimizer-previous${suffix}" data-optimizer-action="previous" aria-controls="optimizer-results" hidden>Show previous results</button>`;
@@ -26,7 +28,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     <p id="optimizer-cargo-help" class="chart-help" hidden>All freight selects general-purpose vehicles; it does not combine different commodities.</p>
     <div class="optimizer-fields optimizer-service-fields">${number('rate',T.rate,'<span id="optimizer-rate-unit">capacity/year/direction</span>',1,1e9)}
     <label class="optimizer-field">${T.utilization} · ceiling <span><input name="utilization" type="number" min="1" max="100" step="1" value="100" required> %</span></label>
-    </div><details class="optimizer-timing"><summary>Departure intervals &amp; leg time</summary><div class="optimizer-fields optimizer-service-fields">
+    </div><p id="optimizer-declared-service" class="chart-help" role="status" hidden></p><details class="optimizer-timing"><summary>Departure intervals &amp; leg time</summary><div class="optimizer-fields optimizer-service-fields">
     ${[['enableFrequency','minutes',`${T.frequency} · maximum interval`,OPTIMIZER_DEFAULTS.maxHeadwaySeconds,300],['enableMinimumFrequency','minMinutes',`${T.frequency} · minimum interval`,OPTIMIZER_DEFAULTS.minHeadwaySeconds,30],['enableMaxOutboundLeg','outboundMinutes','Max leg time A→B',OPTIMIZER_DEFAULTS.maxOutboundLegSeconds,600],['enableMaxReturnLeg','returnMinutes','Max leg time B→A',OPTIMIZER_DEFAULTS.maxReturnLegSeconds,600]].map(([toggle,name,label,value,fallback])=>`<div class="optimizer-field"><label><input name="${toggle}" type="checkbox"${value!==null?' checked':''}> ${label}</label>${durationInputs({id:`optimizer-${name}`,name,label,value:value??fallback,disabled:value===null})}</div>`).join('')}
     <p class="chart-help optimizer-leg-help"></p>
     </div></details>
@@ -46,16 +48,33 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   if(overview?.classList.contains('panel-top'))root.querySelector('.optimizer-main').prepend(overview);
   const form=root.querySelector('form'),field=name=>form.elements.namedItem(name),$=id=>root.querySelector(`#${id}`)??sidebar.querySelector(`#${id}`),status=$('optimizer-status'),results=$('optimizer-results');
   const buttons=Object.fromEntries(['find','cancel','previous'].map(action=>[action,[...new Set([...root.querySelectorAll(`[data-optimizer-action="${action}"]`),...sidebar.querySelectorAll(`[data-optimizer-action="${action}"]`)])]]));
-  let category='passengers',worker=null,job=0,completed=null,stale=false,infrastructureControl=null,lineControl=null,routeKey=JSON.stringify(getRoute());
+  let category='passengers',worker=null,job=0,completed=null,stale=false,infrastructureControl=null,lineControl=null,routeKey=JSON.stringify(getRoute()),declaredKey='',serviceLock=null;
+  const planKey=()=>{const plan=getPlan();return JSON.stringify(plan&&[plan.goods,plan.stops,plan.segmentAssets]);};
   mountTransportCategory($('optimizer-category'),{value:category,onChange:value=>{category=value;syncCategory();invalidate();}});
   mountFreightFilter($('optimizer-cargo'));syncCategory();
   const stopValues=stop=>({specializedTerminal:$(`optimizer-terminal-${stop}`).checked,specializedWarehouse:$(`optimizer-warehouse-${stop}`).checked});
-  infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getScope:()=>({domain:field('domain').value,category,includeTrams:lineControl?.includeTrams()??false,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
-  lineControl=mountOptimizerLineInfrastructure($('optimizer-line-control'),{getRoute,getScope:()=>({domain:field('domain').value,year:Number(field('year').value)}),onRouteChange,onChange:()=>{syncInfrastructure();invalidate();}});
-  syncInfrastructure();
+  infrastructureControl=mountOptimizerInfrastructure($('optimizer-infrastructure-control'),{getDeclared:scope=>{const plan=getPlan();return plan&&declaredEndpointModel(plan,scope);},getScope:()=>({domain:field('domain').value,category,includeTrams:lineControl?.includeTrams()??false,loadedReturn:field('loadedReturn').checked,maxTrainLength:Number(field('maxTrainLength').value),stopA:stopValues('a'),stopB:stopValues('b')}),onChange:()=>{syncInfrastructure();invalidate();}});
+  lineControl=mountOptimizerLineInfrastructure($('optimizer-line-control'),{getRoute,getDeclared:()=>{const plan=getPlan();return plan&&declaredSegmentFields(plan);},getScope:()=>({domain:field('domain').value,year:Number(field('year').value)}),onRouteChange,onChange:()=>{syncInfrastructure();invalidate();}});
+  syncDeclaredService();syncInfrastructure();
+  /** The declared Rate and return load replace the manual inputs while they apply; the manual values come back afterwards. */
+  function syncDeclaredService(){
+    const plan=getPlan(),service=plan?declaredFreightService(plan):null,note=$('optimizer-declared-service'),rate=field('rate'),loaded=field('loadedReturn');
+    const apply=service?.status==='applied'&&category==='freight';
+    if(apply){
+      serviceLock??={rate:rate.value,loadedReturn:loaded.checked};
+      rate.value=service.rate;rate.readOnly=true;loaded.checked=service.loadedReturn;loaded.disabled=true;
+    }else if(serviceLock){
+      rate.value=serviceLock.rate;rate.readOnly=false;loaded.checked=serviceLock.loadedReturn;loaded.disabled=false;serviceLock=null;
+    }
+    const lines=!service||service.status==='none'?[]:[
+      ...(service.status==='applied'?[category==='freight'?`From the Route declaration: ${service.goodName}, ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return.`:`The Route declares a freight service (${service.goodName}). Choose Freight to use it.`]:[]),
+      ...service.issues.map(issue=>`Not used from the Route declaration: ${issue}`)];
+    note.hidden=!lines.length;note.textContent=lines.join(' ');
+  }
   function syncCategory(){
     root.querySelector('.optimizer-leg-help').textContent=category==='freight'?'Freight leg time includes loading, travel, estimated waiting at the destination and unloading. An empty return includes travel only. Maneuvering and operation/departure pauses are excluded.':'Passenger leg time includes acceleration and any modeled braking; stop handling is excluded.';
     for(const id of ['optimizer-cargo','optimizer-cargo-help','optimizer-loaded-return'])$(id).hidden=category!=='freight';
+    syncDeclaredService();
     $('optimizer-rate-unit').textContent=`${T.capacityUnit}/year${category==='passengers'?'/direction':''}`;
     syncInfrastructure();
   }
@@ -205,5 +224,9 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   };
   mobile?.addEventListener('change',syncSidebar);syncSidebar();
   updateConstraints();
-  return {refresh(){lineControl.refresh();const next=JSON.stringify(getRoute());if(next!==routeKey){routeKey=next;invalidate();}else updateConstraints();},cancel:stop};
+  declaredKey=planKey();
+  return {refresh(){
+    lineControl.refresh();const next=JSON.stringify(getRoute()),declared=planKey();
+    if(next!==routeKey||declared!==declaredKey){routeKey=next;declaredKey=declared;syncDeclaredService();syncInfrastructure();invalidate();}else updateConstraints();
+  },cancel:stop};
 }

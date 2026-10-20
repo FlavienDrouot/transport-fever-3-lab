@@ -2,6 +2,7 @@ import {createRoutePlan,validateRoutePlan,restoreRoutePlans,updateRoutePlanSegme
 import {escapeHtml as escape,formatNumber} from './format.js';
 import {UI_TERMS as T} from './ui-terms.js';
 import {DEFAULT_INDUSTRY_OUTPUT_STORAGE_CAPACITY} from './optimizer-infrastructure.js';
+import {declarationReport} from './route-plan-service.js';
 
 const fmt=n=>formatNumber(n,3);
 const kinds={railPlatform:'Rail station + platform',roadPlatform:'Road station + platform',railStation:'Rail station only',roadStation:'Road station only',busStop:'Bus stop'};
@@ -24,7 +25,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     <details class="panel-group"><summary>Existing tracks &amp; roads</summary><div class="panel-group-body"><div data-route-segment-assets></div><p class="chart-help">Declare what is already present, independently of curve/gradient limits and future vehicles. Empty declarations do not establish reusable infrastructure. Dedicated Tram tracks cover both directions.</p></div></details>
     <section class="route-plan-itinerary" aria-label="Route stops and expected service" data-route-stops></section>
     <section class="route-plan-summary" aria-label="Expected freight flows" data-route-summary></section>
-    <p class="route-plan-analysis-note chart-help">This is the route and expected service declaration. Current vehicle analyses use geometry only; these stops, freight operations and infrastructure declarations are not yet included in their calculations.</p>
+    <p class="route-plan-analysis-note chart-help" data-route-analysis></p>
   </form>`;
   const $=selector=>root.querySelector(selector),name=$('[data-plan-path=name]'),savedSelect=$('[data-route-library]');
   const field=(path,label,value,{type='number',min=0,max=null,step='any'}={})=>`<label>${escape(label)}<input data-plan-path="${path}" type="${type}" value="${escape(value)}"${type==='number'?` min="${min}"${max==null?'':` max="${max}"`} step="${step}"`:' maxlength="120"'} required></label>`;
@@ -93,12 +94,16 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     }).join('')}</article>`).join('');
     $('[data-route-summary]').innerHTML=`<h3>Expected service</h3>${plan.goods.length?`<p class="chart-help">Annual values are the Rate through each portion, not the load of an individual vehicle.</p><div class="table-scroll"><table><thead><tr><th scope="col">Direction</th><th scope="col">Route portion</th><th scope="col">Planned freight</th></tr></thead><tbody>${flows.sections.map(s=>`<tr><td>${s.direction==='outbound'?'A → B':'B → A'}</td><th scope="row">${escape(`${stop(s.from)} → ${stop(s.to)}`)}</th><td>${escape(load(s.load))}</td></tr>`).join('')}</tbody></table></div>${production}${flows.warnings.map(w=>`<p class="route-plan-warning">${escape(`${stop(w.stopId)} · ${good(w.cargoId)}: ${w.message}`)}</p>`).join('')}${Object.values(flows.remaining).some(q=>q.visit>1e-9||q.year>1e-9)?`<p class="chart-help">Freight remains after the declared round trip: ${escape(load(flows.remaining))}.</p>`:''}`:'<p class="chart-help">Declare goods and operations to describe the service before selecting vehicles.</p>'}`;
   }
+  function drawAnalysisNote(){
+    const {used,issues}=declarationReport(plan);
+    $('[data-route-analysis]').textContent=`While this custom route is in use, analyses take from the declaration: ${used.map(item=>item.text).join('; ')||'nothing yet (no tier, freight service or endpoint is declared)'}.${issues.length?` Not used: ${issues.join(' ')}`:''}`;
+  }
   function refreshStatus(error=null){
     invalid=!!error;$('[data-route-action=save]').disabled=invalid;
     $('[data-route-action=save]').textContent=library.has(plan.id)?'Update route':'Save route';
     const status=$('.route-plan-status');status.textContent=error?.message??message;status.classList.toggle('route-plan-warning',invalid);
   }
-  function draw(){name.value=plan.name;drawLibrary();drawGoods();drawAssets();drawStops();drawSummary();refreshStatus();}
+  function draw(){name.value=plan.name;drawLibrary();drawGoods();drawAssets();drawStops();drawSummary();drawAnalysisNote();refreshStatus();}
   function read(){
     const candidate=structuredClone(plan);
     for(const input of root.querySelectorAll('[data-plan-path]')){
@@ -119,7 +124,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
         for(const building of stop.buildings){const title=stopRoot?.querySelector(`[data-building-title="${building.id}"]`);if(title)title.textContent=buildingLabel(building);}
         for(const input of root.querySelectorAll(`select[data-plan-path^="stops.${i}.operations."][data-plan-path$="buildingId"]`))for(const option of input.options){const building=stop.buildings.find(b=>b.id===option.value);if(building)option.textContent=buildingLabel(building);}
       }
-      drawSummary();refreshStatus();onChange(structuredClone(plan));return true;
+      drawSummary();drawAnalysisNote();refreshStatus();onChange(structuredClone(plan));return true;
     }catch(error){refreshStatus(error);return false;}
   }
   function persist(){
@@ -198,7 +203,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     validateSegmentEdit(segments,edit){routePlanFlows(updateRoutePlanSegments(read(),segments,edit));},
     /** Start a fresh draft from shared geometry; saved routes are untouched. */
     replaceDraft(segments,draftName='Shared route'){plan=createRoutePlan(segments,draftName);draw();onChange(structuredClone(plan));},
-    setSegments(segments,edit=null){const next=updateRoutePlanSegments(plan,segments,edit);if(JSON.stringify(next)===JSON.stringify(plan))return;plan=next;drawAssets();drawStops();drawSummary();refreshStatus();onChange(structuredClone(plan));},
+    setSegments(segments,edit=null){const next=updateRoutePlanSegments(plan,segments,edit);if(JSON.stringify(next)===JSON.stringify(plan))return;plan=next;drawAssets();drawStops();drawSummary();drawAnalysisNote();refreshStatus();onChange(structuredClone(plan));},
     savedRoutes(){return [...library.values()].map(r=>structuredClone(r));}
   };
 }

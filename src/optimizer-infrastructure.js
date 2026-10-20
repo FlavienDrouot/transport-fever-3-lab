@@ -264,6 +264,38 @@ export function validateOptimizerInfrastructure(input,domain,category='passenger
   return result;
 }
 
+/** Optimizer `infrastructure` request from endpoint sites, reusable terminals and new-terminal bounds; shared by the manual controls and the Route declaration. */
+export function optimizerInfrastructureValue({limitVehicleCapacity=true,sites,bounds,entries,scope}){
+  const stops=['stopA','stopB'],kinds=scope.domain==='both'?['rail','road']:[scope.domain],freight=scope.category==='freight';
+  const factoryTerminal=(stop,kind)=>freight&&kind==='road'&&sites[stop]?.type==='factory';
+  const matching=(stop,kind)=>entries.filter(entry=>(scope.domain==='both'||entry.domain===scope.domain)&&entry.stop===stop&&entry.domain===kind&&entry.kind);
+  return {limitVehicleCapacity,sites:Object.fromEntries(stops.map(stop=>{
+    const site=sites[stop];
+    return [stop,!freight?{type:'industrial'}:{type:site.type,warehouseCapacity:site.warehouseCapacity,
+      ...(site.type==='factory'?{factoryTerminals:site.factoryTerminals,
+        ...(stop==='stopB'||scope.loadedReturn?{inputStorageCapacity:site.inputStorageCapacity}:{}),
+        ...(stop==='stopA'||scope.loadedReturn?{outputStorageCapacity:site.outputStorageCapacity}:{})}:{}),
+      maxWarehouseCapacity:site.allowWarehouseExpansion?site.maxWarehouseCapacity:site.warehouseCapacity,
+      existingSpecializedWarehouse:site.existingSpecializedWarehouse,
+      warehouseSpecialization:site.existingSpecializedWarehouse?'specialized':site.allowWarehouseSpecialization?'optimize':'generic'}];
+  })),...Object.fromEntries(kinds.map(kind=>[kind,Object.fromEntries(stops.map(stop=>{
+    const available=matching(stop,kind);
+    const factory=factoryTerminal(stop,kind);
+    if(factory&&!scope.includeTrams)return [stop,{mode:'factory'}];
+    const plans=available.length?available.map(entry=>({id:entry.id,mode:entry.kind==='platform'||entry.kind==='busStop'?'reuse':'add',terminalType:entry.kind==='busStop'?'busStop':'station',
+      specializedTerminal:entry.specializedTerminal,allowSpecialization:entry.allowSpecialization,allowExtension:entry.allowExtension,existingLength:entry.existingLength,
+      maxTrainLength:entry.kind==='platform'&&!entry.allowExtension?entry.existingLength:entry.maxTrainLength,
+      ...(kind==='rail'?{platformTrackCount:entry.platformTrackCount,platformCount:entry.railPlatformCount,
+        allowParallelTracks:entry.kind==='station'||entry.allowParallelTracks,
+        maxPlatformTracks:entry.kind==='platform'&&!entry.allowParallelTracks?entry.platformTrackCount:entry.maxPlatformTracks}:{}),
+      ...(kind==='road'?{platformLength:entry.platformLength,platformCount:entry.platformCount,allowParallelPlatforms:entry.kind==='station'||entry.allowParallelPlatforms,
+        maxPlatformLength:entry.kind==='platform'&&!entry.allowExtension?entry.platformLength:entry.maxPlatformLength,
+        maxPlatforms:entry.kind==='platform'&&!entry.allowParallelPlatforms?entry.platformCount:entry.maxPlatforms}:{}),
+    })):{mode:'new',...bounds[stop],allowBusStop:bounds[stop].allowBusStop&&busStopAllowed(kind,scope.category,stop,sites[stop]?.type,scope.loadedReturn)};
+    return [stop,factory?[{mode:'factory'},...(Array.isArray(plans)?plans:[plans]).map(plan=>({...plan,tramOnly:true}))]:plans];
+  }))]))};
+}
+
 export function optimizerTrainLengthLimit(request){
   if(!request.infrastructure?.rail)return Math.min(request.maxTrainLength,RAIL_PLATFORM_MAX_LENGTH);
   return Math.min(request.maxTrainLength,RAIL_PLATFORM_MAX_LENGTH,...['stopA','stopB'].map(stop=>{

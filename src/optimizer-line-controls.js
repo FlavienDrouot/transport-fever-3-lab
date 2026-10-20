@@ -3,7 +3,7 @@ import {UI_TERMS as T} from './ui-terms.js';
 import {formatNumber} from './format.js';
 
 /** Lane counts are route constraints, never choices made by the optimizer. */
-export function mountOptimizerLineInfrastructure(root,{getRoute,getScope,onRouteChange,onChange}){
+export function mountOptimizerLineInfrastructure(root,{getRoute,getScope,onRouteChange,onChange,getDeclared=()=>null}){
   root.innerHTML=`<details class="panel-group" open><summary>Tracks &amp; roads</summary><div class="panel-group-body">
     <label class="road-inline-check"><input type="checkbox" data-line-costs> Include route ${T.runningCosts}</label>
     <label class="road-inline-check" data-tram-option><input type="checkbox" data-include-trams> Include trams in Road search</label>
@@ -18,19 +18,20 @@ export function mountOptimizerLineInfrastructure(root,{getRoute,getScope,onRoute
   function routeValue(){return getRoute().map((part,i)=>({...part,roadLanes:lanes.get(i)??part.roadLanes??2,railTracks:tracks.has(i)?tracks.get(i):part.railTracks??null,tramInfrastructure:tramTracks.get(i)??part.tramInfrastructure??'auto'}));}
   function refresh(){
     root.querySelector('[data-line-settings]').hidden=!checkbox.checked;
-    const route=getRoute(),scope=getScope(),includeTrams=trams.checked&&scope.domain!=='rail',next=JSON.stringify([route,scope.domain,scope.year,includeTrams]);
+    const route=getRoute(),scope=getScope(),declared=getDeclared(),includeTrams=trams.checked&&scope.domain!=='rail',next=JSON.stringify([route,scope.domain,scope.year,includeTrams,declared]);
+    const fixed=(i,field)=>declared?.[i]?.[field]?' disabled':'',note=(i,field)=>declared?.[i]?.[field]?' · declared in Route':'';
     root.querySelector('[data-tram-option]').hidden=scope.domain==='rail';
     root.querySelector('[data-tram-help]').hidden=!includeTrams;
     root.querySelector('[data-tram-segments]').hidden=!includeTrams;
     if(next===key)return;
     key=next;lanes=new Map(route.map((part,i)=>[i,part.roadLanes??2]));tracks=new Map(route.map((part,i)=>[i,part.railTracks??null]));tramTracks=new Map(route.map((part,i)=>[i,part.tramInfrastructure??'auto']));
-    root.querySelector('[data-tram-segments]').innerHTML=route.map((part,i)=>`<div class="optimizer-line-segment"><strong>Tram · segment ${i+1} · ${formatNumber(part.distanceKm,4)} km</strong><fieldset class="scale-toggle"><legend>Tram infrastructure</legend>${[['auto','Auto'],['road','Road tracks'],['dedicated','Dedicated tracks']].map(([value,label])=>`<label><input type="radio" name="optimizer-tram-tracks-${i}" data-tram-segment="${i}" value="${value}"${tramTracks.get(i)===value?' checked':''}><span>${label}</span></label>`).join('')}</fieldset></div>`).join('');
+    root.querySelector('[data-tram-segments]').innerHTML=route.map((part,i)=>`<div class="optimizer-line-segment"><strong>Tram · segment ${i+1} · ${formatNumber(part.distanceKm,4)} km</strong><fieldset class="scale-toggle"${fixed(i,'tram')}><legend>Tram infrastructure${note(i,'tram')}</legend>${[['auto','Auto'],['road','Road tracks'],['dedicated','Dedicated tracks']].map(([value,label])=>`<label><input type="radio" name="optimizer-tram-tracks-${i}" data-tram-segment="${i}" value="${value}"${tramTracks.get(i)===value?' checked':''}><span>${label}</span></label>`).join('')}</fieldset></div>`).join('');
     root.querySelector('[data-line-track-help]').hidden=scope.domain==='road';
     root.querySelector('[data-line-segments]').innerHTML=route.map((part,i)=>{
       const tiers=segmentLineTiers(part,'road',scope.year),city=tiers[0]?.city;
       return `<div class="optimizer-line-segment"><strong>Segment ${i+1} · ${formatNumber(part.distanceKm,4)} km${scope.domain!=='rail'&&city?' · City':''}</strong>
-        ${scope.domain==='road'?'':`<fieldset class="scale-toggle"><legend>Rail tracks</legend>${[['auto','Auto'],['2','2 tracks']].map(([value,label])=>`<label><input type="radio" name="optimizer-rail-tracks-${i}" data-track-segment="${i}" value="${value}"${(tracks.get(i)===2?'2':'auto')===value?' checked':''}><span>${label}</span></label>`).join('')}</fieldset>`}
-        ${scope.domain==='rail'?'':`<fieldset class="scale-toggle"><legend>Road lanes</legend>${[2,4].map(count=>`<label><input type="radio" name="optimizer-road-lanes-${i}" data-lane-segment="${i}" value="${count}"${lanes.get(i)===count?' checked':''}><span>${count} lanes</span></label>`).join('')}</fieldset>`}</div>`;
+        ${scope.domain==='road'?'':`<fieldset class="scale-toggle"${fixed(i,'railTracks')}><legend>Rail tracks${note(i,'railTracks')}</legend>${[['auto','Auto'],['2','2 tracks']].map(([value,label])=>`<label><input type="radio" name="optimizer-rail-tracks-${i}" data-track-segment="${i}" value="${value}"${(tracks.get(i)===2?'2':'auto')===value?' checked':''}><span>${label}</span></label>`).join('')}</fieldset>`}
+        ${scope.domain==='rail'?'':`<fieldset class="scale-toggle"${fixed(i,'roadLanes')}><legend>Road lanes${note(i,'roadLanes')}</legend>${[2,4].map(count=>`<label><input type="radio" name="optimizer-road-lanes-${i}" data-lane-segment="${i}" value="${count}"${lanes.get(i)===count?' checked':''}><span>${count} lanes</span></label>`).join('')}</fieldset>`}</div>`;
     }).join('');
     const road=roadLineTiers(scope.year);
     root.querySelector('[data-line-tariffs]').innerHTML=`${scope.domain!=='road'?`<p>Rail available in ${scope.year}: ${railLineTiers(scope.year).map(tier=>`${tier.speed} km/h · $${formatNumber(tier.maintenance,0,true)}`).join('; ')} per track per km/year. 160 km/h unlocks in 1930; 350 in 1980.</p>`:''}${scope.domain!=='rail'?`<p>Road ${scope.year<1940?'before 1940':'from 1940'}: ${road.map(tier=>`${tier.speed} km/h${tier.city?' (city)':''} · $${formatNumber(tier.maintenance,0,true)}${tier.speed===120?' (4 lanes)':tier.speed===100?' (2 lanes only)':' (2 lanes; ×2 for 4)'}`).join('; ')} per km/year. ${scope.year<1940?'No faster road tier is available. ':''}Extra lanes provide no modeled performance gain.</p>`:''}`;
@@ -43,7 +44,7 @@ export function mountOptimizerLineInfrastructure(root,{getRoute,getScope,onRoute
       else tramTracks.set(Number(input.dataset.tramSegment),input.value);
       const route=routeValue(),scope=getScope();
       // Parent refresh must not replace the radio currently holding keyboard focus.
-      key=JSON.stringify([route,scope.domain,scope.year,trams.checked&&scope.domain!=='rail']);
+      key=JSON.stringify([route,scope.domain,scope.year,trams.checked&&scope.domain!=='rail',getDeclared()]);
       onRouteChange?.(route);
     }
     refresh();onChange();
