@@ -800,3 +800,12 @@ th[data-sort]{padding:0}th[data-sort] .sort-button{display:block;width:100%;heig
 }
 .rp-stop-head{align-self:start}
 @media(max-width:700px){.rp-band{justify-content:flex-start}.rp-band::before{content:attr(data-dir);font-weight:400;margin-right:4px}}
+.rp-trips{display:flex;flex-direction:column;gap:8px}
+.rp-trips h4{margin:6px 0 0;font-size:14px}
+.rp-trip{display:flex;flex-wrap:wrap;align-items:end;gap:8px 10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.rp-trip>.rp-dot,.rp-trip>.rp-arrow,.rp-trip>.rp-remove,.rp-trip>.road-inline-check{align-self:center}
+.rp-arrow{font-size:16px;color:var(--muted)}
+.route-plan-form .rp-trip label:has(input[type=number]):not(#_){flex:0 1 150px}
+.rp-remove{border:0;color:var(--muted)}
+span.rp-op{cursor:default}
+.rp-trip .road-inline-check{font-size:12px}

@@ -97,7 +97,6 @@ export function declaredService(input){
   const [out,back]=legLoads(routePlanFlows(deliveredAtTerminus(plan)),good.id),[,carried]=legLoads(routePlanFlows(plan),good.id);
   // A load still onboard at B in the general flows is what this service delivers there.
   base.deliveredAtB=carried.year>back.year+EPSILON;
-  if(out.visit>EPSILON||back.visit>EPSILON)issues.push(`Quantities per visit are no longer used: declare an annual ${T.rate} or a percentage. Infrastructure limits belong to the stop's infrastructure.`);
   if(out.year<=EPSILON&&back.year<=EPSILON)return {...base,status:'unsupported',issues};
   const differ=out.year>EPSILON&&back.year>EPSILON&&Math.abs(out.year-back.year)>1e-6*Math.max(out.year,back.year);
   if(passengers){

@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRoutePlan,newRouteStop,newRouteBuilding,validateRoutePlan,updateRoutePlanSegments,routePlanFlows,restoreRoutePlans} from '../src/route-plan.js';
+import {createRoutePlan as createTripPlan,newRouteStop,newRouteBuilding,validateRoutePlan,updateRoutePlanSegments,routePlanFlows,restoreRoutePlans} from '../src/route-plan.js';
+// These fixtures declare version 3 loading/unloading; validation migrates them to version 4 trips.
+const createRoutePlan=(...args)=>{const plan=createTripPlan(...args);plan.schemaVersion=3;delete plan.trips;return plan;};
 import {routeProfileSketch} from '../src/route-profile-control.js';
 
 const segment={distanceKm:2,gradePercent:0,speedLimitKmh:160,roadSpeedLimitKmh:80};
@@ -62,21 +64,17 @@ test('industry input needs follow output recipe ratios, without selecting vehicl
   assert.ok(Object.values(flow.remaining).every(q=>q.visit===0&&q.year===0));assert.deepEqual(flow.warnings,[]);
 });
 
-test('absolute visits and annual Rate stay independent; percentages follow actual declared onboard goods',()=>{
+test('version 3 operations become trips: unloading takes its share of every parcel onboard, the rest reaches the terminus',()=>{
   const plan=createRoutePlan([segment,segment]);plan.goods=[goods[0]];
   const mid=newRouteStop(1,'Drop-off');plan.stops.splice(1,0,mid);
   plan.stops[0].operations=[operation('good:a','load',100,'visit'),operation('good:a','load',1000,'year')];
-  mid.operations=[operation('good:a','unload',25,'percent')];
+  mid.operations=[operation('good:a','unload',25,'percent'),operation('good:a','load',200,'year')];
   plan.stops[2].operations=[operation('good:a','unload',50,'percent'),operation('good:a','load',20,'visit','return')];
-  plan.stops[0].operations.push(operation('good:a','unload',100,'percent','return'));
-  const flows=routePlanFlows(plan);
-  assert.deepEqual(flows.sections[1].load['good:a'],{visit:75,year:750});
-  assert.deepEqual(flows.sections[2].load['good:a'],{visit:57.5,year:375});
-  assert.deepEqual(flows.remaining['good:a'],{visit:0,year:0});
-  const empty=createRoutePlan([segment]);empty.goods=[goods[0]];empty.stops[0].operations=[operation('good:a','load',50,'percent')];
-  assert.match(routePlanFlows(empty).warnings[0].message,/already onboard/);
-  empty.stops[1].operations=[operation('good:a','unload',10,'visit')];
-  assert.match(routePlanFlows(empty).warnings[1].message,/exceeds/);
+  const migrated=validateRoutePlan(plan),[a,m,b]=migrated.stops.map(s=>s.id);
+  assert.deepEqual(migrated.trips.map(t=>[t.from,t.to,t.rate]),[[a,m,250],[a,b,750],[m,b,200]]);
+  const flows=routePlanFlows(migrated);
+  assert.deepEqual(flows.sections.map(s=>s.load['good:a'].year),[1000,950,0,0]);
+  assert.ok(flows.sections.every(s=>s.load['good:a'].visit===0));
 });
 
 test('multiple recipe outputs share a production-cycle basis and expose untransported byproducts',()=>{
@@ -102,7 +100,7 @@ test('geometry insertion rebases stops and refuses collapsing their declarations
   const plan=example(),before=JSON.stringify(plan);
   const extended=updateRoutePlanSegments(plan,[segment,segment,segment],{action:'insert',index:0});
   assert.deepEqual(extended.stops.map(s=>s.boundary),[0,2,3]);
-  assert.deepEqual(extended.stops[1].operations,plan.stops[1].operations);
+  assert.deepEqual(extended.stops[1].operations,validateRoutePlan(plan).stops[1].operations);
   const deleted=updateRoutePlanSegments(extended,[segment,segment],{action:'remove',index:0});
   assert.deepEqual(deleted.stops.map(s=>s.boundary),[0,1,2]);
   assert.throws(()=>updateRoutePlanSegments(plan,[segment],{action:'remove',index:0}),/Two stops/);
@@ -175,7 +173,7 @@ test('version 1 saved routes migrate their single building and retain explicit s
   });
   const before=JSON.stringify(legacy),restored=restoreRoutePlans(JSON.stringify({schemaVersion:1,routes:[legacy]}));
   assert.equal(restored.skipped,0);assert.equal(JSON.stringify(legacy),before);
-  const migrated=restored.routes[0];assert.equal(migrated.schemaVersion,3);assert.ok(migrated.goods.every(g=>g.type===null));
+  const migrated=restored.routes[0];assert.equal(migrated.schemaVersion,4);assert.ok(migrated.goods.every(g=>g.type===null));
   assert.equal(migrated.stops[1].buildings[0].type,'factory');assert.equal(migrated.stops[1].buildings[0].storage[0].outputCapacity,100);
   for(const stop of migrated.stops)assert.ok(stop.operations.every(op=>op.buildingId===stop.buildings[0].id));
   assert.deepEqual(routePlanFlows(migrated).production[0].required.year,{'good:a':600,'good:b':300});
@@ -192,5 +190,21 @@ test('loads are passengers or a freight group; passengers are declared once and 
   const stocked=structuredClone(plan);stocked.stops[0].buildings=[{...newRouteBuilding('Hall','warehouse'),storage:[{id:'s',cargoId:'good:p',inputCapacity:100,outputCapacity:100}]}];
   assert.throws(()=>validateRoutePlan(stocked),/freight only/);
   const legacy={...structuredClone(plan),schemaVersion:2,goods:[{id:'good:c',name:'Coal'}]};legacy.stops[0].operations=[operation('good:c','load',1000)];
-  const migrated=validateRoutePlan(legacy);assert.equal(migrated.schemaVersion,3);assert.equal(migrated.goods[0].type,null);
+  const migrated=validateRoutePlan(legacy);assert.equal(migrated.schemaVersion,4);assert.equal(migrated.goods[0].type,null);
+});
+
+test('trips in both directions keep an exchanging passenger line balanced',()=>{
+  const plan=createTripPlan([segment,segment]),people={id:'good:people',name:'Passengers',type:'passengers'},mid=newRouteStop(1,'Stop 2');
+  plan.goods=[people];plan.stops.splice(1,0,mid);const [a,,b]=plan.stops;
+  const trip=(from,to,rate)=>({id:`trip:${from.name}-${to.name}`.replace(/ /g,""),cargoId:people.id,from:from.id,to:to.id,rate,bothWays:true});
+  plan.trips=[trip(a,b,900),trip(a,mid,100),trip(mid,b,100)];
+  const flows=routePlanFlows(plan);
+  assert.deepEqual(flows.sections.map(s=>[s.direction,s.load['good:people'].year]),[['outbound',1000],['outbound',1000],['return',1000],['return',1000]]);
+  const boarded=(stop,direction)=>flows.visits.find(v=>v.stopId===stop.id&&v.direction===direction).moves.map(m=>[m.action,m.quantity.year]);
+  assert.deepEqual(boarded(mid,'outbound'),[['unload',100],['load',100]]);
+  assert.deepEqual(boarded(mid,'return'),[['unload',100],['load',100]]);
+  const reversed=validateRoutePlan({...plan,trips:[{...plan.trips[0],from:b.id,to:a.id,bothWays:false}]});
+  assert.deepEqual(reversed.stops[2].operations.map(op=>[op.direction,op.action]),[['return','load']]);
+  for(const [change,error] of [[t=>({...t,to:t.from}),/two different stops/],[t=>({...t,rate:0}),/positive Rate/],[t=>({...t,from:'stop:missing'}),/start and end stops/],[t=>({...t,fromBuildingId:'building:missing'}),/Choose a building/]])
+    assert.throws(()=>validateRoutePlan({...plan,trips:[change(plan.trips[0])]}),error);
 });

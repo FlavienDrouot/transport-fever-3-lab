@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createRoutePlan,newRouteStop,newRouteBuilding,validateRoutePlan} from '../src/route-plan.js';
+import {createRoutePlan as createTripPlan,newRouteStop,newRouteBuilding,validateRoutePlan} from '../src/route-plan.js';
+// These fixtures declare version 3 loading/unloading; validation migrates them to version 4 trips.
+const createRoutePlan=(...args)=>{const plan=createTripPlan(...args);plan.schemaVersion=3;delete plan.trips;return plan;};
 import {declaredSegmentFields,declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declaredService,declaredLoadNames,declaredServiceText,uncappedDeclaredTiers,declaredEndpointModel,declaredPlatformLength,declaredHandling,declarationReport,declaredServiceInputs} from '../src/route-plan-service.js';
 import {optimizerRequest,optimizerCandidates,evaluateOptimizerCandidate} from '../src/optimizer.js';
 import {optimizerInfrastructureValue,optimizerTrainLengthLimit,validateOptimizerInfrastructure} from '../src/optimizer-infrastructure.js';
@@ -70,10 +72,11 @@ test('unsupported service shapes are reported instead of guessed',()=>{
   const reverse=freightPlan();reverse.stops[0].operations=[];reverse.stops[1].operations=[];
   operation(reverse.stops[1],coal.id,'load',500,{direction:'return'});operation(reverse.stops[0],coal.id,'unload',100,{mode:'percent',direction:'return'});
   assert.match(declaredService(reverse).issues[0],/B → A leg only/);
+  // Version 3 quantities per visit had no Rate: migration to trips drops them.
   const visits=freightPlan();visits.stops[0].operations[0].quantity={mode:'visit',value:20};
-  const visit=declaredService(visits);assert.equal(visit.status,'unsupported');assert.match(visit.issues[0],/per visit/);
+  assert.equal(declaredService(visits).status,'none');
   const mixed=freightPlan();operation(mixed.stops[0],coal.id,'load',20,{mode:'visit'});
-  const kept=declaredService(mixed);assert.equal(kept.status,'applied');assert.match(kept.issues[0],/per visit/);
+  const kept=declaredService(mixed);assert.equal(kept.status,'applied');assert.equal(kept.rate,6000);assert.deepEqual(kept.issues,[]);
   const intermediate=freightPlan();intermediate.stops.splice(1,0,newRouteStop(1,'Halt'));
   assert.match(declaredService(intermediate).issues[0],/Intermediate stops/);
   const several=freightPlan();several.goods.push(grain);operation(several.stops[0],grain.id,'load',500);
@@ -207,15 +210,16 @@ test('A–B–A delivers everything onboard at B: only return-direction loading 
   const bare=createRoutePlan([segment,segment]);bare.goods=[coal];operation(bare.stops[0],coal.id,'load',1000);
   const service=declaredService(bare);
   assert.deepEqual([service.status,service.rate,service.loadedReturn],['applied',1000,false]);
-  assert.equal(service.deliveredAtB,true);assert.deepEqual(service.issues,[]);
-  assert.match(declarationReport(bare).used.find(item=>/Coal/.test(item.text)).text,/still onboard at B is delivered there/);
+  // Migration turns what stays onboard into a trip ending at B.
+  assert.equal(service.deliveredAtB,false);assert.deepEqual(service.issues,[]);
+  assert.deepEqual(validateRoutePlan(bare).trips.map(t=>[t.from,t.to,t.rate]),[[bare.stops[0].id,bare.stops[1].id,1000]]);
   assert.deepEqual(declaredServiceInputs(bare,{category:'freight'}).loadedReturn,false);
   const partial=createRoutePlan([segment,segment]);partial.goods=[coal];operation(partial.stops[0],coal.id,'load',1000);operation(partial.stops[1],coal.id,'unload',400);
   assert.deepEqual([declaredService(partial).rate,declaredService(partial).loadedReturn],[1000,false]);
   const loaded=createRoutePlan([segment,segment]);loaded.goods=[coal];operation(loaded.stops[0],coal.id,'load',1000);operation(loaded.stops[1],coal.id,'load',1000,{direction:'return'});
   const back=declaredService(loaded);
   assert.deepEqual([back.status,back.rate,back.loadedReturn],['applied',2000,true]);
-  assert.equal(back.deliveredAtB,true);
+  assert.deepEqual(validateRoutePlan(loaded).trips.map(t=>[t.rate,t.bothWays]),[[1000,true]]);
 });
 
 test('freight carried over from A never fills an unequal return',()=>{
