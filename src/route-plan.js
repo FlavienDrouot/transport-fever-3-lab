@@ -11,28 +11,34 @@ const list=(value,label,max)=>{if(!Array.isArray(value)||value.length>max)throw 
 const identities=(items,label)=>{const ids=new Set();for(const item of items){const id=identity(item?.id,`${label} ID`);if(ids.has(id))throw new RangeError(`Duplicate ${label} ID.`);ids.add(id);}return ids;};
 const choice=(value,values,label)=>{if(!values.includes(value))throw new RangeError(`Choose a valid ${label}.`);return value;};
 const ratio=value=>{number(value,'Recipe ratio',0,1e9);if(value===0)throw new RangeError('Recipe ratio must be positive.');return value;};
+/** Passengers or a freight group. General freight needs general-purpose vehicles; a specific group also admits them. */
+export const LOAD_TYPES=Object.freeze(['passengers','general','bulk','goods','flatbed','liquid']);
 export const newRouteBuilding=(name='Building 1',type='none')=>({id:routeId('building'),name,type,warehouseCapacity:500,industryTerminals:2,storage:[],recipe:{inputs:[],outputs:[]}});
 export const newRouteStop=(boundary,name)=>({id:routeId('stop'),boundary,name,buildings:[],infrastructure:[],operations:[]});
 export function createRoutePlan(segments,name='Custom route'){
   const profile=validateRouteProfile(segments);
-  return {schemaVersion:2,id:routeId('route'),name,segments:profile,segmentAssets:profile.map(newSegmentAssets),goods:[],stops:[newRouteStop(0,'A'),newRouteStop(profile.length,'B')]};
+  return {schemaVersion:3,id:routeId('route'),name,segments:profile,segmentAssets:profile.map(newSegmentAssets),goods:[],stops:[newRouteStop(0,'A'),newRouteStop(profile.length,'B')]};
 }
 
 /** Version 1's single building owns its existing storage, recipe and operations. */
 function currentDefinition(input){
-  if(input?.schemaVersion===2)return input;
+  if(input?.schemaVersion===3)return input;
+  // Version 2 goods had no type; the user chooses one instead of a guess.
+  if(input?.schemaVersion===2)return {...input,schemaVersion:3,goods:list(input.goods,'Goods',50).map(g=>({...g,type:null}))};
   if(input?.schemaVersion!==1)throw new RangeError('Unsupported route schema.');
-  return {...input,schemaVersion:2,stops:list(input.stops,'Stops',25).map(stop=>{
+  return currentDefinition({...input,schemaVersion:2,stops:list(input.stops,'Stops',25).map(stop=>{
     const building={id:`building:${identity(stop.id,'Stop ID').slice(0,100)}`,name:stop.name,type:stop.building,
       warehouseCapacity:stop.warehouseCapacity,industryTerminals:stop.industryTerminals,storage:stop.storage,recipe:stop.recipe};
     return {...stop,buildings:[building],operations:list(stop.operations,'Freight operations',200).map(op=>({...op,buildingId:building.id}))};
-  })};
+  })});
 }
 
 /** A service declaration, not a vehicle definition or a cached simulation. */
 export function validateRoutePlan(input){
   input=currentDefinition(input);
-  const segments=validateRouteProfile(input.segments),goods=list(input.goods,'Goods',50).map(g=>({id:identity(g.id,'Good ID'),name:text(g.name,'Good name')}));
+  const segments=validateRouteProfile(input.segments),goods=list(input.goods,'Loads',50).map(g=>({id:identity(g.id,'Load ID'),name:text(g.name,'Load name'),type:g.type==null?null:choice(g.type,LOAD_TYPES,'load type')}));
+  if(goods.filter(g=>g.type==='passengers').length>1)throw new RangeError('Declare passengers once.');
+  if(goods.some(g=>g.type==='passengers')&&goods.some(g=>g.type!=='passengers'))throw new RangeError('A route carries passengers or freight, not both yet. Remove one kind of load.');
   const cargoIds=identities(goods,'good'),names=new Set();
   const segmentAssets=list(input.segmentAssets??segments.map(newSegmentAssets),'Segment infrastructure',24).map(asset=>{
     const railTier=choice(asset.railTier,[null,100,160,350],'existing Rail tier'),roadTier=choice(asset.roadTier,[null,40,60,50,80,100,120],'existing Road tier');
@@ -43,14 +49,15 @@ export function validateRoutePlan(input){
     return {railTier,railTracks,roadTier,roadLanes,tramTracks};
   });
   if(segmentAssets.length!==segments.length)throw new RangeError('Declare infrastructure for each route segment.');
-  for(const good of goods){const key=good.name.toLocaleLowerCase('en');if(names.has(key))throw new RangeError('Good names must be distinct.');names.add(key);}
-  const cargo=value=>{if(!cargoIds.has(value))throw new RangeError('Choose a declared good.');return value;};
+  for(const good of goods){const key=good.name.toLocaleLowerCase('en');if(names.has(key))throw new RangeError('Load names must be distinct.');names.add(key);}
+  const cargo=value=>{if(!cargoIds.has(value))throw new RangeError('Choose a declared load.');return value;};
+  const freight=new Set(goods.filter(g=>g.type!=='passengers').map(g=>g.id)),stocked=item=>{if(!freight.has(item.cargoId))throw new RangeError('Storage and recipes apply to freight only.');return item;};
   const row=(item)=>({id:identity(item.id,'Row ID'),cargoId:cargo(item.cargoId)});
   const stops=list(input.stops,'Stops',25).map(stop=>{
     const buildings=list(stop.buildings,'Buildings at a stop',20).map(building=>{
       const type=choice(building.type,['none','factory','warehouse','industrial'],'building');
-      const storage=list(building.storage,'Storage',50).map(s=>({...row(s),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)}));
-      const recipe=Object.fromEntries(['inputs','outputs'].map(key=>[key,list(building.recipe?.[key],`Recipe ${key}`,50).map(r=>({...row(r),ratio:ratio(r.ratio)}))]));
+      const storage=list(building.storage,'Storage',50).map(s=>({...row(stocked(s)),inputCapacity:whole(s.inputCapacity,'Input storage',100,Number.MAX_SAFE_INTEGER,100),outputCapacity:whole(s.outputCapacity,'Output storage',100,Number.MAX_SAFE_INTEGER,100)}));
+      const recipe=Object.fromEntries(['inputs','outputs'].map(key=>[key,list(building.recipe?.[key],`Recipe ${key}`,50).map(r=>({...row(stocked(r)),ratio:ratio(r.ratio)}))]));
       for(const [key,items] of Object.entries({storage,...recipe})){
         identities(items,key);
         if(new Set(items.map(r=>r.cargoId)).size!==items.length)throw new RangeError(`Declare each good once in ${key} for this building.`);
@@ -84,7 +91,7 @@ export function validateRoutePlan(input){
   identities(stops,'stop');
   if(stops.length<2||stops[0].boundary!==0||stops.at(-1).boundary!==segments.length)throw new RangeError('Keep a source and destination at the route ends.');
   if(new Set(stops.map(s=>s.boundary)).size!==stops.length)throw new RangeError('Two stops cannot occupy the same boundary. Remove one stop before removing their connecting segment.');
-  return {schemaVersion:2,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops};
+  return {schemaVersion:3,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops};
 }
 
 /** Stops stay attached to the following segment; reordering geometry keeps stop order. Split halves share their infrastructure. */

@@ -10,6 +10,7 @@ import {motionValue,motionStateAtAbscissa,motionTransitions,renderMotionTransiti
 import {mountGradientControl} from './gradient-control.js';
 import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profile-control.js';
 import {mountRoutePlanControls} from './route-plan-controls.js';
+import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs,declaredService,declaredLoadNames} from './route-plan-service.js';
 import {routeProfileForDomain} from './route-profile.js';
 import {createRouteSelection,mountRouteChoice} from './route-selection.js';
 import {canClimbRail} from './gradient.js';
@@ -66,7 +67,7 @@ const views = {
 let speedView='speed',studyScope='auto';
 const studyBounded=()=>studyScope==='distance'||routeSelection.mode==='custom';
 let economicStoryKey, currentEconomicStory;
-let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl,routePlanControl,routeHasDeclarations=false;
+let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl,routePlanControl,routeHasDeclarations=false,routePlan=null,declarationKey='',declarationTimer;
 let consistEditor,compositionAnalysis,raceGradientControl,baseTrains,trainSelector,roadSelector;
 let lightRailTrains=[],lightRailLoaded=false,lightRailLoading;
 let comparisonCategoryControl,optimizerControl;
@@ -89,6 +90,7 @@ function setComparisonCategory(category){
   comparisonCategory=category;
   comparisonCategoryControl?.setValue(category);
   updateRoadCategory?.();
+  syncDeclaredLocks();syncRouteDeclarationNotice();
 }
 function syncStudyControls(){
   const comparing=navigation.space==='compare',custom=routeSelection.mode==='custom';
@@ -132,15 +134,18 @@ function syncRouteDistanceControls(){
 }
 function syncRouteSpeeds(){
   const domain=navigation.view==='optimizer'?'all':navigation.domain;
-  const segment=routeSelection.segments[0];
+  const segment=railRouteProfile[0];
   syncRouteSpeedControls(document,{domain,speed:domain==='road'?(segment.roadSpeedLimitKmh??segment.speedLimitKmh):segment.speedLimitKmh,roadSpeed:segment.roadSpeedLimitKmh??segment.speedLimitKmh,multiple:routeSelection.mode==='custom'});
-  renderRouteProfileStatus($('race-profile-status'),routeSelection.segments,{domain});
+  renderRouteProfileStatus($('race-profile-status'),railRouteProfile,{domain});
 }
 function routeSpeedField(){return navigation.view!=='optimizer'&&navigation.domain==='road'?'roadSpeedLimitKmh':'speedLimitKmh';}
 function activeRouteProfile(){return routeProfileForDomain(railRouteProfile,navigation.domain);}
+/** The custom route carries its declared tiers, tracks, lanes and Tram access; the Simple route is never touched by a declaration. */
+const declaredPlan=()=>routeSelection.mode==='custom'?routePlan:null;
+function currentRoute(){const raw=routeSelection.segments,plan=declaredPlan();return plan?declaredRouteProfile(raw,plan):raw;}
 function syncRouteSelection({restore=false}={}){
+  railRouteProfile=currentRoute();
   optimizerControl?.refresh();
-  railRouteProfile=routeSelection.segments;
   routeDistance=railRouteProfile.reduce((total,part)=>total+part.distanceKm,0);
   const custom=routeSelection.mode==='custom',single=railRouteProfile[0];
   $('optimizer-route-preview').parentElement.hidden=!custom;
@@ -158,11 +163,73 @@ function syncRouteSelection({restore=false}={}){
   $('race-input-error').hidden=true;$('race-input-error').textContent='';
 
   truckService={...truckService,distanceKm:routeDistance};
-  syncRouteDeclarationNotice();
+  syncRouteDeclarationNotice();syncDeclaredLocks();
   crossoverCache.clear();raceYearKey=null;economicStoryKey=null;render();
 }
+const FREIGHT_SERVICE_VIEWS=['economics','trucks','configurator'];
 function syncRouteDeclarationNotice(){
-  $('route-declaration-analysis-note').hidden=!routeHasDeclarations||routeSelection.mode!=='custom'||['route-profile','data'].includes(navigation.view);
+  const note=$('route-declaration-analysis-note'),view=navigation.view,plan=declaredPlan();
+  const shown=plan&&routeHasDeclarations&&!['route-profile','data'].includes(view);
+  const report=shown?declarationReport(plan,{includeTrams}):null;
+  const used=report?.used.filter(item=>item.views.includes(view)&&(!item.category||item.category===comparisonCategory)).map(item=>item.text)??[],unused=view==='race'?[]:report?.issues??[];
+  const service=shown&&FREIGHT_SERVICE_VIEWS.includes(view)?declaredService(plan):null,mismatch=service&&service.status!=='none'&&service.category!==comparisonCategory;
+  note.hidden=!used.length&&!unused.length&&!mismatch;
+  const declared=mismatch?(service.category==='passengers'?'passengers':`freight for ${declaredLoadNames(plan).join(', ')}`):'',label=service?.category==='passengers'?'Passengers':'Freight';
+  note.innerHTML=`${mismatch?`The route declares ${escape(declared)}, but Compare is on ${comparisonCategory==='freight'?'Freight':'Passengers'}, so the declared service is not used. <button type="button" data-switch-category="${service.category}">Switch to ${label}</button><br>`:''}${used.length?`<strong>From the route declaration:</strong> ${escape(used.join('; '))}. `:''}${unused.length?`Not used: ${escape(unused.join(' '))} `:''}<a href="#route-profile">Review the route &amp; expected service →</a>`;
+}
+/** Entering a view with a custom route that declares a load switches Compare to that service; a later manual choice stands until the next view or declaration change. */
+function applyDeclaredCategory(){
+  optimizerControl?.followDeclaration();
+  const plan=declaredPlan(),service=plan&&declaredService(plan);
+  if(!service||service.status==='none'||service.category===comparisonCategory)return;
+  setComparisonCategory(service.category);highlighted=undefined;if(trainSelector)renderCatalogue();
+}
+const declaredLocks=new Map();
+/** While the custom route declares them, these service inputs show the declared value and cannot be edited; their previous values return afterwards. */
+function syncDeclaredLocks(){
+  const plan=declaredPlan(),inputs=plan?declaredServiceInputs(plan,{category:comparisonCategory,includeTrams}):null;
+  const holder=el=>el.closest(el.type==='checkbox'&&!el.closest('.target-control')?'label':'.target-control')??el;
+  let changed=false;
+  const lock=(id,value)=>{
+    const el=$(id);if(!el)return;
+    const box=el.type==='checkbox',locked=declaredLocks.has(id),node=holder(el);
+    if(value===null||value===undefined){
+      if(!locked)return;
+      const saved=declaredLocks.get(id);declaredLocks.delete(id);
+      if(box)el.checked=saved;else el.value=saved;
+      node.inert=false;node.classList.remove('declared-lock');node.removeAttribute('title');changed=true;return;
+    }
+    if(!locked)declaredLocks.set(id,box?el.checked:el.value);
+    if((box?el.checked:el.value)!=value){if(box)el.checked=value;else el.value=value;changed=true;}
+    node.inert=true;node.classList.add('declared-lock');node.title='Set by the route declaration';
+  };
+  const pair=(ids,value)=>{lock(ids[0],value===null||value===undefined?null:true);lock(ids[1],value);};
+  for(const ids of [['enable-flow','desired-flow'],['composition-flow-enabled','composition-flow'],['road-enable-flow','road-desired-flow']])pair(ids,inputs?.rate);
+  for(const id of ['rail-loaded-return','composition-loaded-return','truck-loaded-return'])lock(id,inputs?.loadedReturn);
+  // The declared freight group selects the vehicles: specific groups also admit general-purpose vehicles.
+  for(const [id,name] of [['rail-cargo','economic'],['truck-cargo-specialization','truck']]){
+    const group=$(id),saved=declaredLocks.get(id),value=inputs?.cargo??null,checked=()=>group.querySelector('input:checked')?.value;
+    if(value===null){if(saved===undefined)continue;declaredLocks.delete(id);group.querySelector(`input[value="${saved}"]`).checked=true;group.inert=false;group.classList.remove('declared-lock');group.removeAttribute('title');}
+    else{if(saved===undefined)declaredLocks.set(id,checked());if(checked()===value&&group.inert)continue;group.querySelector(`input[value="${value}"]`).checked=true;group.inert=true;group.classList.add('declared-lock');group.title='Set by the route declaration';}
+    if(name==='economic')economicCargo=checked();else truckCargo=checked();
+    changed=true;highlighted=undefined;
+  }
+  for(const ids of [['enable-platform-limit','platform-length'],['composition-platform-enabled','composition-platform']])pair(ids,inputs?.platformLengthMetres);
+  for(const [domain,ids] of [['rail',{stopA:['rail-terminal-a','composition-terminal-a'],stopB:['rail-terminal-b','composition-terminal-b']}],['road',{stopA:['truck-specialized-terminal'],stopB:['truck-specialized-terminal-b']}]])
+    for(const [stop,names] of Object.entries(ids))for(const id of names)lock(id,inputs?.specializedTerminals[domain]?.[stop].specializedTerminal?true:null);
+  if(!changed)return;
+  if(trainSelector)renderCatalogue();
+  for(const [id,type] of [['enable-flow','change'],['rail-loaded-return','change'],['road-enable-flow','change']])$(id).dispatchEvent(new Event(type,{bubbles:true}));
+  compositionAnalysis?.refresh();
+}
+const declarationSignature=plan=>JSON.stringify(plan&&[plan.goods,plan.stops,plan.segmentAssets]);
+/** Any change to the declaration (not the name) puts the custom route in use, like a geometry edit; merely opening the page does not. */
+function declarationEdited(plan){
+  const key=declarationSignature(plan);
+  if(key===declarationKey)return;declarationKey=key;
+  applyDeclaredCategory();
+  if(routeSelection.mode!=='custom'){routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});return;}
+  clearTimeout(declarationTimer);declarationTimer=setTimeout(()=>{if(routeSelection.mode==='custom')syncRouteSelection();},150);
 }
 function updateSimpleRoute(part){
   if(routeSelection.mode!=='simple')return;
@@ -646,7 +713,9 @@ function syncWelcome(){
 function syncAnalysisView() {
   const target=document.getElementById(location.hash.slice(1));
   const owner=target?.closest('.analysis-view')?.id??(target?.closest('#configuration-sidebar')?'configurator':target?.closest('#road-sidebar')?'trucks':target?.closest('#line-capacity')?'economics':target?.closest('#train-race-settings')?'race':null);
+  const priorView=navigation.view;
   navigation=resolveNavigation(navigation,{hash:location.hash,owner,dataSection:target?.closest('[data-reference-pane]')?.dataset.referencePane});
+  if(navigation.view!==priorView)applyDeclaredCategory();
   syncRouteDeclarationNotice();
   const {view,space,domain,dataView}=navigation;
   for(const name of ANALYSIS_VIEWS)$(name).hidden=name!==view;
@@ -902,12 +971,14 @@ async function ensureRoad(){
 const optimizerCatalogue=request=>loadOptimizerCatalogue(loadData,request,dataset);
 function ensureOptimizer(){
   if(optimizerControl)return;
+  // A proposal applies its speeds, but never copies declared tracks, lanes or Tram access into the stored route.
+  const proposalRoute=profile=>declaredPlan()?withoutDeclaredLineChoices(profile,routeSelection.segments,declaredPlan()):profile;
   const applyOptimizerRoute=segments=>{
     if(routeSelection.mode==='simple'&&segments.length===1)routeSelection.updateSimple(segments[0]);else routeSelection.updateCustom(segments);
     if(routeSelection.mode==='custom'){profileControl?.setSegments(segments);routePlanControl?.setSegments(segments);}
     syncRouteSelection({restore:true});
   };
-  optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:()=>routeSelection.segments,onRouteChange:applyOptimizerRoute,getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent,action)=>{
+  optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:currentRoute,getPlan:declaredPlan,onRouteChange:segments=>applyOptimizerRoute(declaredPlan()?mergeUndeclaredLineChoices(routeSelection.segments,segments,declaredPlan()):segments),getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent,action)=>{
     // Apply the route and targets only after explicitly choosing a current proposal.
     if(proposal.domain==='rail'||proposal.definition&&action==='composition'){
       await ensureConfigurator();if(!isCurrent())return;if(!consistEditor)throw new Error('Composition catalogue is unavailable.');
@@ -915,7 +986,7 @@ function ensureOptimizer(){
       $('rail-cargo').querySelector(`input[value="${economicCargo}"]`).checked=true;
       const restored=consistEditor.restoreDraft({...proposal.definition,year:proposal.year,freightSpecialization:request.cargo==='all'?'general':request.cargo});
       if(!restored)throw new Error('This composition could not be restored.');
-      if(request.routeProfile)applyOptimizerRoute(request.routeProfile);
+      if(request.routeProfile)applyOptimizerRoute(proposalRoute(request.routeProfile));
       updateCompositionSettings({...compositionSettings(),fillRatio:request.fillRatio,desiredFlow:request.rate,maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',platformLengthMetres:request.maxTrainLength,loadedReturn:request.loadedReturn,stopA:request.stopA,stopB:request.stopB});
       location.hash='#composition-builder';syncAnalysisView();
     }else{
@@ -926,7 +997,7 @@ function ensureOptimizer(){
         consistEditor.restoreDraft({...proposal.definition,year:proposal.year,freightSpecialization:request.cargo==='all'?'general':request.cargo});
         compareComposition();comparisonId=comparisonComposition.id;
       }
-      if(request.routeProfile)applyOptimizerRoute(request.routeProfile);
+      if(request.routeProfile)applyOptimizerRoute(proposalRoute(request.routeProfile));
       truckYear=request.year;truckCargo=request.cargo;includeTrams=Boolean(proposal.definition);roadStarter=false;selectedRoad=new Set([comparisonId]);
       $('truck-year').value=truckYear;$('truck-year-value').textContent=truckYear;$('road-include-trams').checked=includeTrams;
       $('truck-cargo-specialization').querySelector(`input[value="${truckCargo}"]`).checked=true;
@@ -958,7 +1029,7 @@ async function ensureConfigurator(){
       consistEditor=mountConsistEditor(document,{catalogue:[...tramComponents({locomotives:components[0].locomotives,passengerWagons:components[1].wagons,freightWagons:components[2].wagons,passengerTrams:tramDataset.trams,freightTrams:tramDataset.freightTrams}),...railComponents({locomotives:components[3].locomotives,passengerWagons:components[4].wagons,freightWagons:components[5].wagons,multipleUnits:dataset.trains}),...lightRailComponents([...tramDataset.trams,...tramDataset.freightTrams])],units:dataset.source,storage:compositionStorage,thumbnails,onPreview:preview=>{liveComposition=preview;$('composition-compare').disabled=!preview;compositionAnalysis.setDraft(preview);},onChange:change=>{
         if(change.item?.carrier==='tram'){
           setComparisonCategory(change.item.category);truckCargo=change.item.freightSpecialization==='general'?'all':change.item.freightSpecialization??'all';includeTrams=true;truckYear=Math.max(truckYear,change.item.year);
-          $('truck-cargo-specialization').querySelector(`input[value="${truckCargo}"]`).checked=true;$('road-include-trams').checked=true;$('truck-year').value=truckYear;$('truck-year-value').textContent=truckYear;updateRoadCategory();
+          $('truck-cargo-specialization').querySelector(`input[value="${truckCargo}"]`).checked=true;$('road-include-trams').checked=true;$('truck-year').value=truckYear;$('truck-year-value').textContent=truckYear;updateRoadCategory();syncDeclaredLocks();
         }
         syncCustomCompositions(change);
       }});
@@ -968,7 +1039,7 @@ async function ensureConfigurator(){
       $('configuration-load-status').hidden=!!thumbnails;
       if(!thumbnails)$('configuration-load-status').textContent='Vehicle images could not be loaded. Building and comparing compositions remain available.';
       $('component-catalogue').hidden=false;$('composition-builder').hidden=false;$('composition-analysis').hidden=false;
-      compositionAnalysis.refresh();
+      compositionAnalysis.refresh();syncDeclaredLocks();
     }catch(error){$('configuration-load-status').textContent='Unable to load composition data. Standard comparisons remain available.';$('configuration-retry').hidden=false;console.error(error);}
     finally{configurationLoading=null;}
   })();return configurationLoading;
@@ -1063,7 +1134,7 @@ async function init() {
   comparisonCategoryControl=mountTransportCategory($('comparison-category'),{value:comparisonCategory,legend:'Transport',showLegend:true,onChange:category=>{
     setComparisonCategory(category);highlighted=undefined;renderCatalogue();render();
   }});
-  $('road-include-trams').addEventListener('change',()=>{includeTrams=$('road-include-trams').checked;updateRoadCategory();render();});
+  $('road-include-trams').addEventListener('change',()=>{includeTrams=$('road-include-trams').checked;updateRoadCategory();syncDeclaredLocks();render();});
   updateRoadCategory();
   $('truck-cargo-specialization').addEventListener('change',()=>{
     truckCargo=document.querySelector('input[name="truck-cargo"]:checked').value;render();
@@ -1158,12 +1229,14 @@ async function init() {
   let routeStorage;try{routeStorage=window.localStorage;}catch{}
   routePlanControl=mountRoutePlanControls($('route-plan-control'),{initialSegments:railRouteProfile,storage:routeStorage,
     onSelectSegment:index=>profileControl.selectSegment(index),
-    onLoad:plan=>{profileControl.setSegments(plan.segments);routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});},
-    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.operations.length||s.infrastructure.length||s.buildings.some(b=>b.type!=='none'||b.storage.length||b.recipe.inputs.length||b.recipe.outputs.length));profileControl.setStops(plan.stops);syncRouteDeclarationNotice();}
+    onLoad:plan=>{routePlan=plan;profileControl.setSegments(plan.segments);routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});},
+    onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.operations.length||s.infrastructure.length||s.buildings.some(b=>b.type!=='none'||b.storage.length||b.recipe.inputs.length||b.recipe.outputs.length));profileControl.setStops(plan.stops);routePlan=plan;declarationEdited(plan);syncRouteDeclarationNotice();}
   });
+  routePlan=routePlanControl.plan;declarationKey=declarationSignature(routePlan);
   profileControl.setStops(routePlanControl.plan.stops);
-  mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);syncRouteSelection({restore:true});}});
-  $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');syncRouteSelection({restore:true});});
+  mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);applyDeclaredCategory();syncRouteSelection({restore:true});}});
+  $('route-declaration-analysis-note').addEventListener('click',event=>{const button=event.target.closest('[data-switch-category]');if(!button)return;setComparisonCategory(button.dataset.switchCategory);highlighted=undefined;renderCatalogue();render();});
+  $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');applyDeclaredCategory();syncRouteSelection({restore:true});});
   syncRouteSelection();
   $('route-speed-input').addEventListener('input',()=>{if(validateRace())updateSimpleRoute({[routeSpeedField()]:$('route-speed-input').valueAsNumber});});
   $('race-infrastructure-speed').addEventListener('change',()=>{

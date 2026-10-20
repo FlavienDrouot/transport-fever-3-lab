@@ -120,9 +120,10 @@ export function evaluateOptimizerCandidate(candidate,data,request){
     parts=[{name:vehicle.name,quantity:1}];
   }
   let best=null,rejected='infrastructure';
+  const countsTerminalCosts=request.infrastructure?.countRunningCosts!==false;
   const limitingConstraints=new Set(),singleConstraints=new Set();
-  for(const choice of optimizerTerminalChoices(request,candidate.domain,vehicle.cargoCapacity,vehicle.lengthMetres,{vehicleType:vehicle.vehicleType,costCeiling:()=>best?best.cost-vehicle.economy.annualMaintenance:Infinity})){
-    if(best&&(choice.selection?.annualMaintenance??0)+vehicle.economy.annualMaintenance>best.cost+1e-7)continue;
+  for(const choice of optimizerTerminalChoices(request,candidate.domain,vehicle.cargoCapacity,vehicle.lengthMetres,{vehicleType:vehicle.vehicleType,costCeiling:()=>best&&countsTerminalCosts?best.cost-vehicle.economy.annualMaintenance:Infinity})){
+    if(best&&countsTerminalCosts&&(choice.selection?.annualMaintenance??0)+vehicle.economy.annualMaintenance>best.cost+1e-7)continue;
     if(candidate.domain==='rail'&&vehicle.lengthMetres>choice.maxTrainLength+1e-9)continue;
     const storageLimits=request.category==='freight'&&request.infrastructure?.limitVehicleCapacity!==false?['stopA','stopB'].filter(stop=>vehicle.cargoCapacity>optimizerStorageCapacity(choice[stop])+1e-7).map(stop=>`storageCapacity${stop==='stopA'?'A':'B'}`):[];
     const search=!storageLimits.length&&(request.lineInfrastructure||vehicle.vehicleType==='Tram'&&candidate.domain==='road')?searchLineInfrastructure(request,candidate.domain,vehicle,choice,
@@ -226,6 +227,9 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
   result.terminalRunningCosts=choice.selection?.annualMaintenance??0;
   result.routeRunningCosts=linePlan?.annualMaintenance??0;
   if(linePlan)result.routeInfrastructure=linePlan;
+  // Excluded stop costs stay as a tie-break, so equal vehicles still get the least costly stops.
+  const counted=request.infrastructure?.countRunningCosts!==false;
+  if(!counted){result.uncountedTerminalRunningCosts=result.terminalRunningCosts;result.terminalRunningCosts=0;result.infrastructureCostsCounted=false;}
   result.infrastructureRunningCosts=result.terminalRunningCosts+result.routeRunningCosts;
   result.cost+=result.infrastructureRunningCosts;
   result.unitCost+=result.infrastructureRunningCosts/(result.rate*(freight?1:2));
@@ -233,7 +237,7 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
 }
 
 const existingTerminals=result=>result.infrastructure?Number(result.infrastructure.stopA.existing)+Number(result.infrastructure.stopB.existing):0;
-export const compareOptimizerResults=(a,b)=>a.cost-b.cost||a.fleet-b.fleet||(a.domain==='road'&&b.domain==='road'?a.cycle-b.cycle:0)||a.length-b.length||a.id.localeCompare(b.id)||existingTerminals(b)-existingTerminals(a);
+export const compareOptimizerResults=(a,b)=>a.cost-b.cost||(a.uncountedTerminalRunningCosts??0)-(b.uncountedTerminalRunningCosts??0)||a.fleet-b.fleet||(a.domain==='road'&&b.domain==='road'?a.cycle-b.cycle:0)||a.length-b.length||a.id.localeCompare(b.id)||existingTerminals(b)-existingTerminals(a);
 
 /** Progress is yielded between candidates so callers can schedule or cancel work. */
 export function* optimizeService(data,input,{limit=3}={}){
