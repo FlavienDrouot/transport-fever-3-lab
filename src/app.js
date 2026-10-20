@@ -645,7 +645,7 @@ function syncWelcome(){
 }
 function syncAnalysisView() {
   const target=document.getElementById(location.hash.slice(1));
-  const owner=target?.closest('.analysis-view')?.id??(target?.closest('#configuration-sidebar')?'configurator':target?.closest('#profile-sidebar')?'route-profile':target?.closest('#road-sidebar')?'trucks':target?.closest('#line-capacity')?'economics':target?.closest('#train-race-settings')?'race':null);
+  const owner=target?.closest('.analysis-view')?.id??(target?.closest('#configuration-sidebar')?'configurator':target?.closest('#road-sidebar')?'trucks':target?.closest('#line-capacity')?'economics':target?.closest('#train-race-settings')?'race':null);
   navigation=resolveNavigation(navigation,{hash:location.hash,owner,dataSection:target?.closest('[data-reference-pane]')?.dataset.referencePane});
   syncRouteDeclarationNotice();
   const {view,space,domain,dataView}=navigation;
@@ -1149,9 +1149,11 @@ async function init() {
   raceGradientControl=mountGradientControl(document,$('race-gradient'),{rail:true,noticeId:'race-input-error',validate:validateRace,onChange:grade=>updateSimpleRoute({gradePercent:grade})});
   profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:railRouteProfile,
-    visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),
-    beforeChange:(segments,edit)=>routePlanControl?.validateSegmentEdit(segments,edit),
-    onChange:state=>{routePlanControl?.setSegments(state.segments,state.edit);routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
+    visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),shapes:$('profile-shapes'),
+    // A starting shape opens a new draft; saved routes are untouched.
+    confirmReplace:shape=>!routeHasDeclarations||window.confirm(`Start from “${shape.name}”? This draft's stops, freight and infrastructure declarations will be cleared. Saved routes are kept.`),
+    beforeChange:(segments,edit)=>{if(edit?.action!=='replace')routePlanControl?.validateSegmentEdit(segments,edit);},
+    onChange:state=>{if(state.edit?.action==='replace')routePlanControl?.replaceDraft(state.segments,state.edit.name);else routePlanControl?.setSegments(state.segments,state.edit);routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
   });
   let routeStorage;try{routeStorage=window.localStorage;}catch{}
   routePlanControl=mountRoutePlanControls($('route-plan-control'),{initialSegments:railRouteProfile,storage:routeStorage,

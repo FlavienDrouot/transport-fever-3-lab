@@ -87,14 +87,14 @@ export function validateRoutePlan(input){
   return {schemaVersion:2,id:identity(input.id,'Route ID'),name:text(input.name,'Route name'),segments,segmentAssets,goods,stops};
 }
 
-/** Stops stay attached to the following segment; reordering geometry keeps stop order. */
+/** Stops stay attached to the following segment; reordering geometry keeps stop order. Split halves share their infrastructure. */
 export function updateRoutePlanSegments(input,segments,edit=null){
   const plan=validateRoutePlan(input),next=validateRouteProfile(segments),oldLength=plan.segments.length;
   const delta=next.length-oldLength;
   if(delta&&!edit)throw new RangeError('Load a complete route when replacing its segment structure.');
-  const insertion=edit?.action==='add'?oldLength:edit?.action==='insert'?edit.index+1:edit?.index;
+  const insertion=edit?.action==='add'?oldLength:edit?.action==='insert'||edit?.action==='split'?edit.index+1:edit?.index;
   const segmentAssets=structuredClone(plan.segmentAssets);
-  if(delta===1)segmentAssets.splice(insertion,0,newSegmentAssets());
+  if(delta===1)segmentAssets.splice(insertion,0,edit.action==='split'?{...segmentAssets[edit.index]}:newSegmentAssets());
   else if(delta===-1)segmentAssets.splice(edit.index,1);
   else if(edit?.action==='up'||edit?.action==='down'){const other=edit.index+(edit.action==='up'?-1:1);[segmentAssets[edit.index],segmentAssets[other]]=[segmentAssets[other],segmentAssets[edit.index]];}
   const stops=plan.stops.map(stop=>{

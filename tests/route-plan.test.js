@@ -42,6 +42,8 @@ test('existing segment infrastructure moves with geometry and rejects street Tra
   const inserted=updateRoutePlanSegments(plan,[segment,segment,plan.segments[1]],{action:'insert',index:0});
   assert.deepEqual(inserted.segmentAssets[2],plan.segmentAssets[1]);assert.equal(inserted.segmentAssets[1].roadTier,null);
   const removed=updateRoutePlanSegments(inserted,plan.segments,{action:'remove',index:1});assert.deepEqual(removed.segmentAssets,plan.segmentAssets);
+  const half={...plan.segments[1],distanceKm:1.5},split=updateRoutePlanSegments(plan,[plan.segments[0],half,half],{action:'split',index:1});
+  assert.deepEqual(split.segmentAssets,[plan.segmentAssets[0],plan.segmentAssets[1],plan.segmentAssets[1]]);assert.equal(split.stops.at(-1).boundary,3);
   const invalid=structuredClone(plan);invalid.segmentAssets[1].tramTracks='road';assert.throws(()=>validateRoutePlan(invalid),/highways/);
   invalid.segmentAssets[1].tramTracks='none';invalid.segmentAssets[1].roadLanes=2;assert.throws(()=>validateRoutePlan(invalid),/4 lanes/);
   const legacy=structuredClone(plan);delete legacy.segmentAssets;
