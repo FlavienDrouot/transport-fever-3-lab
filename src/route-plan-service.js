@@ -97,7 +97,6 @@ export function declaredService(input){
   const [out,back]=legLoads(routePlanFlows(deliveredAtTerminus(plan)),good.id),[,carried]=legLoads(routePlanFlows(plan),good.id);
   // A load still onboard at B in the general flows is what this service delivers there.
   base.deliveredAtB=carried.year>back.year+EPSILON;
-  if(out.visit>EPSILON||back.visit>EPSILON)issues.push(`Quantities per visit are no longer used: declare an annual ${T.rate} or a percentage. Infrastructure limits belong to the stop's infrastructure.`);
   if(out.year<=EPSILON&&back.year<=EPSILON)return {...base,status:'unsupported',issues};
   const differ=out.year>EPSILON&&back.year>EPSILON&&Math.abs(out.year-back.year)>1e-6*Math.max(out.year,back.year);
   if(passengers){
@@ -160,9 +159,10 @@ export function declaredEndpointModel(input,{category='passengers',loadedReturn=
       const stock=goods.length===1?building.storage.find(s=>s.cargoId===goods[0]):null;
       if(building.type==='factory'){
         site.factoryTerminals=building.industryTerminals;
-        if(stock)Object.assign(site,{inputStorageCapacity:stock.inputCapacity,outputStorageCapacity:stock.outputCapacity});
+        if(stock)site[stock.side==='input'?'inputStorageCapacity':'outputStorageCapacity']=stock.capacity;
         else if(building.storage.length)issues.push(`${label}: storage is declared for other goods; default storage is used for this service.`);
       }
+      if(building.type==='industrial'&&building.storage.length)issues.push(`${label}: storage at an industrial building is descriptive; the calculators do not limit it.`);
       lines.push(`${label} · ${building.name} · ${BUILDINGS[building.type]}${building.type==='warehouse'?` · ${formatNumber(building.warehouseCapacity,0)} ${T.capacityUnit}${building.warehouseSpecializedFor?` · specialized for ${plan.goods.find(g=>g.id===building.warehouseSpecializedFor).name}`:''}`:building.type==='factory'?` · ${building.industryTerminals} Truck terminals`:''}`);
     }else lines.push(`${label} · building not specified`);
     sites[key]=site;
