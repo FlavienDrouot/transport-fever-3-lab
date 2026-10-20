@@ -286,3 +286,8 @@ test('declared passengers become a Rate per direction, equal both ways',()=>{
   const uneven=createRoutePlan([segment,segment]);uneven.goods=[people];operation(uneven.stops[0],people.id,'load',5000);operation(uneven.stops[1],people.id,'load',3000,{direction:'return'});
   assert.match(declaredService(uneven).issues.at(-1),/one Rate in both directions/);
 });
+
+test('general freight requires general-purpose vehicles',()=>{
+  const plan=freightPlan();plan.goods=[{...coal,name:'Crates',type:'general'}];
+  const service=declaredService(plan);assert.equal(service.cargo,'all');assert.match(declaredServiceText(service),/Crates \(General\)/);
+});

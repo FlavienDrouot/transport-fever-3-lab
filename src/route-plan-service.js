@@ -69,7 +69,7 @@ const legLoads=(flows,goodId)=>['outbound','return'].map(direction=>flows.sectio
 
 /** The loads a declaration moves, for messages that name them. */
 export const declaredLoadNames=input=>{const plan=validateRoutePlan(input);return serviceGoodIds(plan).map(id=>plan.goods.find(g=>g.id===id).name);};
-const LOAD_LABELS={passengers:'Passengers',bulk:'Bulk',goods:'Goods',flatbed:'Flatbed',liquid:'Liquid'};
+const LOAD_LABELS={passengers:'Passengers',general:'General',bulk:'Bulk',goods:'Goods',flatbed:'Flatbed',liquid:'Liquid'};
 export const loadTypeLabel=type=>LOAD_LABELS[type]??'type not chosen';
 
 /** One load on an A–B–A service. Freight: annual quantities become the delivered Rate, return freight a loaded return. Passengers: the Rate per direction, equal both ways. */
@@ -77,10 +77,10 @@ export function declaredService(input){
   const plan=validateRoutePlan(input),goodIds=serviceGoodIds(plan);
   if(!goodIds.length)return {status:'none',issues:[]};
   const good=plan.goods.find(g=>g.id===goodIds[0]),passengers=good.type==='passengers',noun=passengers?'passenger':'freight';
-  const issues=[],base={goodId:good.id,goodName:good.name,category:passengers?'passengers':'freight',cargo:passengers?null:good.type};
+  const issues=[],base={goodId:good.id,goodName:good.name,category:passengers?'passengers':'freight',cargo:passengers?null:good.type==='general'?'all':good.type};
   if(plan.stops.length>2)issues.push(`Intermediate stops are not modelled: services run A–B–A, so the declared ${noun} flows are not used.`);
   if(goodIds.length>1)issues.push('Several goods share this service, but each calculator carries one good per service.');
-  if(!passengers&&!good.type)issues.push(`Choose a type for ${good.name} (Bulk, Goods, Flatbed or Liquid): it decides which vehicles can carry it.`);
+  if(!passengers&&!good.type)issues.push(`Choose a type for ${good.name} (General, Bulk, Goods, Flatbed or Liquid): it decides which vehicles can carry it.`);
   if(issues.length)return {...base,status:'unsupported',issues};
   const [out,back]=legLoads(routePlanFlows(deliveredAtTerminus(plan)),good.id),[,carried]=legLoads(routePlanFlows(plan),good.id);
   // A load still onboard at B in the general flows is what this service delivers there.
@@ -104,7 +104,7 @@ export function declaredService(input){
 /** One sentence describing an applied service, shared by every view. */
 export function declaredServiceText(service){
   if(service.category==='passengers')return `${service.goodName}: ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year in each direction${service.bothDirectionsDeclared?'':' (the same Rate is used B → A)'}`;
-  return `${service.goodName} (${loadTypeLabel(service.cargo)}): ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return${service.deliveredAtB?'; freight still onboard at B is delivered there, not carried back':''}`;
+  return `${service.goodName} (${service.cargo==='all'?'General':loadTypeLabel(service.cargo)}): ${T.rate} ${formatNumber(service.rate,0)} ${T.capacityUnit}/year, ${service.loadedReturn?'loaded':'empty'} return${service.deliveredAtB?'; freight still onboard at B is delivered there, not carried back':''}`;
 }
 
 /** The building a stop contributes to the service: the one its operations name, else its only typed building. */

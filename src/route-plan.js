@@ -11,8 +11,8 @@ const list=(value,label,max)=>{if(!Array.isArray(value)||value.length>max)throw 
 const identities=(items,label)=>{const ids=new Set();for(const item of items){const id=identity(item?.id,`${label} ID`);if(ids.has(id))throw new RangeError(`Duplicate ${label} ID.`);ids.add(id);}return ids;};
 const choice=(value,values,label)=>{if(!values.includes(value))throw new RangeError(`Choose a valid ${label}.`);return value;};
 const ratio=value=>{number(value,'Recipe ratio',0,1e9);if(value===0)throw new RangeError('Recipe ratio must be positive.');return value;};
-/** Passengers or a freight group; the group selects compatible vehicles (general-purpose vehicles carry every group). */
-export const LOAD_TYPES=Object.freeze(['passengers','bulk','goods','flatbed','liquid']);
+/** Passengers or a freight group. General freight needs general-purpose vehicles; a specific group also admits them. */
+export const LOAD_TYPES=Object.freeze(['passengers','general','bulk','goods','flatbed','liquid']);
 export const newRouteBuilding=(name='Building 1',type='none')=>({id:routeId('building'),name,type,warehouseCapacity:500,industryTerminals:2,storage:[],recipe:{inputs:[],outputs:[]}});
 export const newRouteStop=(boundary,name)=>({id:routeId('stop'),boundary,name,buildings:[],infrastructure:[],operations:[]});
 export function createRoutePlan(segments,name='Custom route'){

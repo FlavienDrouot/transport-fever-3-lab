@@ -728,3 +728,7 @@ th[data-sort]{padding:0}th[data-sort] .sort-button{display:block;width:100%;heig
 .profile-line-map .profile-band-group:focus{outline:none}
 .profile-segment-fields:not(#_){grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));align-items:start}
 .profile-presets button:not(#_){min-width:36px;padding:5px}
+.route-plan-load-type{align-self:end;flex-wrap:wrap}
+.route-plan-load-type legend{font-size:12px;margin-bottom:5px}
+.route-plan-form .route-plan-load-type label:not(#_){display:block;min-width:0;flex:none;gap:0}
+.route-plan-form .route-plan-load-type input:not(#_){position:absolute;opacity:0;width:1px;height:1px;min-height:0;padding:0}

@@ -6,7 +6,7 @@ import {declarationReport,terminusFlows} from './route-plan-service.js';
 
 const fmt=n=>formatNumber(n,3);
 const kinds={railPlatform:'Rail station + platform',roadPlatform:'Road station + platform',railStation:'Rail station only',roadStation:'Road station only',busStop:'Bus stop'};
-const loadTypes={passengers:'Passengers',bulk:'Freight · Bulk',goods:'Freight · Goods',flatbed:'Freight · Flatbed',liquid:'Freight · Liquid'};
+const loadTypes={passengers:'Passengers',general:'General freight',bulk:'Bulk',goods:'Goods',flatbed:'Flatbed',liquid:'Liquid'};
 const buildings={none:'Not specified',factory:T.industry,warehouse:'Warehouse',industrial:'Industrial building'};
 const newInfrastructure=kind=>({id:routeId('infra'),kind,...(kind==='railPlatform'?{length:840,tracks:2,platforms:1,specialized:false}:kind==='roadPlatform'?{length:20,platforms:1,specialized:false}:{})});
 
@@ -45,8 +45,8 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   function drawGoods(){
     $('[data-route-goods]').innerHTML=plan.goods.length?plan.goods.map((good,i)=>{
       const types=Object.fromEntries(Object.entries(loadTypes).filter(([type])=>type==='passengers'?plan.goods.length===1:good.type!=='passengers'));
-      return `<div class="route-plan-row">${field(`goods.${i}.name`,'Load name',good.name,{type:'text'})}${select(`goods.${i}.type`,'Type',good.type??'',good.type?types:{'':'Choose a type',...types})}<button type="button" data-route-action="remove-good" data-index="${i}">Remove</button></div>`;
-    }).join('')+(plan.goods.some(g=>!g.type)?'<p class="chart-help route-plan-warning">Choose a type for each load: it decides which vehicles can carry it.</p>':''):'<p class="chart-help">Declare what this route carries: passengers, or freight with its type. The type decides which vehicles can carry it; general-purpose vehicles carry every type. A route carries passengers or freight, not both yet.</p>';
+      return `<div class="route-plan-row">${field(`goods.${i}.name`,'Load name',good.name,{type:'text'})}<fieldset class="scale-toggle route-plan-load-type"><legend>Type</legend>${Object.entries(types).map(([type,label])=>`<label><input type="radio" name="load-type-${escape(good.id)}" data-plan-path="goods.${i}.type" value="${type}"${good.type===type?' checked':''}><span>${label}</span></label>`).join('')}</fieldset><button type="button" data-route-action="remove-good" data-index="${i}">Remove</button></div>`;
+    }).join('')+(plan.goods.some(g=>!g.type)?'<p class="chart-help route-plan-warning">Choose a type for each load: it decides which vehicles can carry it.</p>':''):'<p class="chart-help">Declare what this route carries: passengers, or freight with its type. The type decides which vehicles can carry it: General freight needs general-purpose vehicles; Bulk, Goods, Flatbed and Liquid also admit them. A route carries passengers or freight, not both yet.</p>';
     const passengers=plan.goods.some(g=>g.type==='passengers');
     $('[data-route-action=add-good]').disabled=passengers;$('[data-route-action=add-passengers]').disabled=plan.goods.length>0;
   }
@@ -114,7 +114,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   function read(){
     const candidate=structuredClone(plan);
     for(const input of root.querySelectorAll('[data-plan-path]')){
-      if(input.disabled)continue;
+      if(input.disabled||input.type==='radio'&&!input.checked)continue;
       const parts=input.dataset.planPath.split('.'),key=parts.pop();let record=candidate;for(const p of parts)record=record[p];
       record[key]=input.type==='checkbox'?input.checked:input.type==='number'?input.value===''?null:input.valueAsNumber:input.value;
       if(key==='buildingId'||key==='type'&&parts[0]==='goods')record[key]=input.value||null;
@@ -151,7 +151,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     for(const asset of candidate.segmentAssets)if(asset.roadTier===100)asset.roadLanes=2;else if(asset.roadTier===120)asset.roadLanes=4;
     if(path.at(-1)==='kind'){const i=Number(path[1]),j=Number(path[3]);candidate.stops[i].infrastructure[j]={...newInfrastructure(input.value),id:plan.stops[i].infrastructure[j].id};}
     if(path.at(-1)==='tracks'){const entry=candidate.stops[Number(path[1])].infrastructure[Number(path[3])];entry.platforms=Math.max(Math.ceil(entry.tracks/2),Math.min(entry.platforms,entry.tracks));}
-    const redraw=path[0]==='segmentAssets'||['type','kind','tracks','mode'].includes(path.at(-1));if(accept(candidate,{redraw})&&redraw)$(`[data-plan-path="${input.dataset.planPath}"]`)?.focus();
+    const redraw=path[0]==='segmentAssets'||['type','kind','tracks','mode'].includes(path.at(-1));if(accept(candidate,{redraw})&&redraw)($(`[data-plan-path="${input.dataset.planPath}"]:checked`)??$(`[data-plan-path="${input.dataset.planPath}"]`))?.focus();
   });
   root.addEventListener('change',event=>{if(event.target.hasAttribute('data-plan-path')&&!event.target.checkValidity())event.target.reportValidity();});
   root.addEventListener('click',event=>{
