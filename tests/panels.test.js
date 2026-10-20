@@ -25,20 +25,17 @@ test('Side panels follow the analysis tab and close inactive dialogs',()=>{
   syncAnalysisPanels(document,'configurator');assert.equal(node('configuration-sidebar').hidden,false);assert.equal(node('catalogue').hidden,true);assert.equal(node('configuration-picker-toggle').hidden,false);
   node('configuration-drawer').open=true;syncAnalysisPanels(document,'race');assert.equal(node('configuration-drawer').open,false);assert.equal(node('line-capacity').hidden,true);syncAnalysisPanels(document,'economics');assert.equal(node('line-capacity').hidden,false);assert.equal(node('train-race-settings').hidden,false);
   node('train-drawer').open=true;syncAnalysisPanels(document,'trucks');assert.equal(node('train-drawer').open,false);
-  syncAnalysisPanels(document,'route-profile');assert.ok(classes.has('route-profile-view'));assert.equal(node('catalogue').hidden,true);assert.equal(node('picker-toggle').hidden,true);assert.equal(node('profile-sidebar').hidden,false);assert.equal(node('profile-picker-toggle').hidden,false);
-  node('profile-drawer').open=true;syncAnalysisPanels(document,'race');assert.equal(node('profile-drawer').open,false);assert.equal(node('profile-sidebar').hidden,true);
+  syncAnalysisPanels(document,'route-profile');assert.ok(classes.has('route-profile-view'));assert.equal(node('catalogue').hidden,true);assert.equal(node('picker-toggle').hidden,true);assert.equal(node('road-sidebar').hidden,true);
 });
 test('Mobile drawers move the same controls and preserve state across viewport changes',()=>{
   const {node,document}=fixture();const mobile={matches:true,handlers:[],addEventListener(type,handler){this.handlers.push(handler);}};
   node('road-sidebar').value='preserved state';mountPanelDrawers(document,mobile);
-  assert.equal(node('road-sidebar').parent,node('road-drawer'));assert.equal(node('catalogue').parent,node('train-drawer'));assert.equal(node('profile-sidebar').parent,node('profile-drawer'));
+  assert.equal(node('road-sidebar').parent,node('road-drawer'));assert.equal(node('catalogue').parent,node('train-drawer'));
   node('road-picker-toggle').handlers.click();assert.equal(node('road-drawer').open,true);assert.equal(node('road-picker-toggle').attrs['aria-expanded'],'true');
   assert.equal(node('road-vehicle-search').focused,true);
   node('road-picker-close').handlers.click();assert.equal(node('road-drawer').open,false);assert.equal(node('road-picker-toggle').attrs['aria-expanded'],'false');
-  node('profile-picker-toggle').handlers.click();assert.equal(node('profile-drawer').open,true);assert.equal(node('profile-segment-list').focused,true);
-  node('profile-picker-close').handlers.click();assert.equal(node('profile-drawer').open,false);
   mobile.matches=false;for(const handler of mobile.handlers)handler();
-  assert.equal(node('road-sidebar').parent,node('road-sidebar-anchor'));assert.equal(node('road-sidebar').value,'preserved state');assert.equal(node('profile-sidebar').parent,node('profile-sidebar-anchor'));
+  assert.equal(node('road-sidebar').parent,node('road-sidebar-anchor'));assert.equal(node('road-sidebar').value,'preserved state');
 });
 test('Three workspaces keep contextual views; route controls have one owner and labelled drawer',async()=>{
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
@@ -53,10 +50,11 @@ test('Three workspaces keep contextual views; route controls have one owner and 
   for(const id of ['economic-category','road-category'])assert.ok(!html.includes(`id="${id}"`));
   assert.equal([...html.matchAll(/id="comparison-category"/g)].length,1);
   const trains=html.match(/<aside id="catalogue"[\s\S]*?<\/aside>/)?.[0];assert.ok(trains.includes('id="line-capacity"'));assert.ok(trains.includes('id="route-distance"'));assert.ok(trains.includes('id="comparison-category"'));
-  const profile=html.match(/<aside id="profile-sidebar"[\s\S]*?<\/aside>/)?.[0];assert.ok(profile?.includes('id="profile-segment-list"'));
+  // The route editor keeps its segment list beside the map, without a sidebar or drawer.
+  assert.ok(!html.includes('id="profile-sidebar"'));assert.ok(!html.includes('profile-drawer'));
+  assert.ok(html.indexOf('id="route-profile-visual"')<html.indexOf('id="profile-segment-list"'));
   assert.ok(html.includes('id="route-profile-control"'));assert.ok(html.indexOf('id="route-profile-visual"')<html.indexOf('id="route-profile-control"'));
   assert.match(html,/<dialog id="road-drawer" aria-labelledby="road-sidebar-heading">/);
-  assert.match(html,/<dialog id="profile-drawer" aria-labelledby="profile-sidebar-heading">/);
 });
 
 test('A mobile picker opens collapsed ancestor groups before focusing its controls',()=>{
@@ -86,6 +84,6 @@ test('Road Race uses the road picker and shared Route controls without service c
 test('Optimizer reuses Route while hiding every catalogue sidebar',()=>{
   const {node,document,classes}=fixture();syncAnalysisPanels(document,'optimizer');
   assert.ok(classes.has('optimizer-view'));assert.equal(node('train-race-settings').hidden,false);
-  for(const id of ['catalogue','road-sidebar','configuration-sidebar','profile-sidebar','line-capacity'])assert.equal(node(id).hidden,true);
+  for(const id of ['catalogue','road-sidebar','configuration-sidebar','line-capacity'])assert.equal(node(id).hidden,true);
   syncAnalysisPanels(document,'race');assert.ok(!classes.has('optimizer-view'));
 });

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {routeProfileSketch} from '../src/route-profile-control.js';
+import {routeProfileSketch,gradeClass,ROUTE_SHAPES} from '../src/route-profile-control.js';
+import {validateRouteProfile,routeProfileDistance} from '../src/route-profile.js';
 
 test('symbolic route sketch identifies each section and its relative rise and fall',()=>{
   const html=routeProfileSketch([
@@ -33,13 +34,22 @@ test('linear route view positions boundaries in proportion to travelled distance
   assert.match(linear,/Horizontal distance is linear/);
 });
 
-test('selected segments can be removed from the sketch unless they are the only segment',()=>{
-  const part={distanceKm:1,gradePercent:0,speedLimitKmh:100};
-  const single=routeProfileSketch([part],{selectedIndex:0});
-  const multiple=routeProfileSketch([part,part],{selectedIndex:0});
-  assert.doesNotMatch(single,/data-action="remove"/);
-  assert.match(multiple,/data-action="remove" data-index="0"[^>]+aria-label="Remove segment 1"/);
-  assert.match(multiple,/class="profile-trash-icon"/);
+test('the route map colours each track by grade and offers insertion at the selected segment ends',()=>{
+  const parts=[{distanceKm:1,gradePercent:0,speedLimitKmh:100},{distanceKm:2,gradePercent:-3,speedLimitKmh:100},{distanceKm:1,gradePercent:5,speedLimitKmh:100}];
+  const html=routeProfileSketch(parts,{selectedIndex:1});
+  assert.deepEqual([...html.matchAll(/class="profile-track grade-(\w+)"/g)].map(m=>m[1]),['flat','steep','severe']);
+  assert.deepEqual([...html.matchAll(/data-action="([\w-]+)" data-index="(\d)"/g)].map(m=>`${m[1]}:${m[2]}`),['insert-before:1','insert:1']);
+  assert.match(html,/data-segment="1"[^>]+aria-pressed="true"/);
+  assert.doesNotMatch(routeProfileSketch(Array(24).fill(parts[0]),{selectedIndex:0}),/data-action=/);
+  assert.equal(gradeClass(-0.4),'flat');assert.equal(gradeClass(2),'steep');
+});
+
+test('starting shapes are valid routes within the editor limits',()=>{
+  for(const shape of ROUTE_SHAPES){
+    const route=validateRouteProfile(shape.segments);
+    assert.ok(route.length<=24&&routeProfileDistance(route)<=100,shape.id);
+    assert.ok(route.every(part=>part.roadSpeedLimitKmh!=null),shape.id);
+  }
 });
 
 test('compact previews keep distance proportions and slope directions without editor actions',()=>{

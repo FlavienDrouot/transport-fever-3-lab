@@ -13,16 +13,13 @@ export function syncAnalysisPanels(document,view,{domain='rail'}={}){
   $('road-picker-toggle').hidden=!roadView;
   $('configuration-sidebar').hidden=view!=='configurator';
   $('configuration-picker-toggle').hidden=view!=='configurator';
-  $('profile-sidebar').hidden=view!=='route-profile';
   if($('optimizer-sidebar'))$('optimizer-sidebar').hidden=view!=='optimizer';
-  $('profile-picker-toggle').hidden=view!=='route-profile';
   $('line-capacity').hidden=view!=='economics';
   $('train-race-settings').hidden=!trainView&&!roadView&&view!=='optimizer';
   $('rail-service-note').hidden=view!=='economics';
   if(!trainView&&$('train-drawer').open)$('train-drawer').close();
   if(!roadView&&$('road-drawer').open)$('road-drawer').close();
   if(view!=='configurator'&&$('configuration-drawer').open)$('configuration-drawer').close();
-  if(view!=='route-profile'&&$('profile-drawer').open)$('profile-drawer').close();
 }
 
 export function mountPanelDrawers(document,mobile) {
@@ -31,7 +28,6 @@ export function mountPanelDrawers(document,mobile) {
     {drawer:'train-drawer',panel:'catalogue',toggle:'picker-toggle',close:'picker-close',anchor:'catalogue-anchor',focus:'train-search'},
     {drawer:'road-drawer',panel:'road-sidebar',toggle:'road-picker-toggle',close:'road-picker-close',anchor:'road-sidebar-anchor',focus:'road-vehicle-search'},
     {drawer:'configuration-drawer',panel:'configuration-sidebar',toggle:'configuration-picker-toggle',close:'configuration-picker-close',anchor:'configuration-sidebar-anchor',focus:'configuration-search'},
-    {drawer:'profile-drawer',panel:'profile-sidebar',toggle:'profile-picker-toggle',close:'profile-picker-close',anchor:'profile-sidebar-anchor',focus:'profile-segment-list'},
   ]){
     const drawer=$(ids.drawer),panel=$(ids.panel),toggle=$(ids.toggle);
     const sync=()=>{
