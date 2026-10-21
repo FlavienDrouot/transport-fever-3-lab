@@ -78,7 +78,10 @@ test('unsupported service shapes are reported instead of guessed',()=>{
   const mixed=freightPlan();operation(mixed.stops[0],coal.id,'load',20,{mode:'visit'});
   const kept=declaredService(mixed);assert.equal(kept.status,'applied');assert.equal(kept.rate,6000);assert.deepEqual(kept.issues,[]);
   const intermediate=freightPlan();intermediate.stops.splice(1,0,newRouteStop(1,'Halt'));
-  assert.match(declaredService(intermediate).issues[0],/Intermediate stops/);
+  const halted=declaredService(intermediate);
+  assert.deepEqual([halted.status,halted.rate,halted.issues],['applied',6000,[]]);
+  assert.deepEqual(halted.servicePattern.stops.map(s=>[s.outbound.load,s.outbound.unload]),[[1,0],[0,0],[0,1]]);
+  assert.equal(declaredRouteProfile(intermediate.segments,intermediate)[0].stopAfter,'Halt');
   const several=freightPlan();several.goods.push(grain);operation(several.stops[0],grain.id,'load',500);
   assert.match(declaredService(several).issues[0],/Several goods/);
 });
@@ -161,7 +164,7 @@ test('the declared platform length and specialized terminals feed the service co
 
 test('Compare and Composition receive the Rate and return only for Freight',()=>{
   const plan=freightPlan({back:6000});
-  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:6000,loadedReturn:true,cargo:'bulk',platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}},road:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}}}});
+  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:6000,loadedReturn:true,cargo:'bulk',servicePattern:null,platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}},road:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}}}});
   const passengers=declaredServiceInputs(plan,{category:'passengers'});
   assert.deepEqual([passengers.rate,passengers.loadedReturn,passengers.specializedTerminals.rail],[null,null,null]);
 });
@@ -177,7 +180,9 @@ test('the report lists what analyses use and what remains descriptive',()=>{
   assert.ok(report.issues.some(issue=>/recipes/.test(issue)));
   assert.deepEqual(declarationReport(createRoutePlan([segment])),{service:{status:'none',issues:[]},used:[],issues:[]});
   const halt=freightPlan();halt.stops.splice(1,0,newRouteStop(1,'Halt'));
-  assert.equal(declarationReport(halt).issues.filter(issue=>/Intermediate stops/.test(issue)).length,1);
+  const halted=declarationReport(halt);
+  assert.deepEqual(halted.issues,[]);
+  assert.ok(halted.used.some(item=>item.text==='vehicles stop at Halt'&&item.views.includes('race')));
 });
 
 const read=async name=>JSON.parse(await readFile(new URL(`../data/${name}.json`,import.meta.url)));
@@ -333,4 +338,17 @@ test('one building loads and another receives at the same stop, each with its ow
   assert.ok(model.notes.some(note=>/Mine loads, Shed receives/.test(note)));
   assert.ok(!model.issues.some(issue=>/several buildings/.test(issue)));
   const service=declaredService(plan);assert.deepEqual([service.status,service.rate,service.loadedReturn,service.cargo],['applied',1000,.5,'all']);
+});
+
+test('intermediate stops: the busiest section sets the Rate and each stop moves its share',()=>{
+  const plan=createTripPlan([segment,segment],'Line');plan.goods=[{id:'good:people',name:'Passengers',type:'passengers'}];
+  plan.stops.splice(1,0,newRouteStop(1,'Middle'));
+  const [a,m,b]=plan.stops.map(stop=>stop.id);
+  const trip=(id,from,to,rate)=>({id,cargoId:'good:people',from,to,rate,bothWays:true,fromBuildingId:null,toBuildingId:null});
+  plan.trips=[trip('trip:ab',a,b,900),trip('trip:am',a,m,100),trip('trip:mb',m,b,100)];
+  const service=declaredService(plan);
+  assert.deepEqual([service.status,service.rate,service.issues],['applied',1000,[]]);
+  // Every section carries 1,000: Middle swaps a tenth of the load each way.
+  assert.deepEqual(service.servicePattern.stops.map(s=>[s.outbound.load,s.outbound.unload,s.return.load,s.return.unload]),[[1,0,0,1],[.1,.1,.1,.1],[0,1,1,0]]);
+  assert.deepEqual(service.stopNames,['Middle']);
 });

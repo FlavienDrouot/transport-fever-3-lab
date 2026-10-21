@@ -416,3 +416,15 @@ test('existing line infrastructure is kept for free, upgraded for the maintenanc
   assert.throws(()=>validateLineInfrastructure({existing:[existing]},2),/each route segment/);
   assert.deepEqual(segmentLineTiers(part,'rail',2000).map(t=>t.annualMaintenance),[100000,300000,900000]);
 });
+
+test('intermediate stops: the Optimizer stops there and handles each stop\'s share',()=>{
+  const stopping=[{distanceKm:1,gradePercent:0,speedLimitKmh:80,stopAfter:'Middle'},{distanceKm:1,gradePercent:0,speedLimitKmh:80}];
+  const pattern={stops:[{outbound:{load:1,unload:0},return:{load:0,unload:1}},{outbound:{load:.5,unload:.5},return:{load:.5,unload:.5}},{outbound:{load:0,unload:1},return:{load:1,unload:0}}]};
+  const plain=run(small,{routeProfile:[{...stopping[0],stopAfter:undefined},stopping[1]],rate:500,domain:'road'});
+  const served=run(small,{routeProfile:stopping,servicePattern:pattern,rate:500,domain:'road'});
+  const cycle=answer=>Object.fromEntries(answer.best.road.map(r=>[r.id,r.cycle]));
+  const before=cycle(plain),after=cycle(served);
+  for(const id of Object.keys(after))if(before[id])assert.ok(after[id]>before[id]);
+  for(const result of served.best.road)assert.ok(Math.abs(result.rate-500)<1e-6||result.rate>500);
+  assert.throws(()=>optimizerRequest({routeProfile,servicePattern:pattern}),RangeError);
+});

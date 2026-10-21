@@ -60,12 +60,11 @@ test('All supplied formations contribute their expected aggregate rate', async (
     assert.ok(r.travelSeconds>createModel(t,data.source).timeAt(10));
   }
 });
-test('Invalid service parameters fail; zero fixed delay is allowed', () => {
-  for(const change of [{distanceKm:0},{distanceKm:NaN},{fillRatio:1.1},{fillRatio:-.1},{baseRate:0},{brakingDeceleration:0},{stationDelaySeconds:-1}]){
+test('Invalid service parameters fail', () => {
+  for(const change of [{distanceKm:0},{distanceKm:NaN},{fillRatio:1.1},{fillRatio:-.1},{baseRate:0},{brakingDeceleration:0}]){
     assert.throws(()=>analyseLine(train,{distanceKm:1,...change}),RangeError);
   }
   assert.throws(()=>analyseLine({...train,carCount:1.5},{distanceKm:1}),RangeError);
-  assert.equal(analyseLine(train,{distanceKm:1,stationDelaySeconds:0}).stationSeconds,15);
 });
 test('Absolute maintenance-per-throughput is reciprocal and uses hourly throughput', () => {
   const result=analyseLine(train,{distanceKm:1});

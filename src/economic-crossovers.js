@@ -19,7 +19,7 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
   const start=axis==='distance'?(automatic?axisDefinitions.distance.start:Math.min(axisDefinitions.distance.start,distance/10)):axisDefinitions[axis].start;
   const label=axisDefinitions[axis].label;
   // Freight engines take deliveries; the axis shows the Rate per direction, as in the game.
-  const rateKey=targets.freight?'demandPerYear':'demandPerDirection',deliveries=targets.freight?deliveriesPerRate(targets.loadedReturn):1;
+  const rateKey=targets.freight?'demandPerYear':'demandPerDirection',deliveries=targets.freight?deliveriesPerRate(targets.loadedReturn,targets.servicePattern):1;
   const current=automatic?null:{distance,year,utilization:fill*100,demand:targets[rateKey]==null?null:targets[rateKey]/deliveries,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
   let end={distance:automatic?1:distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
   const analysisTargets=automatic?uniformServiceStudyOptions(targets):targets;

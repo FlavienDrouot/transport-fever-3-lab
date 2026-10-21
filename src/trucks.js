@@ -2,13 +2,14 @@ import {roadRoundTripMotion} from './road-motion.js';
 import {UI_TERMS} from './ui-terms.js';
 import {roadGradientSpeeds,validateGradient} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
-import {sizeFleet,returnShare,deliveriesPerRate} from './service-fleet.js';
+import {sizeFleet,deliveriesPerRate} from './service-fleet.js';
+import {servicePattern,cycleHandling} from './stop-pattern.js';
 import {sizeRoadTerminalFleet,ROAD_MANEUVER_SECONDS} from './road-terminal-service.js';
 import {updateTablePreview} from './table-preview.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {formatTime} from './format.js';
 import {renderServiceSummary} from './service-summary.js';
-import {validateRouteProfile,reverseRouteProfile,routeProfileForDomain} from './route-profile.js';
+import {validateRouteProfile,reverseRouteProfile,routeProfileForDomain,routeStops} from './route-profile.js';
 
 export const FREIGHT_LOAD_SPEED_FACTOR = 0.0625;
 export const PASSENGER_LOAD_SPEED_FACTOR = 1;
@@ -88,9 +89,9 @@ export function selectRoadVehicles(datasets,{category='freight',includeTrams=fal
 }
 
 /** A–B–A cycle with optional motion and sequential handling of delivered capacity. */
-function analyseRoadService(trucks, {distanceKm, fillRatio = 1, loadedReturn = false, roadSpeedLimit = null, gradePercent = 0, routeProfile = null, motion = false, specializedTerminal = false, specializedWarehouse = false, stopA, stopB, maneuverSeconds=0}, baseRate) {
+function analyseRoadService(trucks, {distanceKm, fillRatio = 1, loadedReturn = false, roadSpeedLimit = null, gradePercent = 0, routeProfile = null, motion = false, specializedTerminal = false, specializedWarehouse = false, stopA, stopB, maneuverSeconds=0, servicePattern:declared=null}, baseRate) {
   if(!Number.isFinite(maneuverSeconds)||maneuverSeconds<0)throw new RangeError('Road maneuver time must be nonnegative.');
-  const share=returnShare(loadedReturn),terminalDelaySeconds = ROAD_OPERATION_DELAY_SECONDS * (share>0 ? 3 : 2)+maneuverSeconds;
+  const pattern=servicePattern({servicePattern:declared,loadedReturn,routeProfile}),last=pattern.stops.length-1;
   for (const [name,value] of Object.entries({distanceKm,baseRate})) {
     if (!Number.isFinite(value)||value<=0) throw new RangeError(`${name} must be positive and finite`);
   }
@@ -106,21 +107,19 @@ function analyseRoadService(trucks, {distanceKm, fillRatio = 1, loadedReturn = f
     const multiplier=row.truck.formationLoadingUnloadingSpeedMultiplier!==undefined?row.truck.formationLoadingUnloadingSpeedMultiplier:row.truck.loadingUnloadingSpeedMultiplier;
     if (!Number.isFinite(multiplier)||multiplier<=0) throw new RangeError('Handling multiplier must be positive and finite');
     const cargoPerLeg=row.truck.cargoCapacity*fillRatio;
-    const deliveredPerCycle=cargoPerLeg*(1+share);
     // Mean leg speeds include acceleration when enabled; Road braking is omitted.
     // Handling remains independent of travel; profiles scale to this distance.
     const travelSeconds=distanceKm/row.effectiveSpeedKmh*3600;
     const outboundTravelSeconds=distanceKm/row.outboundSpeedKmh*3600,returnTravelSeconds=distanceKm/row.returnSpeedKmh*3600;
-    const transferA=cargoPerLeg/(baseRate*multiplier*handlingMultiplierA);
-    const transferB=cargoPerLeg/(baseRate*multiplier*handlingMultiplierB);
-    const loadingSeconds=transferA+share*transferB;
-    const unloadingSeconds=transferB+share*transferA;
-    const stationSecondsA=transferA*(1+share)+terminalDelaySeconds;
-    const stationSecondsB=transferB*(1+share)+terminalDelaySeconds;
-    const roundTripSeconds=2*travelSeconds+loadingSeconds+unloadingSeconds+2*terminalDelaySeconds;
+    const rate=baseRate*multiplier,rateAt=stop=>rate*(stop===0?handlingMultiplierA:stop===last?handlingMultiplierB:1);
+    const h=cycleHandling(pattern,cargoPerLeg,rateAt,maneuverSeconds);
+    const {loadingSeconds,unloadingSeconds,stationSecondsA,stationSecondsB,deliveredPerCycle,pauseSeconds,intermediateStopSeconds,deliveries}=h;
+    // Fixed time at A, kept for terminal estimates: pauses for its transfers and departure, plus maneuvering.
+    const terminalDelaySeconds=h.visits[0].pauseSeconds;
+    const roundTripSeconds=2*travelSeconds+loadingSeconds+unloadingSeconds+pauseSeconds;
     const cargoPerYear=deliveredPerCycle/roundTripSeconds*GAME_YEAR_SECONDS;
     const costPerCargo=row.truck.economy.annualMaintenance/cargoPerYear;
-    return {...row,terminalDelaySeconds,stationSecondsA,stationSecondsB,handlingMultiplier,handlingMultiplierA,handlingMultiplierB,cargoPerLeg,deliveredPerCycle,travelSeconds,outboundTravelSeconds,returnTravelSeconds,loadingSeconds,unloadingSeconds,roundTripSeconds,cargoPerYear,costPerCargo};
+    return {...row,terminalDelaySeconds,pauseSeconds,intermediateStopSeconds,deliveries,stationSecondsA,stationSecondsB,handlingMultiplier,handlingMultiplierA,handlingMultiplierB,cargoPerLeg,deliveredPerCycle,travelSeconds,outboundTravelSeconds,returnTravelSeconds,loadingSeconds,unloadingSeconds,roundTripSeconds,cargoPerYear,costPerCargo};
   }).sort((a,b)=>a.costPerCargo-b.costPerCargo||a.truck.year-b.truck.year||a.truck.name.localeCompare(b.truck.name,'en'));
   let rank=0,previous;
   return rows.map((row,i)=>{
@@ -170,13 +169,13 @@ export function renderTruckService(document,trucks,options) {
   const unit=UI_TERMS.capacityUnit;
   document.getElementById('truck-service-readout').closest('table').classList.toggle('has-targets',options.demandPerYear!=null||options.maxHeadwaySeconds!=null);
   renderServiceSummary(document.getElementById('truck-service-summary'),{names:rows.filter(row=>row.rank===1).map(row=>row.truck.name),cost:rows[0]?.costPerCargo,unit,emptyMessage:trucks.length?`No selected vehicle can complete this ${profile?'route':'gradient'} with its weight, Power and Traction force. Reduce the gradient or choose a stronger vehicle.`:'No vehicles selected for this category and year. Choose vehicles or adjust the filters.'});
-  document.getElementById('road-service-caption').textContent=`A–B–A · ${fmt(options.distanceKm,profile?3:1)} km per leg${profile?` · ${profile.length} segment${profile.length===1?'':'s'} (${options.motion?'acceleration; braking omitted':'theoretical steady speeds'})`:options.gradePercent?` · ${fmt(options.gradePercent,1)}% A→B`:''} · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'}${!passenger&&rows.length?` · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}`:''}. ${options.motion?'Road motion uses the shared Traction force/Power model and empty weight in both directions. ':''}Travel and handling times in m:ss; handling totals cover the entire round trip.`;
+  document.getElementById('road-service-caption').textContent=`A–B–A · ${fmt(options.distanceKm,profile?3:1)} km per leg${profile&&routeStops(profile).length?` · stops at ${routeStops(profile).join(', ')}`:''}${profile?` · ${profile.length} segment${profile.length===1?'':'s'} (${options.motion?'acceleration; braking omitted':'theoretical steady speeds'})`:options.gradePercent?` · ${fmt(options.gradePercent,1)}% A→B`:''} · ${passenger?'equal utilization in both directions':options.loadedReturn?'loaded in both directions':'empty return'}${!passenger&&rows.length?` · handling A ×${rows[0].handlingMultiplierA} / B ×${rows[0].handlingMultiplierB}`:''}. ${options.motion?'Road motion uses the shared Traction force/Power model and empty weight in both directions. ':''}Travel and handling times in m:ss; handling totals cover the entire round trip.`;
   if(document.getElementById('road-gradient-exclusions'))document.getElementById('road-gradient-exclusions').textContent=`Excluded on this ${profile?'route':'gradient'} (cannot climb or missing mechanical data): `+trucks.filter(t=>!rows.some(r=>r.truck.id===t.id)).map(t=>t.name).join(', ');
   if(document.getElementById('road-gradient-exclusions'))document.getElementById('road-gradient-exclusions').hidden=rows.length===trucks.length;
   if(document.getElementById('road-travel-column'))document.getElementById('road-travel-column').textContent=directional?'Travel A→B / B→A':'Travel / leg';
   renderTruckBars(document.getElementById('truck-bars'),rows);
   updateTablePreview(document,'truck-bar-list');
-  document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2,true)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${directional?`${formatTime(row.outboundTravelSeconds)} / ${formatTime(row.returnTravelSeconds)}`:formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td><td class="road-fleet-column">${row.vehicleCount}</td><td class="road-fleet-column">${fmt(row.actualFillRatio*100,1)}%</td><td class="road-fleet-column">${formatTime(row.headwaySeconds)}</td><td class="road-fleet-column">${fmt(row.deliveredPerYear/deliveriesPerRate(passenger||options.loadedReturn),0)}</td><td class="road-fleet-column">$${fmt(row.fleetMaintenance,0)}</td></tr>`).join('');
+  document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2,true)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${directional?`${formatTime(row.outboundTravelSeconds)} / ${formatTime(row.returnTravelSeconds)}`:formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td><td class="road-fleet-column">${row.vehicleCount}</td><td class="road-fleet-column">${fmt(row.actualFillRatio*100,1)}%</td><td class="road-fleet-column">${formatTime(row.headwaySeconds)}</td><td class="road-fleet-column">${fmt(row.deliveredPerYear/deliveriesPerRate(passenger||options.loadedReturn,options.servicePattern),0)}</td><td class="road-fleet-column">$${fmt(row.fleetMaintenance,0)}</td></tr>`).join('');
   updateTablePreview(document,'truck-service-readout');
 }
 

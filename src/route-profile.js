@@ -29,6 +29,12 @@ export function validateRouteProfile(segments) {
       if(![2,4].includes(part.roadLanes))throw new RangeError(`Segment ${index+1}: Road must have 2 or 4 lanes`);
       metadata.roadLanes=part.roadLanes;
     }
+    // An intermediate stop at the end of this segment, named for charts; never after the last segment.
+    if(part.stopAfter!=null){
+      if(typeof part.stopAfter!=='string'||!part.stopAfter.trim()||part.stopAfter.length>120)throw new RangeError(`Segment ${index+1}: name the stop at its end`);
+      if(index===segments.length-1)throw new RangeError('The last segment ends at B, not at an intermediate stop');
+      metadata.stopAfter=part.stopAfter;
+    }
     if(part.roadCity!=null){
       if(typeof part.roadCity!=='boolean')throw new RangeError(`Segment ${index+1}: choose a valid city constraint`);
       metadata.roadCity=part.roadCity;
@@ -47,8 +53,16 @@ export function routeProfileForDomain(segments,domain='rail') {
 }
 
 export function reverseRouteProfile(segments) {
-  return validateRouteProfile(segments).toReversed().map(part=>({...part,gradePercent:-part.gradePercent}));
+  const route=validateRouteProfile(segments);
+  // A stop after segment i stands between i and i+1; reversed, it follows what was segment i+1.
+  return route.toReversed().map((part,i,reversed)=>{
+    const {stopAfter,...rest}=part,before=route[route.length-2-i]?.stopAfter;
+    return {...rest,gradePercent:-part.gradePercent,...(i<reversed.length-1&&before?{stopAfter:before}:{})};
+  });
 }
+
+/** Intermediate stop names in A→B order. */
+export const routeStops=segments=>validateRouteProfile(segments).filter(part=>part.stopAfter).map(part=>part.stopAfter);
 
 export function routeProfileDistance(segments) {
   return validateRouteProfile(segments).reduce((total,part)=>total+part.distanceKm,0);
@@ -56,12 +70,13 @@ export function routeProfileDistance(segments) {
 
 const trajectoryCache=new WeakMap();
 /** Tractive motion with calibrated gravity; configured braking anticipates caps and terminal stops. */
-export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5}={}) {
+export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5,stopDwellSeconds=0}={}) {
   const motionConfig=train.model?.motionConfig??RAIL_MOTION;
   const route=routeProfileForDomain(segments,motionConfig.transportDomain??'rail');
   const brakingEnabled=motionConfig.brakingEnabled!==false;
   if(!Number.isFinite(brakingDeceleration)||brakingDeceleration<=0)throw new RangeError('Braking must be positive');
-  const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration]);
+  if(!Number.isFinite(stopDwellSeconds)||stopDwellSeconds<0)throw new RangeError('Stop dwell must be nonnegative');
+  const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration,stopDwellSeconds]);
   const identity=train.model??train;
   let cache=trajectoryCache.get(identity);
   if(!cache){cache=new Map();trajectoryCache.set(identity,cache);}
@@ -70,20 +85,21 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   const vehicleCap=train.maxSpeedKmh/3.6;
   if(![mass,force,power,vehicleCap].every(n=>Number.isFinite(n)&&n>0))throw new RangeError('Invalid train motion parameters');
   let end=0;
-  const sections=route.map(part=>{const start=end;end+=part.distanceKm*1000;return {start,end,gradePercent:part.gradePercent,cap:Math.min(vehicleCap,part.speedLimitKmh/3.6),gravity:gradientAcceleration(part.gradePercent)*(motionConfig.gravityFactor??1)};});
+  const sections=route.map(part=>{const start=end;end+=part.distanceKm*1000;return {start,end,gradePercent:part.gradePercent,cap:Math.min(vehicleCap,part.speedLimitKmh/3.6),gravity:gradientAcceleration(part.gradePercent)*(motionConfig.gravityFactor??1),stop:part.stopAfter??null};});
   const routeMetres=end,dt=motionConfig.stepSeconds;
   const speeds=[0],distances=[0],times=[0],events=[];
   let position=0,speed=0,time=0,index=0,stalled=false,brakingLast=false;
   // The minimum braking ability over the remaining path gives a conservative
   // envelope for every future lower cap, including the stop at B.
-  const targets=brakingEnabled?sections.slice(1).map((section,i)=>({distance:section.start,speed:section.cap,label:`Segment ${i+2}`})):[];
+  const targets=brakingEnabled?sections.slice(1).map((section,i)=>({distance:section.start,speed:sections[i].stop?0:section.cap,label:`Segment ${i+2}`})):[];
   if(brakingEnabled&&brakeAtEnd)targets.push({distance:routeMetres,speed:0,label:'Terminal B'});
   const braking=sections.map(section=>brakingDeceleration+section.gravity);
   if(brakingEnabled&&braking.some(value=>value<=0))throw new RangeError('Vehicle cannot brake on this gradient');
   const envelope=(metres,partIndex)=>{
     let allowed=sections[partIndex].cap;
     for(const target of targets){
-      if(target.distance<metres-1e-7)continue;
+      // A stop already reached no longer limits the departure from it.
+      if(target.distance<metres-1e-7||target.distance<=sections[partIndex].start+1e-7)continue;
       let distance=target.distance-metres,b=Infinity;
       for(let k=partIndex;k<sections.length&&sections[k].start<target.distance;k++)b=Math.min(b,braking[k]);
       allowed=Math.min(allowed,Math.sqrt(target.speed**2+2*b*distance));
@@ -91,6 +107,13 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
     return allowed;
   };
   const push=(t,d,v)=>{times.push(t);distances.push(d);speeds.push(v);};
+  // Leaving a section: at an intermediate stop the vehicle halts (Road, without braking, instantly) and waits.
+  const nextSection=()=>{
+    const stop=sections[index].stop;
+    if(stop){speed=0;speeds[speeds.length-1]=0;events.push({time,distanceKm:position/1000,label:stop});
+      if(stopDwellSeconds>0){time+=stopDwellSeconds;push(time,position,0);}}
+    index++;events.push({time,distanceKm:position/1000,label:`Segment ${index+1}`});
+  };
   // Bounded by 100 km at 0.2 s; a stalled uphill train exits immediately.
   for(let steps=0;position<routeMetres-1e-7&&steps<2_000_000;steps++){
     const section=sections[index];
@@ -113,7 +136,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
       if(bulkTo-position>speed*dt*10){
         const delta=bulkTo-position;time+=delta/speed;position=bulkTo;
         push(time,position,speed);
-        if(position>=section.end-1e-7&&index<sections.length-1){index++;events.push({time,distanceKm:position/1000,label:`Segment ${index+1}`});}
+        if(position>=section.end-1e-7&&index<sections.length-1)nextSection();
         continue;
       }
     }
@@ -164,7 +187,7 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
     if(travelled<1e-10){stalled=true;break;}
     position=Math.min(routeMetres,position+travelled);time+=step;speed=next;
     push(time,position,speed);
-    if(position>=section.end-1e-7&&index<sections.length-1){index++;events.push({time,distanceKm:position/1000,label:`Segment ${index+1}`});}
+    if(position>=section.end-1e-7&&index<sections.length-1)nextSection();
   }
   if(position<routeMetres-1e-7)stalled=true;
   if(brakingEnabled&&brakeAtEnd&&!stalled&&speed<.01){speed=0;speeds[speeds.length-1]=0;}

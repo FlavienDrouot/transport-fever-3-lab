@@ -12,7 +12,7 @@ import {mountRouteProfileControls,renderRouteProfileStatus} from './route-profil
 import {mountRoutePlanControls} from './route-plan-controls.js';
 import {loadedReturnValue,deliveriesPerRate} from './service-fleet.js';
 import {declaredRouteProfile,withoutDeclaredLineChoices,mergeUndeclaredLineChoices,declarationReport,declaredServiceInputs,declaredService,declaredLoadNames} from './route-plan-service.js';
-import {routeProfileForDomain} from './route-profile.js';
+import {routeProfileForDomain,routeStops} from './route-profile.js';
 import {createRouteSelection,mountRouteChoice} from './route-selection.js';
 import {canClimbRail} from './gradient.js';
 import {createDataLoader} from './data-loader.js';
@@ -80,13 +80,17 @@ const sharedAtLoad=decodeShareState(location.search);let shareReady=false;
 let busDataset, tramDataset, includeTrams = false;
 let truckDataset, truckYear = 2035, truckCargo = 'all';
 let roadFlow=null,roadHeadway=null,roadFrequencyMode='maximum';
-function roadTargets(){return comparisonServiceTargets({demandPerYear:roadFlow===null?null:roadFlow*deliveriesPerRate(comparisonCategory==='passengers'||truckService.loadedReturn),maxHeadwaySeconds:roadHeadway,frequencyMode:roadFrequencyMode});}
+function roadTargets(){const servicePattern=activeServicePattern();return comparisonServiceTargets({servicePattern,demandPerYear:roadFlow===null?null:roadFlow*deliveriesPerRate(comparisonCategory==='passengers'||truckService.loadedReturn,servicePattern),maxHeadwaySeconds:roadHeadway,frequencyMode:roadFrequencyMode});}
 let truckService = {distanceKm:1,fillRatio:1,loadedReturn:false,specializedTerminal:false,specializedWarehouse:false};
 let dataset, experiments, trains, selected, highlighted, raceView = 'distance', routeDistance = 10, catalogueYear = 2035, lineFill = 1, desiredFlow = null, maxHeadwaySeconds = null, frequencyMode = 'maximum', infrastructureSpeedKmh = 350, allowMultipleUnits = false, platformLengthMetres = null;
 let comparisonCategory='passengers',economicCargo='all';
 const routeSelection=createRouteSelection({distanceKm:10,gradePercent:0,speedLimitKmh:350,roadSpeedLimitKmh:120});
 let railGradePercent=0,railRouteProfile=routeSelection.segments;
 let railFreight={loadedReturn:false,stopA:{},stopB:{}};
+// What each declared stop loads and unloads; only while the custom route declares intermediate stops.
+let declaredPattern=null;
+const stopsCaption=()=>{const stops=routeStops(railRouteProfile);return stops.length?` · stops at ${stops.join(', ')}`:'';};
+const activeServicePattern=()=>declaredPattern&&routeStops(railRouteProfile).length===declaredPattern.stops.length-2?declaredPattern:null;
 function setComparisonCategory(category){
   comparisonCategory=category;
   comparisonCategoryControl?.setValue(category);
@@ -220,6 +224,8 @@ function syncDeclaredLocks(){
     changed=true;highlighted=undefined;
   }
   for(const ids of [['enable-platform-limit','platform-length'],['composition-platform-enabled','composition-platform']])pair(ids,inputs?.platformLengthMetres);
+  const pattern=inputs?.servicePattern??null;
+  if(JSON.stringify(pattern)!==JSON.stringify(declaredPattern)){declaredPattern=pattern;changed=true;}
   for(const [domain,ids] of [['rail',{stopA:['rail-terminal-a','composition-terminal-a'],stopB:['rail-terminal-b','composition-terminal-b']}],['road',{stopA:['truck-specialized-terminal'],stopB:['truck-specialized-terminal-b']}]])
     for(const [stop,names] of Object.entries(ids))for(const id of names)lock(id,inputs?.specializedTerminals[domain]?.[stop].specializedTerminal?true:null);
   for(const [stop,ids] of [['stopA',['rail-warehouse-a','composition-warehouse-a','truck-specialized-warehouse']],['stopB',['rail-warehouse-b','composition-warehouse-b','truck-specialized-warehouse-b']]])
@@ -249,8 +255,8 @@ function comparisonServiceTargets(targets){
   const active=serviceStudyTargets({...targets,studyScope,studyCustomRoute:routeSelection.mode==='custom'});
   return studyBounded()?active:uniformServiceStudyOptions(active);
 }
-function serviceTargets(){return comparisonServiceTargets({studyScope,studyCustomRoute:routeSelection.mode==='custom',gradePercent:railGradePercent,routeProfile:railRouteProfile,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh:railRouteProfile?null:infrastructureSpeedKmh,platformLengthMetres,...(comparisonCategory==='freight'?{freight:true,demandPerYear:desiredFlow===null?null:desiredFlow*deliveriesPerRate(railFreight.loadedReturn),allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})});}
-function compositionSettings(){return {distanceKm:routeDistance,fillRatio:lineFill,gradePercent:railGradePercent,routeProfile:railRouteProfile,routeMode:routeSelection.mode,desiredFlow,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...railFreight};}
+function serviceTargets(){const servicePattern=activeServicePattern();return comparisonServiceTargets({servicePattern,studyScope,studyCustomRoute:routeSelection.mode==='custom',gradePercent:railGradePercent,routeProfile:railRouteProfile,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh:railRouteProfile?null:infrastructureSpeedKmh,platformLengthMetres,...(comparisonCategory==='freight'?{freight:true,demandPerYear:desiredFlow===null?null:desiredFlow*deliveriesPerRate(railFreight.loadedReturn,servicePattern),allowMultipleUnits:false,...railFreight}:{demandPerDirection:desiredFlow,allowMultipleUnits})});}
+function compositionSettings(){return {servicePattern:activeServicePattern(),distanceKm:routeDistance,fillRatio:lineFill,gradePercent:railGradePercent,routeProfile:railRouteProfile,routeMode:routeSelection.mode,desiredFlow,maxHeadwaySeconds,frequencyMode,infrastructureSpeedKmh,platformLengthMetres,...railFreight};}
 function updateCompositionSettings(settings){
   lineFill=settings.fillRatio;railGradePercent=settings.gradePercent;
   desiredFlow=settings.desiredFlow;maxHeadwaySeconds=settings.maxHeadwaySeconds;frequencyMode=settings.frequencyMode;
@@ -298,7 +304,8 @@ function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.n
 // The answer comes first: the arrival winner, its lead and the conditions behind it.
 function renderRaceVerdict(ranking,studyDistance,blocked){
   const root=$('race-summary'),[first,second]=ranking,road=navigation.domain==='road';
-  const conditions=road?'Road braking is omitted.':routeSelection.mode==='custom'?'Segment gradients and speed-limit braking are included; no stop at B.':`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`;
+  const stops=routeStops(railRouteProfile),halts=stops.length?` Stops at ${stops.join(', ')} for the 2 s departure pause.`:'';
+  const conditions=(road?'Road braking is omitted.':routeSelection.mode==='custom'?'Segment gradients and speed-limit braking are included; no stop at B.':`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`)+halts;
   const blockedNote=blocked.length?` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>escape(t.name)).join(', ')}.`:'';
   if(!first){root.innerHTML=`<p class="race-verdict-note">Select at least one vehicle to compare travel times.${blockedNote}</p>`;return;}
   const km=fmtKm(studyDistance),bounded=studyBounded();
@@ -643,7 +650,7 @@ function renderEconomicControls() {
   $('service-targets-description').previousElementSibling.title=freight?'Optional: size a fleet for the total delivered cargo per year, or an interval between trains.':'Optional: choose a passenger rate per direction or interval target to size a fleet.';
   $('economic-metric-help').textContent=studyBounded()?`Running costs per ${unit} carried on the A–B line. Lower is better.`:`Running costs per ${unit} carried 1 km at cruising speed. Lower is better.`;
   $('economic-cost-formula').textContent=freight?'Cost per capacity = fleet running costs / capacity transported per game year. Empty return trips still incur running costs.':'Cost per capacity = fleet running costs / capacity transported per game year. Each boarding counts once: A→B and B→A are separate journeys.';
-  $('economic-calendar-help').textContent=freight?'Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. A target rate counts all cargo delivered, including both directions when loaded return is enabled.':'Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. Per-direction throughput is half the total A–B–A throughput.';
+  $('economic-calendar-help').textContent='Calendar: 4 simulation seconds per game day; 365 days = 1,460 simulation seconds per game year. Rate is per direction, on the busiest section.';
   $('economic-passenger-revenue').hidden=freight;
   $('economic-passenger-assumptions').hidden=freight;
   $('economic-freight-assumptions').hidden=!freight;
@@ -653,7 +660,7 @@ function renderEconomicControls() {
 }
 function renderLineAnalysis() {
   renderEconomicControls();
-  const targets=serviceTargets(),desiredFlow=targets.demandPerDirection??(targets.demandPerYear==null?null:targets.demandPerYear/deliveriesPerRate(railFreight.loadedReturn)),maxHeadwaySeconds=targets.maxHeadwaySeconds,allowMultipleUnits=targets.allowMultipleUnits,platformLengthMetres=targets.platformLengthMetres;
+  const targets=serviceTargets(),desiredFlow=targets.demandPerDirection??(targets.demandPerYear==null?null:targets.demandPerYear/deliveriesPerRate(railFreight.loadedReturn,targets.servicePattern)),maxHeadwaySeconds=targets.maxHeadwaySeconds,allowMultipleUnits=targets.allowMultipleUnits,platformLengthMetres=targets.platformLengthMetres;
   const freight=comparisonCategory==='freight',unit=UI_TERMS.capacityUnit;
   $('occupancy-label').textContent=desiredFlow===null?'Utilization':'Utilization limit';
   $('utilization-help').textContent=desiredFlow===null?'Share of capacity used on each loaded leg.':'Maximum utilization of capacity when sizing the fleet.';
@@ -673,7 +680,7 @@ function renderLineAnalysis() {
   const winners=rows.filter(({result})=>best>0&&Math.abs(result.efficiency/best-1)<1e-9);
   renderServiceSummary($('line-summary'),{names:winners.map(({t})=>t.name),cost:winners[0]?.result.maintenancePerUnit,unit,
     emptyMessage:!rows.length?(selection.excluded.length?'No selected train fits the length or gradient constraints.':'No selected train is available in this year.'):`Utilization is zero: no transported ${UI_TERMS.capacityUnit} and no best service choice.`});
-  $('line-caption').textContent=`A–B–A at ${fmtKm(routeDistance)} km per leg${railRouteProfile?' · segment profile':railGradePercent?` · ${fmt(railGradePercent,1)}% A→B`:''} · ${freight?(railFreight.loadedReturn?'loaded return · ':'empty return · '):''}normal-difficulty running costs`;
+  $('line-caption').textContent=`A–B–A at ${fmtKm(routeDistance)} km per leg${stopsCaption()}${railRouteProfile?' · segment profile':railGradePercent?` · ${fmt(railGradePercent,1)}% A→B`:''} · ${freight?(railFreight.loadedReturn?'loaded return · ':'empty return · '):''}normal-difficulty running costs`;
   const headings=freight?[
     ['Rank'],['Train'],[`Cost / ${UI_TERMS.capacityUnit}`,'$ · lower is better'],['Trains'],[UI_TERMS.frequency,'m:ss'],[UI_TERMS.rate,`${UI_TERMS.capacityUnit} / year / direction`],
     ['Length','m / train'],[UI_TERMS.capacity,`${UI_TERMS.capacityUnit} / train`],[UI_TERMS.utilization,'%'],[UI_TERMS.runningCosts,'$ / year (fleet)'],['Load / loaded leg',UI_TERMS.capacityUnit],['Handling A / B',`${UI_TERMS.capacityUnit} / s`],[railGradePercent||railRouteProfile?'Travel A→B / B→A':'Travel / leg','m:ss'],['Stop A / B','m:ss'],['Round trip','m:ss']
@@ -688,7 +695,7 @@ function renderLineAnalysis() {
     if(prior===undefined||Math.abs(score-prior)>Math.max(1e-7,Math.abs(score||0)*1e-9))rank=i+1;
     prior=score;
     const cells=freight?[
-      score===null?'—':fmt(score,2),r.trainCount,formatTime(r.headwaySeconds),fmt(r.deliveredPerYear/deliveriesPerRate(railFreight.loadedReturn),0),fmt(r.trainLengthMetres,1),r.capacityPerTrain,`${fmt(r.actualOccupancyRatio*100,1)}%`,fmt(r.fleetMaintenance,0),
+      score===null?'—':fmt(score,2),r.trainCount,formatTime(r.headwaySeconds),fmt(r.deliveredPerYear/deliveriesPerRate(railFreight.loadedReturn,activeServicePattern()),0),fmt(r.trainLengthMetres,1),r.capacityPerTrain,`${fmt(r.actualOccupancyRatio*100,1)}%`,fmt(r.fleetMaintenance,0),
       fmt(r.cargoPerLeg),`${fmt(r.handlingRateA,2)} / ${fmt(r.handlingRateB,2)}`,(railGradePercent||railRouteProfile)?`${formatTime(r.outboundTravelSeconds)} / ${formatTime(r.returnTravelSeconds)}`:formatTime(r.travelSeconds),`${formatTime(r.stationSecondsA)} / ${formatTime(r.stationSecondsB)}`,formatTime(r.roundTripSeconds)
     ]:[
       score===null?'—':fmt(score,2),r.trainCount,formatTime(r.headwaySeconds),fmt(r.perDirectionJourneysPerYear,0),r.unitsPerTrain,fmt(r.trainLengthMetres,1),r.capacityPerTrain,`${fmt(r.actualOccupancyRatio*100,1)}%`,fmt(r.fleetMaintenance,0),fmt(r.passengers),
@@ -1101,7 +1108,7 @@ async function init() {
   });
   updateRoadCategory=()=>{
     const passenger=comparisonCategory==='passengers';
-    const targets=roadTargets(),roadFlow=targets.demandPerYear===null?null:targets.demandPerYear/deliveriesPerRate(passenger||truckService.loadedReturn),roadHeadway=targets.maxHeadwaySeconds;
+    const targets=roadTargets(),roadFlow=targets.demandPerYear===null?null:targets.demandPerYear/deliveriesPerRate(passenger||truckService.loadedReturn,targets.servicePattern),roadHeadway=targets.maxHeadwaySeconds;
     $('road-metric-help').textContent=studyBounded()?`Running costs per ${UI_TERMS.capacityUnit} carried on the A–B line. Lower is better.`:`Running costs per ${UI_TERMS.capacityUnit} carried 1 km at cruising speed. Lower is better.`;
     $('road-intro').textContent=passenger?`Compare buses${includeTrams?' and passenger trams':''} on A–B–A, with equal utilization in both directions. Fixed passenger handling factor: 1.`:`Compare trucks${includeTrams?' and freight trams':''} on A–B–A. Fixed freight handling factor: 0.0625 (1/16).`;
     for(const id of ['road-freight-filter','road-return-control','road-freight-facilities'])$(id).hidden=passenger;

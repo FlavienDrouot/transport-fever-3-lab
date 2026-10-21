@@ -1,6 +1,7 @@
 import {analyseService, GAME_YEAR_SECONDS, serviceEligible, roundTripMotion} from './line.js';
 import {withRailSpeedLimit} from './rail-motion.js';
-import {sizeFleet,returnShare} from './service-fleet.js';
+import {sizeFleet} from './service-fleet.js';
+import {servicePattern,cycleHandling} from './stop-pattern.js';
 
 import {FREIGHT_LOAD_SPEED_FACTOR} from './trucks.js';
 
@@ -11,7 +12,7 @@ function handlingRate(multiplier, stop, name) {
   return FREIGHT_LOAD_SPEED_FACTOR * multiplier * (specializedTerminal ? 2 : 1) * (specializedWarehouse ? 2 : 1);
 }
 
-/** Whole freight formations on A–B–A; demand counts all units delivered per game year.
+/** Whole freight formations on A–B–A, stopping at the route's intermediate stops; demand counts all units delivered per game year.
  * Motion uses empty mass in both directions. Terminal bonuses only change transfers.
  */
 export function analyseFreightService(train, options) {
@@ -37,18 +38,16 @@ export function analyseFreightService(train, options) {
   const vehicle = infrastructureSpeedKmh === null ? train : withRailSpeedLimit(train, infrastructureSpeedKmh);
   const motion = roundTripMotion(vehicle, {distanceKm,brakingDeceleration,gradePercent:options.gradePercent??0,routeProfile:options.routeProfile??null});
   if(motion.eligible===false)return {eligible:false,efficiency:0,maintenancePerUnit:null};
-  // The busier leg carries the full load and the other leg a share of it. Motion uses
-  // empty mass, so which direction is busier does not change the cycle.
-  const returns = returnShare(loadedReturn);
-  // Each configured operation has a 2 s pause, followed by 2 s before departure.
-  const pauseSeconds = returns > 0 ? 6 : 4;
+  // The busiest section carries the full load; each stop moves its share of it (A–B–A: the
+  // return a share of the outbound load). Motion uses empty mass, so loads do not change travel.
+  const pattern = servicePattern({servicePattern:options.servicePattern ?? null, loadedReturn, routeProfile:options.routeProfile ?? null});
+  const baseRate = FREIGHT_LOAD_SPEED_FACTOR * multiplier, last = pattern.stops.length - 1;
+  const rateAt = stop => stop === 0 ? handlingRateA : stop === last ? handlingRateB : baseRate;
   const cycleFor = cargoPerLeg => {
-    const loadingSeconds = cargoPerLeg / handlingRateA + returns * cargoPerLeg / handlingRateB;
-    const unloadingSeconds = cargoPerLeg / handlingRateB + returns * cargoPerLeg / handlingRateA;
-    const stationSecondsA = (1 + returns) * cargoPerLeg / handlingRateA + pauseSeconds;
-    const stationSecondsB = (1 + returns) * cargoPerLeg / handlingRateB + pauseSeconds;
-    return {cargoPerLeg, deliveredPerCycle:cargoPerLeg * (1 + returns), loadingSeconds, unloadingSeconds,
-      stationSecondsA, stationSecondsB, roundTripSeconds:2 * motion.travelSeconds + stationSecondsA + stationSecondsB};
+    const h = cycleHandling(pattern, cargoPerLeg, rateAt);
+    return {cargoPerLeg, deliveredPerCycle:h.deliveredPerCycle, loadingSeconds:h.loadingSeconds, unloadingSeconds:h.unloadingSeconds,
+      stationSecondsA:h.stationSecondsA, stationSecondsB:h.stationSecondsB, intermediateStopSeconds:h.intermediateStopSeconds, deliveries:h.deliveries,
+      roundTripSeconds:2 * motion.travelSeconds + h.loadingSeconds + h.unloadingSeconds + h.pauseSeconds};
   };
   const baseline = cycleFor(train.cargoCapacity * fillRatio);
   const fleet = sizeFleet({cycleSeconds:baseline.roundTripSeconds,

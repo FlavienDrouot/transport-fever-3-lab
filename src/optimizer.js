@@ -2,6 +2,7 @@ import {buildConsist,railComponents,tramComponents,lightRailComponents} from './
 import {mixedLightRailFormations,formationVehicleCostBound} from './optimizer-trams.js';
 import {analyseEconomicService} from './rail-freight.js';
 import {deliveriesPerRate} from './service-fleet.js';
+import {servicePattern as checkedPattern} from './stop-pattern.js';
 import {analyseRoadFleet,matchesFreightFilter,selectRoadVehicles} from './trucks.js';
 import {routeProfileDistance,validateRouteProfile} from './route-profile.js';
 import {RAIL_PLATFORM_MAX_LENGTH,validateOptimizerInfrastructure,optimizerTrainLengthLimit,optimizerTerminalChoices,optimizerStorageCapacity} from './optimizer-infrastructure.js';
@@ -10,7 +11,7 @@ import {ROAD_MANEUVER_SECONDS} from './road-terminal-service.js';
 import {railTerminalEstimates,RAIL_SWITCH_LENGTH_METRES} from './rail-terminal-service.js';
 
 export const OPTIMIZER_DEFAULTS={domain:'both',includeTrams:false,identicalMUsOnly:true,category:'passengers',cargo:'all',rate:1000,minHeadwaySeconds:null,maxHeadwaySeconds:null,maxLegSeconds:null,maxOutboundLegSeconds:null,maxReturnLegSeconds:null,fillRatio:1,year:2035,ignoreRetirements:true,
-  maxTrainLength:RAIL_PLATFORM_MAX_LENGTH,maxRoadTramLength:80,maxLocomotives:2,maxWagons:40,maxFleet:1000,loadedReturn:false,stopA:{},stopB:{},infrastructure:null,lineInfrastructure:null};
+  maxTrainLength:RAIL_PLATFORM_MAX_LENGTH,maxRoadTramLength:80,maxLocomotives:2,maxWagons:40,maxFleet:1000,loadedReturn:false,servicePattern:null,stopA:{},stopB:{},infrastructure:null,lineInfrastructure:null};
 export const OPTIMIZER_MAX_TRAIN_LENGTH=RAIL_PLATFORM_MAX_LENGTH;
 
 export function optimizerRequest(input){
@@ -30,6 +31,8 @@ export function optimizerRequest(input){
   if(typeof request.ignoreRetirements!=='boolean')throw new RangeError('Choose a valid retirement setting.');
   if(typeof request.loadedReturn!=='boolean'&&!(Number.isFinite(request.loadedReturn)&&request.loadedReturn>=0&&request.loadedReturn<=1))throw new RangeError('Choose a valid return load.');
   if(typeof request.includeTrams!=='boolean')throw new RangeError('Choose a valid tram setting.');
+  // A declared stop pattern must match the route's intermediate stops.
+  if(request.servicePattern!==null)request.servicePattern=checkedPattern({servicePattern:request.servicePattern,routeProfile:request.routeProfile});
   if(typeof request.identicalMUsOnly!=='boolean')throw new RangeError('Choose a valid MU coupling setting.');
   for(const stop of ['stopA','stopB']){
     const facilities=request[stop];
@@ -150,10 +153,10 @@ export function evaluateOptimizerCandidate(candidate,data,request){
 }
 
 function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice,linePlan=null){
-  const freight=request.category==='freight',deliveries=deliveriesPerRate(!freight||request.loadedReturn);
+  const freight=request.category==='freight',deliveries=deliveriesPerRate(!freight||request.loadedReturn,request.servicePattern);
   const storage=freight?optimizerStorageCapacity(choice.stopA,choice.stopB):Infinity;
   const options={distanceKm:request.distanceKm,routeProfile:request.routeProfile,fillRatio:freight?Math.min(request.fillRatio,storage/vehicle.cargoCapacity):request.fillRatio,
-    maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',loadedReturn:request.loadedReturn,stopA:choice.stopA,stopB:choice.stopB,
+    maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',loadedReturn:request.loadedReturn,servicePattern:request.servicePattern,stopA:choice.stopA,stopB:choice.stopB,
     maneuverSeconds:domain==='road'&&choice.selection?ROAD_MANEUVER_SECONDS:0};
   const analyse=()=>domain==='rail'?analyseEconomicService(vehicle,{...options,freight,allowMultipleUnits:false,platformLengthMetres:choice.maxTrainLength,
     ...(freight?{demandPerYear:request.rate*deliveries}:{demandPerDirection:request.rate})}):
@@ -182,7 +185,7 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
     cycle:service.roundTripSeconds,outboundTravelSeconds,returnTravelSeconds,outboundLegSeconds,returnLegSeconds,unitCost:service.maintenancePerUnit??service.costPerCargo,
     purchase:vehicle.economy.purchasePrice*(service.trainCount??service.vehicleCount)};
   if(![result.cost,result.rate,result.frequency,result.utilization,result.cycle,result.unitCost,outboundTravelSeconds,returnTravelSeconds,outboundLegSeconds,returnLegSeconds].every(Number.isFinite)||result.cost<=0)throw new Error('A service calculation returned invalid values.');
-  const transfer=domain==='rail'&&!freight?4*service.loadingSeconds:service.loadingSeconds+service.unloadingSeconds;
+  const transfer=domain==='rail'&&!freight?service.transferSeconds:service.loadingSeconds+service.unloadingSeconds;
   const optimisticFill=freight?Math.min(request.fillRatio,storage/vehicle.cargoCapacity):request.fillRatio;
   const fleetModel={transferSeconds:transfer/result.utilization*optimisticFill,
     // Queue estimates depend on headway and route tiers; omit them from optimistic search bounds.
@@ -233,7 +236,7 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
   if(!counted){result.uncountedTerminalRunningCosts=result.terminalRunningCosts;result.terminalRunningCosts=0;result.infrastructureCostsCounted=false;}
   result.infrastructureRunningCosts=result.terminalRunningCosts+result.routeRunningCosts;
   result.cost+=result.infrastructureRunningCosts;
-  result.unitCost+=result.infrastructureRunningCosts/(result.rate*deliveriesPerRate(!freight||request.loadedReturn));
+  result.unitCost+=result.infrastructureRunningCosts/(result.rate*deliveriesPerRate(!freight||request.loadedReturn,request.servicePattern));
   return {result,fleetModel};
 }
 

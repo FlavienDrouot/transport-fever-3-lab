@@ -140,7 +140,8 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     return line&&plan?{lineInfrastructure:{existing:plan.segmentAssets},routeProfile:uncappedDeclaredTiers(route,getStoredRoute(),plan)}:{lineInfrastructure:line,routeProfile:route};
   }
   function request(){
-    const domain=field('domain').value;
+    const domain=field('domain').value,plan=getPlan(),service=plan&&declaredService(plan);
+    const servicePattern=service?.status==='applied'&&service.category===category?service.servicePattern??null:null;
     const values=Object.fromEntries(['rate','year',...railBounds,'maxRoadTramLength','maxFleet'].map(name=>[name,field(name).disabled?OPTIMIZER_DEFAULTS[name]:Number(field(name).value)]));
     if(domain!=='road'&&infrastructureControl.isActive())values.maxTrainLength=OPTIMIZER_MAX_TRAIN_LENGTH;
     return optimizerRequest({...values,domain,identicalMUsOnly:field('identicalMUsOnly').disabled?OPTIMIZER_DEFAULTS.identicalMUsOnly:field('identicalMUsOnly').checked,includeTrams:lineControl.includeTrams(),ignoreRetirements:field('ignoreRetirements').checked,category,cargo:$('optimizer-cargo').querySelector('input:checked').value,
@@ -148,7 +149,7 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
       maxOutboundLegSeconds:field('enableMaxOutboundLeg').checked?durationSeconds(field('outboundMinutes'),field('outboundMinutesSeconds')):null,
       maxReturnLegSeconds:field('enableMaxReturnLeg').checked?durationSeconds(field('returnMinutes'),field('returnMinutesSeconds')):null,
       maxHeadwaySeconds:field('enableFrequency').checked?durationSeconds(field('minutes'),field('minutesSeconds')):null,fillRatio:Number(field('utilization').value)/100,
-      loadedReturn:loadedReturnValue(field('loadedReturn')),stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),...lineRequest()});
+      loadedReturn:loadedReturnValue(field('loadedReturn')),servicePattern,stopA:stopValues('a'),stopB:stopValues('b'),infrastructure:infrastructureControl.getValue(),...lineRequest()});
   }
   const fmt=(n,d=1)=>formatNumber(n,d,true);
   function show(answer){

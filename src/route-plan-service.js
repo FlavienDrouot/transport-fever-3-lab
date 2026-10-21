@@ -32,6 +32,9 @@ export function declaredRouteProfile(segments,input){
       next.roadLanes=asset.roadLanes;next.roadCity=CITY_TIERS.includes(asset.roadTier);
     }
     if(asset.tramTracks!=='none')next.tramInfrastructure=asset.tramTracks;
+    // Vehicles stop at every declared intermediate stop.
+    const stop=plan.stops.find(s=>s.boundary===i+1&&i<route.length-1);
+    if(stop)next.stopAfter=stop.name;
     return next;
   }));
 }
@@ -84,11 +87,14 @@ export const declaredLoadNames=input=>{const plan=validateRoutePlan(input);retur
 const LOAD_LABELS={passengers:'Passengers',general:'General',bulk:'Bulk',goods:'Goods',flatbed:'Flatbed',liquid:'Liquid'};
 export const loadTypeLabel=type=>LOAD_LABELS[type]??'type not chosen';
 
-/** One good per direction on an A–B–A service. Freight: the delivered Rate counts both legs; the lighter leg carries a share of the busier leg's load. Passengers: the busier direction sets the Rate per direction. */
+/** One good per direction. Rate is per direction, as in the game: the load on the busiest section; the lighter direction carries a share of it.
+ * With intermediate stops, `servicePattern` gives what each stop loads and unloads, as shares of that load. */
 export function declaredService(input){
   const plan=validateRoutePlan(input),goodIds=serviceGoodIds(plan);
   if(!goodIds.length)return {status:'none',issues:[]};
-  const flows=routePlanFlows(deliveredAtTerminus(plan)),load=Object.fromEntries(['outbound','return'].map(d=>[d,flows.sections.find(s=>s.direction===d).load]));
+  const flows=routePlanFlows(deliveredAtTerminus(plan));
+  // Busiest section of each direction, per good.
+  const load=Object.fromEntries(['outbound','return'].map(d=>[d,Object.fromEntries(goodIds.map(id=>[id,{year:Math.max(0,...flows.sections.filter(s=>s.direction===d).map(s=>s.load[id].year))}]))]));
   const moving=d=>goodIds.filter(id=>load[d][id].year>EPSILON),good=id=>plan.goods.find(g=>g.id===id);
   const [outIds,backIds]=[moving('outbound'),moving('return')],passengers=good(goodIds[0]).type==='passengers',noun=passengers?'passenger':'freight';
   const types=[...new Set([...outIds,...backIds].map(id=>good(id).type))];
@@ -97,22 +103,34 @@ export function declaredService(input){
   const base={goodId:(outbound??back)?.goodId??goodIds[0],goodName:[...new Set([outbound,back].filter(Boolean).map(l=>l.goodName))].join(' / ')||good(goodIds[0]).name,
     category:passengers?'passengers':'freight',cargo:passengers?null:types.length===1&&types[0]&&types[0]!=='general'?types[0]:'all',outbound,return:back,issues:[]};
   const issues=base.issues;
-  if(plan.stops.length>2)issues.push(`Intermediate stops: services run A–B–A, so the ${noun} flows are not used.`);
   if(outIds.length>1||backIds.length>1)issues.push('Several goods in one direction: the calculators carry one good per direction.');
   for(const id of goodIds)if(!passengers&&!good(id).type)issues.push(`Choose a type for ${good(id).name}: it decides which vehicles can carry it.`);
   if(issues.length||!outbound&&!back)return {...base,status:'unsupported'};
   const qOut=outbound?.rate??0,qBack=back?.rate??0,busier=Math.max(qOut,qBack);
+  const pattern=plan.stops.length>2?stopPattern(plan,flows,busier,passengers&&qBack<=EPSILON):null;
   if(passengers){
     const rate=Math.ceil(busier-EPSILON);
     if(rate>1e9)return {...base,status:'unsupported',issues:[`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
-    return {...base,status:'applied',rate:Math.max(1,rate),bothDirectionsDeclared:qOut>EPSILON&&qBack>EPSILON};
+    return {...base,status:'applied',rate:Math.max(1,rate),bothDirectionsDeclared:qOut>EPSILON&&qBack>EPSILON,servicePattern:pattern,stopNames:stopNames(plan)};
   }
   if(qOut<=EPSILON)return {...base,status:'unsupported',issues:['Freight on B → A only: declare the route from the loading stop.']};
   // Rate is per direction, as in the game: the busier leg; the return share adds its handling.
   const rate=Math.ceil(busier-EPSILON);
   if(rate>1e9)return {...base,status:'unsupported',issues:[`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
   const share=qBack>EPSILON?Math.min(qOut,qBack)/busier:0;
-  return {...base,status:'applied',rate:Math.max(1,rate),loadedReturn:share===1?true:share===0?false:share,returnShare:share};
+  return {...base,status:'applied',rate:Math.max(1,rate),loadedReturn:share===1?true:share===0?false:share,returnShare:share,servicePattern:pattern,stopNames:stopNames(plan)};
+}
+
+const stopNames=plan=>plan.stops.slice(1,-1).map(stop=>stop.name);
+/** What each stop loads and unloads per direction, as shares of the busiest section's load. A passenger flow declared one way is mirrored on the way back. */
+function stopPattern(plan,flows,busiest,mirror){
+  const moved=(stopId,direction,action)=>flows.visits.filter(v=>v.stopId===stopId&&v.direction===direction).flatMap(v=>v.moves)
+    .filter(m=>m.action===action).reduce((sum,m)=>sum+m.quantity.year,0)/busiest;
+  const share=value=>Math.min(1,value);
+  return {stops:plan.stops.map(stop=>{
+    const outbound={load:share(moved(stop.id,'outbound','load')),unload:share(moved(stop.id,'outbound','unload'))};
+    return {outbound,return:mirror?{load:outbound.unload,unload:outbound.load}:{load:share(moved(stop.id,'return','load')),unload:share(moved(stop.id,'return','unload'))}};
+  })};
 }
 
 /** One sentence describing an applied service, shared by every view. */
@@ -228,7 +246,7 @@ export function declarationReport(input,{includeTrams=false}={}){
   if(model){used.push({views:['optimizer'],text:'endpoint buildings, storage and terminals as constraints'});issues.push(...model.issues);for(const text of model.notes)used.push({views:['optimizer'],text});}
   for(const [i,asset] of plan.segmentAssets.entries())if(asset.railTier!==null&&asset.railTracks===1)notes.push(`Segment ${i+1}: single track, for one train (more trains add a second track)`);
   if(plan.stops.some(stop=>stop.buildings.some(b=>b.recipe.inputs.length||b.recipe.outputs.length)))issues.push('Industry recipes are only summarised on the Route page.');
-  if(plan.stops.length>2&&service.status!=='unsupported')issues.push('Intermediate stops are ignored by A–B–A calculations.');
+  if(plan.stops.length>2)used.push({views:['race','economics','trucks','configurator','optimizer'],text:`vehicles stop at ${plan.stops.slice(1,-1).map(stop=>stop.name).join(', ')}`});
   for(const text of notes)used.push({views:['optimizer'],text});
   return {service,used,issues:[...new Set(issues)]};
 }
@@ -236,6 +254,6 @@ export function declarationReport(input,{includeTrams=false}={}){
 /** Values the Compare and Composition service controls take from the declaration; null leaves a control to its user. */
 export function declaredServiceInputs(input,{category,includeTrams=false}){
   const plan=validateRoutePlan(input),service=declaredService(plan),applied=service.status==='applied'&&service.category===category,freight=category==='freight';
-  return {rate:applied?service.rate:null,loadedReturn:applied&&freight?service.loadedReturn:null,cargo:applied&&freight?service.cargo:null,platformLengthMetres:declaredPlatformLength(plan),
+  return {rate:applied?service.rate:null,loadedReturn:applied&&freight?service.loadedReturn:null,cargo:applied&&freight?service.cargo:null,servicePattern:applied?service.servicePattern??null:null,platformLengthMetres:declaredPlatformLength(plan),
     specializedTerminals:{rail:freight?declaredHandling(plan,{domain:'rail'}):null,road:freight?declaredHandling(plan,{domain:'road',includeTrams}):null}};
 }

@@ -1,4 +1,5 @@
 import {routeTrajectory} from './route-profile.js';
+import {DEPARTURE_PAUSE_SECONDS} from './stop-pattern.js';
 import {validateGradient} from './gradient.js';
 const models=new WeakMap();
 const gradients=new WeakMap();
@@ -25,13 +26,13 @@ export function withRailSpeedLimit(train,limit) {
 }
 
 const profileModels=new WeakMap();
-/** Finite A→B Race model. Arrival after B is intentionally undefined. */
+/** Finite A→B Race model. Arrival after B is intentionally undefined. Vehicles stop at intermediate stops for the departure pause; Race carries no load. */
 export function withRailProfile(train,segments) {
   const key=JSON.stringify(segments);
   let cache=profileModels.get(train);
   if(!cache){cache=new Map();profileModels.set(train,cache);}
   if(cache.has(key))return cache.get(key);
-  const motion=routeTrajectory(train,segments);
+  const motion=routeTrajectory(train,segments,{stopDwellSeconds:DEPARTURE_PAUSE_SECONDS});
   const model={canStart:!motion.stalled,routeProfile:true,routeDistanceKm:motion.routeDistanceKm,
     effectiveMaxSpeedKmh:motion.maxSpeedKmh,tractionEndSeconds:0,speedCapSeconds:motion.travelSeconds,
     speedViewSeconds:motion.travelSeconds,speedCapKm:motion.routeDistanceKm,profileEvents:motion.events,

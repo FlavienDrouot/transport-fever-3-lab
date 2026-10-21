@@ -2,6 +2,7 @@ import {sizeFleet} from './service-fleet.js';
 import {canClimbRail,gradientAcceleration,validateGradient} from './gradient.js';
 import {withRailGradient,withRailSpeedLimit} from './rail-motion.js';
 import {routeRoundTrip,scaledRouteProfile,validateRouteProfile} from './route-profile.js';
+import {servicePattern,cycleHandling} from './stop-pattern.js';
 // Default calendar: four simulation seconds per day, 365 days per year.
 export const GAME_YEAR_SECONDS = 4 * 365;
 
@@ -68,26 +69,29 @@ export function roundTripMotion(train,{gradePercent=0,routeProfile=null,...optio
 }
 
 // Passenger journeys count both directions; motion always uses the vehicle's empty mass.
-export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, stationDelaySeconds = 6, gradePercent = 0, routeProfile = null}) {
+export function analyseLine(train, {distanceKm, fillRatio = 1, baseRate = 1, brakingDeceleration = 2.5, gradePercent = 0, routeProfile = null, servicePattern: pattern = null}) {
   const formationMultiplier=train.formationLoadingUnloadingSpeedMultiplier!==undefined?train.formationLoadingUnloadingSpeedMultiplier:train.loadingUnloadingSpeedMultiplier*train.carCount;
   for (const [name, value] of Object.entries({distanceKm, baseRate, brakingDeceleration, capacity: train.passengerCapacity, multiplier: formationMultiplier, maintenance: train.economy.annualMaintenance})) {
     if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`);
   }
   if (!Number.isInteger(train.carCount) || train.carCount <= 0) throw new RangeError('Car count must be a positive integer');
-  if (!Number.isFinite(stationDelaySeconds) || stationDelaySeconds < 0) throw new RangeError('Station delay must be non-negative and finite');
   if (!Number.isFinite(fillRatio) || fillRatio < 0 || fillRatio > 1) throw new RangeError('Fill ratio must be between zero and one');
   const passengers = train.passengerCapacity * fillRatio;
   const rate = baseRate * formationMultiplier;
   const motion=roundTripMotion(train,{distanceKm,brakingDeceleration,gradePercent,routeProfile});
   const {travelSeconds,brakingSeconds,peakSpeedKmh}=motion;
   if(motion.eligible===false)return {eligible:false,efficiency:0,maintenancePerJourney:null};
+  // Passengers ride both ways; each stop unloads, then loads, with its pauses.
+  const handling = cycleHandling(servicePattern({servicePattern:pattern,loadedReturn:true,routeProfile}), passengers, () => rate);
   const loadingSeconds = passengers / rate;
-  const stationSeconds = 2 * loadingSeconds + stationDelaySeconds; // Sequential unloading, then loading at each terminal.
-  const roundTripSeconds = 2 * travelSeconds + 2 * stationSeconds;
-  const journeysPerSecond = 2 * passengers / roundTripSeconds;
+  const stationSeconds = handling.stationSecondsA;
+  const roundTripSeconds = 2 * travelSeconds + handling.loadingSeconds + handling.unloadingSeconds + handling.pauseSeconds;
+  const journeysPerSecond = handling.deliveredPerCycle / roundTripSeconds;
   const journeysPerHour = journeysPerSecond * 3600;
   const transportPerMaintenance = journeysPerHour / train.economy.annualMaintenance;
   return {...motion,passengers, rate, travelSeconds, brakingSeconds, peakSpeedKmh, loadingSeconds, stationSeconds, roundTripSeconds,
+    transferSeconds:handling.loadingSeconds+handling.unloadingSeconds, pauseSeconds:handling.pauseSeconds, transferShares:handling.transferShares,
+    deliveries:handling.deliveries, intermediateStopSeconds:handling.intermediateStopSeconds,
     journeysPerHour, transportPerMaintenance,
     maintenancePerJourney: journeysPerSecond > 0 ? train.economy.annualMaintenance / (journeysPerSecond * GAME_YEAR_SECONDS) : null,
     maintenancePerThroughput: journeysPerHour > 0 ? train.economy.annualMaintenance / journeysPerHour : null,
@@ -103,16 +107,17 @@ function analyseSingleService(train, options, fleetCount = null) {
   const baseline=analyseLine(train,options);
   if(baseline.eligible===false)return {eligible:false,efficiency:0,maintenancePerJourney:null};
   if(demandPerDirection!==null&&!baseline.passengers)throw new RangeError('A positive occupancy limit is required for passenger demand');
-  const fleet=sizeFleet({cycleSeconds:baseline.roundTripSeconds,transferSeconds:4*baseline.loadingSeconds,unitsPerCycle:2*baseline.passengers||1,yearSeconds:GAME_YEAR_SECONDS},
-    {demandPerYear:demandPerDirection===null?null:2*demandPerDirection,maxHeadwaySeconds,frequencyMode},fleetCount);
+  // Rate is per direction on the busiest section; a cycle delivers `deliveries` loads.
+  const fleet=sizeFleet({cycleSeconds:baseline.roundTripSeconds,transferSeconds:baseline.transferSeconds,unitsPerCycle:baseline.deliveries*baseline.passengers||1,yearSeconds:GAME_YEAR_SECONDS},
+    {demandPerYear:demandPerDirection===null?null:baseline.deliveries*demandPerDirection,maxHeadwaySeconds,frequencyMode},fleetCount);
   const trainCount=fleet.count;
   const line=fleet.loadScale===1?baseline:analyseLine(train,{...options,fillRatio:(options.fillRatio??1)*fleet.loadScale});
   const journeysPerHour=line.journeysPerHour*trainCount;
   const fleetMaintenance=train.economy.annualMaintenance*trainCount;
   const journeysPerSecond=journeysPerHour/3600;
   return {...line,trainCount,fleetMaintenance,journeysPerHour,
-    perDirectionJourneysPerHour:journeysPerHour/2,
-    perDirectionJourneysPerYear:journeysPerSecond*GAME_YEAR_SECONDS/2,
+    perDirectionJourneysPerHour:journeysPerHour/line.deliveries,
+    perDirectionJourneysPerYear:journeysPerSecond*GAME_YEAR_SECONDS/line.deliveries,
     actualOccupancyRatio:line.passengers/train.passengerCapacity,
     headwaySeconds:line.roundTripSeconds/trainCount,
     maintenancePerJourney:journeysPerSecond>0?fleetMaintenance/(journeysPerSecond*GAME_YEAR_SECONDS):null,
@@ -152,8 +157,8 @@ export function analyseService(train, options) {
   let best=resultFor(1);
   if (!allowMultipleUnits || train.automaticCouplingAllowed===false || options.maxHeadwaySeconds == null || options.demandPerDirection == null) return best;
   const flow=options.demandPerDirection/GAME_YEAR_SECONDS, target=options.maxHeadwaySeconds;
-  const fixedCycle=2*best.travelSeconds+2*(options.stationDelaySeconds??6);
-  const transfer=4*flow/best.rate;
+  const fixedCycle=2*best.travelSeconds+best.pauseSeconds;
+  const transfer=best.transferShares*flow/best.rate;
   const capacityCount=flow*fixedCycle/(train.passengerCapacity*(options.fillRatio??1))+transfer;
   const maximum=platformLengthMetres===null?Infinity:Math.floor((platformLengthMetres+1e-9)/train.lengthMetres);
   const maximumFleet=best.trainCount+1;
