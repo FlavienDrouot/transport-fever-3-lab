@@ -36,7 +36,8 @@ test('Road uses Road motion and preserves rated capacity and speed beside constr
   const empty=steadyServiceRows([truck],{...settings,passenger:false,loadedReturn:false},{road:true})[0];
   const loaded=steadyServiceRows([truck],{...settings,passenger:false,loadedReturn:true},{road:true})[0];
   assert.equal(loaded.steady.costPerUnitKm,empty.steady.costPerUnitKm/2);
-  assert.equal(loaded.steady.transportOutputPerYear,empty.steady.transportOutputPerYear*2);
+  // Rate is per direction: a loaded return halves the cost per delivered unit without changing the Rate.
+  assert.equal(loaded.steady.transportOutputPerYear,empty.steady.transportOutputPerYear);
 });
 
 test('steady readouts show base metrics, kilometre costs and no finite-route Frequency or fleet values',()=>{

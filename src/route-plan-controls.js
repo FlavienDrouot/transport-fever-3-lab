@@ -158,7 +158,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     const {used,issues}=declarationReport(plan),flows=routePlanFlows(plan),last=plan.stops.at(-1);
     const onboard=loadText(flows.visits.find(v=>v.direction==='outbound'&&v.stopId===last.id).load);
     const warnings=[...flows.warnings.map(w=>`${stopName(w.stopId)} · ${goodName(w.cargoId)}: ${w.message}`),...issues];
-    const notes=onboard.length?[`Still onboard at ${last.name} after its declared unloading: ${onboard.join('; ')}. B is the terminus, so it is delivered there.`]:[];
+    const notes=onboard.length?[`Delivered at ${last.name}, the terminus: ${onboard.join('; ')}`]:[];
     $('[data-route-summary]').innerHTML=`<h3>While this custom route is in use</h3><ul class="rp-checklist">${used.map(item=>`<li class="rp-ok">${escape(item.text)}</li>`).join('')||'<li class="rp-none">Nothing is used yet: declare a load, existing tiers or endpoint infrastructure.</li>'}${notes.map(text=>`<li class="rp-info">${escape(text)}</li>`).join('')}${warnings.map(text=>`<li class="rp-warn">${escape(text)}</li>`).join('')}</ul>`;
   }
   function refreshStatus(error=null){

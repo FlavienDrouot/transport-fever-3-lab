@@ -10,7 +10,7 @@ export function optimizerExclusionSummary(answer,domain){
     maxOutboundLegSeconds:`Max leg time A→B (${formatDuration(request.maxOutboundLegSeconds)})`,
     maxReturnLegSeconds:`Max leg time B→A (${formatDuration(request.maxReturnLegSeconds)})`,
     maxFleet:`Fleet size · at most ${formatNumber(request.maxFleet)}`,
-    rate:`${T.rate} · at least ${formatNumber(request.rate)} ${T.capacityUnit}/year${request.category==='passengers'?'/direction':''}`,
+    rate:`${T.rate} · at least ${formatNumber(request.rate)} ${T.capacityUnit}/year/direction`,
     fillRatio:`${T.utilization} · ceiling ${formatNumber(request.fillRatio*100)}%`,
     stopCapacityA:domain==='rail'?'Rail terminal capacity without waiting at A':'Terminal vehicle throughput at A',
     stopCapacityB:domain==='rail'?'Rail terminal capacity without waiting at B':'Terminal vehicle throughput at B',

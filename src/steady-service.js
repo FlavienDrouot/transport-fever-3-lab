@@ -26,7 +26,7 @@ export function renderSteadyService({summary,table,body,caption},vehicles,settin
   const rows=steadyServiceRows(vehicles,settings,{road}),best=rows.filter(row=>row.rank===1);
   const freight=road?!settings.passenger:!!settings.freight,per=road?'vehicle':'train';
   const headings=[['Rank'],['Vehicle'],[`Cost / ${UI_TERMS.capacityUnit} / km`,'$ · lower is better'],
-    [`${UI_TERMS.rate} × distance`,`${UI_TERMS.capacityUnit}·km/year${freight?'':'/direction'} / ${per}`],
+    [`${UI_TERMS.rate} × distance`,`${UI_TERMS.capacityUnit}·km/year/direction / ${per}`],
     [UI_TERMS.capacity,`${UI_TERMS.capacityUnit} / ${per}`],[UI_TERMS.runningCosts,`$/year / ${per}`],
     ['Maximum speed','km/h · vehicle limit'],['Steady speed A→B / B→A','km/h'],[UI_TERMS.utilization,'%']];
   const detail=index=>index>=7?' class="service-detail"':'';

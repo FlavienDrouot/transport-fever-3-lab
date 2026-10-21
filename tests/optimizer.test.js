@@ -152,10 +152,10 @@ test('recommendations reproduce the existing service calculators, including faci
       const common={...request,frequencyMode:'maximum',motion:true};
       if(domain==='rail'){
         const candidate=[...optimizerCandidates(small,request)].find(c=>c.definition?.id===result.id),vehicle=buildConsist(candidate.definition,candidate.catalogue,small.units);
-        service=analyseEconomicService(vehicle,{...common,freight:category==='freight',allowMultipleUnits:false,platformLengthMetres:request.maxTrainLength,...(category==='freight'?{demandPerYear:500}:{demandPerDirection:500})});
+        service=analyseEconomicService(vehicle,{...common,freight:category==='freight',allowMultipleUnits:false,platformLengthMetres:request.maxTrainLength,...(category==='freight'?{demandPerYear:1000}:{demandPerDirection:500})});
       }else{
         const vehicle=(category==='freight'?small.trucks:small.buses).find(v=>v.id===result.id);
-        service=analyseRoadFleet([vehicle],{...common,passenger:category==='passengers',demandPerYear:category==='passengers'?1000:500})[0];
+        service=analyseRoadFleet([vehicle],{...common,passenger:category==='passengers',demandPerYear:1000})[0];
       }
       close(result.cost,service.fleetMaintenance);close(result.frequency,service.headwaySeconds);close(result.cycle,service.roundTripSeconds);close(result.rate,500);
     }
@@ -332,13 +332,14 @@ test('a loaded return activates Industry output storage and can need another tra
     c.definition.components[1].componentId==='rail:freight-wagon:box-wagon-2000'&&c.definition.components[1].quantity===12);
   assert.ok(candidate);
   const changed=values=>optimizerRequest({...input,...values});
-  const narrow=changed({infrastructure:{...input.infrastructure,sites:{...input.infrastructure.sites,stopB:{...input.infrastructure.sites.stopB,outputStorageCapacity:100}}}});
+  // Rate is per direction: 150 each way with a loaded return delivers the 300 a year of the empty service.
+  const narrow=changed({rate:150,infrastructure:{...input.infrastructure,sites:{...input.infrastructure.sites,stopB:{...input.infrastructure.sites.stopB,outputStorageCapacity:100}}}});
   const blocked=evaluateOptimizerCandidate(candidate,catalogue,narrow);
   assert.equal(blocked.result,undefined);assert.ok(blocked.limitingConstraints.includes('maxFleet'));
   assert.equal(narrow.maxReturnLegSeconds,null);assert.equal(narrow.infrastructure.sites.stopB.outputStorageCapacity,100);
-  const empty=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...narrow,loadedReturn:false})).result;
+  const empty=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...narrow,loadedReturn:false,rate:300})).result;
   assert.ok(empty);assert.equal(empty.fleet,1);close(empty.cost,10872822);close(empty.outboundLegSeconds,599.1655586846841);
-  const loaded=evaluateOptimizerCandidate(candidate,catalogue,request).result;
+  const loaded=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...input,rate:150})).result;
   assert.ok(loaded);assert.equal(loaded.fleet,1);assert.ok(loaded.outboundLegSeconds<=600);assert.ok(loaded.capacity*loaded.utilization>100);
   const expandedFleet=evaluateOptimizerCandidate(candidate,catalogue,optimizerRequest({...narrow,maxFleet:2})).result;
   assert.ok(expandedFleet);assert.equal(expandedFleet.fleet,2);assert.ok(expandedFleet.capacity*expandedFleet.utilization<=100);
@@ -349,7 +350,7 @@ test('freight leg time includes transfers per loaded direction and deadlines can
     const request=optimizerRequest({domain,category:'freight',routeProfile,loadedReturn,rate:10000,maxWagons:1,maxTrainLength:120,maxFleet:100000});
     const candidate=optimizerCandidates(small,request).next().value;assert.ok(candidate);
     const vehicle=domain==='rail'?buildConsist(candidate.definition,candidate.catalogue,small.units):candidate.vehicle;
-    const service=domain==='rail'?analyseEconomicService(vehicle,{distanceKm:2,routeProfile,freight:true,loadedReturn,fillRatio:1,demandPerYear:10000,allowMultipleUnits:false}):analyseRoadFleet([vehicle],{distanceKm:2,routeProfile,loadedReturn,fillRatio:1,demandPerYear:10000,motion:true})[0];
+    const service=domain==='rail'?analyseEconomicService(vehicle,{distanceKm:2,routeProfile,freight:true,loadedReturn,fillRatio:1,demandPerYear:10000*(loadedReturn?2:1),allowMultipleUnits:false}):analyseRoadFleet([vehicle],{distanceKm:2,routeProfile,loadedReturn,fillRatio:1,demandPerYear:10000*(loadedReturn?2:1),motion:true})[0];
     const result=evaluateOptimizerCandidate(candidate,small,request).result;assert.ok(result);
     const handling=(service.loadingSeconds+service.unloadingSeconds)/(1+Number(loadedReturn));
     close(result.outboundLegSeconds,result.outboundTravelSeconds+handling);

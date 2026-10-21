@@ -52,11 +52,11 @@ test('All five Economics axes use freight deliveries, independent stops and the 
       const scenario={distanceKm:8,fillRatio:.75,...targets};
       if(axis==='distance')scenario.distanceKm=x;
       if(axis==='utilization')scenario.fillRatio=x/100;
-      if(axis==='demand')scenario.demandPerYear=x;
+      if(axis==='demand')scenario.demandPerYear=x*2;
       if(axis==='headway')scenario.maxHeadwaySeconds=x*60;
       assert.equal(story.valueAt(train.id,x),axis==='year'&&train.year>x?null:analyseFreightService(train,scenario).maintenancePerUnit);
     }
-    if(axis==='demand')assert.equal(story.label,'Rate (capacity / year)');
+    if(axis==='demand'){assert.equal(story.label,'Rate (capacity / year / direction)');assert.equal(story.current,500);}
     for(const kind of ['curves','rank'])for(const distanceMode of ['linear','focus']){
       const container={id:'freight-phase',clientWidth:900};
       renderEconomicCrossovers(container,{trains,story,fill:.75,targets,kind,distanceMode});

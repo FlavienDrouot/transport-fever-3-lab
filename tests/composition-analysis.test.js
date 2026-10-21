@@ -30,7 +30,8 @@ test('Unsaved composition analysis exactly matches Economics for passenger and f
     else assert.ok(options.distanceKm>analysis.maximumDistance);
     assert.equal(analysis.service.unitsPerTrain,1);
     assert.equal(JSON.stringify(train),before);
-    assert.equal(category==='freight'?analysis.serviceOptions.demandPerYear:analysis.serviceOptions.demandPerDirection,3000);
+    // Rate is per direction; freight engines receive the deliveries, including a loaded return.
+    assert.equal(category==='freight'?analysis.serviceOptions.demandPerYear:analysis.serviceOptions.demandPerDirection,category==='freight'&&loadedReturn?6000:3000);
   }
 });
 
