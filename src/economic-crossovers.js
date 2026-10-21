@@ -1,6 +1,7 @@
 import {UI_TERMS} from './ui-terms.js';
 import {automaticCostStudyAllowed,automaticCostTail,serviceSteadyDistance,clipStudyStory,uniformServiceStudyOptions} from './comparison-study.js';
 import {analyseEconomicService as analyseLine} from './rail-freight.js';
+import {deliveriesPerRate} from './service-fleet.js';
 
 const axisDefinitions = {
   distance: {label:'One-way distance (km)', start:.1},
@@ -16,9 +17,10 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
   if(!axisDefinitions[axis])throw new RangeError('Unknown economic axis');
   const automatic=axis==='distance'&&automaticCostStudyAllowed(targets);
   const start=axis==='distance'?(automatic?axisDefinitions.distance.start:Math.min(axisDefinitions.distance.start,distance/10)):axisDefinitions[axis].start;
-  const label=axis==='demand'&&targets.freight?`${UI_TERMS.rate} (${UI_TERMS.capacityUnit} / year)`:axisDefinitions[axis].label;
-  const rateKey=targets.freight?'demandPerYear':'demandPerDirection';
-  const current=automatic?null:{distance,year,utilization:fill*100,demand:targets[rateKey]??null,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
+  const label=axisDefinitions[axis].label;
+  // Freight engines take deliveries; the axis shows the Rate per direction, as in the game.
+  const rateKey=targets.freight?'demandPerYear':'demandPerDirection',deliveries=targets.freight?deliveriesPerRate(targets.loadedReturn):1;
+  const current=automatic?null:{distance,year,utilization:fill*100,demand:targets[rateKey]==null?null:targets[rateKey]/deliveries,headway:targets.maxHeadwaySeconds==null?null:targets.maxHeadwaySeconds/60}[axis];
   let end={distance:automatic?1:distance,year:2035,utilization:100,demand:Math.max(1000,current??0),headway:Math.max(10,current??0)}[axis];
   const analysisTargets=automatic?uniformServiceStudyOptions(targets):targets;
   const byId=new Map(trains.map(train=>[train.id,train]));
@@ -31,7 +33,7 @@ export function economicStory(trains, distance, fill, targets = {}, {axis='dista
     const options={distanceKm:distance,fillRatio:fill,...analysisTargets};
     if(axis==='distance')options.distanceKm=x;
     if(axis==='utilization')options.fillRatio=x/100;
-    if(axis==='demand')options[rateKey]=x;
+    if(axis==='demand')options[rateKey]=x*deliveries;
     if(axis==='headway')options.maxHeadwaySeconds=x*60;
     const value=analyseLine(train,options).maintenancePerUnit;values.set(cacheKey,value);return value;
   };

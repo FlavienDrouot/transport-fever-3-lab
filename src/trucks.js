@@ -2,7 +2,7 @@ import {roadRoundTripMotion} from './road-motion.js';
 import {UI_TERMS} from './ui-terms.js';
 import {roadGradientSpeeds,validateGradient} from './gradient.js';
 import {escapeHtml as escape, formatNumber} from './format.js';
-import {sizeFleet,returnShare} from './service-fleet.js';
+import {sizeFleet,returnShare,deliveriesPerRate} from './service-fleet.js';
 import {sizeRoadTerminalFleet,ROAD_MANEUVER_SECONDS} from './road-terminal-service.js';
 import {updateTablePreview} from './table-preview.js';
 import {GAME_YEAR_SECONDS} from './line.js';
@@ -176,7 +176,7 @@ export function renderTruckService(document,trucks,options) {
   if(document.getElementById('road-travel-column'))document.getElementById('road-travel-column').textContent=directional?'Travel A→B / B→A':'Travel / leg';
   renderTruckBars(document.getElementById('truck-bars'),rows);
   updateTablePreview(document,'truck-bar-list');
-  document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2,true)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${directional?`${formatTime(row.outboundTravelSeconds)} / ${formatTime(row.returnTravelSeconds)}`:formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td><td class="road-fleet-column">${row.vehicleCount}</td><td class="road-fleet-column">${fmt(row.actualFillRatio*100,1)}%</td><td class="road-fleet-column">${formatTime(row.headwaySeconds)}</td><td class="road-fleet-column">${fmt(row.deliveredPerYear,0)}</td><td class="road-fleet-column">$${fmt(row.fleetMaintenance,0)}</td></tr>`).join('');
+  document.getElementById('truck-service-readout').innerHTML=rows.map(row=>`<tr><td>${row.rank}</td><th scope="row">${escape(row.truck.name)}${row.truck.vehicleType?`<span class="road-vehicle-kind">${escape(row.truck.vehicleType)}</span>`:''}</th><td title="${escape(row.costPerCargo.toFixed(6))}">${fmt(row.costPerCargo,2,true)}</td><td>${fmt(row.cargoPerLeg,1)}</td><td>${directional?`${formatTime(row.outboundTravelSeconds)} / ${formatTime(row.returnTravelSeconds)}`:formatTime(row.travelSeconds)}</td><td>${formatTime(row.loadingSeconds)}</td><td>${formatTime(row.unloadingSeconds)}</td><td>${formatTime(row.roundTripSeconds)}</td><td class="road-fleet-column">${row.vehicleCount}</td><td class="road-fleet-column">${fmt(row.actualFillRatio*100,1)}%</td><td class="road-fleet-column">${formatTime(row.headwaySeconds)}</td><td class="road-fleet-column">${fmt(row.deliveredPerYear/deliveriesPerRate(passenger||options.loadedReturn),0)}</td><td class="road-fleet-column">$${fmt(row.fleetMaintenance,0)}</td></tr>`).join('');
   updateTablePreview(document,'truck-service-readout');
 }
 

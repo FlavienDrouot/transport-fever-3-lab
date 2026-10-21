@@ -10,13 +10,14 @@ import {createScale} from './scales.js';
 import {speedDistanceHorizon} from './race.js';
 import {gradientAcceleration} from './gradient.js';
 import {routeProfileDistance} from './route-profile.js';
+import {deliveriesPerRate} from './service-fleet.js';
 
 /** Adapt shared route settings to the draft category, never automatically couple it. */
 export function compositionServiceOptions(train,settings) {
   const {desiredFlow=null,...options}=settings;
   return {...options,allowMultipleUnits:false,freight:train.category==='freight',
     ...(settings.routeProfile?{distanceKm:routeProfileDistance(settings.routeProfile),infrastructureSpeedKmh:null}:{}),
-    ...(train.category==='freight'?{demandPerYear:desiredFlow}:{demandPerDirection:desiredFlow})};
+    ...(train.category==='freight'?{demandPerYear:desiredFlow===null?null:desiredFlow*deliveriesPerRate(settings.loadedReturn)}:{demandPerDirection:desiredFlow})};
 }
 
 /** Display domains depend on acceleration/braking, never on the configured route length. */
@@ -46,14 +47,13 @@ export function compositionSteadyRunning(train,settings) {
   });
   const secondsPerKm=speeds.every(v=>v>0)?speeds.reduce((sum,v)=>sum+3600/v,0)/2:null;
   const freight=train.category==='freight';
-  const unitsPerCycle=(freight?train.cargoCapacity:train.passengerCapacity)*(settings.fillRatio??1)*
-    (freight?1+Number(settings.loadedReturn??false):2);
+  const deliveries=deliveriesPerRate(freight?settings.loadedReturn:true);
+  const unitsPerCycle=(freight?train.cargoCapacity:train.passengerCapacity)*(settings.fillRatio??1)*deliveries;
   const costPerUnitKm=secondsPerKm!==null&&unitsPerCycle>0?
     train.economy.annualMaintenance*2*secondsPerKm/(GAME_YEAR_SECONDS*unitsPerCycle):null;
-  // Rate keeps the service convention: passengers per direction, total freight deliveries.
-  // Multiplying by one-way distance removes route length in the cruise-only limit.
+  // Rate is per direction, as in the game. Multiplying by one-way distance removes route length in the cruise-only limit.
   const transportOutputPerYear=secondsPerKm===null?null:
-    unitsPerCycle*GAME_YEAR_SECONDS/(2*secondsPerKm)*(freight?1:.5);
+    unitsPerCycle*GAME_YEAR_SECONDS/(2*secondsPerKm)/deliveries;
   return {outboundSpeedKmh:speeds[0],returnSpeedKmh:speeds[1],secondsPerKm,costPerUnitKm,transportOutputPerYear,freight};
 }
 
@@ -64,7 +64,7 @@ export function renderCompositionSteadySummary(root,analysis) {
   const rows=[
     [different?'Maximum speed A→B / B→A':'Maximum speed',different?
       `${formatNumber(s.outboundSpeedKmh,1)} / ${formatNumber(s.returnSpeedKmh,1)} km/h`:`${formatNumber(s.outboundSpeedKmh,1)} km/h`],
-    [`${UI_TERMS.rate} × distance`,s.transportOutputPerYear===null?'—':`${formatNumber(s.transportOutputPerYear,0)} ${UI_TERMS.capacityUnit}·km/year${s.freight?'':'/direction'}`,
+    [`${UI_TERMS.rate} × distance`,s.transportOutputPerYear===null?'—':`${formatNumber(s.transportOutputPerYear,0)} ${UI_TERMS.capacityUnit}·km/year/direction`,
       'Transport output at steady speed: doubling distance halves Rate, so Rate × distance stays constant.'],
     [`Cost / ${UI_TERMS.capacityUnit} / km`,
       s.costPerUnitKm===null?'—':`$${formatSignificant(s.costPerUnitKm)}`]
@@ -116,7 +116,7 @@ export function analyseComposition(train,settings,{samples=81}={}) {
   if(analysisReady&&steady.transportOutputPerYear>0&&steady.costPerUnitKm>0){
     for(let i=0;i<32;i++){
       const baseline=serviceAt(normalizedMaximumDistance);
-      const rate=options.freight?baseline.deliveredPerYear:baseline.perDirectionJourneysPerYear;
+      const rate=options.freight?baseline.deliveredPerYear/deliveriesPerRate(options.loadedReturn):baseline.perDirectionJourneysPerYear;
       if(rate/baseline.trainCount*normalizedMaximumDistance>=steady.transportOutputPerYear*.99&&
         baseline.maintenancePerUnit/normalizedMaximumDistance<=steady.costPerUnitKm*1.01)break;
       if(i<31)normalizedMaximumDistance*=2;
@@ -148,7 +148,7 @@ export function compositionChartSeries(analysis,view) {
   if(view==='normalized'){
     const output={key:'transport-output',name:'Rate × distance / train',axis:'Rate × distance',unit:'capacity·km/year',
       color:'#bd6b22',dash:'6 3',reference:analysis.steady.transportOutputPerYear,points:points.map(p=>({x:2*p.x,
-        y:(analysis.options.freight?p.service.deliveredPerYear:p.service.perDirectionJourneysPerYear)/p.service.trainCount*p.x}))};
+        y:(analysis.options.freight?p.service.deliveredPerYear/deliveriesPerRate(analysis.options.loadedReturn):p.service.perDirectionJourneysPerYear)/p.service.trainCount*p.x}))};
     const costPerKm={...cost,key:'cost-per-km',name:`Cost / ${UI_TERMS.capacityUnit} / km`,unit:`$/${UI_TERMS.capacityUnit}/km`,scaleMode:'log',reference:analysis.steady.costPerUnitKm,
       points:points.map(p=>({x:2*p.x,y:p.service.maintenancePerUnit===null?null:p.service.maintenancePerUnit/p.x}))};
     return [peak,output,costPerKm,...(graded?[back]:[])];
@@ -193,14 +193,14 @@ export function renderCompositionSummary(root,analysis) {
   const s=analysis.service;
   if(!s){root.replaceChildren();return;}
   const freight=analysis.options.freight;
-  const throughput=freight?s.deliveredPerYear:s.perDirectionJourneysPerYear;
+  const throughput=freight?s.deliveredPerYear/deliveriesPerRate(analysis.options.loadedReturn):s.perDirectionJourneysPerYear;
   const profile=!!analysis.serviceOptions.routeProfile;
   const rows=[['Travel A→B / B→A',`${formatTime(s.outboundTravelSeconds)} / ${formatTime(s.returnTravelSeconds)}`],
     [profile?'Peak service speed A→B / B→A':'Peak service speed',profile?
       `${formatNumber(s.outboundPeakSpeedKmh,1)} / ${formatNumber(s.returnPeakSpeedKmh,1)} km/h`:
       `${formatNumber(s.peakSpeedKmh,1)} km/h`],['Round trip incl. handling',formatTime(s.roundTripSeconds)],
     ['Trains',`${s.trainCount} ${s.trainCount===1?'train':'trains'}`],[UI_TERMS.frequency,formatDuration(s.headwaySeconds)],
-    [UI_TERMS.rate,`${formatNumber(throughput,0)} ${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`],
+    [UI_TERMS.rate,`${formatNumber(throughput,0)} ${UI_TERMS.capacityUnit}/year/direction`],
     [UI_TERMS.utilization,`${formatNumber(s.actualOccupancyRatio*100,1)}%`],[UI_TERMS.runningCosts,`$${formatNumber(s.fleetMaintenance,0)}/year`],
     [`Cost / ${UI_TERMS.capacityUnit}`,s.maintenancePerUnit===null?'—':`$${formatNumber(s.maintenancePerUnit,2)}`]];
   root.innerHTML=`<dl class="consist-totals">${rows.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
@@ -238,7 +238,7 @@ export function renderCompositionChart(root,analysis,view) {
   const formatDistance=x=>normalized&&x>0&&x<.001?x.toPrecision(2):formatNumber(x,3);
   const sy=(index,y)=>bottom-scales[index].position(y)*(bottom-top);
   const formatY=(s,y)=>s.key==='time'?formatTime(y):s.key==='cost'||s.key==='cost-per-km'?`$${formatNumber(y,2)}/${UI_TERMS.capacityUnit}${s.key==='cost-per-km'?'/km':''}`:
-    s.key==='transport-output'?`${formatNumber(y,1)} capacity·km/year${analysis.options.freight?'':'/direction'}`:`${formatNumber(y,1)} km/h`;
+    s.key==='transport-output'?`${formatNumber(y,1)} capacity·km/year/direction`:`${formatNumber(y,1)} km/h`;
   const ordinate=normalized?'Peak speed, transport output per train and cost per kilometre':combined?'Peak speed, round-trip time and cost':view==='speed'?'Speed (km/h)':view==='time'?'Round-trip time incl. handling (m:ss)':`Round-trip cost / ${UI_TERMS.capacityUnit} ($)`;
   let svg=`<title>${escape(ordinate)} over ${distanceLabel.toLowerCase()}</title><desc>${view==='speed'?'Acceleration without final braking along A to B.':'A–B–A cycles with acceleration, braking and handling at both terminals. Peak speed is the maximum reached in the cycle. Costs count journeys or deliveries across both legs.'}${combined?' Each quantity uses its own coloured vertical scale.':''}${normalized?' Distance and cost use logarithmic scales. The window includes station-handling amortization and the approach to the fixed-utilization reference. Rate multiplied by one-way distance is per train, per direction for passengers and across loaded legs for freight. Cost is divided by one-way distance; speed includes final braking.':''}${mergedTimeCost?' At fixed utilization, time and cost are proportional and share one orange curve with two scales.':''}</desc><rect width="${width}" height="${height}" fill="white"/>`;
   if(!combined)svg+=`<text x="${left}" y="19">${escape(ordinate)}</text>`;
@@ -260,7 +260,7 @@ export function renderCompositionChart(root,analysis,view) {
     svg+=`<line x1="${left}" x2="${width-right}" y1="${sy(index,s.reference)}" y2="${sy(index,s.reference)}" stroke="${s.color}" stroke-dasharray="6 4" opacity=".45"/>`;
   if(combined)axisIndices.forEach(index=>{
     const s=series[index],x=axisX(index);
-    const unit=`${s.unit}${s.key==='transport-output'&&!analysis.options.freight?'/direction':''}`;
+    const unit=`${s.unit}${s.key==='transport-output'?'/direction':''}`;
     const lines=[...(narrow?[]:[s.axis]),...unit.split(/(?=\/(?:year|direction|km))/),...(scales[index].mode==='log'?['log scale']:[])];
     svg+=`<line x1="${index===0?left:x-4}" x2="${index===0?left:x-4}" y1="${top}" y2="${bottom}" stroke="${s.color}" opacity=".5"/>`;
     lines.forEach((line,i)=>{svg+=`<text class="composition-axis" x="${index===0?left:x-4}" y="${top-10-(lines.length-1-i)*12}" text-anchor="${index===0?'end':'start'}" style="fill:${s.color};font-size:${i||narrow?10:11}px;font-weight:${i||narrow?400:600}">${escape(line)}</text>`;});

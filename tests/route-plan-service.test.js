@@ -61,14 +61,14 @@ test('annual flows become a Rate, and freight coming back means a loaded return'
   const outbound=declaredService(freightPlan());
   assert.deepEqual([outbound.status,outbound.rate,outbound.loadedReturn,outbound.goodName],['applied',6000,false,'Coal']);
   const loaded=declaredService(freightPlan({back:6000}));
-  assert.deepEqual([loaded.status,loaded.rate,loaded.loadedReturn],['applied',12000,true]);
+  assert.deepEqual([loaded.status,loaded.rate,loaded.loadedReturn],['applied',6000,true]);
   const percent=freightPlan();percent.stops[0].operations[0].quantity.value=1000.2;
   assert.equal(declaredService(percent).rate,1001);
 });
 
 test('unsupported service shapes are reported instead of guessed',()=>{
   const asymmetric=declaredService(freightPlan({back:2000}));
-  assert.deepEqual([asymmetric.status,asymmetric.rate,asymmetric.returnShare],['applied',8000,1/3]);
+  assert.deepEqual([asymmetric.status,asymmetric.rate,asymmetric.returnShare],['applied',6000,1/3]);
   const reverse=freightPlan();reverse.stops[0].operations=[];reverse.stops[1].operations=[];
   operation(reverse.stops[1],coal.id,'load',500,{direction:'return'});operation(reverse.stops[0],coal.id,'unload',100,{mode:'percent',direction:'return'});
   assert.match(declaredService(reverse).issues[0],/B → A only/);
@@ -161,7 +161,7 @@ test('the declared platform length and specialized terminals feed the service co
 
 test('Compare and Composition receive the Rate and return only for Freight',()=>{
   const plan=freightPlan({back:6000});
-  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:12000,loadedReturn:true,cargo:'bulk',platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}},road:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}}}});
+  assert.deepEqual(declaredServiceInputs(plan,{category:'freight'}),{rate:6000,loadedReturn:true,cargo:'bulk',platformLengthMetres:null,specializedTerminals:{rail:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}},road:{stopA:{specializedTerminal:false,specializedWarehouse:false},stopB:{specializedTerminal:false,specializedWarehouse:false}}}});
   const passengers=declaredServiceInputs(plan,{category:'passengers'});
   assert.deepEqual([passengers.rate,passengers.loadedReturn,passengers.specializedTerminals.rail],[null,null,null]);
 });
@@ -220,21 +220,21 @@ test('A–B–A delivers everything onboard at B: only return-direction loading 
   assert.deepEqual([declaredService(partial).rate,declaredService(partial).loadedReturn],[1000,false]);
   const loaded=createRoutePlan([segment,segment]);loaded.goods=[coal];operation(loaded.stops[0],coal.id,'load',1000);operation(loaded.stops[1],coal.id,'load',1000,{direction:'return'});
   const back=declaredService(loaded);
-  assert.deepEqual([back.status,back.rate,back.loadedReturn],['applied',2000,true]);
+  assert.deepEqual([back.status,back.rate,back.loadedReturn],['applied',1000,true]);
   assert.deepEqual(validateRoutePlan(loaded).trips.map(t=>[t.rate,t.bothWays]),[[1000,true]]);
 });
 
 test('unequal flows size the fleet on the busier leg; each direction may carry its own good',()=>{
   const plan=createRoutePlan([segment,segment]);plan.goods=[coal];operation(plan.stops[0],coal.id,'load',1000);operation(plan.stops[1],coal.id,'load',500,{direction:'return'});
   const service=declaredService(plan);
-  assert.deepEqual([service.status,service.rate,service.loadedReturn,service.cargo],['applied',1500,.5,'bulk']);
-  assert.match(declaredServiceText(service),/Coal A → B 1,000\/yr · Coal B → A 500\/yr · Bulk · Rate 1,500 capacity\/year · return 50% loaded/);
+  assert.deepEqual([service.status,service.rate,service.loadedReturn,service.cargo],['applied',1000,.5,'bulk']);
+  assert.match(declaredServiceText(service),/Coal A → B 1,000\/yr · Coal B → A 500\/yr · Bulk · Rate 1,000 capacity\/year · return 50% loaded/);
   const busierBack=createRoutePlan([segment,segment]);busierBack.goods=[coal];operation(busierBack.stops[0],coal.id,'load',500);operation(busierBack.stops[1],coal.id,'load',2000,{direction:'return'});
-  assert.deepEqual([declaredService(busierBack).rate,declaredService(busierBack).loadedReturn],[2500,.25]);
+  assert.deepEqual([declaredService(busierBack).rate,declaredService(busierBack).loadedReturn],[2000,.25]);
   const swap=createRoutePlan([segment,segment]),boxes={id:'good:boxes',name:'Boxes',type:'goods'};swap.goods=[coal,boxes];
   operation(swap.stops[0],coal.id,'load',1000);operation(swap.stops[1],boxes.id,'load',1000,{direction:'return'});
   const mixed=declaredService(swap);
-  assert.deepEqual([mixed.status,mixed.rate,mixed.loadedReturn,mixed.cargo,mixed.outbound.goodName,mixed.return.goodName],['applied',2000,true,'all','Coal','Boxes']);
+  assert.deepEqual([mixed.status,mixed.rate,mixed.loadedReturn,mixed.cargo,mixed.outbound.goodName,mixed.return.goodName],['applied',1000,true,'all','Coal','Boxes']);
   assert.match(declaredServiceText(mixed),/general-purpose vehicles for both goods/);
   const same=structuredClone(swap);same.goods[1]={...boxes,type:'bulk'};assert.equal(declaredService(same).cargo,'bulk');
   const crowded=structuredClone(swap);operation(crowded.stops[0],boxes.id,'load',100);
@@ -332,5 +332,5 @@ test('one building loads and another receives at the same stop, each with its ow
   assert.deepEqual([model.sites.stopA.type,model.sites.stopA.outputStorageCapacity],['factory',1600]);
   assert.ok(model.notes.some(note=>/Mine loads, Shed receives/.test(note)));
   assert.ok(!model.issues.some(issue=>/several buildings/.test(issue)));
-  const service=declaredService(plan);assert.deepEqual([service.status,service.rate,service.loadedReturn,service.cargo],['applied',1500,.5,'all']);
+  const service=declaredService(plan);assert.deepEqual([service.status,service.rate,service.loadedReturn,service.cargo],['applied',1000,.5,'all']);
 });

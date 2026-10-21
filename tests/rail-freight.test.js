@@ -176,3 +176,8 @@ test('a partial return share scales return handling and deliveries between empty
   assert.equal(roadHalf.deliveredPerCycle,roadHalf.cargoPerLeg*1.5);
   assert.ok(Math.abs(roadHalf.loadingSeconds-(roadEmpty.loadingSeconds+roadFull.loadingSeconds)/2)<1e-9);
 });
+
+test('Rate is per direction, as in the game: deliveries add the loaded return share',async()=>{
+  const {deliveriesPerRate}=await import('../src/service-fleet.js');
+  assert.deepEqual([false,.5,true].map(deliveriesPerRate),[1,1.5,2]);
+});

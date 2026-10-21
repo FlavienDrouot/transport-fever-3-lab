@@ -1,6 +1,7 @@
 import {buildConsist,railComponents,tramComponents,lightRailComponents} from './consists.js';
 import {mixedLightRailFormations,formationVehicleCostBound} from './optimizer-trams.js';
 import {analyseEconomicService} from './rail-freight.js';
+import {deliveriesPerRate} from './service-fleet.js';
 import {analyseRoadFleet,matchesFreightFilter,selectRoadVehicles} from './trucks.js';
 import {routeProfileDistance,validateRouteProfile} from './route-profile.js';
 import {RAIL_PLATFORM_MAX_LENGTH,validateOptimizerInfrastructure,optimizerTrainLengthLimit,optimizerTerminalChoices,optimizerStorageCapacity} from './optimizer-infrastructure.js';
@@ -149,14 +150,14 @@ export function evaluateOptimizerCandidate(candidate,data,request){
 }
 
 function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice,linePlan=null){
-  const freight=request.category==='freight';
+  const freight=request.category==='freight',deliveries=deliveriesPerRate(!freight||request.loadedReturn);
   const storage=freight?optimizerStorageCapacity(choice.stopA,choice.stopB):Infinity;
   const options={distanceKm:request.distanceKm,routeProfile:request.routeProfile,fillRatio:freight?Math.min(request.fillRatio,storage/vehicle.cargoCapacity):request.fillRatio,
     maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',loadedReturn:request.loadedReturn,stopA:choice.stopA,stopB:choice.stopB,
     maneuverSeconds:domain==='road'&&choice.selection?ROAD_MANEUVER_SECONDS:0};
   const analyse=()=>domain==='rail'?analyseEconomicService(vehicle,{...options,freight,allowMultipleUnits:false,platformLengthMetres:choice.maxTrainLength,
-    ...(freight?{demandPerYear:request.rate}:{demandPerDirection:request.rate})}):
-    analyseRoadFleet([vehicle],{...options,passenger:!freight,motion:true,demandPerYear:request.rate*(freight?1:2)})[0];
+    ...(freight?{demandPerYear:request.rate*deliveries}:{demandPerDirection:request.rate})}):
+    analyseRoadFleet([vehicle],{...options,passenger:!freight,motion:true,demandPerYear:request.rate*deliveries})[0];
   let service=analyse();
   if(!service||service.eligible===false)return {rejected:'route'};
   const outboundTravelSeconds=service.outboundTravelSeconds??service.travelSeconds,returnTravelSeconds=service.returnTravelSeconds??service.travelSeconds;
@@ -175,7 +176,7 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
   const result={domain,id:vehicle.id,name:vehicle.name,definition,parts,year:vehicle.year,
     length:vehicle.lengthMetres,capacity:freight?vehicle.cargoCapacity:vehicle.passengerCapacity,
     fleet:service.trainCount??service.vehicleCount,cost:service.fleetMaintenance,
-    rate:domain==='rail'&&!freight?service.perDirectionJourneysPerYear:service.deliveredPerYear/(freight?1:2),
+    rate:domain==='rail'&&!freight?service.perDirectionJourneysPerYear:service.deliveredPerYear/deliveries,
     frequency:service.headwaySeconds,utilization:service.actualOccupancyRatio??service.actualFillRatio,
     ...(freight?{serviceFillRatio:options.fillRatio}:{}),
     cycle:service.roundTripSeconds,outboundTravelSeconds,returnTravelSeconds,outboundLegSeconds,returnLegSeconds,unitCost:service.maintenancePerUnit??service.costPerCargo,
@@ -186,7 +187,7 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
   const fleetModel={transferSeconds:transfer/result.utilization*optimisticFill,
     // Queue estimates depend on headway and route tiers; omit them from optimistic search bounds.
     stationSeconds:Math.max(0,result.cycle-outboundTravelSeconds-returnTravelSeconds-transfer-(service.waitingSecondsA??0)-(service.waitingSecondsB??0)),
-    unitsPerCycle:result.capacity*optimisticFill*(freight?1+Number(request.loadedReturn):2)};
+    unitsPerCycle:result.capacity*optimisticFill*deliveries};
   const limitingConstraints=[];
   const railStops=domain==='rail'&&choice.selection&&['stopA','stopB'].some(stop=>choice[stop].platformTrackCount!=null);
   let terminalEstimates=null;
@@ -232,7 +233,7 @@ function evaluateOptimizerService(domain,vehicle,definition,parts,request,choice
   if(!counted){result.uncountedTerminalRunningCosts=result.terminalRunningCosts;result.terminalRunningCosts=0;result.infrastructureCostsCounted=false;}
   result.infrastructureRunningCosts=result.terminalRunningCosts+result.routeRunningCosts;
   result.cost+=result.infrastructureRunningCosts;
-  result.unitCost+=result.infrastructureRunningCosts/(result.rate*(freight?1:2));
+  result.unitCost+=result.infrastructureRunningCosts/(result.rate*deliveriesPerRate(!freight||request.loadedReturn));
   return {result,fleetModel};
 }
 

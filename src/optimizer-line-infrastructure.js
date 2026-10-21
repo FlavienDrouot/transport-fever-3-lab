@@ -1,5 +1,5 @@
 import {validateRouteProfile} from './route-profile.js';
-import {sizeFleet,returnShare} from './service-fleet.js';
+import {sizeFleet,deliveriesPerRate} from './service-fleet.js';
 import {GAME_YEAR_SECONDS} from './line.js';
 import {RAIL_MOTION,gradientAcceleration,MOTION_UNITS} from './gradient.js';
 import {optimizerStorageCapacity} from './optimizer-infrastructure.js';
@@ -135,8 +135,7 @@ export function searchLineInfrastructure(request,domain,vehicle,choice,evaluate,
   // Even infinite speed cannot deliver more than this load per departure at the requested Rate.
   const capacity=request.category==='freight'?vehicle.cargoCapacity:vehicle.passengerCapacity;
   const fill=Math.min(request.fillRatio,request.category==='freight'?optimizerStorageCapacity(choice.stopA,choice.stopB)/capacity:Infinity);
-  const deliveries=request.category==='freight'?1+returnShare(request.loadedReturn):1;
-  if(request.minHeadwaySeconds!==null&&capacity*fill*deliveries*GAME_YEAR_SECONDS/request.rate<request.minHeadwaySeconds-1e-7)return {result:best,rejections};
+  if(request.minHeadwaySeconds!==null&&capacity*fill*GAME_YEAR_SECONDS/request.rate<request.minHeadwaySeconds-1e-7)return {result:best,rejections};
   const chosen=[];
   const visit=(index,cost)=>{
     let minimumCost=cost;
@@ -152,7 +151,7 @@ export function searchLineInfrastructure(request,domain,vehicle,choice,evaluate,
     let count=1;
     if(fleetModel){
       count=sizeFleet({...fleetModel,cycleSeconds:outbound+inbound+fleetModel.stationSeconds+fleetModel.transferSeconds},
-        {demandPerYear:request.rate*(request.category==='passengers'?2:1),maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
+        {demandPerYear:request.rate*deliveriesPerRate(request.category==='passengers'||request.loadedReturn),maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
     }
     const lowerCost=count*vehicle.economy.annualMaintenance+(choice.selection?.annualMaintenance??0)+minimumCost;
     if(count>request.maxFleet||best&&lowerCost>best.cost+1e-7)return;

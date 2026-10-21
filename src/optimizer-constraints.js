@@ -20,7 +20,7 @@ export function renderOptimizerConstraints(root,settings){
   const transport=freight?({all:'All freight',bulk:'Bulk',goods:'Goods',flatbed:'Flatbed',liquid:'Liquid'}[cargo]):'Passengers';
   let html=section('Service',list([
     row('Vehicles',domains.map(d=>d==='rail'?'Rail':settings.includeTrams?'Road + Tram':'Road').join(' + ')),row('Transport',transport),
-    row(`${T.rate} · at least`,`${fmt(settings.rate)} ${T.capacityUnit}/year${freight?'':'/direction'}`),
+    row(`${T.rate} · at least`,`${fmt(settings.rate)} ${T.capacityUnit}/year/direction`),
     row(T.frequency,interval),...[[settings.maxOutboundLegSeconds,'A→B'],[settings.maxReturnLegSeconds,'B→A']].filter(([value])=>value!=null).map(([value,direction])=>row(`Max leg time ${direction}`,formatDuration(value))),row(`${T.utilization} · ceiling`,`${fmt(settings.utilization)}%`),
     ...(freight?[row('Return',settings.loadedReturn?'Loaded':'Empty')]:[])
   ]));
