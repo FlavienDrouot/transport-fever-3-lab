@@ -814,3 +814,6 @@ span.rp-op{cursor:default}
 .rp-item-actions{border-bottom:0}
 .rp-done{border-color:var(--green);color:var(--green);font-weight:600}
 @media(prefers-reduced-motion:reduce){.rp-flash{animation:none}}
+
+/* Race: include the declared service's loading and unloading */
+.race-handling{display:flex;align-items:center;gap:6px;margin:4px 0 10px;font-size:13px;accent-color:var(--green)}

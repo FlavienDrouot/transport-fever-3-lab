@@ -35,7 +35,7 @@ import {tramComponents,railComponents,lightRailComponents,lightRailComparisonVeh
 import {mountConsistEditor} from './consist-editor.js';
 import {mountCompositionAnalysis} from './composition-analysis-controls.js';
 import {renderTruckService, selectRoadVehicles, roadRouteSpeeds, analyseTruckService, analysePassengerRoadService, FREIGHT_LOAD_SPEED_FACTOR, PASSENGER_LOAD_SPEED_FACTOR} from './trucks.js';
-import {outboundStopWaits} from './stop-pattern.js';
+import {outboundStopWaits,abaStopPattern} from './stop-pattern.js';
 import {renderDataView} from './data-view.js';
 import {curveLabels, trainLegend, spreadDiagonalLabels} from './chart-labels.js';
 import {economicStory,yearRankingStory} from './economic-crossovers.js';
@@ -90,6 +90,8 @@ let railGradePercent=0,railRouteProfile=routeSelection.segments;
 let railFreight={loadedReturn:false,stopA:{},stopB:{}};
 // What each declared stop loads and unloads; only while the custom route declares intermediate stops.
 let declaredPattern=null;
+// The declared service Race may include, and whether it does.
+let declaredRace=null,raceHandling=true;
 const stopsCaption=()=>{const stops=routeStops(railRouteProfile);return stops.length?` · stops at ${stops.join(', ')}`:'';};
 const activeServicePattern=()=>declaredPattern&&routeStops(railRouteProfile).length===declaredPattern.stops.length-2?declaredPattern:null;
 function setComparisonCategory(category){
@@ -227,6 +229,9 @@ function syncDeclaredLocks(){
   for(const ids of [['enable-platform-limit','platform-length'],['composition-platform-enabled','composition-platform']])pair(ids,inputs?.platformLengthMetres);
   const pattern=inputs?.servicePattern??null;
   if(JSON.stringify(pattern)!==JSON.stringify(declaredPattern)){declaredPattern=pattern;changed=true;}
+  const race=inputs?.rate!=null?{pattern,loadedReturn:inputs.loadedReturn??true}:null;
+  if(JSON.stringify(race)!==JSON.stringify(declaredRace)){declaredRace=race;changed=true;}
+  $('race-handling').hidden=!race;
   for(const [domain,ids] of [['rail',{stopA:['rail-terminal-a','composition-terminal-a'],stopB:['rail-terminal-b','composition-terminal-b']}],['road',{stopA:['truck-specialized-terminal'],stopB:['truck-specialized-terminal-b']}]])
     for(const [stop,names] of Object.entries(ids))for(const id of names)lock(id,inputs?.specializedTerminals[domain]?.[stop].specializedTerminal?true:null);
   for(const [stop,ids] of [['stopA',['rail-warehouse-a','composition-warehouse-a','truck-specialized-warehouse']],['stopB',['rail-warehouse-b','composition-warehouse-b','truck-specialized-warehouse-b']]])
@@ -290,16 +295,25 @@ function economicSelectionOptions(){
 }
 function speedUsesProfile(){const route=activeRouteProfile();return route.some(part=>part.gradePercent!==route[0].gradePercent||part.speedLimitKmh!==route[0].speedLimitKmh);}
 function raceCandidates(allYears=false){return navigation.domain==='road'?selectRoadVehicles(roadDatasets(),{category:comparisonCategory,includeTrams,cargo:truckCargo,year:allYears?2035:truckYear}).filter(t=>selectedRoad.has(t.id)).map(withRoadModel):trainCandidates(allYears?Infinity:catalogueYear).filter(t=>selected.has(t.id));}
-/** Waits at intermediate stops: the departure pause, plus declared loading and unloading for the vehicle at its Service Utilization. */
+/** The declared service as Race can follow it: the stop pattern, or the A–B service it describes. */
+function raceServicePattern(route){
+  if(!declaredRace)return null;
+  const pattern=declaredRace.pattern??abaStopPattern(declaredRace.loadedReturn,0);
+  return routeStops(route).length===pattern.stops.length-2?pattern:null;
+}
+/** Waits along A → B: the departure pause at intermediate stops, or, when Race includes the declared service, loading at A,
+ * each stop's transfers and unloading at B for the vehicle at its Service Utilization, with its facilities at A and B. */
 function raceStopWaits(vehicle,route){
-  const count=routeStops(route).length,pattern=activeServicePattern();
-  if(!count||!pattern)return outboundStopWaits(null,count);
+  const count=routeStops(route).length,pattern=raceHandling?raceServicePattern(route):null;
+  if(!pattern)return outboundStopWaits(null,count);
   const road=navigation.domain==='road',freight=comparisonCategory==='freight';
   const capacity=freight?vehicle.cargoCapacity:vehicle.passengerCapacity,fill=road?truckService.fillRatio:lineFill;
   const multiplier=vehicle.formationLoadingUnloadingSpeedMultiplier??vehicle.loadingUnloadingSpeedMultiplier*(road?1:vehicle.carCount);
-  return outboundStopWaits(pattern,count,capacity*fill,(freight?FREIGHT_LOAD_SPEED_FACTOR:PASSENGER_LOAD_SPEED_FACTOR)*multiplier);
+  const bonus=stop=>{if(!freight)return 1;const flags=road?{specializedTerminal:truckService.specializedTerminal,specializedWarehouse:truckService.specializedWarehouse,...truckService[stop]}:railFreight[stop]??{};return (flags.specializedTerminal?2:1)*(flags.specializedWarehouse?2:1);};
+  const rate=(freight?FREIGHT_LOAD_SPEED_FACTOR:PASSENGER_LOAD_SPEED_FACTOR)*multiplier,last=count+1;
+  return outboundStopWaits(pattern,count,capacity*fill,stop=>rate*(stop===0?bonus('stopA'):stop===last?bonus('stopB'):1));
 }
-const raceWaitsKey=()=>JSON.stringify([activeServicePattern(),comparisonCategory,lineFill,truckService.fillRatio]);
+const raceWaitsKey=()=>JSON.stringify([raceHandling,declaredRace,comparisonCategory,lineFill,truckService,railFreight]);
 function raceStudyModels(allYears=false){
   const route=activeRouteProfile(),part=route[0];
   return raceCandidates(allYears).map(t=>routeSelection.mode==='custom'?withRailProfile(t,route,raceStopWaits(t,route)):withRailGradient(withRailSpeedLimit(t,part.speedLimitKmh),part.gradePercent)).filter(t=>t.model.canStart!==false);
@@ -315,8 +329,9 @@ function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.n
 // The answer comes first: the arrival winner, its lead and the conditions behind it.
 function renderRaceVerdict(ranking,studyDistance,blocked){
   const root=$('race-summary'),[first,second]=ranking,road=navigation.domain==='road';
-  const stops=routeStops(railRouteProfile),halts=!stops.length?'':activeServicePattern()?` Stops at ${stops.join(', ')}: declared loading and unloading at the Service ${UI_TERMS.utilization}, plus pauses.`:` Stops at ${stops.join(', ')} for the 2 s departure pause.`;
-  const conditions=(road?'Road braking is omitted.':routeSelection.mode==='custom'?'Segment gradients and speed-limit braking are included; no stop at B.':`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`)+halts;
+  const stops=routeStops(railRouteProfile),handled=raceHandling&&!!raceServicePattern(railRouteProfile);
+  const halts=handled?` Includes the declared loading at A${stops.length?`, transfers at ${stops.join(', ')}`:''} and unloading at B, at the Service ${UI_TERMS.utilization}.`:stops.length?` Stops at ${stops.join(', ')} for the 2 s departure pause.`:'';
+  const conditions=(road?'Road braking is omitted.':routeSelection.mode==='custom'?`Segment gradients and speed-limit braking are included${handled?'':'; no stop at B'}.`:`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`)+halts;
   const blockedNote=blocked.length?` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>escape(t.name)).join(', ')}.`:'';
   if(!first){root.innerHTML=`<p class="race-verdict-note">Select at least one vehicle to compare travel times.${blockedNote}</p>`;return;}
   const km=fmtKm(studyDistance),bounded=studyBounded();
@@ -454,7 +469,7 @@ function renderChart(kind, width) {
   el('chart-heading').textContent = spec.title;
   const xName = view === 'time'||view==='speed-distance' ? 'Distance' : 'Time', yName = view === 'time' ? 'Time' : view.startsWith('speed') ? 'Speed' : 'Distance';
   for (const [axis,name] of [['x',xName],['y',yName]]) {el(`${axis}-scale-label`).textContent=name;el(`${axis}-scale-legend`).textContent=`${name} scale`;}
-  el('chart-help').textContent = speedUsesProfile()&&view.startsWith('speed')?(navigation.domain==='road'?'Speed follows the route to B; lower limits apply instantly. Road braking is omitted.':'Speed responds to each segment grade and limit, with advance braking for lower limits. Race ends at B without a terminal stop.'):view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited vehicles approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
+  el('chart-help').textContent = speedUsesProfile()&&view.startsWith('speed')?(navigation.domain==='road'?'Speed follows the route to B; lower limits apply instantly. Road braking is omitted.':'Speed responds to each segment grade and limit, with advance braking for lower limits. '+(raceHandling&&raceServicePattern(railRouteProfile)?'Race ends once unloading at B is done.':'Race ends at B without a terminal stop.')):view.startsWith('speed')&&ts.some(t=>t.model.asymptoticSpeed)?'Uphill power-limited vehicles approach an equilibrium speed. This view covers at least 99% of that limit; race and service timings retain full precision.':spec.help;
   if(view.startsWith('speed')&&!speedUsesProfile()&&!studyBounded())el('chart-help').textContent+=' Shown until every vehicle reaches top speed.';
   if(studyBounded()&&view.startsWith('speed'))el('chart-help').textContent+=' Up to the route distance.';
   el('chart-help').textContent+=' Hover a curve for details.';
@@ -1277,6 +1292,7 @@ async function init() {
     $('service-table').closest('.line-table').classList.toggle('show-details',e.target.checked);
     renderLineAnalysis();
   });
+  $('race-handling-input').addEventListener('change',event=>{raceHandling=event.target.checked;highlighted=undefined;render();});
   $('road-steady-details').addEventListener('change',e=>$('road-steady-table').closest('.line-table').classList.toggle('show-details',e.target.checked));
   $('rail-cargo').addEventListener('change',()=>{
     economicCargo=$('rail-cargo').querySelector('input:checked').value;

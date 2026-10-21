@@ -145,9 +145,13 @@ test('service handling follows the stop pattern; A–B–A is unchanged',()=>{
 test('Race waits at each stop for the departure pause, or the declared transfers',async()=>{
   const {outboundStopWaits}=await import('../src/stop-pattern.js');
   const stopping=[{...segment(5),stopAfter:'Middle'},segment(5)];
-  assert.deepEqual(outboundStopWaits(null,1),[2]);
+  assert.deepEqual(outboundStopWaits(null,1),{start:0,stops:[2],end:null});
   const pattern={stops:[{outbound:{load:1,unload:0},return:{load:0,unload:1}},{outbound:{load:.2,unload:.3},return:{load:0,unload:0}},{outbound:{load:0,unload:1},return:{load:1,unload:0}}]};
-  // 100 units at 10/s: 5 s of transfers, 2 s before each transfer and 2 s before departure.
-  assert.deepEqual(outboundStopWaits(pattern,1,100,10),[11]);
-  near(withRailProfile(train,stopping,[11]).model.timeAt(10)-withRailProfile(train,stopping).model.timeAt(10),9);
+  // 100 units at 10/s. Middle: 5 s of transfers, 2 s before each transfer and before departure.
+  // A: 10 s loading, 2 s before it and 2 s before departure; B: 10 s unloading after 2 s.
+  assert.deepEqual(outboundStopWaits(pattern,1,100,()=>10),{start:14,stops:[11],end:12});
+  near(withRailProfile(train,stopping,{stops:[11]}).model.timeAt(10)-withRailProfile(train,stopping).model.timeAt(10),9);
+  const full=withRailProfile(train,stopping,{start:14,stops:[11],end:12}).model;
+  near(full.timeAt(10),14+routeTrajectory(train,stopping,{brakeAtEnd:true,stopDwellSeconds:11}).travelSeconds+12);
+  assert.equal(full.stateAt(5).distanceKm,0);
 });

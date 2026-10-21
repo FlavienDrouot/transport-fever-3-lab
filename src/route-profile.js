@@ -70,15 +70,15 @@ export function routeProfileDistance(segments) {
 
 const trajectoryCache=new WeakMap();
 /** Tractive motion with calibrated gravity; configured braking anticipates caps and terminal stops. */
-export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5,stopDwellSeconds=0}={}) {
+export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDeceleration=train.model?.motionConfig?.brakingDeceleration??2.5,stopDwellSeconds=0,startWaitSeconds=0,endWaitSeconds=0}={}) {
   const motionConfig=train.model?.motionConfig??RAIL_MOTION;
   const route=routeProfileForDomain(segments,motionConfig.transportDomain??'rail');
   const brakingEnabled=motionConfig.brakingEnabled!==false;
   if(!Number.isFinite(brakingDeceleration)||brakingDeceleration<=0)throw new RangeError('Braking must be positive');
   // One wait for every intermediate stop, or a list in A→B order.
   const stopCount=segments.filter(part=>part.stopAfter).length,waits=Array.isArray(stopDwellSeconds)?stopDwellSeconds:Array(stopCount).fill(stopDwellSeconds);
-  if(waits.length!==stopCount||waits.some(wait=>!Number.isFinite(wait)||wait<0))throw new RangeError('Give one nonnegative wait per intermediate stop');
-  const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration,stopDwellSeconds]);
+  if(waits.length!==stopCount||[...waits,startWaitSeconds,endWaitSeconds].some(wait=>!Number.isFinite(wait)||wait<0))throw new RangeError('Waits must be nonnegative, one per intermediate stop');
+  const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration,stopDwellSeconds,startWaitSeconds,endWaitSeconds]);
   const identity=train.model??train;
   let cache=trajectoryCache.get(identity);
   if(!cache){cache=new Map();trajectoryCache.set(identity,cache);}
@@ -110,6 +110,8 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   };
   const push=(t,d,v)=>{times.push(t);distances.push(d);speeds.push(v);};
   // Leaving a section: at an intermediate stop the vehicle halts (Road, without braking, instantly) and waits.
+  // Loading at A before departure.
+  if(startWaitSeconds>0){time=startWaitSeconds;push(time,0,0);}
   let reached=0;
   const nextSection=()=>{
     const stop=sections[index].stop;
@@ -194,13 +196,15 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   }
   if(position<routeMetres-1e-7)stalled=true;
   if(brakingEnabled&&brakeAtEnd&&!stalled&&speed<.01){speed=0;speeds[speeds.length-1]=0;}
+  // Unloading at B: arrival counts once it is done.
+  if(!stalled&&endWaitSeconds>0){speed=0;speeds[speeds.length-1]=0;events.push({time,distanceKm:position/1000,label:'Unloading at B'});time+=endWaitSeconds;push(time,position,0);}
   const find=(values,target)=>{let lo=0,hi=values.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(values[mid]<=target)lo=mid;else hi=mid;}return lo;};
   const interpolate=(values,target)=>{const i=find(values,target),fraction=values[i+1]===values[i]?0:(target-values[i])/(values[i+1]-values[i]);return {time:times[i]+(times[i+1]-times[i])*fraction,distanceKm:(distances[i]+(distances[i+1]-distances[i])*fraction)/1000,speedKmh:(speeds[i]+(speeds[i+1]-speeds[i])*fraction)*3.6};};
   events.sort((a,b)=>a.time-b.time);
   const result={routeDistanceKm:routeMetres/1000,travelSeconds:stalled?Infinity:time,stalled,events,
     maxSpeedKmh:speeds.reduce((max,value)=>Math.max(max,value),0)*3.6,
     stateAt(t){if(!Number.isFinite(t)||t<0)throw new RangeError('Invalid time');if(t>=time)return {distanceKm:position/1000,speedKmh:speed*3.6};const {distanceKm,speedKmh}=interpolate(times,t);return {distanceKm,speedKmh};},
-    timeAt(km){if(!Number.isFinite(km)||km<0)throw new RangeError('Invalid distance');if(km===0)return 0;if(km>position/1000+1e-9)return Infinity;return interpolate(distances,Math.min(km*1000,position)).time;}};
+    timeAt(km){if(!Number.isFinite(km)||km<0)throw new RangeError('Invalid distance');if(km===0)return 0;if(km>position/1000+1e-9)return Infinity;if(!stalled&&km*1000>=position-1e-9)return time;return interpolate(distances,Math.min(km*1000,position)).time;}};
   if(cache.size>=12)cache.clear();cache.set(key,result);
   return result;
 }

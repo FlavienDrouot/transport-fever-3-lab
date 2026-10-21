@@ -26,14 +26,14 @@ export function withRailSpeedLimit(train,limit) {
 }
 
 const profileModels=new WeakMap();
-/** Finite A→B Race model. Arrival after B is intentionally undefined. At intermediate stops vehicles wait `stopWaits`
- * (one value, or one per stop): by default the departure pause, or the declared loading and unloading. */
-export function withRailProfile(train,segments,stopWaits=DEPARTURE_PAUSE_SECONDS) {
-  const key=JSON.stringify([segments,stopWaits]);
+/** Finite A→B Race model. Arrival after B is intentionally undefined. `waits` gives the wait at each intermediate stop
+ * (by default the departure pause), and optionally loading at A (`start`) and unloading at B (`end`, which stops the vehicle there). */
+export function withRailProfile(train,segments,waits={stops:DEPARTURE_PAUSE_SECONDS}) {
+  const key=JSON.stringify([segments,waits]);
   let cache=profileModels.get(train);
   if(!cache){cache=new Map();profileModels.set(train,cache);}
   if(cache.has(key))return cache.get(key);
-  const motion=routeTrajectory(train,segments,{stopDwellSeconds:stopWaits});
+  const motion=routeTrajectory(train,segments,{stopDwellSeconds:waits.stops??DEPARTURE_PAUSE_SECONDS,startWaitSeconds:waits.start??0,endWaitSeconds:waits.end??0,brakeAtEnd:waits.end!=null});
   const model={canStart:!motion.stalled,routeProfile:true,routeDistanceKm:motion.routeDistanceKm,
     effectiveMaxSpeedKmh:motion.maxSpeedKmh,tractionEndSeconds:0,speedCapSeconds:motion.travelSeconds,
     speedViewSeconds:motion.travelSeconds,speedCapKm:motion.routeDistanceKm,profileEvents:motion.events,

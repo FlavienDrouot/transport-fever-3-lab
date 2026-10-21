@@ -32,11 +32,14 @@ export function servicePattern({servicePattern=null,loadedReturn=false,routeProf
   return pattern;
 }
 
-/** Waits at the intermediate stops on the way A → B: the departure pause, plus the declared transfers and their pauses for a vehicle carrying `load` at `rate` units/s. */
-export function outboundStopWaits(pattern,count,load=0,rate=Infinity){
-  if(!pattern)return Array(count).fill(DEPARTURE_PAUSE_SECONDS);
-  return validateStopPattern(pattern).stops.slice(1,-1).map(({outbound:visit})=>
-    (visit.load+visit.unload)*load/rate+TRANSFER_PAUSE_SECONDS*((visit.load>EPSILON)+(visit.unload>EPSILON))+DEPARTURE_PAUSE_SECONDS);
+/** Race waits on the way A → B. Without a pattern: the departure pause at each intermediate stop.
+ * With one, the declared service: loading at A before departure, each stop's transfers, and unloading at B before arrival counts,
+ * for a vehicle carrying `load` at its transfer rate `rateAt(stop)`, with 2 s before each transfer and before each departure. */
+export function outboundStopWaits(pattern,count,load=0,rateAt=()=>Infinity){
+  if(!pattern)return {start:0,stops:Array(count).fill(DEPARTURE_PAUSE_SECONDS),end:null};
+  const {stops}=validateStopPattern(pattern),last=stops.length-1;
+  const wait=(visit,stop,departs)=>(visit.load+visit.unload)*load/rateAt(stop)+TRANSFER_PAUSE_SECONDS*((visit.load>EPSILON)+(visit.unload>EPSILON))+(departs?DEPARTURE_PAUSE_SECONDS:0);
+  return {start:wait({load:stops[0].outbound.load,unload:0},0,true),stops:stops.slice(1,-1).map((stop,i)=>wait(stop.outbound,i+1,true)),end:wait({load:0,unload:stops[last].outbound.unload},last,false)};
 }
 
 /** Stop visits in one A–B–A cycle: A and B once each, intermediate stops once per direction. */
