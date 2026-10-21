@@ -179,5 +179,5 @@ test('a partial return share scales return handling and deliveries between empty
 
 test('Rate is per direction, as in the game: deliveries add the loaded return share',async()=>{
   const {deliveriesPerRate}=await import('../src/service-fleet.js');
-  assert.deepEqual([false,.5,true].map(deliveriesPerRate),[1,1.5,2]);
+  assert.deepEqual([false,.5,true].map(value=>deliveriesPerRate(value)),[1,1.5,2]);
 });

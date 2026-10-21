@@ -36,8 +36,8 @@ export function returnShare(loadedReturn){
   return loadedReturn;
 }
 
-/** Rate is per direction, as in the game: the busier leg's load. A cycle delivers it once, plus the return share. */
-export const deliveriesPerRate=loadedReturn=>1+returnShare(loadedReturn);
+/** Rate is per direction, as in the game: the load on the busiest section. An A–B–A cycle delivers it once, plus the return share; a stop pattern delivers what it unloads. */
+export const deliveriesPerRate=(loadedReturn,pattern=null)=>pattern?pattern.stops.reduce((sum,stop)=>sum+(stop.outbound?.unload??0)+(stop.return?.unload??0),0):1+returnShare(loadedReturn);
 
 /** A Loaded return checkbox, or the return share a route declaration placed on it. */
 export const loadedReturnValue=input=>input.dataset?.share===undefined?input.checked:Number(input.dataset.share);

@@ -13,7 +13,7 @@ The site has three spaces: **Compare**, **Design** and **Data & models**. A shor
 - **Race**: which vehicle is fastest? The answer comes first (winner, time and margin), then speed and distance over time. **Where the lead changes** shows overtakes and the ranking at each distance.
 - **Service**: which vehicle is cheapest to run? It ranks Running costs per transported capacity on an A–B–A line. Set **Utilization**, a **Rate** or a **Frequency** to size a whole fleet; Freight adds loaded return and terminal/warehouse bonuses.
 - **Composition** (*Build your own train*): assemble locomotives, multiple units, wagons or trams, check their performance, then race or compare them without saving.
-- **Route**: draw the line from a starting shape (flat, climb, mountain pass…) with grades and speed limits per segment. Optionally declare what it carries: stops, trips with an annual Rate, buildings, storage and existing tracks or roads. Race, Service, Composition and the Optimizer then use these declarations.
+- **Route**: draw the line from a starting shape (flat, climb, mountain pass…) with grades and speed limits per segment. Optionally declare what it carries: stops, trips with an annual Rate, buildings, storage and existing tracks or roads. Race, Service, Composition and the Optimizer then use these declarations, including the stops vehicles make along the line.
 - **Optimizer** (experimental): enter a Rate and constraints, and it searches the cheapest Rail and Road fleets, optionally with the upkeep of new tracks, roads and stations.
 - **Data & models**: the vehicle catalogue (downloadable), the calculation methods and the measurements behind them.
 

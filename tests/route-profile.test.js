@@ -111,3 +111,47 @@ test('profile validation rejects missing, nonfinite and out-of-range segment val
   for(const bad of [[],[segment(0)],[segment(NaN)],[segment(1,20.1)],[segment(1,0,351)],Array.from({length:25},()=>segment(1))])
     assert.throws(()=>validateRouteProfile(bad),RangeError);
 });
+
+test('an intermediate stop splits the leg: the vehicle stops, waits and restarts',()=>{
+  const through=[segment(5),segment(5)],stopping=[{...segment(5),stopAfter:'Middle'},segment(5)];
+  const single=routeTrajectory(train,[segment(5)],{brakeAtEnd:true}).travelSeconds;
+  near(routeTrajectory(train,stopping,{brakeAtEnd:true}).travelSeconds,2*single);
+  near(routeTrajectory(train,stopping,{brakeAtEnd:true,stopDwellSeconds:2}).travelSeconds,2*single+2);
+  assert.ok(routeTrajectory(train,stopping,{brakeAtEnd:true}).travelSeconds>routeTrajectory(train,through,{brakeAtEnd:true}).travelSeconds);
+  assert.ok(routeTrajectory(train,stopping).events.some(e=>e.label==='Middle'));
+  // Reversed, the stop still stands between the same two segments.
+  assert.deepEqual(reverseRouteProfile([{...segment(2),stopAfter:'S1'},{...segment(3),stopAfter:'S2'},segment(4)]).map(p=>[p.distanceKm,p.stopAfter]),[[4,'S2'],[3,'S1'],[2,undefined]]);
+  assert.throws(()=>validateRouteProfile([{...segment(5),stopAfter:'B?'}]),RangeError);
+  assert.equal(withRailProfile(train,stopping).model.timeAt(10),routeTrajectory(train,stopping,{stopDwellSeconds:2}).travelSeconds);
+});
+
+test('service handling follows the stop pattern; A–B–A is unchanged',()=>{
+  const stopping=[{...segment(5),stopAfter:'Middle'},segment(5)];
+  const plain=analyseFreightService(train,{distanceKm:10,routeProfile:[segment(5),segment(5)],loadedReturn:true});
+  const visited=analyseFreightService(train,{distanceKm:10,routeProfile:stopping,loadedReturn:true});
+  // Without transfers, Middle only adds its departure pause in each direction and the stop itself.
+  assert.ok(visited.roundTripSeconds>plain.roundTripSeconds+4-1e-9);
+  assert.equal(visited.deliveredPerCycle,plain.deliveredPerCycle);
+  const pattern={stops:[{outbound:{load:1,unload:0},return:{load:0,unload:1}},{outbound:{load:.5,unload:.5},return:{load:.5,unload:.5}},{outbound:{load:0,unload:1},return:{load:1,unload:0}}]};
+  const swapped=analyseFreightService(train,{distanceKm:10,routeProfile:stopping,servicePattern:pattern,demandPerYear:3000});
+  const rate=.0625*train.formationLoadingUnloadingSpeedMultiplier,q=swapped.cargoPerLeg;
+  near(swapped.intermediateStopSeconds,2*(q/rate+6));
+  near(swapped.deliveredPerCycle,3*q);
+  assert.throws(()=>analyseFreightService(train,{distanceKm:10,routeProfile:[segment(10)],servicePattern:pattern}),RangeError);
+  const passengers=analyseService(train,{distanceKm:10,routeProfile:stopping,servicePattern:pattern,demandPerDirection:1000});
+  near(passengers.perDirectionJourneysPerYear,1000,1e-6);
+});
+
+test('Race waits at each stop for the departure pause, or the declared transfers',async()=>{
+  const {outboundStopWaits}=await import('../src/stop-pattern.js');
+  const stopping=[{...segment(5),stopAfter:'Middle'},segment(5)];
+  assert.deepEqual(outboundStopWaits(null,1),{start:0,stops:[2],end:null});
+  const pattern={stops:[{outbound:{load:1,unload:0},return:{load:0,unload:1}},{outbound:{load:.2,unload:.3},return:{load:0,unload:0}},{outbound:{load:0,unload:1},return:{load:1,unload:0}}]};
+  // 100 units at 10/s. Middle: 5 s of transfers, 2 s before each transfer and before departure.
+  // A: 10 s loading, 2 s before it and 2 s before departure; B: 10 s unloading after 2 s.
+  assert.deepEqual(outboundStopWaits(pattern,1,100,()=>10),{start:14,stops:[11],end:12});
+  near(withRailProfile(train,stopping,{stops:[11]}).model.timeAt(10)-withRailProfile(train,stopping).model.timeAt(10),9);
+  const full=withRailProfile(train,stopping,{start:14,stops:[11],end:12}).model;
+  near(full.timeAt(10),14+routeTrajectory(train,stopping,{brakeAtEnd:true,stopDwellSeconds:11}).travelSeconds+12);
+  assert.equal(full.stateAt(5).distanceKm,0);
+});

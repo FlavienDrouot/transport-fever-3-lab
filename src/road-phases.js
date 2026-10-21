@@ -18,7 +18,7 @@ export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5
   vehicles=vehicles.filter(v=>rows.some(r=>r.truck.id===v.id));
   const coefficients=new Map(rows.map(row=>{
     const factor=row.truck.economy.annualMaintenance/(GAME_YEAR_SECONDS*row.deliveredPerCycle);
-    return [row.truck.id,{row,transferFactor:(options.demandPerYear??0)/GAME_YEAR_SECONDS*(row.loadingSeconds+row.unloadingSeconds)/row.deliveredPerCycle,handling:factor*(row.loadingSeconds+row.unloadingSeconds),fixed:factor*(2*row.travelSeconds+2*row.terminalDelaySeconds),factor}];
+    return [row.truck.id,{row,transferFactor:(options.demandPerYear??0)/GAME_YEAR_SECONDS*(row.loadingSeconds+row.unloadingSeconds)/row.deliveredPerCycle,handling:factor*(row.loadingSeconds+row.unloadingSeconds),fixed:factor*(2*row.travelSeconds+row.pauseSeconds),factor}];
   }));
   const travelAt=(row,x)=>options.motion?roadRoundTripMotion(row.truck,{...options,distanceKm:x}).travelSeconds:x/row.effectiveSpeedKmh*3600;
   const valueAt=(id,x)=>{
@@ -28,14 +28,14 @@ export function roadPhaseStory(vehicles,options,{axis='distance',start=.01,end=5
     if(options.demandPerYear!=null){
       if(axis==='year'&&c.row.truck.year>x)return null;
       const scale=axis==='utilization'?x/100/(options.fillRatio??1):1;
-      const fixedSeconds=2*travel+2*c.row.terminalDelaySeconds;
+      const fixedSeconds=2*travel+c.row.pauseSeconds;
       const minimumVehicles=c.transferFactor+options.demandPerYear/GAME_YEAR_SECONDS*fixedSeconds/(c.row.deliveredPerCycle*scale);
       const count=fixedRateFleetCount(fixedSeconds,c.transferFactor,minimumVehicles,options.maxHeadwaySeconds??null,options.frequencyMode);
       // A fixed rate is delivered exactly: fleet maintenance / annual delivery.
       return c.row.truck.economy.annualMaintenance*count/options.demandPerYear;
     }
     if(axis==='year')return c.row.truck.year<=x?c.row.costPerCargo:null;
-    return axis==='distance'?c.factor*(2*travel+c.row.loadingSeconds+c.row.unloadingSeconds+2*c.row.terminalDelaySeconds):c.handling+c.fixed*(options.fillRatio??1)/(x/100);
+    return axis==='distance'?c.factor*(2*travel+c.row.loadingSeconds+c.row.unloadingSeconds+c.row.pauseSeconds):c.handling+c.fixed*(options.fillRatio??1)/(x/100);
   };
   if(axis!=='year')return {...rankingStory(vehicles.map(v=>v.id),(id,x)=>{const cost=valueAt(id,x);return cost===null?null:-cost;},start,end,true,512,rankingOptions),valueAt};
   if(!Number.isInteger(start)||!Number.isInteger(end)||end<=start)throw new RangeError('Invalid year domain');

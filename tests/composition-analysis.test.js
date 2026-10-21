@@ -48,7 +48,7 @@ test('Speed uses A→B motion while time plots the entire round trip including h
     const p=analysis.points[i];
     assert.equal(time[0].points[i].x,2*p.x);
     assert.equal(time[0].points[i].y,p.service.roundTripSeconds);
-    assert.equal(p.service.roundTripSeconds,p.service.outboundTravelSeconds+p.service.returnTravelSeconds+p.service.stationSecondsA+p.service.stationSecondsB);
+    assert.ok(Math.abs(p.service.roundTripSeconds-(p.service.outboundTravelSeconds+p.service.returnTravelSeconds+p.service.stationSecondsA+p.service.stationSecondsB))<1e-9);
   }
   assert.ok(analysis.service.outboundTravelSeconds>motion.timeAt(10),'service includes final braking');
 });
