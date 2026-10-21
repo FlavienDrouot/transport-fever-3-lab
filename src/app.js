@@ -1261,19 +1261,26 @@ async function init() {
   profileControl=mountRouteProfileControls($('route-profile-control'),{
     initial:railRouteProfile,
     visual:$('route-profile-visual'),scaleControl:$('profile-horizontal-scale'),scaleNote:$('profile-scale-note'),segmentList:$('profile-segment-list'),shapes:$('profile-shapes'),
+    // The service lanes line up under the map; selecting a segment opens its details, geometry and existing infrastructure together.
+    below:geometry=>routePlanControl?.lanes(geometry)??'',onSelect:index=>routePlanControl?.openSegment(index),
     // A starting shape opens a new draft; saved routes are untouched.
     confirmReplace:shape=>!routeHasDeclarations||window.confirm(`Start from “${shape.name}”? This draft's stops, freight and infrastructure declarations will be cleared. Saved routes are kept.`),
     beforeChange:(segments,edit)=>{if(edit?.action!=='replace')routePlanControl?.validateSegmentEdit(segments,edit);},
     onChange:state=>{if(state.edit?.action==='replace')routePlanControl?.replaceDraft(state.segments,state.edit.name);else routePlanControl?.setSegments(state.segments,state.edit);routeSelection.updateCustom(state.segments);syncRouteSelection({restore:true});}
   });
   let routeStorage;try{routeStorage=window.localStorage;}catch{}
-  routePlanControl=mountRoutePlanControls($('route-plan-control'),{initialSegments:railRouteProfile,storage:routeStorage,
+  routePlanControl=mountRoutePlanControls($('profile-overview'),{initialSegments:railRouteProfile,storage:routeStorage,
+    layout:{header:$('route-plan-header'),panel:$('route-plan-panel'),summary:$('route-plan-summary')},
+    // One details panel: a stop or a trip replaces the segment editor; closing them returns to the selected segment.
+    onPanel:panel=>{const service=!!panel&&panel.kind!=='segment';$('profile-editor-section').hidden=service;$('route-profile-visual').classList.toggle('is-service-focus',service);if(!panel)queueMicrotask(()=>routePlanControl?.openSegment(profileControl.selectedIndex));},
+    onLanes:()=>profileControl?.redraw(),
     onSelectSegment:index=>profileControl.selectSegment(index),
     onLoad:plan=>{routePlan=plan;profileControl.setSegments(plan.segments);routeSelection.updateCustom(plan.segments);syncRouteSelection({restore:true});},
     onChange:plan=>{routeHasDeclarations=plan.stops.length>2||plan.segmentAssets.some(a=>a.railTier!==null||a.roadTier!==null||a.tramTracks!=='none')||plan.stops.some(s=>s.operations.length||s.infrastructure.length||s.buildings.some(b=>b.type!=='none'||b.storage.length||b.recipe.inputs.length||b.recipe.outputs.length));profileControl.setStops(plan.stops);routePlan=plan;declarationEdited(plan);syncRouteDeclarationNotice();}
   });
   routePlan=routePlanControl.plan;declarationKey=declarationSignature(routePlan);
   profileControl.setStops(routePlanControl.plan.stops);
+  routePlanControl.openSegment(profileControl.selectedIndex);
   mountRouteChoice($('comparison-route-choice'),{value:routeSelection.mode,onChange:mode=>{routeSelection.select(mode);applyDeclaredCategory();syncRouteSelection({restore:true});}});
   $('route-declaration-analysis-note').addEventListener('click',event=>{const button=event.target.closest('[data-switch-category]');if(!button)return;setComparisonCategory(button.dataset.switchCategory);highlighted=undefined;renderCatalogue();render();});
   $('profile-use-route').addEventListener('click',()=>{routeSelection.select('custom');applyDeclaredCategory();syncRouteSelection({restore:true});});
