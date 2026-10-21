@@ -99,7 +99,7 @@ export function mountCompositionAnalysis(document,{getSettings,onSettingsChange,
     const freight=draft?.category==='freight';$('composition-freight-options').hidden=!freight;
     $('composition-tram-notice').hidden=draft?.carrier!=='tram';
     $('composition-road-warning').hidden=draft?.carrier!=='tram';
-    $('composition-flow-unit').textContent=`${UI_TERMS.capacityUnit}/year${freight?'':'/direction'}`;
+    $('composition-flow-unit').textContent=`${UI_TERMS.capacityUnit}/year/direction`;
     $('composition-flow').setAttribute('aria-label',`Target rate in ${UI_TERMS.capacityUnit} per game year${freight?'':' per direction'}`);
     $('composition-headway').setAttribute('aria-label','Target frequency · min');
     $('composition-platform').setAttribute('aria-label','Maximum train length in metres');

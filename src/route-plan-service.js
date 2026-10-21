@@ -108,7 +108,8 @@ export function declaredService(input){
     return {...base,status:'applied',rate:Math.max(1,rate),bothDirectionsDeclared:qOut>EPSILON&&qBack>EPSILON};
   }
   if(qOut<=EPSILON)return {...base,status:'unsupported',issues:['Freight on B → A only: declare the route from the loading stop.']};
-  const rate=Math.ceil(qOut+qBack-EPSILON);
+  // Rate is per direction, as in the game: the busier leg; the return share adds its handling.
+  const rate=Math.ceil(busier-EPSILON);
   if(rate>1e9)return {...base,status:'unsupported',issues:[`${T.rate} above 1,000,000,000 ${T.capacityUnit}/year is outside the calculators' range.`]};
   const share=qBack>EPSILON?Math.min(qOut,qBack)/busier:0;
   return {...base,status:'applied',rate:Math.max(1,rate),loadedReturn:share===1?true:share===0?false:share,returnShare:share};

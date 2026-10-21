@@ -36,5 +36,8 @@ export function returnShare(loadedReturn){
   return loadedReturn;
 }
 
+/** Rate is per direction, as in the game: the busier leg's load. A cycle delivers it once, plus the return share. */
+export const deliveriesPerRate=loadedReturn=>1+returnShare(loadedReturn);
+
 /** A Loaded return checkbox, or the return share a route declaration placed on it. */
 export const loadedReturnValue=input=>input.dataset?.share===undefined?input.checked:Number(input.dataset.share);

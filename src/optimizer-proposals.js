@@ -28,7 +28,7 @@ function proposal(r,index,category,group=null,wagon=null,selected=false){
   const domain=r.domain,priced=(r.infrastructure&&r.infrastructureCostsCounted!==false)||r.routeInfrastructure;
   return `<article class="optimizer-proposal">${selected?'<p class="chart-help optimizer-selected-label">Selected configuration</p>':''}<div class="optimizer-proposal-top">${selected?'':`<span class="optimizer-rank">${index+1}</span>`}<h4>${escapeHtml(r.name)}</h4><strong>${money(r.cost)}/year</strong></div><p class="chart-help">${escapeHtml(r.parts.map(p=>`${p.quantity} × ${p.name}`).join(' + '))}${Number.isFinite(r.length)?` · ${fmt(r.length)} m`:''}</p>${terminalSummary(r,category)}<dl class="optimizer-metrics">${[
     ['Fleet',`${fmt(r.fleet,0)} ${domain==='rail'?'trains':'vehicles'}`],[T.capacity,`${fmt(r.capacity,0)} ${T.capacityUnit}`],
-    [T.rate,`${fmt(r.rate,0)} ${T.capacityUnit}/year${category==='passengers'?'/direction':''}`],
+    [T.rate,`${fmt(r.rate,0)} ${T.capacityUnit}/year/direction`],
     [T.frequency,formatDuration(r.frequency)],[T.utilization,`${fmt(r.utilization*100)}%`],['Leg time A→B / B→A',`${formatTime(r.outboundLegSeconds??r.outboundTravelSeconds)} / ${formatTime(r.returnLegSeconds??r.returnTravelSeconds)}`],['Round trip',formatTime(r.cycle)],
     ...(priced?[[`${T.runningCosts} · vehicles`,`${money(r.vehicleRunningCosts)}/year`]]:[]),
     ...(r.routeInfrastructure?[[`${T.runningCosts} · route`,`${money(r.routeRunningCosts)}/year`]]:[]),

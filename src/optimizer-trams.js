@@ -1,5 +1,5 @@
 import {GAME_YEAR_SECONDS} from './line.js';
-import {sizeFleet,returnShare} from './service-fleet.js';
+import {sizeFleet,returnShare,deliveriesPerRate} from './service-fleet.js';
 import {segmentLineTiers,segmentTramTiers} from './optimizer-line-infrastructure.js';
 
 /** Safe whole-fleet upkeep floor for Rail MU/wagon and Road tram formations. */
@@ -9,11 +9,11 @@ export function formationVehicleCostBound(request,domain){
   return ({capacity,multiplier,speed,maintenance})=>{
     if(caps.some(cap=>cap<=0))return Infinity;
     const trip=request.routeProfile.reduce((seconds,part,i)=>seconds+part.distanceKm*7200/Math.min(speed,caps[i]),0);
-    const freight=request.category==='freight',load=capacity*request.fillRatio,deliveries=freight?1+returnShare(request.loadedReturn):2;
+    const freight=request.category==='freight',load=capacity*request.fillRatio,deliveries=deliveriesPerRate(!freight||request.loadedReturn);
     const transferSeconds=freight?load*2*(1+returnShare(request.loadedReturn))/(multiplier*.0625*4):4*load/multiplier;
     const pauses=freight?(returnShare(request.loadedReturn)>0?12:8):12;
     return maintenance*sizeFleet({cycleSeconds:trip+pauses+transferSeconds,transferSeconds,unitsPerCycle:load*deliveries},
-      {demandPerYear:request.rate*(freight?1:2),maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
+      {demandPerYear:request.rate*deliveries,maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
   };
 }
 
@@ -29,8 +29,8 @@ export function* mixedLightRailFormations(items,request,maxLength,costCeiling=()
     request.lineInfrastructure?Math.max(...segmentLineTiers(part,'rail',request.year).map(tier=>tier.speedLimitKmh)):part.speedLimitKmh);
   if(caps.some(cap=>cap<=0))return;
   const minimumTrip=speed=>request.routeProfile.reduce((seconds,part,i)=>seconds+part.distanceKm*7200/Math.min(speed,caps[i]),0);
-  const deliveryFactor=request.category==='passengers'?2:1+returnShare(request.loadedReturn);
-  const flow=request.rate*(request.category==='passengers'?2:1)/GAME_YEAR_SECONDS;
+  const deliveryFactor=deliveriesPerRate(request.category==='passengers'||request.loadedReturn);
+  const flow=request.rate*deliveryFactor/GAME_YEAR_SECONDS;
   const parts=[];
   function* visit(index,left,length,maintenance,capacity,multiplier,speed){
     const tripMinimum=minimumTrip(speed);
@@ -43,7 +43,7 @@ export function* mixedLightRailFormations(items,request,maxLength,costCeiling=()
       const transferSeconds=freight?load*2*(1+returnShare(request.loadedReturn))/(multiplier*.0625*4):4*load/multiplier;
       const pauses=freight?(returnShare(request.loadedReturn)>0?12:8):12;
       const fleet=sizeFleet({cycleSeconds:tripMinimum+pauses+transferSeconds,transferSeconds,unitsPerCycle:load*deliveryFactor},
-        {demandPerYear:request.rate*(freight?1:2),maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
+        {demandPerYear:request.rate*deliveryFactor,maxHeadwaySeconds:request.maxHeadwaySeconds}).count;
       if(fleet<=request.maxFleet&&maintenance*fleet<=costCeiling()+1e-7)yield parts.map(part=>({...part}));
       return;
     }
@@ -53,8 +53,7 @@ export function* mixedLightRailFormations(items,request,maxLength,costCeiling=()
     const minCount=Math.max(1,Math.ceil(flow*tripMinimum/(maxCapacity*deliveryFactor)-1e-10),request.maxHeadwaySeconds===null?1:Math.ceil(tripMinimum/request.maxHeadwaySeconds-1e-10));
     const minimumMaintenance=maintenance+left*Math.min(...remaining.map(item=>item.economy.annualMaintenance));
     if(minCount>request.maxFleet||minimumMaintenance*minCount>costCeiling()+1e-7)return;
-    const headwayDeliveries=request.category==='passengers'?1:deliveryFactor;
-    if(request.minHeadwaySeconds!==null&&maxCapacity*request.fillRatio*headwayDeliveries*GAME_YEAR_SECONDS/request.rate<request.minHeadwaySeconds-1e-7)return;
+    if(request.minHeadwaySeconds!==null&&maxCapacity*request.fillRatio*GAME_YEAR_SECONDS/request.rate<request.minHeadwaySeconds-1e-7)return;
     const item=items[index],maximum=Math.min(left,Math.floor((maxLength-length+1e-9)/item.lengthMetres));
     for(let quantity=0;quantity<=maximum;quantity++){
       if(quantity)parts.push({componentId:item.id,quantity});
