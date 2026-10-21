@@ -34,7 +34,8 @@ import {mountSourceCatalogue} from './source-catalogue.js';
 import {tramComponents,railComponents,lightRailComponents,lightRailComparisonVehicles} from './consists.js';
 import {mountConsistEditor} from './consist-editor.js';
 import {mountCompositionAnalysis} from './composition-analysis-controls.js';
-import {renderTruckService, selectRoadVehicles, roadRouteSpeeds, analyseTruckService, analysePassengerRoadService} from './trucks.js';
+import {renderTruckService, selectRoadVehicles, roadRouteSpeeds, analyseTruckService, analysePassengerRoadService, FREIGHT_LOAD_SPEED_FACTOR, PASSENGER_LOAD_SPEED_FACTOR} from './trucks.js';
+import {outboundStopWaits} from './stop-pattern.js';
 import {renderDataView} from './data-view.js';
 import {curveLabels, trainLegend, spreadDiagonalLabels} from './chart-labels.js';
 import {economicStory,yearRankingStory} from './economic-crossovers.js';
@@ -289,9 +290,19 @@ function economicSelectionOptions(){
 }
 function speedUsesProfile(){const route=activeRouteProfile();return route.some(part=>part.gradePercent!==route[0].gradePercent||part.speedLimitKmh!==route[0].speedLimitKmh);}
 function raceCandidates(allYears=false){return navigation.domain==='road'?selectRoadVehicles(roadDatasets(),{category:comparisonCategory,includeTrams,cargo:truckCargo,year:allYears?2035:truckYear}).filter(t=>selectedRoad.has(t.id)).map(withRoadModel):trainCandidates(allYears?Infinity:catalogueYear).filter(t=>selected.has(t.id));}
+/** Waits at intermediate stops: the departure pause, plus declared loading and unloading for the vehicle at its Service Utilization. */
+function raceStopWaits(vehicle,route){
+  const count=routeStops(route).length,pattern=activeServicePattern();
+  if(!count||!pattern)return outboundStopWaits(null,count);
+  const road=navigation.domain==='road',freight=comparisonCategory==='freight';
+  const capacity=freight?vehicle.cargoCapacity:vehicle.passengerCapacity,fill=road?truckService.fillRatio:lineFill;
+  const multiplier=vehicle.formationLoadingUnloadingSpeedMultiplier??vehicle.loadingUnloadingSpeedMultiplier*(road?1:vehicle.carCount);
+  return outboundStopWaits(pattern,count,capacity*fill,(freight?FREIGHT_LOAD_SPEED_FACTOR:PASSENGER_LOAD_SPEED_FACTOR)*multiplier);
+}
+const raceWaitsKey=()=>JSON.stringify([activeServicePattern(),comparisonCategory,lineFill,truckService.fillRatio]);
 function raceStudyModels(allYears=false){
   const route=activeRouteProfile(),part=route[0];
-  return raceCandidates(allYears).map(t=>routeSelection.mode==='custom'?withRailProfile(t,route):withRailGradient(withRailSpeedLimit(t,part.speedLimitKmh),part.gradePercent)).filter(t=>t.model.canStart!==false);
+  return raceCandidates(allYears).map(t=>routeSelection.mode==='custom'?withRailProfile(t,route,raceStopWaits(t,route)):withRailGradient(withRailSpeedLimit(t,part.speedLimitKmh),part.gradePercent)).filter(t=>t.model.canStart!==false);
 }
 function raceStudyDistance(ts=raceStudyModels()){
   return studyBounded()?routeDistance:automaticRaceDistance(ts);
@@ -304,7 +315,7 @@ function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.n
 // The answer comes first: the arrival winner, its lead and the conditions behind it.
 function renderRaceVerdict(ranking,studyDistance,blocked){
   const root=$('race-summary'),[first,second]=ranking,road=navigation.domain==='road';
-  const stops=routeStops(railRouteProfile),halts=stops.length?` Stops at ${stops.join(', ')} for the 2 s departure pause.`:'';
+  const stops=routeStops(railRouteProfile),halts=!stops.length?'':activeServicePattern()?` Stops at ${stops.join(', ')}: declared loading and unloading at the Service ${UI_TERMS.utilization}, plus pauses.`:` Stops at ${stops.join(', ')} for the 2 s departure pause.`;
   const conditions=(road?'Road braking is omitted.':routeSelection.mode==='custom'?'Segment gradients and speed-limit braking are included; no stop at B.':`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`)+halts;
   const blockedNote=blocked.length?` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>escape(t.name)).join(', ')}.`:'';
   if(!first){root.innerHTML=`<p class="race-verdict-note">Select at least one vehicle to compare travel times.${blockedNote}</p>`;return;}
@@ -510,7 +521,7 @@ function renderChart(kind, width) {
 let raceYearKey,raceYearStory;
 function renderRaceYear(kind){
   const ts=raceStudyModels(true),distance=raceStudyDistance(ts);
-  const key=JSON.stringify([ts.map(t=>[t.id,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh]),distance]);
+  const key=JSON.stringify([ts.map(t=>[t.id,t.year,t.massTonnes,t.powerCh,t.tractionKgf,t.maxSpeedKmh]),distance])+raceWaitsKey();
   if(key!==raceYearKey){
     const valueAt=(id,x)=>{const train=ts.find(t=>t.id===id);return train.year<=x?train.model.timeAt(distance):null;};
     raceYearStory={...yearRankingStory(ts,valueAt),valueAt,axis:'year',label:'Game year',current:navigation.domain==='road'?truckYear:catalogueYear,discontinuous:true};raceYearKey=key;
@@ -528,7 +539,7 @@ function renderCrossovers() {
   const byYear=$('race-phase-axis').querySelector('input:checked').value==='year';
   $('crossover-readout').closest('table').querySelector('th').textContent=byYear?'Year range':'Distance range (km)';
   if(byYear){renderRaceYear('rank');return;}
-  const ts=raceStudyModels(),key=ts.map(t=>t.id).sort().join('|'),distance=raceStudyDistance(ts);
+  const ts=raceStudyModels(),key=ts.map(t=>t.id).sort().join('|')+raceWaitsKey(),distance=raceStudyDistance(ts);
   if(!crossoverCache.has(key))crossoverCache.set(key,clipStudyStory(crossoverStory(ts),distance,{unbounded:!studyBounded()}));
   const minimum=Math.min(.1,distance/10);
   const {phases, intervals, end} = rankWindow(crossoverCache.get(key),minimum);

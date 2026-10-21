@@ -26,13 +26,14 @@ export function withRailSpeedLimit(train,limit) {
 }
 
 const profileModels=new WeakMap();
-/** Finite A→B Race model. Arrival after B is intentionally undefined. Vehicles stop at intermediate stops for the departure pause; Race carries no load. */
-export function withRailProfile(train,segments) {
-  const key=JSON.stringify(segments);
+/** Finite A→B Race model. Arrival after B is intentionally undefined. At intermediate stops vehicles wait `stopWaits`
+ * (one value, or one per stop): by default the departure pause, or the declared loading and unloading. */
+export function withRailProfile(train,segments,stopWaits=DEPARTURE_PAUSE_SECONDS) {
+  const key=JSON.stringify([segments,stopWaits]);
   let cache=profileModels.get(train);
   if(!cache){cache=new Map();profileModels.set(train,cache);}
   if(cache.has(key))return cache.get(key);
-  const motion=routeTrajectory(train,segments,{stopDwellSeconds:DEPARTURE_PAUSE_SECONDS});
+  const motion=routeTrajectory(train,segments,{stopDwellSeconds:stopWaits});
   const model={canStart:!motion.stalled,routeProfile:true,routeDistanceKm:motion.routeDistanceKm,
     effectiveMaxSpeedKmh:motion.maxSpeedKmh,tractionEndSeconds:0,speedCapSeconds:motion.travelSeconds,
     speedViewSeconds:motion.travelSeconds,speedCapKm:motion.routeDistanceKm,profileEvents:motion.events,

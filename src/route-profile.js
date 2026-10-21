@@ -75,7 +75,9 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   const route=routeProfileForDomain(segments,motionConfig.transportDomain??'rail');
   const brakingEnabled=motionConfig.brakingEnabled!==false;
   if(!Number.isFinite(brakingDeceleration)||brakingDeceleration<=0)throw new RangeError('Braking must be positive');
-  if(!Number.isFinite(stopDwellSeconds)||stopDwellSeconds<0)throw new RangeError('Stop dwell must be nonnegative');
+  // One wait for every intermediate stop, or a list in A→B order.
+  const stopCount=segments.filter(part=>part.stopAfter).length,waits=Array.isArray(stopDwellSeconds)?stopDwellSeconds:Array(stopCount).fill(stopDwellSeconds);
+  if(waits.length!==stopCount||waits.some(wait=>!Number.isFinite(wait)||wait<0))throw new RangeError('Give one nonnegative wait per intermediate stop');
   const key=JSON.stringify([route,brakeAtEnd,brakingDeceleration,stopDwellSeconds]);
   const identity=train.model??train;
   let cache=trajectoryCache.get(identity);
@@ -108,10 +110,11 @@ export function routeTrajectory(train,segments,{brakeAtEnd=false,brakingDecelera
   };
   const push=(t,d,v)=>{times.push(t);distances.push(d);speeds.push(v);};
   // Leaving a section: at an intermediate stop the vehicle halts (Road, without braking, instantly) and waits.
+  let reached=0;
   const nextSection=()=>{
     const stop=sections[index].stop;
     if(stop){speed=0;speeds[speeds.length-1]=0;events.push({time,distanceKm:position/1000,label:stop});
-      if(stopDwellSeconds>0){time+=stopDwellSeconds;push(time,position,0);}}
+      const wait=waits[reached++];if(wait>0){time+=wait;push(time,position,0);}}
     index++;events.push({time,distanceKm:position/1000,label:`Segment ${index+1}`});
   };
   // Bounded by 100 km at 0.2 s; a stalled uphill train exits immediately.

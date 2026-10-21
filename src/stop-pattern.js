@@ -32,6 +32,13 @@ export function servicePattern({servicePattern=null,loadedReturn=false,routeProf
   return pattern;
 }
 
+/** Waits at the intermediate stops on the way A → B: the departure pause, plus the declared transfers and their pauses for a vehicle carrying `load` at `rate` units/s. */
+export function outboundStopWaits(pattern,count,load=0,rate=Infinity){
+  if(!pattern)return Array(count).fill(DEPARTURE_PAUSE_SECONDS);
+  return validateStopPattern(pattern).stops.slice(1,-1).map(({outbound:visit})=>
+    (visit.load+visit.unload)*load/rate+TRANSFER_PAUSE_SECONDS*((visit.load>EPSILON)+(visit.unload>EPSILON))+DEPARTURE_PAUSE_SECONDS);
+}
+
 /** Stop visits in one A–B–A cycle: A and B once each, intermediate stops once per direction. */
 export function cycleVisits(pattern){
   const {stops}=pattern,last=stops.length-1,middle=stops.slice(1,-1);

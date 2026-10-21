@@ -141,3 +141,13 @@ test('service handling follows the stop pattern; A–B–A is unchanged',()=>{
   const passengers=analyseService(train,{distanceKm:10,routeProfile:stopping,servicePattern:pattern,demandPerDirection:1000});
   near(passengers.perDirectionJourneysPerYear,1000,1e-6);
 });
+
+test('Race waits at each stop for the departure pause, or the declared transfers',async()=>{
+  const {outboundStopWaits}=await import('../src/stop-pattern.js');
+  const stopping=[{...segment(5),stopAfter:'Middle'},segment(5)];
+  assert.deepEqual(outboundStopWaits(null,1),[2]);
+  const pattern={stops:[{outbound:{load:1,unload:0},return:{load:0,unload:1}},{outbound:{load:.2,unload:.3},return:{load:0,unload:0}},{outbound:{load:0,unload:1},return:{load:1,unload:0}}]};
+  // 100 units at 10/s: 5 s of transfers, 2 s before each transfer and 2 s before departure.
+  assert.deepEqual(outboundStopWaits(pattern,1,100,10),[11]);
+  near(withRailProfile(train,stopping,[11]).model.timeAt(10)-withRailProfile(train,stopping).model.timeAt(10),9);
+});
