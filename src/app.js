@@ -330,7 +330,7 @@ function arrivalName(t, view) {return view.startsWith('speed') ? t.name : `${t.n
 function renderRaceVerdict(ranking,studyDistance,blocked){
   const root=$('race-summary'),[first,second]=ranking,road=navigation.domain==='road';
   const stops=routeStops(railRouteProfile),handled=raceHandling&&!!raceServicePattern(railRouteProfile);
-  const halts=handled?` Includes the declared loading at A${stops.length?`, transfers at ${stops.join(', ')}`:''} and unloading at B, at the Service ${UI_TERMS.utilization}.`:stops.length?` Stops at ${stops.join(', ')} for the 2 s departure pause.`:'';
+  const halts=handled?` Includes the declared loading at A${stops.length?`, transfers at ${stops.join(', ')}`:''} and unloading at B; vehicles run loaded at ${fmt((road?truckService.fillRatio:lineFill)*100,0)}% ${UI_TERMS.utilization} (set in Service).`:stops.length?` Stops at ${stops.join(', ')} for the 2 s departure pause.`:'';
   const conditions=(road?'Road braking is omitted.':routeSelection.mode==='custom'?`Segment gradients and speed-limit braking are included${handled?'':'; no stop at B'}.`:`Gradient A→B: ${fmt(railGradePercent,1)}%; no terminal stop at B.`)+halts;
   const blockedNote=blocked.length?` ${railRouteProfile?'Cannot complete this route':'Cannot overcome resistance on this route'}: ${blocked.map(t=>escape(t.name)).join(', ')}.`:'';
   if(!first){root.innerHTML=`<p class="race-verdict-note">Select at least one vehicle to compare travel times.${blockedNote}</p>`;return;}
