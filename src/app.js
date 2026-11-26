@@ -69,7 +69,7 @@ const views = {
 let speedView='speed',studyScope='auto';
 const studyBounded=()=>studyScope==='distance'||routeSelection.mode==='custom';
 let economicStoryKey, currentEconomicStory;
-let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,profileControl,routePlanControl,routeHasDeclarations=false,routePlan=null,declarationKey='',declarationTimer;
+let navigation=initialNavigation(),liveComposition=null,comparisonComposition=null,optimizerComparisons=[],profileControl,routePlanControl,routeHasDeclarations=false,routePlan=null,declarationKey='',declarationTimer;
 let consistEditor,compositionAnalysis,raceGradientControl,baseTrains,trainSelector,roadSelector;
 let lightRailTrains=[],lightRailLoaded=false,lightRailLoading;
 let comparisonCategoryControl,optimizerControl;
@@ -399,7 +399,7 @@ function roadCandidates(){return selectRoadVehicles(roadDatasets(),{category:com
 function renderRoadCatalogue(){syncStarterSelections();roadSelector.render();}
 function rebuildRailComparisons(){
   const custom=consistEditor?.getCompositions()??[];
-  trains=[...baseTrains,...lightRailTrains,...(comparisonComposition?.carrier==='rail'?[comparisonComposition]:[]),...custom.filter(t=>t.carrier==='rail').map((t,i)=>({...t,color:['#147d64','#ad5a28','#9270b9','#3897a7'][i%4]}))];
+  trains=[...baseTrains,...lightRailTrains,...(comparisonComposition?.carrier==='rail'?[comparisonComposition]:[]),...optimizerComparisons,...custom.filter(t=>t.carrier==='rail').map((t,i)=>({...t,color:['#147d64','#ad5a28','#9270b9','#3897a7'][i%4]}))];
 }
 function syncCustomCompositions(change={}){
   const custom=consistEditor.getCompositions();
@@ -827,6 +827,29 @@ function compareComposition(){
   location.hash=item.carrier==='tram'?'#trucks':item.category==='freight'||navigation.railView==='economics'?'#economics':'#race';syncAnalysisView();
 }
 
+const OPTIMIZER_COMPARISON_COLORS=['#20a6b2','#c2410c','#7c3aed','#15803d','#b91c1c','#0369a1','#a16207','#be185d'];
+/** Checked Optimizer trains replace the previous checked set in Race and Service; nothing is saved. */
+async function compareOptimizerProposals(proposals,request,isCurrent,applyRoute){
+  await ensureConfigurator();if(!isCurrent())return;if(!consistEditor)throw new Error('Composition catalogue is unavailable.');
+  const cargo=request.cargo==='all'?'general':request.cargo;
+  const built=proposals.map((proposal,i)=>{
+    const item=consistEditor.build({...proposal.definition,id:`custom:preview:optimizer:${i}`});
+    if(!item.serviceReady)throw new Error(`${proposal.definition.name} could not be rebuilt.`);
+    return {...item,year:proposal.year??item.year,freightSpecialization:request.category==='freight'?cargo:item.freightSpecialization,vehicleType:'Optimizer train',name:`${configurationName(proposal)} · optimizer`,color:OPTIMIZER_COMPARISON_COLORS[i%OPTIMIZER_COMPARISON_COLORS.length]};
+  });
+  for(const item of optimizerComparisons)selected.delete(item.id);
+  optimizerComparisons=built;
+  if(request.routeProfile)applyRoute(request.routeProfile);
+  setComparisonCategory(request.category);economicCargo=request.cargo;
+  $('rail-cargo').querySelector(`input[value="${economicCargo}"]`).checked=true;
+  catalogueYear=Math.max(catalogueYear,...built.map(item=>item.year));
+  updateCompositionSettings({...compositionSettings(),fillRatio:request.fillRatio,desiredFlow:request.rate,maxHeadwaySeconds:request.maxHeadwaySeconds,frequencyMode:'maximum',platformLengthMetres:request.maxTrainLength,loadedReturn:request.loadedReturn,stopA:request.stopA,stopB:request.stopB});
+  railStarter=false;selected=new Set(built.map(item=>item.id));highlighted=undefined;trainSelector.clearSearch();
+  syncCustomCompositions();
+  location.hash=request.category==='freight'?'#economics':'#race';syncAnalysisView();
+}
+const configurationName=proposal=>proposal.parts.map(part=>`${part.quantity} × ${part.name}`).join(' + ');
+
 let roadPhaseTimer,economicProfileTimer;
 // Road Running cost over distance mirrors Rail: ∞ extends until every vehicle cruises and the leader is settled.
 let roadEfficiencyKey,roadEfficiencyExtent;
@@ -1018,7 +1041,7 @@ function ensureOptimizer(){
     if(routeSelection.mode==='custom'){profileControl?.setSegments(segments);routePlanControl?.setSegments(segments);}
     syncRouteSelection({restore:true});
   };
-  optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:currentRoute,getStoredRoute:()=>routeSelection.segments,getPlan:declaredPlan,onRouteChange:segments=>applyOptimizerRoute(declaredPlan()?mergeUndeclaredLineChoices(routeSelection.segments,segments,declaredPlan()):segments),getCatalogue:optimizerCatalogue,onOpen:async (proposal,request,isCurrent,action)=>{
+  optimizerControl=mountOptimizer($('optimizer-control'),{summaryRoot:$('optimizer-sidebar'),getRoute:currentRoute,getStoredRoute:()=>routeSelection.segments,getPlan:declaredPlan,onRouteChange:segments=>applyOptimizerRoute(declaredPlan()?mergeUndeclaredLineChoices(routeSelection.segments,segments,declaredPlan()):segments),getCatalogue:optimizerCatalogue,onCompare:(proposals,request,isCurrent)=>compareOptimizerProposals(proposals,request,isCurrent,profile=>applyOptimizerRoute(proposalRoute(profile))),onOpen:async (proposal,request,isCurrent,action)=>{
     // Apply the route and targets only after explicitly choosing a current proposal.
     if(proposal.domain==='rail'||proposal.definition&&action==='composition'){
       await ensureConfigurator();if(!isCurrent())return;if(!consistEditor)throw new Error('Composition catalogue is unavailable.');
