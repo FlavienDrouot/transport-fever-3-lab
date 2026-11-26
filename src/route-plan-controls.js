@@ -14,21 +14,22 @@ const newInfrastructure=kind=>({id:routeId('infra'),kind,...(kind==='railPlatfor
 const directions={outbound:'A → B',return:'B → A'};
 
 /** Saved geometry and logistics stay separate from vehicle selection and simulation. Trips declare who goes where; the grid shows the resulting boarding and flows. */
-export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad,onChange=()=>{},onSelectSegment=()=>{}}){
+export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad,onChange=()=>{},onSelectSegment=()=>{},layout=null,onPanel=()=>{},onLanes=()=>{}}){
   let plan=createRoutePlan(initialSegments),message='',invalid=false,panel=null;
   const openSections=new Set(),expanded=new Set();
   const library=new Map();let restored;
   try{restored=restoreRoutePlans(storage?.getItem(ROUTE_STORAGE_KEY));}catch{restored={routes:[],skipped:1};}
   for(const route of restored.routes)library.set(route.id,route);
   if(restored.skipped)message='Some saved routes could not be restored. Valid routes are retained.';
-  root.innerHTML=`<form class="route-plan-form" novalidate>
-    <div class="rp-toolbar"><label class="rp-name">Route name <input data-plan-path="name" maxlength="120" required></label><button type="button" data-route-action="save">Save route</button><button type="button" data-route-action="duplicate">Duplicate draft</button><button type="button" data-route-action="new">New route</button>
+  const toolbar=`<div class="rp-toolbar"><label class="rp-name">Route name <input data-plan-path="name" maxlength="120" required></label><button type="button" data-route-action="save">Save route</button><button type="button" data-route-action="duplicate">Duplicate draft</button><button type="button" data-route-action="new">New route</button>
       <label class="rp-library">Saved routes <select data-route-library aria-label="Saved routes"></select></label><button type="button" data-route-action="load">Load</button><button type="button" data-route-action="delete">Remove saved route</button></div>
     <p class="route-plan-status chart-help" role="status" aria-live="polite"></p>
-    <section class="rp-loads" aria-label="Loads" data-route-loads></section>
-    <section class="rp-service" aria-label="Service along the line"><div data-route-grid></div><div class="rp-panel" data-route-panel></div></section>
-    <section class="route-plan-summary" aria-label="What the analyses use" data-route-summary></section>
-  </form>`;
+    <section class="rp-loads" aria-label="Loads" data-route-loads></section>`;
+  const panelSlot='<div class="rp-panel" data-route-panel></div>',summarySlot='<section class="route-plan-summary" aria-label="What the analyses use" data-route-summary></section>';
+  // With a layout, the service lanes are drawn under the line map (see `lanes`) and the parts go to their own places on the page.
+  if(layout){layout.header.innerHTML=`<form class="route-plan-form" novalidate>${toolbar}</form>`;layout.panel.innerHTML=`<div class="route-plan-form">${panelSlot}</div>`;layout.summary.innerHTML=`<div class="route-plan-form">${summarySlot}</div>`;}
+  else root.innerHTML=`<form class="route-plan-form" novalidate>${toolbar}
+    <section class="rp-service" aria-label="Service along the line"><div data-route-grid></div>${panelSlot}</section>${summarySlot}</form>`;
   const $=selector=>root.querySelector(selector),name=$('[data-plan-path=name]'),savedSelect=$('[data-route-library]');
   const field=(path,label,value,{type='number',min=0,max=null,step='any'}={})=>`<label>${escape(label)}<input data-plan-path="${path}" type="${type}" value="${escape(value)}"${type==='number'?` min="${min}"${max==null?'':` max="${max}"`} step="${step}"`:' maxlength="120"'} required></label>`;
   const choice=(path,legend,value,options)=>`<fieldset class="scale-toggle rp-choice"><legend>${escape(legend)}</legend>${(Array.isArray(options)?options:Object.entries(options)).map(([key,label])=>`<label><input type="radio" name="${path}" data-plan-path="${path}" value="${escape(key)}"${String(value)===key?' checked':''}><span>${escape(label)}</span></label>`).join('')}</fieldset>`;
@@ -79,11 +80,14 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     const target=direction==='outbound'?plan.stops.at(-1):plan.stops[0];
     return `<div class="rp-cell"><span class="rp-cell-label">${directions[direction]}</span>${chips.join('')}${stop.id!==target.id?`<button type="button" class="rp-op rp-add" data-route-action="add-trip" data-from="${stop.id}" data-to="${target.id}" aria-label="Add a trip from ${escape(stop.name)}, ${directions[direction]}">＋</button>`:''}</div>`;
   }
-  function band(section,direction){
+  // Under the map, a single load is named by its colour only, to fit short sections.
+  function band(section,direction,short=false){
     const items=section?Object.entries(section.load).filter(([,v])=>v.visit>1e-9||v.year>1e-9):[];
-    return `<div class="rp-band${items.length?'':' rp-empty'}" data-dir="${directions[direction]}">${items.length?items.map(([id])=>`<span>${dot(id)}${escape(loadText({[id]:section.load[id]})[0])}</span>`).join(''):'Empty'}</div>`;
+    const text=id=>short&&plan.goods.length===1?`${fmt(section.load[id].year)}/yr`:loadText({[id]:section.load[id]})[0];
+    return `<div class="rp-band${items.length?'':' rp-empty'}" data-dir="${directions[direction]}" title="${escape(items.map(([id])=>loadText({[id]:section.load[id]})[0]).join(' · '))}">${items.length?items.map(([id])=>`<span>${dot(id)}${escape(text(id))}</span>`).join(''):'Empty'}</div>`;
   }
   function drawGrid(){
+    if(!$('[data-route-grid]'))return;
     const flows=terminusFlows(plan),columns=[`<div class="rp-col rp-labels" aria-hidden="true"><span></span><span>A → B</span><span>B → A</span></div>`];
     plan.stops.forEach((stop,i)=>{
       columns.push(`<div class="rp-col rp-stop${i===0||i===plan.stops.length-1?' rp-end':''}" data-route-stop="${escape(stop.id)}">${stopHead(stop,i)}${opCell(stop,i,'outbound')}${opCell(stop,i,'return')}</div>`);
@@ -129,6 +133,9 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     return `<article class="rp-building"><div class="route-plan-row">${choice(`${p}.kind`,'Existing infrastructure',entry.kind,kinds)}</div>${entry.kind.endsWith('Platform')?`<div class="route-plan-row">${field(`${p}.length`,'Platform length · m',entry.length,{min:rail?40:20,max:rail?840:10000,step:rail?40:10})}${field(`${p}.platforms`,rail?'Platforms':'Parallel platforms',entry.platforms,{min:rail?Math.ceil(entry.tracks/2):1,max:rail?entry.tracks:100,step:1})}${rail?field(`${p}.tracks`,'Platform tracks',entry.tracks,{min:1,max:100,step:1}):''}${check(`${p}.specialized`,'Specialized freight platform',entry.specialized)}</div>`:entry.kind==='busStop'?'<p class="chart-help">No specified length; one vehicle at a time. Freight unloading at industrial buildings only.</p>':'<p class="chart-help">Station exists; no available platform is assumed.</p>'}${doneRow(entry.id,`<button type="button" data-route-action="remove-row" data-path="${p}">Remove</button>`)}</article>`;
   }
   function drawPanel(){
+    drawPanelBody();onPanel(panel&&{...panel});
+  }
+  function drawPanelBody(){
     const slot=$('[data-route-panel]');
     const close='<button type="button" class="rp-close" data-route-action="close-panel" aria-label="Close details">✕</button>';
     if(panel?.kind==='stop'){
@@ -143,7 +150,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     }else if(panel?.kind==='segment'){
       const j=panel.index,s=plan.segments[j],a=plan.segmentAssets[j],p=`segmentAssets.${j}`;
       if(!s){panel=null;slot.innerHTML='';return;}
-      slot.innerHTML=`<div class="rp-panel-head"><h4>Segment ${j+1} · ${fmt(s.distanceKm)} km · ${s.gradePercent>0?'+':''}${fmt(s.gradePercent)}%</h4>${close}</div>
+      slot.innerHTML=layout?`<h5>Existing infrastructure</h5><p class="chart-help">Declare what already exists, independently of curve or gradient limits.</p>`:`<div class="rp-panel-head"><h4>Segment ${j+1} · ${fmt(s.distanceKm)} km · ${s.gradePercent>0?'+':''}${fmt(s.gradePercent)}%</h4>${close}</div>
         <p class="chart-help">Declare what already exists, independently of curve or gradient limits. <button type="button" class="rp-link" data-route-action="select-segment" data-index="${j}">Edit its length, grade and limits on the map ↑</button></p>
         <div class="route-plan-row">${choice(`${p}.railTier`,'Existing Rail tier',a.railTier??'none',[['none','None'],['100','100'],['160','160'],['350','350 km/h']])}${choice(`${p}.railTracks`,'Rail tracks',a.railTracks,{1:'1',2:'2'})}</div>
         <div class="route-plan-row">${choice(`${p}.roadTier`,'Existing Road tier',a.roadTier??'none',[['none','None'],['40','40'],['60','60'],['50','50 · city'],['80','80'],['100','100'],['120','120 km/h']])}${choice(`${p}.roadLanes`,'Road lanes',a.roadLanes,a.roadTier===100?{2:'2'}:a.roadTier===120?{4:'4'}:{2:'2',4:'4'})}${choice(`${p}.tramTracks`,'Tram tracks',a.tramTracks,{none:'None',road:'On the Road',dedicated:'Dedicated · 2 tracks'})}</div>
@@ -170,7 +177,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   function drawBody(){
     const active=root.ownerDocument.activeElement,path=active?.dataset?.planPath,action=active?.dataset?.routeAction,key=active?.dataset?.op??active?.dataset?.stop??active?.dataset?.index;
     const kept=new Map([...root.querySelectorAll('details[data-keep]')].map(el=>[el.dataset.keep,el.open]));
-    drawLoads();drawGrid();drawPanel();drawSummary();
+    drawLoads();drawGrid();drawPanel();drawSummary();onLanes();
     for(const el of root.querySelectorAll('details[data-keep]'))if(kept.has(el.dataset.keep)||openSections.has(el.dataset.keep))el.open=kept.get(el.dataset.keep)||openSections.has(el.dataset.keep);
     openSections.clear();
     if(path)(root.querySelector(`[data-plan-path="${path}"]:checked`)??(active.type==='radio'?null:root.querySelector(`[data-plan-path="${path}"]`)))?.focus();
@@ -192,7 +199,7 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
   function accept(candidate,{redraw=true}={}){
     try{
       const next=validateRoutePlan(candidate);routePlanFlows(next);plan=next;message='';
-      if(redraw)drawBody();else{drawGrid();drawSummary();for(const title of root.querySelectorAll('.rp-panel-head h4'))if(panel?.kind==='stop'&&plan.stops.some(s=>s.id===panel.id))title.textContent=`${plan.stops.find(s=>s.id===panel.id).name} · ${fmt(kmAt(plan.stops.find(s=>s.id===panel.id).boundary))} km`;}
+      if(redraw)drawBody();else{drawGrid();drawSummary();onLanes();for(const title of root.querySelectorAll('.rp-panel-head h4'))if(panel?.kind==='stop'&&plan.stops.some(s=>s.id===panel.id))title.textContent=`${plan.stops.find(s=>s.id===panel.id).name} · ${fmt(kmAt(plan.stops.find(s=>s.id===panel.id).boundary))} km`;}
       refreshStatus();onChange(structuredClone(plan));return true;
     }catch(error){refreshStatus(error);if(redraw)drawBody();return false;}
   }
@@ -284,10 +291,43 @@ export function mountRoutePlanControls(root,{initialSegments,storage=null,onLoad
     else return;
     if(accept(candidate)){if(panel&&action==='add-stop'){$('[data-route-panel]').scrollIntoView({block:'nearest'});$('[data-route-panel] input:not([type=radio])')?.focus({preventScroll:true});}if(action==='add-trip'){$('[data-route-panel]').scrollIntoView({block:'nearest'});$('[data-route-panel] [data-plan-path$=".rate"]')?.focus({preventScroll:true});}}
   });
+  // Map stops are SVG groups, not buttons: Enter and Space open them too.
+  root.addEventListener('keydown',event=>{const target=event.target.closest('[data-route-action]');if(!target||target.tagName==='BUTTON'||(event.key!=='Enter'&&event.key!==' '))return;event.preventDefault();target.dispatchEvent(new MouseEvent('click',{bubbles:true}));});
   root.querySelector('form').addEventListener('submit',event=>{event.preventDefault();$('[data-route-action=save]').click();});
   root.addEventListener('invalid',event=>{for(let p=event.target.parentElement;p&&p!==root;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;},true);
+  /** Service lanes under the line map: each stop sits at its map position `xs[boundary]` (map units, `width` wide), with the flows between stops.
+   * Too narrow a stop shows a trip count that opens it; `＋ stop` marks the free boundaries. */
+  function lanes({width,xs}){
+    const flows=terminusFlows(plan),stops=plan.stops,x=stop=>xs[stop.boundary];
+    // A and B also use the margin beyond them, so their cells reach further inward.
+    const spans=stops.map((stop,i)=>{const last=i===stops.length-1,half=Math.min(i===0||last?130:80,i?(x(stop)-x(stops[i-1]))/2-4:Infinity,!last?(x(stops[i+1])-x(stop))/2-4:Infinity);return [i===0?0:Math.max(0,x(stop)-half),last?width:Math.min(width,x(stop)+half)];});
+    const columns=[];let cursor=0;
+    for(const [a,b] of spans){columns.push(Math.max(0,a-cursor),b-a);cursor=b;}
+    columns.push(Math.max(0,width-cursor));
+    const template=columns.map(c=>`minmax(0,${c.toFixed(1)}fr)`).join(' ');
+    const row=direction=>{
+      const parts=['<span></span>'];
+      stops.forEach((stop,i)=>{
+        const narrow=spans[i][1]-spans[i][0]<96,index=new Map(stops.map((s,k)=>[s.id,k])),chips=[];
+        for(const trip of plan.trips)for(const [from,to] of legs(trip))if((index.get(from)<index.get(to))===(direction==='outbound')&&(from===stop.id||to===stop.id))chips.push(tripChip(trip,from,to,stop.id));
+        const target=direction==='outbound'?stops.at(-1):stops[0];
+        parts.push(narrow?`<div class="rp-cell rp-compact"><button type="button" class="rp-op rp-count" data-route-action="open-stop" data-stop="${i}">${chips.length?`${chips.length} trip${chips.length===1?'':'s'}`:'＋'}</button></div>`
+          :`<div class="rp-cell${panel?.kind==='stop'&&panel.id===stop.id?' rp-current':''}">${chips.join('')}${stop.id!==target.id?`<button type="button" class="rp-op rp-add" data-route-action="add-trip" data-from="${stop.id}" data-to="${target.id}" aria-label="Add a trip from ${escape(stop.name)}, ${directions[direction]}">＋</button>`:''}</div>`);
+        const next=stops[i+1];
+        if(next)parts.push(band(flows.sections.find(s=>s.direction===direction&&(direction==='outbound'?s.from===stop.id:s.to===stop.id)),direction,true));
+      });
+      parts.push('<span></span>');
+      return `<div class="rp-lane-title">${directions[direction]}</div><div class="rp-lane" style="grid-template-columns:${template}">${parts.join('')}</div>`;
+    };
+    const used=new Set(stops.map(s=>s.boundary)),free=xs.map((_,b)=>b).filter(b=>!used.has(b));
+    const adds=free.map(b=>`<button type="button" class="rp-add-stop" style="left:${(xs[b]/width*100).toFixed(2)}%" data-route-action="add-stop" data-boundary="${b}" aria-label="Add a stop at ${fmt(kmAt(b))} km">＋ stop</button>`).join('');
+    return `<div class="rp-lanes" aria-label="Service along the line">${adds?`<div class="rp-stop-adds">${adds}</div>`:''}${row('outbound')}${row('return')}</div>`;
+  }
   draw();
   return {
+    lanes,
+    /** Show a segment's existing infrastructure in the details panel, under its geometry. */
+    openSegment(index){panel={kind:'segment',index};drawPanel();onLanes();},
     get plan(){return structuredClone(plan);},
     validateSegmentEdit(segments,edit){routePlanFlows(updateRoutePlanSegments(read(),segments,edit));},
     /** Start a fresh draft from shared geometry; saved routes are untouched. */

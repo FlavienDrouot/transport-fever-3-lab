@@ -817,3 +817,28 @@ span.rp-op{cursor:default}
 
 /* Race: include the declared service's loading and unloading */
 .race-handling{display:flex;align-items:center;gap:6px;margin:4px 0 10px;font-size:13px;accent-color:var(--green)}
+
+/* Route page: service lanes under the line map, one details panel */
+.rp-lanes{position:relative;min-width:640px;margin-top:2px}
+.rp-stop-adds{position:relative;height:24px}
+.rp-stop-adds .rp-add-stop{position:absolute;top:0;transform:translateX(-50%);background:var(--surface,#fff)}
+.rp-lane-title{font-size:11px;color:var(--muted);margin:6px 0 2px}
+.rp-lane{display:grid;align-items:center}
+.rp-lane .rp-cell{justify-content:center;min-height:34px;min-width:0}
+.rp-lane .rp-band{margin:0 3px;justify-content:center;min-width:0}
+.rp-lane .rp-band::before{content:none}
+.rp-lane .rp-cell.rp-current{box-shadow:0 0 0 2px var(--green)}
+.profile-stop{cursor:pointer}
+.profile-stop:hover circle,.profile-stop:focus-visible circle{stroke:var(--green);stroke-width:3}
+.profile-stop:focus-visible{outline:none}
+.route-detail{border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.route-detail .rp-panel{border:0;padding:0}
+.route-detail .rp-panel:empty{display:none}
+.route-detail .profile-inspector-panel{border:0;padding:0;margin:0}
+.profile-sketch .profile-stop .profile-node,.profile-sketch .profile-stop .profile-stop-label{pointer-events:auto}
+.profile-sketch .profile-stop .profile-node{r:9px}
+.rp-lanes{padding-bottom:4px}
+/* While a stop or a trip is open, the map no longer marks a selected segment. */
+.profile-visual.is-service-focus .profile-line-map .profile-band-group.is-selected:not(:focus-visible) .profile-band:not(#_){fill:transparent;stroke:none}
+.profile-visual.is-service-focus .profile-inline-actions{display:none}
+.rp-lane .rp-band{overflow:hidden;white-space:nowrap}

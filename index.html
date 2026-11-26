@@ -149,13 +149,17 @@
     <div id="route-profile" class="analysis-view" hidden>
       <section id="profile-overview" class="chart-panel" aria-labelledby="profile-heading">
         <div class="panel-top"><h2 id="profile-heading">Route</h2><p class="chart-help">Pick a starting shape, then select a segment on the map to adjust it.</p><button id="profile-use-route" type="button">Use this route</button></div>
+        <div id="route-plan-header" class="route-plan-header"></div>
         <div id="profile-shapes" class="profile-shapes" role="group" aria-label="Starting shapes"></div>
         <div class="profile-map-tools"><fieldset id="profile-horizontal-scale" class="scale-toggle profile-scale"><legend>Horizontal scale</legend><label><input type="radio" name="profile-horizontal-scale" value="equal" checked><span>Equal segments</span></label><label><input type="radio" name="profile-horizontal-scale" value="linear"><span>Distance · linear</span></label></fieldset><p class="profile-grade-legend" aria-label="Line colour shows the grade">Grade <span class="grade-flat">under 0.5%</span><span class="grade-gentle">0.5–2%</span><span class="grade-steep">2–4%</span><span class="grade-severe">4% or more</span></p></div>
         <div class="profile-preview"><div id="route-profile-visual" class="profile-visual"></div></div>
         <p id="profile-scale-note" class="chart-help">Equal widths · elevation exaggerated.</p>
         <div id="profile-segment-list" class="profile-segment-strip"></div>
+        <section class="route-detail" aria-label="Details">
         <section id="profile-editor-section" class="profile-inspector-panel" aria-labelledby="profile-editor-heading"><h2 id="profile-editor-heading" class="sr-only">Selected segment</h2><div id="route-profile-control"></div></section>
-        <section class="route-plan-panel" aria-labelledby="route-plan-heading"><h2 id="route-plan-heading">Route &amp; expected service</h2><div id="route-plan-control"></div></section>
+          <div id="route-plan-panel"></div>
+        </section>
+        <div id="route-plan-summary"></div>
         <details class="info-disclosure profile-notes"><summary>About route profiles</summary><p class="chart-help">Each segment has a constant grade and speed limit; the return runs them in reverse, downhill where A → B climbs. Up to 100 km in total; the elevation sketch is symbolic. Rail brakes ahead of lower limits; Road applies them instantly.</p></details>
         <div class="profile-destinations"><a id="profile-compare-race" href="#race">Compare Race →</a><a id="profile-compare-service" href="#economics">Compare service →</a><a href="#configurator">Adjust composition →</a></div>
       </section>

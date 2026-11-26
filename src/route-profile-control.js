@@ -31,7 +31,7 @@ const shapeIcon=segments=>{
 
 /** Elevation is exaggerated; the full map is the route editor, compact previews are read-only. */
 export function routeProfileSketch(segments,options={}) {
-  const {scale='equal',selectedIndex=null,availableWidth=900,compact=false,stops=[]}=options;
+  const {scale='equal',selectedIndex=null,availableWidth=900,compact=false,stops=[],openStops=false,below=null}=options;
   if(compact||options.selectable===false)return compactSketch(segments,options);
   const parts=validateRouteProfile(segments),total=routeProfileDistance(parts);
   if(scale!=='equal'&&scale!=='linear')throw new RangeError('Unknown profile scale');
@@ -54,7 +54,8 @@ export function routeProfileSketch(segments,options={}) {
     const i=selectedIndex,lower=k=>Math.min(186,y(heights[k])+28);
     return `<g class="profile-inline-actions is-selected" data-actions-for="${i}">${action('insert-before',i,xs[i]+(i===0?14:0),lower(i),`Add segment before segment ${i+1}`)}${action('insert',i,xs[i+1]-(i===parts.length-1?14:0),lower(i+1),`Add segment after segment ${i+1}`)}</g>`;
   })():'';
-  const markers=heights.map((height,i)=>{const stop=stops.find(s=>s.boundary===i);return `<circle cx="${xs[i].toFixed(1)}" cy="${y(height).toFixed(1)}" r="${stop?7:4}" class="profile-node${stop?' profile-stop-node':''}"><title>${escapeHtml(stop?.name??(i===0?'A':i===parts.length?'B':`After segment ${i}`))} · ${format(distances[i])} km from A</title></circle>${stop?`<text class="profile-stop-label" x="${xs[i].toFixed(1)}" y="${(y(height)-15).toFixed(1)}" text-anchor="${i===0?'start':i===parts.length?'end':'middle'}">${escapeHtml(stop.name.slice(0,28))}</text>`:''}`;}).join('');
+  // With openStops, a stop is a button that opens its details (the Route page's service panel).
+  const markers=heights.map((height,i)=>{const stop=stops.find(s=>s.boundary===i),open=openStops&&stop?`<g class="profile-stop" data-route-action="open-stop" data-stop="${stops.indexOf(stop)}" tabindex="0" role="button" aria-label="${escapeHtml(`Open ${stop.name}`)}">`:'';return `${open}<circle cx="${xs[i].toFixed(1)}" cy="${y(height).toFixed(1)}" r="${stop?7:4}" class="profile-node${stop?' profile-stop-node':''}"><title>${escapeHtml(stop?.name??(i===0?'A':i===parts.length?'B':`After segment ${i}`))} · ${format(distances[i])} km from A</title></circle>${stop?`<text class="profile-stop-label" x="${xs[i].toFixed(1)}" y="${(y(height)-15).toFixed(1)}" text-anchor="${i===0?'start':i===parts.length?'end':'middle'}">${escapeHtml(stop.name.slice(0,28))}</text>`:''}${open?'</g>':''}`;}).join('');
   const axisY=256,axisLabelY=274,tickCount=6;
   const axis=scale==='linear'?Array.from({length:tickCount},(_,i)=>{
     const distance=i*total/(tickCount-1),x=left+span*i/(tickCount-1);
@@ -62,7 +63,7 @@ export function routeProfileSketch(segments,options={}) {
   }).join(''):`<text x="${left}" y="${axisLabelY}" text-anchor="start">A · 0 km</text><text x="${right}" y="${axisLabelY}" text-anchor="end">B · ${format(total)} km</text>`;
   const description=`Route from A to B, ${format(total)} km over ${parts.length} segment${parts.length===1?'':'s'}. ${scale==='linear'?'Horizontal distance is linear.':'Segments have equal visual widths.'} ${parts.map((p,i)=>`Segment ${i+1}: ${format(p.distanceKm)} km, ${format(p.gradePercent)} percent grade, ${p.roadSpeedLimitKmh==null?`${format(p.speedLimitKmh)} kilometres per hour`:`Rail ${format(p.speedLimitKmh)}, Road ${format(p.roadSpeedLimitKmh)} kilometres per hour`} limit.`).join(' ')}`;
   const stopDescription=stops.filter(s=>Number.isInteger(s.boundary)&&s.boundary>=0&&s.boundary<=parts.length).map(s=>`${s.name} at ${format(distances[s.boundary])} km.`).join(' ');
-  return `<div class="profile-sketch-scroll"><svg class="profile-sketch profile-line-map" viewBox="0 0 ${width} 296" role="group" aria-label="${escapeHtml(`${description} ${stopDescription}`.trim())}"><polygon points="${points} ${xs.at(-1).toFixed(1)},192 ${xs[0].toFixed(1)},192" class="profile-ground"/>${bands}<polyline points="${points}" class="profile-terrain"/>${markers}${actions}<line x1="${left}" x2="${right}" y1="${axisY}" y2="${axisY}" class="profile-axis"/>${axis}<text x="${(left+right)/2}" y="292" text-anchor="middle">Distance from A (km)${scale==='linear'?' · linear':''}</text></svg></div>`;
+  return `<div class="profile-sketch-scroll"><svg class="profile-sketch profile-line-map" viewBox="0 0 ${width} 296" role="group" aria-label="${escapeHtml(`${description} ${stopDescription}`.trim())}"><polygon points="${points} ${xs.at(-1).toFixed(1)},192 ${xs[0].toFixed(1)},192" class="profile-ground"/>${bands}<polyline points="${points}" class="profile-terrain"/>${markers}${actions}<line x1="${left}" x2="${right}" y1="${axisY}" y2="${axisY}" class="profile-axis"/>${axis}<text x="${(left+right)/2}" y="292" text-anchor="middle">Distance from A (km)${scale==='linear'?' · linear':''}</text></svg>${below?below({width,xs}):''}</div>`;
 }
 
 /** Read-only preview for narrow panels; elevation is exaggerated. */
@@ -111,11 +112,12 @@ export function renderRouteProfileStatus(status,segments,{domain='rail'}={}){
 }
 
 /** The route editor owns the custom preset shared by rail and road comparisons. */
-export function mountRouteProfileControls(container,{initial,onChange,beforeChange=()=>{},confirmReplace=()=>true,visual,scaleControl,scaleNote,segmentList,shapes}) {
+export function mountRouteProfileControls(container,{initial,onChange,beforeChange=()=>{},confirmReplace=()=>true,visual,scaleControl,scaleNote,segmentList,shapes,below=null,onSelect=()=>{}}) {
   let segments=validateRouteProfile(initial),scale='equal',selectedIndex=0,previewStops=[];
   const segmentRange=(distances,i)=>`${i===0?'A · 0 km':`${format(distances[i])} km`} → ${i===segments.length-1?`B · ${format(distances[i+1])} km`:`${format(distances[i+1])} km`}`;
   const renderVisual=()=>{
-    visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex,availableWidth:Math.max(0,visual.clientWidth-18),stops:previewStops});
+    // `below` draws what lines up under the map (the service lanes), from the same horizontal positions.
+    visual.innerHTML=routeProfileSketch(segments,{scale,selectedIndex,availableWidth:Math.max(0,visual.clientWidth-18),stops:previewStops,openStops:!!below,below});
     scaleNote.textContent=scale==='linear'?'Distance to scale · elevation exaggerated. Select short segments in the list below.':'Equal widths · elevation exaggerated.';
   };
   const presets=(i,field,values,unit,label)=>`<div class="profile-presets" role="group" aria-label="Segment ${i+1} ${label} presets">${values.map(value=>`<button type="button" data-preset="${value}" data-preset-field="${field}" data-index="${i}" aria-pressed="${(segments[i][field]??segments[i].speedLimitKmh)===value}">${field==='gradePercent'?gradeText(value):value}${unit}</button>`).join('')}</div>`;
@@ -155,15 +157,16 @@ export function mountRouteProfileControls(container,{initial,onChange,beforeChan
     notify();
   };
   const changed=(origin,action,index)=>{
-    selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify({action,index});
+    selectedIndex=Math.min(selectedIndex,segments.length-1);render();notify({action,index});onSelect(selectedIndex);
     const focus=origin===segmentList?segmentList.querySelector(`button[data-select-segment="${selectedIndex}"]`):origin===visual?visual.querySelector(`[data-segment="${selectedIndex}"]`):container.querySelector(`.profile-segment [data-action="${action}"]:not(:disabled)`);
     (focus??container.querySelector(`.profile-segment[data-index="${selectedIndex}"] input`))?.focus();
   };
   const showError=(error,target)=>{const message=container.querySelector('.profile-error');message.textContent=error.message;message.hidden=false;if(target){target.setCustomValidity(error.message);target.reportValidity();target.setCustomValidity('');}};
   const select=index=>{
-    if(index===selectedIndex)return;
+    // Selecting the current segment again still brings its details back.
+    if(index===selectedIndex){onSelect(index);return;}
     selectedIndex=index;
-    renderInspector();renderVisual();renderSegmentList();
+    renderInspector();renderVisual();renderSegmentList();onSelect(index);
   };
   const invalidInput=()=>{const invalid=container.querySelector('.profile-segment input[data-control="number"]:invalid');invalid?.reportValidity();return invalid;};
   scaleControl.addEventListener('change',event=>{if(event.target.name==='profile-horizontal-scale'){scale=event.target.value;renderVisual();}});
@@ -244,7 +247,7 @@ export function mountRouteProfileControls(container,{initial,onChange,beforeChan
   }
   renderShapes();
   render();
-  return {refresh:render,selectSegment:select,setStops(stops){previewStops=stops.map(s=>({...s}));renderVisual();},setSegments(parts){
+  return {refresh:render,redraw:renderVisual,get selectedIndex(){return selectedIndex;},selectSegment:select,setStops(stops){previewStops=stops.map(s=>({...s}));renderVisual();},setSegments(parts){
     const next=validateRouteProfile(parts);
     if(JSON.stringify(next)===JSON.stringify(segments))return;
     segments=next;selectedIndex=Math.min(selectedIndex,segments.length-1);render();
