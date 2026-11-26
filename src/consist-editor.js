@@ -185,6 +185,7 @@ export function mountConsistEditor(document,{catalogue,units,onChange,onPreview=
     edit:openComposition,
     restoreDraft(item){return loadDraft(item,saved.has(item.sourceCompositionId)?item.sourceCompositionId:null);},
     getCompositions(){return [...saved.values()];},
+    build(definition){return buildConsist(definition,catalogue,units);},
     openContext(next){
       context={...next};
       radio('configuration-carrier',context.carrier);radio('configuration-category',context.category);radio('configuration-cargo',context.cargo);radio('configuration-role','all');

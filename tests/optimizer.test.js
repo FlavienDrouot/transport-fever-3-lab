@@ -428,3 +428,23 @@ test('intermediate stops: the Optimizer stops there and handles each stop\'s sha
   for(const result of served.best.road)assert.ok(Math.abs(result.rate-500)<1e-6||result.rate>500);
   assert.throws(()=>optimizerRequest({routeProfile,servicePattern:pattern}),RangeError);
 });
+
+test('Rail rows can be checked for comparison and keep their proposal coordinates',async()=>{
+  const {checkedOptimizerProposals,syncCompareChecked}=await import('../src/optimizer-proposals.js');
+  const answer=run(small,{domain:'rail',maxTrainLength:200,rate:250});
+  const html=renderOptimizerProposals(answer,'rail');
+  assert.ok(html.includes('data-compare-checked disabled'));
+  assert.equal((html.match(/data-compare-proposal/g)??[]).length,(html.match(/data-select-proposal/g)??[]).length);
+  assert.ok(!renderOptimizerProposals(run(small,{domain:'road',rate:250}),'road').includes('data-compare-proposal'));
+  // Minimal DOM stand-in: two checked rows, one unchecked.
+  const boxes=[{checked:true,dataset:{domain:'rail',group:'0',wagon:'0',result:'0'}},{checked:false,dataset:{domain:'rail',group:'1',wagon:'0',result:'0'}},{checked:true,dataset:{domain:'rail',group:'1',wagon:'1',result:'2'}}];
+  const button={disabled:true,textContent:''};
+  const section={querySelectorAll:selector=>selector.endsWith(':checked')?boxes.filter(b=>b.checked):boxes,querySelector:()=>button};
+  const checked=checkedOptimizerProposals(section);
+  assert.deepEqual(checked,[boxes[0].dataset,boxes[2].dataset]);
+  for(const selection of checked)assert.ok(optimizerProposalAt(answer,selection));
+  syncCompareChecked(section);
+  assert.equal(button.disabled,false);assert.equal(button.textContent,'Compare 2 checked trains →');
+  boxes.forEach(b=>{b.checked=false;});syncCompareChecked(section);
+  assert.equal(button.disabled,true);
+});

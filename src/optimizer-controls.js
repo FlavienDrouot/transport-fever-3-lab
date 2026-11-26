@@ -14,10 +14,10 @@ import {renderOptimizerConstraints} from './optimizer-constraints.js';
 import {routeProfileSketch} from './route-profile-control.js';
 import {optimizerExclusionSummary} from './optimizer-diagnostics.js';
 import {loadDefaultOptimizerResult} from './optimizer-cache.js';
-import {renderOptimizerVerdict,renderOptimizerProposals,renderSelectedOptimizerProposal,toggleOptimizerProposalRows,showMoreOptimizerProposals,optimizerProposalAt,mountStickyOptimizerHeaders} from './optimizer-proposals.js';
+import {renderOptimizerVerdict,renderOptimizerProposals,renderSelectedOptimizerProposal,toggleOptimizerProposalRows,showMoreOptimizerProposals,optimizerProposalAt,checkedOptimizerProposals,syncCompareChecked,mountStickyOptimizerHeaders} from './optimizer-proposals.js';
 
 /** `getPlan` returns the custom route's declaration while that route is active, otherwise null (Simple route keeps the manual inputs). */
-export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,onRouteChange,getPlan=()=>null,getStoredRoute=getRoute}){
+export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,onCompare=async()=>{},summaryRoot,onRouteChange,getPlan=()=>null,getStoredRoute=getRoute}){
   bindDurationInputs(root.ownerDocument);
   const railBounds=['maxTrainLength','maxLocomotives','maxWagons'];
   const actions=(suffix='')=>`<button type="submit" form="optimizer-form" id="optimizer-find${suffix}" data-optimizer-action="find" class="optimizer-primary">Find solutions</button><button type="button" id="optimizer-cancel${suffix}" data-optimizer-action="cancel" hidden>Cancel</button><button type="button" id="optimizer-previous${suffix}" data-optimizer-action="previous" aria-controls="optimizer-results" hidden>Show previous results</button>`;
@@ -208,6 +208,8 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
     }catch(error){if(token!==job)return;stop();status.textContent=`Search failed: ${error.message}`;}
   });
   results.addEventListener('change',event=>{
+    const compare=event.target.closest('[data-compare-proposal]');
+    if(compare){syncCompareChecked(compare.closest('.optimizer-variants'));return;}
     const toggle=event.target.closest('[data-result-visibility]');if(!toggle)return;
     results.querySelector(`[data-result-domain="${toggle.value}"]`).hidden=!toggle.checked;
     const visible=results.querySelectorAll('[data-result-domain]:not([hidden])').length;
@@ -217,6 +219,18 @@ export function mountOptimizer(root,{getRoute,getCatalogue,onOpen,summaryRoot,on
   results.addEventListener('click',async event=>{
     const more=event.target.closest('[data-more-proposals],[data-all-proposals]');
     if(more){showMoreOptimizerProposals(more);return;}
+    // The checkbox only marks a row; it must not also select or expand it.
+    if(event.target.closest('[data-compare-proposal]'))return;
+    const compare=event.target.closest('[data-compare-checked]');
+    if(compare){
+      if(!completed)return;
+      const answer=completed,token=job,proposals=checkedOptimizerProposals(compare.closest('.optimizer-variants')).map(selection=>optimizerProposalAt(answer,selection)).filter(Boolean);
+      if(!proposals.length)return;compare.disabled=true;
+      try{await onCompare(proposals,optimizerProposalRequest(proposals[0],answer.request),()=>completed===answer&&job===token&&JSON.stringify(getRoute())===routeKey);}
+      catch(error){if(completed===answer)status.textContent=`Unable to compare proposals: ${error.message}`;}
+      finally{compare.disabled=false;}
+      return;
+    }
     const row=event.target.closest('.optimizer-variants-table tbody tr');
     let button=event.target.closest('[data-result]');
     const toggle=event.target.closest('[data-powered-toggle],[data-wagon-toggle]')??(!button&&row?.querySelector('[data-powered-toggle],[data-wagon-toggle]'));

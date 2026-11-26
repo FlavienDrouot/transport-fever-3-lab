@@ -598,7 +598,7 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .optimizer-results [data-selected-rail],.optimizer-results [data-selected-road]{display:flex;min-width:0}.optimizer-results [data-selected-rail]>.optimizer-proposal,.optimizer-results [data-selected-road]>.optimizer-proposal{flex:1;margin-bottom:0}
 @supports(grid-template-rows:subgrid){.optimizer-results>section{display:grid;grid-template-rows:subgrid;grid-row:span 5}.optimizer-results .optimizer-variants{display:grid;grid-template-rows:subgrid;grid-row:span 3;row-gap:0;margin-bottom:0;border:0;border-radius:0}.optimizer-results .optimizer-variants>h4{border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0}.optimizer-results .optimizer-variants>.chart-help{border-left:1px solid var(--line);border-right:1px solid var(--line)}.optimizer-results .optimizer-variants-content{border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px}.optimizer-results .optimizer-no-results{grid-row:span 4;align-self:start}}
 .optimizer-variants{border:1px solid var(--line);border-radius:6px;margin-bottom:12px}.optimizer-variants>h4{padding:12px;margin:0;font-size:14px}.optimizer-variants>.chart-help{margin:0;padding:0 12px 12px}
-.optimizer-variants-content{min-width:0;align-self:start;display:grid;grid-template-columns:minmax(0,1fr);--optimizer-cost-width:136px;--optimizer-select-width:100px}
+.optimizer-variants-content{min-width:0;align-self:start;display:grid;grid-template-columns:minmax(0,1fr);--optimizer-cost-width:136px;--optimizer-select-width:124px}
 .optimizer-variants-more{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px;font-size:12px;color:var(--muted)}
 .optimizer-variants-scroll{overflow:auto;max-width:100%;grid-area:1/1}.optimizer-variants-table{width:100%;min-width:1000px;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:12px}
 .optimizer-variants-header{grid-area:1/1;align-self:start;position:sticky;top:var(--app-header-offset);z-index:4;min-width:0;background:var(--tint,#f3f6f3);pointer-events:none}.optimizer-variants-header-scroll{overflow:hidden}
@@ -617,7 +617,7 @@ input[aria-invalid=true]{outline:2px solid #b6443b;outline-offset:2px}
 .optimizer-variants-table [data-select-proposal][aria-pressed=true]{color:var(--green);font-weight:600;border-color:var(--green)}
 .optimizer-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:12px;margin:14px 0}.optimizer-metrics dt{color:var(--muted)}.optimizer-metrics dd{margin:2px 0 0;font-weight:600}.optimizer-no-results{font-size:13px;color:var(--muted);padding:14px;border:1px solid var(--line);border-radius:6px}
 @media(max-width:700px){.optimizer-setup,.optimizer-results{grid-template-columns:minmax(0,1fr);gap:12px}.optimizer-fields,.optimizer-fields.optimizer-service-fields,.optimizer-service-selectors{grid-template-columns:minmax(0,1fr)}.optimizer-setup .panel-group-body{padding:10px}}
-@media(max-width:700px){.optimizer-results>section{grid-template-rows:auto auto auto;grid-row:auto}.optimizer-results .optimizer-variants{grid-template-rows:auto auto auto;grid-row:auto}.optimizer-results .optimizer-no-results{grid-row:auto}.optimizer-variants-content{--optimizer-cost-width:116px;--optimizer-select-width:88px}.optimizer-variants-table :is(.optimizer-cost-cell,.optimizer-select-cell){padding-left:6px;padding-right:6px}}
+@media(max-width:700px){.optimizer-results>section{grid-template-rows:auto auto auto;grid-row:auto}.optimizer-results .optimizer-variants{grid-template-rows:auto auto auto;grid-row:auto}.optimizer-results .optimizer-no-results{grid-row:auto}.optimizer-variants-content{--optimizer-cost-width:116px;--optimizer-select-width:112px}.optimizer-variants-table :is(.optimizer-cost-cell,.optimizer-select-cell){padding-left:6px;padding-right:6px}}
 
 .road-stop-grid>.chart-help{grid-column:1/-1}
 
@@ -842,3 +842,5 @@ span.rp-op{cursor:default}
 .profile-visual.is-service-focus .profile-line-map .profile-band-group.is-selected:not(:focus-visible) .profile-band:not(#_){fill:transparent;stroke:none}
 .profile-visual.is-service-focus .profile-inline-actions{display:none}
 .rp-lane .rp-band{overflow:hidden;white-space:nowrap}
+.optimizer-select-cell [data-compare-proposal]{width:16px;height:16px;margin:0 0 0 8px;vertical-align:middle;cursor:pointer;accent-color:var(--accent,#147d64)}
+.optimizer-variants-more [data-compare-checked]{margin-left:auto}
